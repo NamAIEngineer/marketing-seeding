@@ -654,6 +654,23 @@ test("queue scheduler materializes exact standing approved-copy candidates idemp
     standingAuthorizationReference: "fixture-standing-content-candidate-scheduler"
   }, "operator");
 
+  // A prior authorization may leave an unrelated draft candidate behind. The
+  // autonomous queue must preserve it as draft/read-only and avoid creating a
+  // blocked post or any execution controls for content outside the active
+  // approved copy set.
+  await service.store.mutate("fixture", "add-stale-approved-copy-candidate", (state) => {
+    const currentCampaign = state.campaigns.find((item) => item.id === campaign.id);
+    currentCampaign.contentCandidates.push({
+      ...candidate,
+      contentId: "content-stale-approved-copy",
+      contentIdentity: "stale-approved-copy-identity",
+      content: "Stale copy from a prior authorization",
+      contentHash: campaignContentHash("Stale copy from a prior authorization"),
+      status: "draft"
+    });
+    return currentCampaign;
+  });
+
   await service.queueDueCampaignJobs("fixture-scheduler");
   const first = await service.snapshot();
   const firstPost = first.posts.find((item) => item.contentId === candidate.contentId);
@@ -662,6 +679,9 @@ test("queue scheduler materializes exact standing approved-copy candidates idemp
   assert.equal(first.executionRequests.filter((item) => item.jobId === firstPost.id).length, 1);
   assert.equal(first.oneTimeExecutionWindows.filter((item) => item.jobId === firstPost.id).length, 1);
   assert.equal(first.liveExecutionGrants.filter((item) => item.jobId === firstPost.id).length, 1);
+  const staleCandidate = first.campaigns.find((item) => item.id === campaign.id).contentCandidates.find((item) => item.contentId === "content-stale-approved-copy");
+  assert.equal(staleCandidate.status, "draft");
+  assert.equal(first.posts.filter((item) => item.campaignId === campaign.id && item.contentId === staleCandidate.contentId).length, 0);
 
   await service.queueDueCampaignJobs("fixture-scheduler");
   const restarted = new SeedingService(new JsonStore(path.join(directory, "state.json")));

@@ -4401,7 +4401,17 @@ export class SeedingService {
       campaign = requireItem(snapshot.campaigns, campaignId, "Campaign");
     }
     const results = [];
-    for (const candidate of (campaign.contentCandidates || []).filter((item) => item.status === "draft")) {
+    const draftCandidates = (campaign.contentCandidates || []).filter((item) => item.status === "draft");
+    // Approved-copy authorizations are an exact content boundary. A campaign
+    // can retain draft candidates from an earlier authorization (or from a
+    // previous strategy pass); attempting to materialize those candidates only
+    // creates noisy blocked posts and obscures the active queue. Keep stale
+    // candidates as draft/read-only records and evaluate only candidates whose
+    // canonical bytes are in the currently active approved copy set.
+    const candidates = authorization.contentBoundary.mode === "approved_copy_set"
+      ? draftCandidates.filter((candidate) => authorization.contentBoundary.contentHashes?.includes(campaignContentHash(candidate.content || "")))
+      : draftCandidates;
+    for (const candidate of candidates) {
       const existing = snapshot.posts.filter((post) => post.campaignId === campaignId && post.targetId === candidate.targetId && post.contentId === candidate.contentId);
       if (existing.length > 1) {
         results.push({ contentId: candidate.contentId, status: "blocked", reason: "duplicate_candidate_posts" });
