@@ -2994,7 +2994,24 @@ export class SeedingService {
     campaign = requireItem(state.campaigns, identity.campaignId, "Campaign");
     let story = (state.stories || []).filter((item) => item.campaignId === identity.campaignId)
       .sort((left, right) => String(right.updatedAt || right.createdAt || "").localeCompare(String(left.updatedAt || left.createdAt || "")))[0] || null;
-    if (!story) {
+    // Keep repeated high-level briefs idempotent, but do not silently reuse a
+    // prior story when the caller intentionally changes a bounded content
+    // policy field. A new CTA/disclosure/language is a new content identity;
+    // deriving it here lets the existing authorization and UNKNOWN fences
+    // create a separately authorized candidate without accepting low-level
+    // hashes or payload bytes from the caller.
+    const requestedStoryPolicy = {
+      callToAction: input.callToAction === undefined ? null : String(input.callToAction).replace(/\s+/g, " ").trim(),
+      disclosure: input.disclosure === undefined ? null : String(input.disclosure).replace(/\s+/g, " ").trim(),
+      language: input.language === undefined ? null : String(input.language).replace(/\s+/g, " ").trim(),
+      distributionAudience: audienceSerialization
+    };
+    const storyMatchesRequestedPolicy = story &&
+      (requestedStoryPolicy.callToAction === null || story.callToAction === requestedStoryPolicy.callToAction) &&
+      (requestedStoryPolicy.disclosure === null || story.disclosure === requestedStoryPolicy.disclosure) &&
+      (requestedStoryPolicy.language === null || story.language === requestedStoryPolicy.language) &&
+      story.audience === requestedStoryPolicy.distributionAudience;
+    if (!story || !storyMatchesRequestedPolicy) {
       story = await this.deriveProductIntelligenceStory(identity.campaignId, {
         callToAction: input.callToAction || `Explore ${identity.productId} and its repository evidence.`,
         disclosure: input.disclosure || "Evidence-grounded draft generated from the registered product repository.",

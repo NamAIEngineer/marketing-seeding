@@ -108,6 +108,29 @@ test("zero-touch bootstrap derives exact authority and is idempotent", async (t)
   assert.equal(after.submissionUncertainties.length, before.submissionUncertainties.length);
 });
 
+test("zero-touch bootstrap derives a new content identity when high-level story policy changes", async (t) => {
+  const { service, productRepo, now } = await fixture(t);
+  const first = await service.bootstrapAutonomousCampaign(brief(productRepo, now, {
+    callToAction: "Review the verified repository evidence."
+  }));
+  assert.equal(first.status, "READY_FOR_AUTONOMOUS_EXECUTION");
+  const before = await service.snapshot();
+  const firstRequest = before.executionRequests.find((item) => item.executionId === first.executionId);
+
+  const second = await service.bootstrapAutonomousCampaign(brief(productRepo, new Date(now.getTime() + 60_000), {
+    callToAction: "Inspect the local design workflow evidence."
+  }));
+  assert.equal(second.status, "READY_FOR_AUTONOMOUS_EXECUTION");
+  assert.notEqual(second.authorizationId, first.authorizationId);
+  assert.notEqual(second.content.contentHash, first.content.contentHash);
+
+  const after = await service.snapshot();
+  assert.equal(after.executionRequests.find((item) => item.executionId === first.executionId).executionId, firstRequest.executionId);
+  assert.equal(after.stories.filter((item) => item.campaignId === first.campaignId).length, 2);
+  assert.equal(after.submissionUncertainties.length, 0);
+  assert.equal(after.executionRequests.filter((item) => item.jobId === second.postId && item.request?.dryRun !== true).length, 1);
+});
+
 test("zero-touch bootstrap resolves a product-only brief from a bounded repository root", async (t) => {
   const { service, productRepo, now } = await fixture(t);
   const result = await service.bootstrapAutonomousCampaign({
