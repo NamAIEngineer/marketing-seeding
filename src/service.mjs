@@ -88,9 +88,10 @@ const BOOTSTRAP_AUTHORIZATION_BLOCKER_MESSAGES = Object.freeze({
 });
 
 function bootstrapAuthorizationBlockers(post) {
+  const readinessReason = String(post?.readinessReasonCode || "").trim();
   const reasons = [...new Set(post?.authorizationDecision?.reasons || [])]
     .map((reason) => String(reason || "").trim())
-    .filter(Boolean);
+    .filter((reason) => reason && reason !== readinessReason);
   return reasons.map((reason) => ({
     code: reason,
     classification: "AUTHORIZATION_BLOCKER",
