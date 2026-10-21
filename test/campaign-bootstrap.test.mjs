@@ -157,6 +157,33 @@ test("zero-touch bootstrap fails closed when account or target authority is miss
   assert.equal((await ambiguous.service.snapshot()).campaigns.length, 0);
 });
 
+test("bootstrap reports authorization quota blockers instead of readiness reason", async (t) => {
+  const { service, productRepo, now } = await fixture(t, { readinessProvider: true });
+  await service.store.mutate("quota-fixture", "install_same_day_account_activity", (state) => {
+    const target = state.targets.find((item) => item.channel === "linkedin");
+    state.posts.push({
+      id: "quota-fixture-post",
+      campaignId: "quota-fixture-campaign",
+      targetId: target.id,
+      status: "published",
+      publishedAt: now.toISOString(),
+      createdAt: now.toISOString()
+    });
+  });
+
+  const result = await service.bootstrapAutonomousCampaign(brief(productRepo, now));
+  assert.equal(result.status, "BLOCKED");
+  assert.equal(result.blockers[0].code, "account_daily_limit_reached");
+  assert.equal(result.blockers[0].classification, "AUTHORIZATION_BLOCKER");
+  assert.match(result.blockers[0].message, /account daily post quota/i);
+
+  const state = await service.snapshot();
+  const post = state.posts.find((item) => item.id === result.postId);
+  assert.ok(post);
+  assert.ok(post.authorizationDecision.reasons.includes("account_daily_limit_reached"));
+  assert.equal(state.posts.find((item) => item.id === "quota-fixture-post").status, "published");
+});
+
 test("stale readiness never produces live execution controls", async (t) => {
   const { service, productRepo, now } = await fixture(t, { freshReadiness: false });
   const result = await service.bootstrapAutonomousCampaign(brief(productRepo, now));
