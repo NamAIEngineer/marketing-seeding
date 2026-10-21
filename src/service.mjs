@@ -74,6 +74,31 @@ const DYNAMIC_EXECUTION_REASONS = new Set([
   "campaign_concurrency_limit_reached"
 ]);
 
+const BOOTSTRAP_AUTHORIZATION_BLOCKER_MESSAGES = Object.freeze({
+  campaign_daily_limit_reached: "The campaign daily post quota has been reached for the current policy day",
+  account_daily_limit_reached: "The authorized LinkedIn account daily post quota has been reached for the current policy day",
+  campaign_minimum_interval_not_met: "The campaign minimum interval has not elapsed since the last account activity",
+  campaign_concurrency_limit_reached: "The campaign concurrency limit is currently exhausted",
+  schedule_not_due: "The campaign schedule is not due yet",
+  schedule_outside_allowed_window: "The campaign schedule is outside its allowed local window",
+  schedule_outside_authorization_window: "The execution is outside the standing authorization validity window",
+  campaign_authorization_expired: "The standing campaign authorization has expired",
+  campaign_authorization_not_active: "The standing campaign authorization is not active",
+  live_execution_not_authorized: "Live execution is not authorized by the standing campaign policy"
+});
+
+function bootstrapAuthorizationBlockers(post) {
+  const reasons = [...new Set(post?.authorizationDecision?.reasons || [])]
+    .map((reason) => String(reason || "").trim())
+    .filter(Boolean);
+  return reasons.map((reason) => ({
+    code: reason,
+    classification: "AUTHORIZATION_BLOCKER",
+    message: BOOTSTRAP_AUTHORIZATION_BLOCKER_MESSAGES[reason] || `Execution authorization blocked: ${reason}`
+  }));
+}
+
+
 const METRIC_FIELDS = Object.freeze(["impressions", "reactions", "comments", "shares", "clicks", "leads"]);
 const METRIC_COVERAGE = new Set(["measured", "unknown", "unsupported"]);
 const METRIC_CHECKPOINTS = Object.freeze([
@@ -3245,11 +3270,11 @@ export class SeedingService {
         message: "This exact content/publication identity is quarantined by an immutable historical SUBMIT_RESULT_UNKNOWN execution; derive a separately authorized content identity before creating new execution controls",
         uncertaintyId: historicalSubmissionUncertainty.id,
         historicalExecutionId: historicalSubmissionUncertainty.executionId || null
-      } : {
+      } : (bootstrapAuthorizationBlockers(currentPost)[0] || {
         code: currentPost.readinessReasonCode || "EXECUTION_CONTROLS_NOT_DERIVED",
         classification: "RUNTIME_BLOCKER",
         message: "Fresh readiness did not produce the complete execution controls"
-      }],
+      })],
       externalSideEffects: false,
       authoritySideEffects: true
     };
