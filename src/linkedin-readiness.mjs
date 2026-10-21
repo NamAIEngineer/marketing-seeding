@@ -175,10 +175,17 @@ export async function openLinkedInComposer(browser, pageId, { mountTimeoutMs = 8
     if (activation?.clicked !== true) return { state, domFallbackUsed, reasonCode: activation?.reason || "composer_trigger_not_activated" };
     if (!state.transientLoadError) state = await sampleComposerState(browser, pageId, mountTimeoutMs);
     if (classifyLinkedInComposerState(state) === "CONFIRMED") return { state, domFallbackUsed };
-    if (!state.transientLoadError || attempt > 0) return { state, domFallbackUsed };
+    // LinkedIn can commit the /sharing/compose route before mounting its
+    // dialog/editor surface. Treat only that exact route-only empty state as
+    // a bounded, reversible load race. Any partial composer or unrelated
+    // route remains UNKNOWN and fails closed without another trigger.
+    const routeOnlyEmpty = state?.route === true && state?.dialogCount === 0 &&
+      state?.editorCount === 0 && state?.audience !== true && state?.postButton !== true;
+    if (!(state.transientLoadError || routeOnlyEmpty) || attempt > 0) return { state, domFallbackUsed };
 
-    // Retry this specific LinkedIn load error once, after returning to the feed
-    // and revalidating the same account/session. No content is entered or sent.
+    // Retry this specific LinkedIn mount race/load error once, after returning
+    // to the feed and revalidating the same account/session. No content is
+    // entered or sent.
     await browser.navigate(pageId, LINKEDIN_FEED_URL_FOR_READINESS);
     await browser.waitForFeed(pageId);
     const feed = await browser.evaluate(pageId, CONTEXT_EXPRESSION(expectedIdentityPath));
@@ -198,9 +205,25 @@ export class LinkedInReadinessProvider {
     if (!browser) throw new Error("LinkedIn readiness requires an ORCA browser adapter");
     this.browser = browser;
     this.ttlMs = ttlMs;
+    // One ORCA profile is a serialized browser surface.  Queue readiness
+    // observations so scheduler refreshes for different posts cannot race
+    // navigation, composer mounting, or cleanup in the same tab.
+    this.readinessTail = Promise.resolve();
   }
 
   async checkReadiness(context) {
+    const previous = this.readinessTail;
+    let release;
+    this.readinessTail = new Promise((resolve) => { release = resolve; });
+    await previous;
+    try {
+      return await this.#checkReadiness(context);
+    } finally {
+      release();
+    }
+  }
+
+  async #checkReadiness(context) {
     const checkedAt = new Date();
     try {
       const identityReference = context.identityReference || context.expectedIdentityUrl;
