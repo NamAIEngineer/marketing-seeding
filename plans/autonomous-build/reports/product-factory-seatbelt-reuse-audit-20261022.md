@@ -127,3 +127,19 @@ claimed as sandbox certification.
 Factory remains `NOT_EXECUTED_UNSAFE` for arbitrary project execution until the
 attestation exists. This audit did not modify canonical state or external
 services.
+
+## Seven-check gap analysis
+
+| Check | What source/probes establish | Why it is not a host attestation |
+|---|---|---|
+| backend invocation | `sandbox-exec` lookup and typed wrapper path exist; `/bin/echo` synthetic run completed | does not prove profile behavior for every invocation |
+| profile integrity | source constructs `(version 1)`, `(deny default)` and scoped read/write rules; unit tests inspect generated profile | tests inspect strings/mocks, not kernel enforcement on the host |
+| network denied | profile contains inbound/outbound deny rules | no valid Python/socket probe ran on this host; source intent alone is insufficient |
+| filesystem scope | read roots and workspace/scratch write rules are constructed; read-only write attempt did not create a file (Python failed before body) | no successful interpreter probe, symlink and outside-path matrix on host |
+| child-process policy | profile says `(allow process*)`; timeout code kills the process group | this is permissive process policy, not a bounded child-process/resource policy; descendant cleanup is only exercised on timeout |
+| timeout cleanup | process-group kill and force cleanup are implemented; unit tests mock timeout | no host-level descendant probe completed; this is a runtime mechanism, not persisted attestation |
+| resource limits | timeout/output limits exist | CPU, memory, process count, file-size, and other resource limits are not configured in `tool_executor.py`; this check cannot be PASS |
+
+Because `resourceLimits` cannot be honestly marked `PASS` from the current
+backend, a mechanical attestation would be false. No attestation artifact was
+created and no execution eligibility was changed.
