@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { projectChannelCapabilities } from "../src/channel-capability-projection.mjs";
 
 const channels = {
-  linkedin: { label: "LinkedIn", requiresRulesReview: false, requiresHumanApproval: true },
+  linkedin: { label: "LinkedIn", requiresRulesReview: false, requiresHumanApproval: true, publishMode: "AUTONOMOUS_WHEN_AUTHORIZED" },
   reddit: { label: "Reddit", requiresRulesReview: true, requiresHumanApproval: true }
 };
 const ready = (id, channel, rulesStatus = "not_required") => ({ id, channel, status: "active", rulesStatus, readiness: { state: "READY", expiresAt: "2030-01-01T00:00:00.000Z" } });
@@ -15,8 +15,19 @@ test("projects deterministic channel readiness without authority side effects", 
     { channel: "reddit", status: "NEEDS_TARGET", freshReadyTargetCount: 0, postCount: 0 }
   ]);
   assert.equal(result[0].advisory, true);
+  assert.equal(result[0].publishMode, "AUTONOMOUS_WHEN_AUTHORIZED");
   assert.equal(result[0].authoritySideEffects, false);
   assert.equal(result[0].externalSideEffects, false);
+});
+
+test("keeps legacy approval policy separate from standing autonomous publish capability", () => {
+  const result = projectChannelCapabilities({ channels, targets: [], posts: [], now: "2029-01-01T00:00:00.000Z" });
+  const linkedin = result.find((item) => item.channel === "linkedin");
+  const reddit = result.find((item) => item.channel === "reddit");
+  assert.equal(linkedin.requiresHumanApproval, true);
+  assert.equal(linkedin.publishMode, "AUTONOMOUS_WHEN_AUTHORIZED");
+  assert.equal(reddit.requiresHumanApproval, true);
+  assert.equal(reddit.publishMode, "HUMAN_APPROVAL_REQUIRED");
 });
 
 test("fails closed for pending rules, stale readiness and inactive targets", () => {

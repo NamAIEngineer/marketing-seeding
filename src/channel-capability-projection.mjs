@@ -45,11 +45,15 @@ function projectOne(channel, policy, targets, posts, nowMs) {
   else if (rulesPending) { status = "RULES_REVIEW_REQUIRED"; reason = "active target requires community rules review"; }
   else if (!readyTargets.length) { status = "AUTH_REQUIRED"; reason = "no active target has fresh READY session readiness"; }
   if (!STATUS.has(status)) status = "BLOCKED";
+  const publishMode = ["AUTONOMOUS_WHEN_AUTHORIZED", "HUMAN_APPROVAL_REQUIRED"].includes(String(policy?.publishMode || ""))
+    ? String(policy.publishMode)
+    : policy?.requiresHumanApproval === true ? "HUMAN_APPROVAL_REQUIRED" : "AUTONOMOUS_WHEN_AUTHORIZED";
   return {
     channel,
     label: text(policy?.label || channel),
     status,
     reason,
+    publishMode,
     requiresHumanApproval: policy?.requiresHumanApproval === true,
     requiresRulesReview: policy?.requiresRulesReview === true,
     targetCount: channelTargets.length,
