@@ -188,6 +188,7 @@ test("stale readiness never produces live execution controls", async (t) => {
   const { service, productRepo, now } = await fixture(t, { freshReadiness: false });
   const result = await service.bootstrapAutonomousCampaign(brief(productRepo, now));
   assert.equal(result.status, "BLOCKED");
+  assert.equal(result.blockers[0].classification, "RUNTIME_BLOCKER");
   const state = await service.snapshot();
   assert.equal(state.executionRequests.length, 0);
   assert.equal(state.oneTimeExecutionWindows.length, 0);
