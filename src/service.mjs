@@ -4557,7 +4557,15 @@ export class SeedingService {
       // A standing campaign may renew only the normal expiry path.  An
       // operator pause/revoke/supersede is an explicit stop signal and must
       // never be silently converted back into live authority.
-      if (authorizations[0].status !== "expired") continue;
+      const previousAuthorization = authorizations[0];
+      if (previousAuthorization.status !== "expired") continue;
+      if (previousAuthorization.executionMode !== "standing_autonomous" ||
+          previousAuthorization.allowLiveExecution !== true ||
+          previousAuthorization.binding !== campaignAuthorizationFingerprint(previousAuthorization) ||
+          previousAuthorization.campaignBinding !== campaignScopeFingerprint(campaign)) {
+        failures.set(campaign.id, "BOOTSTRAP_RENEWAL_AUTHORIZATION_BINDING_BLOCKED");
+        continue;
+      }
 
       const target = (snapshot.targets || []).find((item) => item.id === policy.targetId);
       const account = target && (snapshot.executionAccounts || [])
@@ -4573,6 +4581,14 @@ export class SeedingService {
         target.status === "active" && account.status === "enabled" && account.health === "healthy";
       if (!exactBinding) {
         failures.set(campaign.id, "BOOTSTRAP_RENEWAL_BINDING_BLOCKED");
+        continue;
+      }
+      const previousDestination = (previousAuthorization.destinations || []).filter((destination) =>
+        destination.platform === policy.platform && destination.targetId === policy.targetId &&
+        destination.targetUrl === policy.targetUrl && destination.accountId === policy.accountId &&
+        destination.profileId === policy.profileId);
+      if (previousDestination.length !== 1 || (previousAuthorization.destinations || []).length !== 1) {
+        failures.set(campaign.id, "BOOTSTRAP_RENEWAL_AUTHORIZATION_DESTINATION_BLOCKED");
         continue;
       }
 

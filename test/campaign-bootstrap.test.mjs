@@ -266,7 +266,7 @@ test("scheduler renews persisted bootstrap policy without a per-post brief", asy
     const expiredSchedule = deriveBootstrapSchedule({ now: new Date(now.getTime() - 25 * 60 * 60_000), validityHours: 24, timezone: "UTC", quota: 1, concurrency: 1 });
     campaign.autonomousBootstrap.schedule = expiredSchedule;
     const authorization = state.campaignAuthorizations.find((item) => item.id === first.authorizationId);
-    authorization.validUntil = expiredSchedule.validUntil;
+    authorization.status = "expired";
     const post = state.posts.find((item) => item.id === first.postId);
     post.status = "blocked";
     post.executionState = null;
@@ -299,7 +299,7 @@ test("scheduler renews persisted bootstrap policy without a per-post brief", asy
   assert.equal(after.liveExecutionGrants.filter((item) => item.jobId === post.id).length, 1);
   const historical = after.campaignAuthorizations.find((item) => item.id === oldAuthorization.id);
   assert.equal(historical.status, "expired");
-  assert.ok(Date.parse(historical.validUntil) < Date.now());
+  assert.equal(historical.validUntil, oldAuthorization.validUntil);
 
   const counts = {
     authorizations: after.campaignAuthorizations.length,
@@ -329,7 +329,7 @@ test("scheduler fails closed when persisted bootstrap account or target binding 
       const expiredSchedule = deriveBootstrapSchedule({ now: new Date(now.getTime() - 25 * 60 * 60_000), validityHours: 24, timezone: "UTC", quota: 1, concurrency: 1 });
       campaign.autonomousBootstrap.schedule = expiredSchedule;
       const authorization = state.campaignAuthorizations.find((item) => item.id === first.authorizationId);
-      authorization.validUntil = expiredSchedule.validUntil;
+      authorization.status = "expired";
       if (mode === "account") {
         state.executionAccounts.find((item) => item.accountId === authorization.destinations[0].accountId).health = "quarantined";
       } else {
@@ -356,7 +356,7 @@ test("scheduler does not renew persisted bootstrap policy across an immutable UN
     const expiredSchedule = deriveBootstrapSchedule({ now: new Date(now.getTime() - 25 * 60 * 60_000), validityHours: 24, timezone: "UTC", quota: 1, concurrency: 1 });
     campaign.autonomousBootstrap.schedule = expiredSchedule;
     const authorization = state.campaignAuthorizations.find((item) => item.id === first.authorizationId);
-    authorization.validUntil = expiredSchedule.validUntil;
+    authorization.status = "expired";
     const post = state.posts.find((item) => item.id === first.postId);
     post.status = "submit_result_unknown";
     post.executionState = "SUBMIT_RESULT_UNKNOWN";
