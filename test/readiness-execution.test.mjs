@@ -1041,6 +1041,40 @@ test("LinkedIn readiness verifies composer close with a bounded feed-state wait"
   assert.equal(closeChecks, 2);
 });
 
+test("LinkedIn readiness closes the empty dialog composer when LinkedIn keeps it on /feed", async () => {
+  let phase = "feed";
+  let closeRouteAccepted = false;
+  const browser = {
+    async listProfiles() { return [{ id: "linkedin-profile-1" }]; },
+    async listTabs() { return [{ id: "page-1", profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }]; },
+    async showTab(id) { return { pageId: id, profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }; },
+    async evaluate(_id, expression) {
+      if (expression.includes("const expectedPath")) return {
+        linkedinDomain: true, loginRequired: false, securityChallenge: false,
+        sessionAuthenticated: true, identityVerified: true, feedReachable: true
+      };
+      if (expression.includes("candidates[0].click()")) { phase = "composer"; return { clicked: true }; }
+      if (expression.includes("const cancelButtons")) {
+        closeRouteAccepted = expression.includes("'/feed'");
+        phase = "feed";
+        return closeRouteAccepted ? { closed: true } : { closed: false, reason: "composer_identity_mismatch" };
+      }
+      return phase === "composer"
+        ? { linkedinDomain: true, route: false, routeCompatible: true, dialogCount: 1, editorCount: 1, audience: true, postButton: true, mediaControl: true, closeControl: true, advertisingControls: 0, confirmed: true }
+        : { linkedinDomain: true, route: false, routeCompatible: false, dialogCount: 0, editorCount: 0, audience: false, postButton: false, mediaControl: false, closeControl: false, advertisingControls: 0, confirmed: false };
+    },
+    async snapshot() { return phase === "feed" ? '- button "Start a post" [ref=e10]' : '- textbox "Post editor" [ref=e11]'; },
+    async navigate() {},
+    async waitForFeed() {},
+    async pressEscape() { assert.fail("verified readiness cleanup should use the owned empty-composer control"); }
+  };
+  const result = await new LinkedInReadinessProvider(browser).checkReadiness({
+    platform: "linkedin", profileId: "linkedin-profile-1", expectedIdentityUrl: "https://www.linkedin.com/in/test-owner"
+  });
+  assert.equal(result.state, "READY");
+  assert.equal(closeRouteAccepted, true);
+});
+
 test("LinkedIn readiness recovers once from the explicit composer load error and rechecks identity", async () => {
   let phase = "feed";
   let activations = 0;

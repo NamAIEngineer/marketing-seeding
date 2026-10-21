@@ -145,7 +145,12 @@ const CLOSE_EMPTY_COMPOSER_EXPRESSION = `(() => {
   const host = location.hostname.toLowerCase().replace(/^www\\./, '');
   const path = location.pathname.replace(/\\/$/, '').toLowerCase() || '/';
   const dialogs = Array.from(document.querySelectorAll('dialog,[role="dialog"]')).filter(visible);
-  if (host !== 'linkedin.com' || path !== '/sharing/compose' || dialogs.length !== 1) return { closed: false, reason: 'composer_identity_mismatch' };
+  // LinkedIn currently mounts the share composer as a dialog over /feed/
+  // instead of navigating to /sharing/compose. Both routes are valid only
+  // when the strict dialog/editor/media/close checks below prove ownership of
+  // the empty composer. Keep the route allowlist narrow so an unrelated
+  // dialog can never be treated as readiness cleanup.
+  if (host !== 'linkedin.com' || !(['/sharing/compose', '/feed'].includes(path)) || dialogs.length !== 1) return { closed: false, reason: 'composer_identity_mismatch' };
   const dialog = dialogs[0];
   const editors = Array.from(dialog.querySelectorAll('[contenteditable="true"],[role="textbox"]')).filter(visible);
   if (editors.length !== 1 || editors.some((node) => String(node.innerText || node.textContent || '').trim())) return { closed: false, reason: 'composer_has_content' };
