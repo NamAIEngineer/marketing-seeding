@@ -4526,12 +4526,165 @@ export class SeedingService {
     return decisions;
   }
 
+  /**
+   * Re-derive one bounded standing campaign authority from the high-level
+   * bootstrap policy that is already persisted on the campaign.  This is the
+   * scheduler bridge for zero-touch operation: it reuses the existing
+   * bootstrap path and never reconstructs payload bytes, hashes, grants or
+   * leases in a second code path.
+   *
+   * Only an expired standing authorization may be renewed.  Paused, revoked,
+   * superseded and otherwise operator-terminal authorities remain terminal.
+   * Any post that crossed the submit/publication boundary (including UNKNOWN)
+   * is a hard safety fence for the exact current story identity.
+   */
+  async #renewPersistedBootstrapCampaigns(actor = "campaign-queue-scheduler") {
+    const snapshot = await this.store.read();
+    const failures = new Map();
+    for (const campaign of snapshot.campaigns || []) {
+      const policy = campaign.autonomousBootstrap;
+      if (campaign.status !== "active" || !policy || policy.schemaVersion !== 1) continue;
+      if (snapshot.control?.killSwitch?.active === true) {
+        failures.set(campaign.id, "BOOTSTRAP_RENEWAL_KILL_SWITCH_ACTIVE");
+        continue;
+      }
+      const authorizations = (snapshot.campaignAuthorizations || [])
+        .filter((item) => item.campaignId === campaign.id &&
+          item.standingAuthorizationReference === policy.authorizationReference)
+        .sort((left, right) => String(right.updatedAt || right.approvedAt || right.createdAt || "")
+          .localeCompare(String(left.updatedAt || left.approvedAt || left.createdAt || "")));
+      if (!authorizations.length || authorizations.some((item) => item.status === "active")) continue;
+      // A standing campaign may renew only the normal expiry path.  An
+      // operator pause/revoke/supersede is an explicit stop signal and must
+      // never be silently converted back into live authority.
+      if (authorizations[0].status !== "expired") continue;
+
+      const target = (snapshot.targets || []).find((item) => item.id === policy.targetId);
+      const account = target && (snapshot.executionAccounts || [])
+        .find((item) => item.id === executionAccountKey(target.channel, target.accountId));
+      const exactBinding = target && account &&
+        target.channel === policy.platform &&
+        target.url === policy.targetUrl &&
+        target.accountId === policy.accountId &&
+        target.profileId === policy.profileId &&
+        account.platform === policy.platform &&
+        account.accountId === policy.accountId &&
+        account.profileId === policy.profileId &&
+        target.status === "active" && account.status === "enabled" && account.health === "healthy";
+      if (!exactBinding) {
+        failures.set(campaign.id, "BOOTSTRAP_RENEWAL_BINDING_BLOCKED");
+        continue;
+      }
+
+      const latestStory = (snapshot.stories || [])
+        .filter((item) => item.campaignId === campaign.id)
+        .sort((left, right) => String(right.updatedAt || right.createdAt || "")
+          .localeCompare(String(left.updatedAt || left.createdAt || "")))[0] || null;
+      const schedule = policy.schedule;
+      const from = Date.parse(schedule?.validFrom || "");
+      const until = Date.parse(schedule?.validUntil || "");
+      let canonicalSchedule;
+      try {
+        canonicalSchedule = deriveBootstrapSchedule({
+          now: new Date(),
+          validFrom: schedule?.validFrom,
+          validUntil: schedule?.validUntil,
+          timezone: schedule?.timezone,
+          quota: schedule?.quota,
+          concurrency: schedule?.concurrency
+        });
+      } catch {
+        canonicalSchedule = null;
+      }
+      const scheduleShapeValid = canonicalSchedule &&
+        schedule.cadence === "single" &&
+        JSON.stringify(schedule.weekdays || []) === JSON.stringify(canonicalSchedule.weekdays) &&
+        schedule.startLocal === canonicalSchedule.startLocal &&
+        schedule.endLocal === canonicalSchedule.endLocal &&
+        schedule.nextExecutionAt === canonicalSchedule.nextExecutionAt &&
+        schedule.identity === canonicalSchedule.identity;
+      const validityHours = (Number.isFinite(from) && Number.isFinite(until) && until > from)
+        ? (until - from) / (60 * 60 * 1000)
+        : null;
+      if (!scheduleShapeValid || !Number.isFinite(validityHours) || validityHours <= 0 || validityHours > 24 * 90) {
+        failures.set(campaign.id, "BOOTSTRAP_RENEWAL_POLICY_INCOMPLETE");
+        continue;
+      }
+
+      // Resolve the exact current content identity when the product handoff
+      // is available.  This lets a changed high-level story policy proceed
+      // while still fencing the exact content identity of an UNKNOWN attempt.
+      let currentContentIdentities = new Set();
+      try {
+        const candidates = deriveContentCandidates({
+          productIntelligence: campaign.productIntelligence,
+          story: latestStory,
+          targets: [target]
+        });
+        currentContentIdentities = new Set(candidates.map((item) => item.contentIdentity));
+      } catch {
+        currentContentIdentities = new Set((campaign.contentCandidates || [])
+          .filter((item) => (!latestStory || item.storyId === latestStory.id) && item.targetId === target.id)
+          .map((item) => item.contentIdentity));
+      }
+      const matchingPosts = (snapshot.posts || []).filter((post) =>
+        post.campaignId === campaign.id && post.targetId === target.id &&
+        (currentContentIdentities.size === 0 || currentContentIdentities.has(post.contentIdentity)));
+      const unsafePost = matchingPosts.find((post) => {
+        if (unresolvedSubmission(snapshot, post)) return true;
+        if (["publishing", "processing", UNKNOWN_POST_STATUS, "published"].includes(post.status)) return true;
+        if ((snapshot.executionRequests || []).some((item) => item.jobId === post.id && (
+          ["SUBMIT_SENT_INTENT", "SUBMIT_SENT", "SUBMIT_RESULT_UNKNOWN", "CONFIRMED"].includes(item.state) ||
+          ["SUBMIT_SENT", "UNKNOWN", "CONFIRMED"].includes(item.submitState)
+        ))) return true;
+        if ((snapshot.executionReceipts || []).some((item) => item.jobId === post.id &&
+          ["SUBMIT_SENT", "UNKNOWN", "CONFIRMED"].includes(item.receipt?.submitState))) return true;
+        return (snapshot.publicationAttempts || []).some((item) => item.postId === post.id);
+      });
+      if (unsafePost) {
+        failures.set(campaign.id, "BOOTSTRAP_RENEWAL_SUBMISSION_UNCERTAIN");
+        continue;
+      }
+
+      const brief = {
+        productRepo: campaign.productRepo,
+        name: campaign.name,
+        objective: campaign.objective,
+        audience: campaign.audience,
+        platform: policy.platform,
+        authorizationReference: policy.authorizationReference,
+        targetId: policy.targetId,
+        targetUrl: policy.targetUrl,
+        accountId: policy.accountId,
+        profileId: policy.profileId,
+        visibility: policy.visibility,
+        timezone: schedule.timezone,
+        validityHours,
+        quota: schedule.quota,
+        concurrency: schedule.concurrency,
+        ...(latestStory?.callToAction ? { callToAction: latestStory.callToAction } : {}),
+        ...(latestStory?.disclosure ? { disclosure: latestStory.disclosure } : {}),
+        ...(latestStory?.language ? { language: latestStory.language } : {})
+      };
+      try {
+        const result = await this.bootstrapAutonomousCampaign(brief, actor);
+        if (result.status !== "READY_FOR_AUTONOMOUS_EXECUTION") {
+          failures.set(campaign.id, String(result.blockers?.[0]?.code || result.code || "BOOTSTRAP_RENEWAL_BLOCKED"));
+        }
+      } catch (error) {
+        failures.set(campaign.id, boundedQueueFailureReason(error));
+      }
+    }
+    return failures;
+  }
+
   async queueDueCampaignJobs(actor = "scheduler") {
     await this.expireLiveExecutionGrants(actor);
     await this.expireOneTimeExecutionWindows(actor);
     await this.expireCampaignAuthorizations(actor);
+    const renewalFailures = await this.#renewPersistedBootstrapCampaigns(actor);
     const candidateSnapshot = await this.store.read();
-    const candidateFailures = new Map();
+    const candidateFailures = new Map(renewalFailures);
     for (const campaign of candidateSnapshot.campaigns || []) {
       const activeAuthorizations = (candidateSnapshot.campaignAuthorizations || [])
         .filter((authorization) => authorization.campaignId === campaign.id && authorization.status === "active");
