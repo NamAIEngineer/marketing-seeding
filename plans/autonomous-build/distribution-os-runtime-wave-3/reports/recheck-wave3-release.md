@@ -26,7 +26,8 @@ Full-suite skipped tests are ACL/environment checks: `runtime token ACL excludes
 
 ## RC/runtime observations
 
-- Branch: `wave/distribution-os-runtime-rc`; final reviewed HEAD: `0d6fb02`.
+- Branch: `wave/distribution-os-runtime-rc`; final reviewed implementation:
+  `0d6fb02`; latest clean documentation commit: `631674e`.
 - Current controller diff modifies 9 tracked source/test files covering browser transport, GPM probe/transport, runtime projection, server wiring, and tests. No source edits were made by verifier.
 - ORCA read-only executable probe → `1.4.237`.
 - ORCA read-only `status --json` exit 0: app running (`pid=509`), runtime `state=ready`, `reachable=true`, `connectionState=connected`, `appVersion=1.4.237`, graph `ready`.

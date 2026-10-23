@@ -21,7 +21,9 @@ The RC now adds a bounded runtime-observability slice for the product-level dist
 - Worktree: `/Users/nam/Documents/marketing-seeding-wave-rc`
 - Branch: `wave/distribution-os-runtime-rc`
 - Base RC before Wave 3: `9f002c3`
-- Final reviewable RC commit: `0d6fb02` (`feat: observe provider runtime readiness safely`)
+- Final implementation commit: `0d6fb02` (`feat: observe provider runtime readiness safely`).
+- Latest clean RC commit: `631674e` (`docs: record camoufox protocol boundary`),
+  which adds the Wave 4 feasibility report only.
 - Final RC worktree is clean after the bounded commit.
 - Main remains `98a499e`; integration remains `6899679`; neither was changed or merged.
 
