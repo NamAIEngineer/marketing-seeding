@@ -8,7 +8,10 @@ export const WORKLOAD_TRANSPORT_POLICY = Object.freeze({
   PRODUCT_WEB_DEMO: "camoufox",
   SCREENSHOT_CAPTURE: "camoufox",
   INDEPENDENT_PUBLICATION_VERIFY: "camoufox",
-  HOST_SESSION_SPECIAL_CASE: "orca"
+  // Accessibility is the deterministic host-session default. Pointer remains
+  // registered as an explicit fallback/certification candidate; it is never
+  // selected by array order.
+  HOST_SESSION_SPECIAL_CASE: "orca-accessibility"
 });
 
 function routeError(code, message, details = {}) {
@@ -38,7 +41,8 @@ export class BrowserRuntimeRouter {
   }
 
   candidatesFor(key) {
-    return this.transports.filter((transport) => routeKey(transport) === key);
+    const exact = this.transports.filter((transport) => String(identity(transport).transport || "").toLowerCase() === String(key).toLowerCase());
+    return exact.length ? exact : this.transports.filter((transport) => routeKey(transport) === key);
   }
 
   select({ workload, intentPersisted = false, selectedTransport = null } = {}) {

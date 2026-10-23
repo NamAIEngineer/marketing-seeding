@@ -55,5 +55,14 @@ test("route decision is bound before irreversible intent and cannot silently swi
 test("policy remains explicit and provider-neutral", () => {
   assert.equal(WORKLOAD_TRANSPORT_POLICY.AUTHENTICATED_SOCIAL_EXECUTION, "gpm");
   assert.equal(WORKLOAD_TRANSPORT_POLICY.INDEPENDENT_PUBLICATION_VERIFY, "camoufox");
+  assert.equal(WORKLOAD_TRANSPORT_POLICY.HOST_SESSION_SPECIAL_CASE, "orca-accessibility");
+});
+
+test("host-session route chooses its explicit ORCA accessibility policy", () => {
+  const accessibility = { runtimeIdentity: () => ({ transport: "orca-accessibility", provider: "orca", providerVersion: "1" }) };
+  const pointer = { runtimeIdentity: () => ({ transport: "orca-pointer", provider: "orca", providerVersion: "1" }) };
+  const selected = new BrowserRuntimeRouter({ transports: [pointer, accessibility] }).select({ workload: "HOST_SESSION_SPECIAL_CASE" });
+  assert.equal(selected.transport, accessibility);
+  assert.equal(selected.route, "orca-accessibility");
 });
 

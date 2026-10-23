@@ -33,6 +33,7 @@ import { projectChannelCapabilities } from "./channel-capability-projection.mjs"
 import { projectProductIntelligence } from "./product-intelligence-projection.mjs";
 import { appRoot } from "./paths.mjs";
 import { canonicalAudienceSerialization, deriveBootstrapAuthorizationId, deriveBootstrapIdentity, deriveBootstrapSchedule, normalizeBootstrapAudience, normalizeBootstrapProductKeys } from "./campaign-bootstrap.mjs";
+import { projectBrowserRuntime } from "./runtime-projection.mjs";
 
 export async function pollConfiguredDiscoveries(service, { actor = "scheduled-discovery-observer", shuttingDown = false } = {}) {
   const state = await service.snapshot();
@@ -1852,6 +1853,7 @@ export class SeedingService {
     this.productFactorySandboxProbeTtlMs = Math.min(60_000, Math.max(1_000, Number(options.productFactorySandboxProbeTtlMs) || 15_000));
     this.productFactorySandboxProbeCache = null;
     this.productFactoryUseSeatbelt = options.productFactoryUseSeatbelt === true;
+    this.browserRuntimeRouter = options.browserRuntimeRouter || null;
     const explicitProductRoots = options.productRepoRoots !== undefined || Boolean(String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").trim());
     this.productRepoRoots = (options.productRepoRoots || String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").split(path.delimiter))
       .map((value) => String(value || "").trim())
@@ -6757,6 +6759,7 @@ export class SeedingService {
     const conversationContinuity = projectConversationContinuity(state, { now: new Date() });
     const executionRuntime = projectExecutionRuntime(state);
     const productFactorySandbox = await this.productFactorySandboxCapability();
+    const browserRuntime = await projectBrowserRuntime(this.browserRuntimeRouter);
     const latestMetrics = new Map();
     for (const metric of state.metricSnapshots) {
       const current = latestMetrics.get(metric.postId);
@@ -6843,6 +6846,7 @@ export class SeedingService {
       conversationContinuity,
       executionRuntime,
       productFactorySandbox,
+      browserRuntime,
       communityMemberships: state.communityMemberships,
       statuses,
       totals,

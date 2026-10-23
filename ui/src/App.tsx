@@ -1156,6 +1156,10 @@ function MissionControlPanel({ data }: { data: R }) {
   const factorySandbox = data?.productFactorySandbox && typeof data.productFactorySandbox === "object"
     ? data.productFactorySandbox
     : null
+  const browserRuntime = data?.browserRuntime && typeof data.browserRuntime === "object"
+    ? data.browserRuntime
+    : null
+  const browserRuntimeRows = Array.isArray(browserRuntime?.routes) ? browserRuntime.routes.slice(0, 12) : []
   const unsupportedClaimCount = productIntelligence.reduce((total: number, item: R) => {
     const document = item?.document && typeof item.document === "object" ? item.document : {}
     return total + (Array.isArray(document.CLAIMS_WE_CANNOT_MAKE) ? document.CLAIMS_WE_CANNOT_MAKE.length : 0)
@@ -1314,6 +1318,34 @@ function MissionControlPanel({ data }: { data: R }) {
           </div>
         ) : (
           <div className="empty-state">Chưa có account runtime projection.</div>
+        )}
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head">
+          <div>
+            <span className="mission-eyebrow">Browser runtime routing</span>
+            <small>Read-only route/health projection · hệ thống tự chọn transport theo workload</small>
+          </div>
+          <span className="status">{browserRuntimeRows.length ? `${browserRuntimeRows.length} workload` : "UNKNOWN"}</span>
+        </div>
+        {browserRuntimeRows.length ? (
+          <div className="mission-account-list">
+            {browserRuntimeRows.map((row: R) => (
+              <article key={String(row.workload)}>
+                <div className="mission-account-title">
+                  <strong>{compactText(row.workload, "UNKNOWN", 80)}</strong>
+                  <span className={row.health?.state === "READY" ? "status completed" : "status draft"}>
+                    {compactText(row.health?.state, "UNKNOWN", 24)}
+                  </span>
+                </div>
+                <small>Route: {compactText(row.route, "UNKNOWN", 40)} · transport: {compactText(row.transportId, "UNKNOWN", 80)}</small>
+                <small>Runtime: {compactText(row.runtimeIdentity?.provider, "UNKNOWN", 60)} {compactText(row.runtimeIdentity?.providerVersion, "", 40)}</small>
+                <small>Reason: {compactText(row.health?.reason || row.reason, "UNKNOWN", 120)}</small>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">Chưa có browser runtime projection.</div>
         )}
       </div>
       <div className="mission-advisory-runtime">

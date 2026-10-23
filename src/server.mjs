@@ -16,6 +16,7 @@ import { JevExecutionWorker } from "./jev-execution-worker.mjs";
 import { PlatformAdapterRegistry, ReadinessProviderRegistry } from "./platform-registries.mjs";
 import { isAuthorizedLocalShutdown, runtimeMetadata } from "./service-lifecycle.mjs";
 import { consumeSystemAgenticHandoff } from "./system-agentic-handoff-bridge.mjs";
+import { createDefaultBrowserRuntimeRouter } from "./browser-runtime-router.mjs";
 
 async function loadLocalEnv() {
   try {
@@ -83,7 +84,8 @@ const readinessProviderRegistry = new ReadinessProviderRegistry();
 readinessProviderRegistry.register("linkedin", new LinkedInReadinessProvider(orcaBrowser, { ttlMs: readinessTtlMs }));
 const service = new SeedingService(store, {
   readinessTtlMs,
-  readinessProviderRegistry
+  readinessProviderRegistry,
+  browserRuntimeRouter: createDefaultBrowserRuntimeRouter({ orcaBrowser })
 });
 const platformAdapterRegistry = new PlatformAdapterRegistry();
 // The production lane is fail-closed until an explicit, platform/runtime
