@@ -12,13 +12,28 @@ function bounded(value, limit = 240) {
   return value === undefined || value === null ? null : String(value).slice(0, limit);
 }
 
+function safeEndpoint(value) {
+  if (!value) return null;
+  try {
+    const url = new URL(String(value));
+    url.username = "";
+    url.password = "";
+    for (const key of [...url.searchParams.keys()]) {
+      if (/(token|secret|key|auth|password|cookie|credential)/i.test(key)) url.searchParams.set(key, "[REDACTED]");
+    }
+    return bounded(url.toString());
+  } catch {
+    return bounded(String(value).replace(/(token|secret|key|auth|password|cookie|credential)=([^&\s]+)/ig, "$1=[REDACTED]"));
+  }
+}
+
 function safeIdentity(value) {
   if (!value || typeof value !== "object") return null;
   return {
     transport: bounded(value.transport, 80),
     provider: bounded(value.provider, 80),
     providerVersion: bounded(value.providerVersion, 80),
-    endpoint: value.endpoint ? bounded(value.endpoint, 240) : null,
+    endpoint: value.endpoint ? safeEndpoint(value.endpoint) : null,
     executable: value.executable ? bounded(value.executable, 240) : null,
     profileReference: value.profileReference ? bounded(value.profileReference, 160) : null,
     sessionReference: value.sessionReference ? bounded(value.sessionReference, 160) : null

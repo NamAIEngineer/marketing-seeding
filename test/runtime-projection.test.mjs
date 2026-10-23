@@ -8,11 +8,12 @@ import { JsonStore } from "../src/store.mjs";
 import { SeedingService } from "../src/service.mjs";
 
 test("runtime projection is deterministic, read-only and bounded", async () => {
-  const router = { async selectWithHealth({ workload }) { return { route: "gpm", transportId: "gpm-chrome", runtimeIdentity: { transport: "gpm-chrome", provider: "gpm", providerVersion: "5", endpoint: "http://127.0.0.1:1", secret: "drop" }, health: { state: "UNKNOWN", reason: "PROBE_NOT_CONFIGURED" }, reason: `${workload} route` }; } };
+  const router = { async selectWithHealth({ workload }) { return { route: "gpm", transportId: "gpm-chrome", runtimeIdentity: { transport: "gpm-chrome", provider: "gpm", providerVersion: "5", endpoint: "http://127.0.0.1:1/?token=raw", secret: "drop" }, health: { state: "UNKNOWN", reason: "PROBE_NOT_CONFIGURED" }, reason: `${workload} route` }; } };
   const projection = await projectBrowserRuntime(router, { workloads: ["PUBLIC_DISCOVERY", "AUTHENTICATED_SOCIAL_EXECUTION"] });
   assert.equal(projection.readOnly, true);
   assert.deepEqual(projection.routes.map((row) => row.workload), ["AUTHENTICATED_SOCIAL_EXECUTION", "PUBLIC_DISCOVERY"]);
   assert.equal(projection.routes[0].runtimeIdentity.secret, undefined);
+  assert.equal(projection.routes[0].runtimeIdentity.endpoint, "http://127.0.0.1:1/?token=%5BREDACTED%5D");
   assert.equal(projection.routes[0].health.state, "UNKNOWN");
 });
 

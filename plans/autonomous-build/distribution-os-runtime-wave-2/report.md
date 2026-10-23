@@ -45,7 +45,8 @@ account switching or Post controls.
 - `node --check src/*.mjs`: PASS.
 - `git diff --check`: PASS.
 - Runtime projection tests prove missing/ambiguous routes remain unavailable and
-  do not silently fall back.
+  do not silently fall back; endpoint credentials are redacted at the projection
+  boundary.
 - No raw credential/session values are returned by the new probes/projections.
 
 ## Current product classification
