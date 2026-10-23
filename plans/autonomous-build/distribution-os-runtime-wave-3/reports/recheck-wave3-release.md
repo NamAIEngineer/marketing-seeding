@@ -9,7 +9,10 @@
 
 - UI build/typecheck remains **NOT VERIFIED**: `npm --prefix ui run build` exits 127 (`vite: command not found`; UI dependencies absent).
 - Real GPM profile listing/start/CDP/session health and Camoufox executable/profile operation remain **UNKNOWN**. Root API probing is read-only and tested with fixtures; no profile or social account was started or mutated.
-- RC worktree remains dirty with controller changes; verifier made no source edits.
+- The verifier observed the controller worktree dirty while the final source diff
+  was under review; the controller then committed the exact reviewed snapshot as
+  `0d6fb02`. No source content changed during that commit and the final RC
+  worktree is clean.
 
 ## Fresh gate evidence
 
@@ -23,7 +26,7 @@ Full-suite skipped tests are ACL/environment checks: `runtime token ACL excludes
 
 ## RC/runtime observations
 
-- Branch: `wave/distribution-os-runtime-rc`; `HEAD` and pin: `9f002c3d53701d10568b86f7ad6fc1412ae0f9e4`.
+- Branch: `wave/distribution-os-runtime-rc`; final reviewed HEAD: `0d6fb02`.
 - Current controller diff modifies 9 tracked source/test files covering browser transport, GPM probe/transport, runtime projection, server wiring, and tests. No source edits were made by verifier.
 - ORCA read-only executable probe → `1.4.237`.
 - ORCA read-only `status --json` exit 0: app running (`pid=509`), runtime `state=ready`, `reachable=true`, `connectionState=connected`, `appVersion=1.4.237`, graph `ready`.
@@ -54,10 +57,10 @@ No state write, retry, reconciliation, deletion, or ID mutation occurred.
 
 ## Required completion fields
 
-- **Outcome:** Final independent recheck passes requested Node/runtime/GPM/router/ORCA/authority/safety gates for the final bounded change.
+- **Outcome:** Final independent recheck passes requested Node/runtime/GPM/router/ORCA/authority/safety gates for the final bounded change; the exact reviewed snapshot is committed as `0d6fb02`.
 - **Files changed:** only `plans/autonomous-build/distribution-os-runtime-wave-3/reports/recheck-wave3-release.md`.
 - **Tests:** full **616 total / 614 pass / 0 fail / 2 skipped**; focused **81 total / 81 pass / 0 fail / 0 skipped**.
-- **Limitations:** UI `vite` unavailable; real GPM profile/Camoufox capability and live publication remain unverified; RC worktree contains controller changes.
+- **Limitations:** UI `vite` unavailable; real GPM profile/Camoufox capability and live publication remain unverified. The reviewed RC snapshot is committed and clean.
 - **Next step:** human release review/approval; local gates do not prove live publication.
 
 **Status: DONE_WITH_CONCERNS**
