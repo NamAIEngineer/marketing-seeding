@@ -49,13 +49,22 @@ export class GpmBrowserSession {
     const client = result?.client || result?.transportClient;
     if (!client || typeof client !== "object") throw fail("GPM_CLIENT_MISSING", "attached GPM client is missing");
     const base = new GpmChromeTransport({ client, providerVersion: result?.providerVersion || null });
-    const transport = Object.create(base);
-    Object.defineProperties(transport, {
-      runtimeIdentity: { value: () => Object.freeze({ transport: "gpm-chrome", provider: "gpm", providerVersion: base.providerVersion, attached: true }) },
-      profileIdentity: { value: () => Object.freeze({ bound: true }) },
-      sessionIdentity: { value: () => Object.freeze({ state: "ATTACHED", identityVerified: true }) },
-      health: { value: (...args) => base.health(...args) }
-    });
+    const runtimeIdentity = () => Object.freeze({ transport: "gpm-chrome", provider: "gpm", providerVersion: base.providerVersion, attached: true });
+    const transport = {
+      runtimeIdentity,
+      profileIdentity: () => Object.freeze({ bound: true }),
+      sessionIdentity: () => Object.freeze({ state: "ATTACHED", identityVerified: true }),
+      health: (...args) => base.health(...args),
+      navigate: (...args) => base.navigate(...args),
+      snapshot: (...args) => base.snapshot(...args),
+      findControl: (...args) => base.findControl(...args),
+      type: (...args) => base.type(...args),
+      click: (...args) => base.click(...args),
+      screenshot: (...args) => base.screenshot(...args),
+      observeTransition: (...args) => base.observeTransition(...args),
+      verifyActivation: (...args) => base.verifyActivation(...args),
+      closeOwnedResources: (...args) => base.closeOwnedResources(...args)
+    };
     Object.freeze(transport);
     this.#attached = Object.freeze({ status: "ATTACHED", transport, runtimeIdentity: transport.runtimeIdentity(), capabilities: Object.freeze(["health", "runtimeIdentity", "profileIdentity", "sessionIdentity", "navigate", "snapshot", "findControl", "type", "click", "screenshot", "observeTransition", "verifyActivation", "closeOwnedResources"]) });
     return this.#attached;

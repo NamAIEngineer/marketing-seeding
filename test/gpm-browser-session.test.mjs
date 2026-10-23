@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { GpmBrowserSession } from "../src/gpm-browser-session.mjs";
 
 const selection = { platform: "linkedin", accountId: "acct-a", profileReference: "profile-a" };
-const client = { async navigate() { return { status: "COMMAND_COMPLETED" }; }, async snapshot() { return {}; }, async closeOwnedResources() {} };
+const client = { async navigate() { return { status: "COMMAND_COMPLETED" }; }, async snapshot() { return {}; }, async closeOwnedResources() {}, secret: "raw-secret" };
 
 test("construction is inert and attach exposes bounded transport", async () => {
   let calls = 0;
@@ -16,6 +16,12 @@ test("construction is inert and attach exposes bounded transport", async () => {
   assert.equal("accountId" in attached.runtimeIdentity, false);
   assert.equal("profileReference" in attached.runtimeIdentity, false);
   assert.equal(typeof attached.transport.navigate, "function");
+  assert.deepEqual(await attached.transport.navigate("/bounded"), { status: "COMMAND_COMPLETED" });
+  const serialized = JSON.stringify(attached);
+  assert.equal(serialized.includes("profileReference"), false);
+  assert.equal(serialized.includes("profile-a"), false);
+  assert.equal(serialized.includes("raw-secret"), false);
+  assert.equal(serialized.includes("client"), false);
 });
 
 test("missing, mismatched, challenge, and unknown identities fail closed", async (t) => {
