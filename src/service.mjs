@@ -6763,8 +6763,16 @@ export class SeedingService {
     const executionRuntime = projectExecutionRuntime(state);
     const productFactorySandbox = await this.productFactorySandboxCapability();
     const browserRuntime = await projectBrowserRuntime(this.browserRuntimeRouter);
+    let gpmCatalogObservation = this.gpmAccountCatalogObservation;
+    if (typeof gpmCatalogObservation === "function") {
+      try {
+        gpmCatalogObservation = await gpmCatalogObservation();
+      } catch (error) {
+        gpmCatalogObservation = { state: "UNKNOWN", code: String(error?.code || "GPM_CATALOG_OBSERVATION_FAILED").slice(0, 120), profiles: [] };
+      }
+    }
     const gpmAccountCatalog = projectGpmAccountCatalog(
-      this.gpmAccountCatalogObservation,
+      gpmCatalogObservation,
       state.executionAccounts,
       { now: new Date() }
     );

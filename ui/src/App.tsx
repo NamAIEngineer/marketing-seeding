@@ -1160,6 +1160,9 @@ function MissionControlPanel({ data }: { data: R }) {
     ? data.browserRuntime
     : null
   const browserRuntimeRows = Array.isArray(browserRuntime?.routes) ? browserRuntime.routes.slice(0, 12) : []
+  const gpmCatalog = data?.gpmAccountCatalog && typeof data.gpmAccountCatalog === "object" ? data.gpmAccountCatalog : null
+  const gpmProfiles = Array.isArray(gpmCatalog?.catalog?.profiles) ? gpmCatalog.catalog.profiles.slice(0, 12) : []
+  const gpmAccounts = Array.isArray(gpmCatalog?.accounts) ? gpmCatalog.accounts.slice(0, 12) : []
   const unsupportedClaimCount = productIntelligence.reduce((total: number, item: R) => {
     const document = item?.document && typeof item.document === "object" ? item.document : {}
     return total + (Array.isArray(document.CLAIMS_WE_CANNOT_MAKE) ? document.CLAIMS_WE_CANNOT_MAKE.length : 0)
@@ -1347,6 +1350,19 @@ function MissionControlPanel({ data }: { data: R }) {
         ) : (
           <div className="empty-state">Chưa có browser runtime projection.</div>
         )}
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head">
+          <div><span className="mission-eyebrow">GPM account catalog</span><small>Read-only probe · fingerprints only · không điều khiển profile</small></div>
+          <span className="status">{gpmCatalog?.catalog?.state || "UNKNOWN"}</span>
+        </div>
+        {gpmCatalog && (gpmProfiles.length || gpmAccounts.length) ? (
+          <div className="mission-account-list">
+            <article><div className="mission-account-title"><strong>Catalog state counts</strong><span className="status">{gpmCatalog.summary?.catalogProfiles ?? 0} profiles</span></div><small>Bound {gpmCatalog.summary?.boundProfiles ?? 0} · Unbound {gpmCatalog.summary?.unboundProfiles ?? 0} · Ambiguous {gpmCatalog.summary?.ambiguousProfiles ?? 0} · Missing {gpmCatalog.summary?.missingProfiles ?? 0}</small></article>
+            {gpmProfiles.map((row: R) => <article key={String(row.profileFingerprint)}><div className="mission-account-title"><strong>{compactText(row.name, "UNKNOWN", 60)}</strong><span className="status">{row.linkage?.status || "UNKNOWN"}</span></div><small>Profile fingerprint: {compactText(row.profileFingerprint, "UNKNOWN", 20)} · accounts {row.linkage?.accountCount ?? 0}</small></article>)}
+            {gpmAccounts.map((row: R) => <article key={`account-${String(row.profileFingerprint)}-${String(row.accountId)}`}><div className="mission-account-title"><strong>{compactText(row.platform, "UNKNOWN", 40)} account</strong><span className="status">{row.catalogLinkage || "UNKNOWN"}</span></div><small>Profile fingerprint: {compactText(row.profileFingerprint, "UNKNOWN", 20)}</small></article>)}
+          </div>
+        ) : <div className="empty-state">Catalog UNKNOWN hoặc chưa có GPM endpoint.</div>}
       </div>
       <div className="mission-advisory-runtime">
         <div className="mission-account-head">

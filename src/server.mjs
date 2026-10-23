@@ -95,7 +95,16 @@ const service = new SeedingService(store, {
       endpointCandidates: gpmProcessDiscovery.endpoints,
       probe: ({ runtime }) => probeGpmRuntime({ endpointCandidates: runtime.endpointCandidates, profileCatalogPath: "/api/v1/profiles" })
     }
-  })
+  }),
+  // Dashboard catalog observation is a bounded, read-only GET. It never
+  // starts/stops a profile and returns UNKNOWN when no listener is available.
+  gpmAccountCatalogObservation: async () => {
+    const observation = await probeGpmRuntime({
+      endpointCandidates: gpmProcessDiscovery.endpoints,
+      profileCatalogPath: "/api/v1/profiles"
+    });
+    return observation?.profileCatalog || { state: observation?.state === "UNAVAILABLE" ? "UNAVAILABLE" : "UNKNOWN", code: observation?.code || "GPM_CATALOG_UNKNOWN", profiles: [] };
+  }
 });
 const platformAdapterRegistry = new PlatformAdapterRegistry();
 // The production lane is fail-closed until an explicit, platform/runtime

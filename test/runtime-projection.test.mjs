@@ -76,3 +76,26 @@ test("service dashboard exposes injected GPM catalog as read-only projection", a
   assert.equal(unknown.gpmAccountCatalog.accounts.length, 0);
   assert.equal((await restarted.snapshot()).revision, before);
 });
+
+
+test("service dashboard resolves injected catalog provider and fails closed", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "gpm-catalog-provider-"));
+  let calls = 0;
+  const service = new SeedingService(new JsonStore(path.join(directory, "state.json")), {
+    gpmAccountCatalogObservation: async () => { calls += 1; return { state: "OBSERVED", profiles: [{ profileId: "raw-id", name: "Observed" }] }; }
+  });
+  await service.init();
+  const before = (await service.snapshot()).revision;
+  const dashboard = await service.dashboard();
+  assert.equal(calls, 1);
+  assert.equal(dashboard.gpmAccountCatalog.catalog.state, "OBSERVED");
+  assert.equal(JSON.stringify(dashboard).includes("raw-id"), false);
+  assert.equal((await service.snapshot()).revision, before);
+  const failed = new SeedingService(new JsonStore(path.join(directory, "failed.json")), {
+    gpmAccountCatalogObservation: async () => { throw Object.assign(new Error("offline"), { code: "OFFLINE" }); }
+  });
+  await failed.init();
+  const unknown = await failed.dashboard();
+  assert.equal(unknown.gpmAccountCatalog.catalog.state, "UNKNOWN");
+  assert.equal(unknown.gpmAccountCatalog.catalog.profiles.length, 0);
+});
