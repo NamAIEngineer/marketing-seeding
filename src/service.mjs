@@ -34,6 +34,7 @@ import { projectProductIntelligence } from "./product-intelligence-projection.mj
 import { appRoot } from "./paths.mjs";
 import { canonicalAudienceSerialization, deriveBootstrapAuthorizationId, deriveBootstrapIdentity, deriveBootstrapSchedule, normalizeBootstrapAudience, normalizeBootstrapProductKeys } from "./campaign-bootstrap.mjs";
 import { projectBrowserRuntime } from "./runtime-projection.mjs";
+import { projectGpmAccountCatalog } from "./gpm-account-catalog-projection.mjs";
 
 export async function pollConfiguredDiscoveries(service, { actor = "scheduled-discovery-observer", shuttingDown = false } = {}) {
   const state = await service.snapshot();
@@ -1854,6 +1855,8 @@ export class SeedingService {
     this.productFactorySandboxProbeCache = null;
     this.productFactoryUseSeatbelt = options.productFactoryUseSeatbelt === true;
     this.browserRuntimeRouter = options.browserRuntimeRouter || null;
+    // Optional read-only observation supplied by an adapter; never queried or persisted here.
+    this.gpmAccountCatalogObservation = options.gpmAccountCatalogObservation ?? null;
     const explicitProductRoots = options.productRepoRoots !== undefined || Boolean(String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").trim());
     this.productRepoRoots = (options.productRepoRoots || String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").split(path.delimiter))
       .map((value) => String(value || "").trim())
@@ -6760,6 +6763,11 @@ export class SeedingService {
     const executionRuntime = projectExecutionRuntime(state);
     const productFactorySandbox = await this.productFactorySandboxCapability();
     const browserRuntime = await projectBrowserRuntime(this.browserRuntimeRouter);
+    const gpmAccountCatalog = projectGpmAccountCatalog(
+      this.gpmAccountCatalogObservation,
+      state.executionAccounts,
+      { now: new Date() }
+    );
     const latestMetrics = new Map();
     for (const metric of state.metricSnapshots) {
       const current = latestMetrics.get(metric.postId);
@@ -6847,6 +6855,7 @@ export class SeedingService {
       executionRuntime,
       productFactorySandbox,
       browserRuntime,
+      gpmAccountCatalog,
       communityMemberships: state.communityMemberships,
       statuses,
       totals,

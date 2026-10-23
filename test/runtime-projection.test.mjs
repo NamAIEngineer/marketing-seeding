@@ -51,3 +51,28 @@ test("service dashboard exposes runtime projection without creating execution st
   assert.equal(dashboard.browserRuntime.routes[0].health.profileBindingRequired, false);
   assert.equal((await service.snapshot()).revision, before);
 });
+
+test("service dashboard exposes injected GPM catalog as read-only projection", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "gpm-catalog-dashboard-"));
+  const service = new SeedingService(new JsonStore(path.join(directory, "state.json")), {
+    gpmAccountCatalogObservation: {
+      state: "OBSERVED",
+      code: "GPM_PROFILE_CATALOG_OBSERVED",
+      profiles: [{ profileId: "profile-a", name: "Alpha", browser: { name: "Chrome", version: "1" }, secret: "drop" }]
+    }
+  });
+  await service.init();
+  const before = (await service.snapshot()).revision;
+  const dashboard = await service.dashboard();
+  assert.equal(dashboard.gpmAccountCatalog.readOnly, true);
+  assert.equal(dashboard.gpmAccountCatalog.catalog.state, "OBSERVED");
+  assert.equal(JSON.stringify(dashboard).includes("profile-a"), false);
+  assert.equal(JSON.stringify(dashboard).includes("drop"), false);
+  assert.equal((await service.snapshot()).revision, before);
+  const restarted = new SeedingService(new JsonStore(path.join(directory, "state.json")));
+  await restarted.init();
+  const unknown = await restarted.dashboard();
+  assert.equal(unknown.gpmAccountCatalog.catalog.state, "UNKNOWN");
+  assert.equal(unknown.gpmAccountCatalog.accounts.length, 0);
+  assert.equal((await restarted.snapshot()).revision, before);
+});
