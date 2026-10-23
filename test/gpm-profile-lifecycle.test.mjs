@@ -11,12 +11,19 @@ test("start uses exact encoded path and parses dynamic websocket endpoint", asyn
   assert.deepEqual(await lifecycle.start("a profile/✓"), { profileId: "a profile/✓", endpoint: "ws://127.0.0.1:9222/devtools/browser/abc" });
   assert.equal(calls.length, 1);
   assert.equal(calls[0].url, "http://127.0.0.1:18000/api/v1/profiles/start/a%20profile%2F%E2%9C%93");
-  assert.equal(calls[0].options.method, "POST");
+  assert.equal(calls[0].options.method, "GET");
 });
 
-test("start parses address and port with configurable API prefix", async () => {
-  const lifecycle = new GpmProfileLifecycle({ endpointCandidates: ["http://localhost:1", "http://localhost:2"], apiPrefix: "/v2", fetchImpl: async () => response({ data: { remote_debugging_address: "127.0.0.1", remote_debugging_port: 9333 } }) });
+test("start and stop use exact GET paths with configurable API prefixes", async () => {
+  const calls = [];
+  const lifecycle = new GpmProfileLifecycle({ endpointCandidates: ["http://localhost:1", "http://localhost:2"], apiPrefix: "/v2", fetchImpl: async (url, options) => { calls.push({ url, options }); return response({ data: { remote_debugging_address: "127.0.0.1", remote_debugging_port: 9333 } }); } });
   assert.deepEqual(await lifecycle.start("p"), { profileId: "p", endpoint: "http://127.0.0.1:9333" });
+  assert.equal(calls[0].url, "http://localhost:1/api/v2/profiles/start/p");
+  assert.equal(calls[0].options.method, "GET");
+  const apiLifecycle = new GpmProfileLifecycle({ endpoint: "http://localhost:1", apiPrefix: "/api/v1", fetchImpl: async (url, options) => { calls.push({ url, options }); return response({ success: true, data: true }); } });
+  await apiLifecycle.stop("p/q");
+  assert.equal(calls[1].url, "http://localhost:1/api/v1/profiles/stop/p%2Fq");
+  assert.equal(calls[1].options.method, "GET");
 });
 
 test("stop returns bounded acknowledgement", async () => {

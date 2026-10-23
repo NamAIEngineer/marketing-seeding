@@ -82,7 +82,8 @@ export class GpmProfileLifecycle {
   constructor({ endpoint, endpointCandidates, apiPrefix = "/v1", fetchImpl = globalThis.fetch, profileIdentity = null } = {}) {
     this.fetchImpl = fetchImpl;
     this.profileIdentity = boundedText(profileIdentity, 120);
-    this.apiPrefix = typeof apiPrefix === "string" && /^\/[A-Za-z0-9._~-]+$/.test(apiPrefix) ? apiPrefix : fail("CONFIG_INVALID", "apiPrefix must be a path segment");
+    if (typeof apiPrefix !== "string" || !/^\/(?:api\/)?[A-Za-z0-9._~-]+$/.test(apiPrefix)) fail("CONFIG_INVALID", "apiPrefix must be /v1 or /api/v1");
+    this.apiPrefix = apiPrefix.startsWith("/api/") ? apiPrefix : `/api${apiPrefix}`;
     const values = [endpoint, ...(Array.isArray(endpointCandidates) ? endpointCandidates : [])].map(normalizeBase).filter(Boolean);
     this.endpoints = [...new Set(values)];
     if (!this.endpoints.length) fail("CONFIG_INVALID", "at least one valid endpoint is required");
@@ -91,14 +92,14 @@ export class GpmProfileLifecycle {
 
   #url(action, profileId) {
     const encoded = encodeURIComponent(profileId);
-    return `${this.endpoints[0]}/api${this.apiPrefix}/profiles/${action}/${encoded}`;
+    return `${this.endpoints[0]}${this.apiPrefix}/profiles/${action}/${encoded}`;
   }
 
   async #request(action, profileId) {
     if (typeof profileId !== "string" || !profileId.trim()) fail("PROFILE_ID_REQUIRED", "profileId is required");
     const url = this.#url(action, profileId.trim());
     let response;
-    try { response = await this.fetchImpl(url, { method: "POST", headers: { accept: "application/json" } }); }
+    try { response = await this.fetchImpl(url, { method: "GET", headers: { accept: "application/json" } }); }
     catch (error) { fail("HTTP_FAILURE", "GPM request failed", { cause: error }); }
     const status = Number(response?.status);
     if (!(response?.ok === true || (Number.isInteger(status) && status >= 200 && status < 300))) fail("HTTP_FAILURE", `GPM request returned HTTP ${Number.isFinite(status) ? status : "unknown"}`, { status });

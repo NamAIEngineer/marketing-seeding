@@ -16,4 +16,6 @@ Implemented a provider-neutral, explicitly invoked `GpmProfileLifecycle` adapter
 Addresses A3, A4, A5 and constraints C1-C5. Verification evidence covers V1-V3 through focused syntax/tests and diff review.
 
 ## Limitations
-Real GPM endpoint behavior remains unverified and forbidden in this wave. Adapter intentionally performs no persistence, profile selection, retries, health/projection wiring, or transport submission.
+Real GPM endpoint behavior remains unverified and forbidden in this wave. Adapter intentionally performs no persistence, profile selection, retries, health/projection wiring, or transport submission. The approved observed lifecycle contract uses GET requests at `/api/v1/profiles/start/:id` and `/api/v1/profiles/stop/:id`; `apiPrefix` accepts `/v1` or `/api/v1` without duplication.
+
+Status: DONE_WITH_CONCERNS (real runtime remains unverified and forbidden).
