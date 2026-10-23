@@ -35,6 +35,7 @@ import { appRoot } from "./paths.mjs";
 import { canonicalAudienceSerialization, deriveBootstrapAuthorizationId, deriveBootstrapIdentity, deriveBootstrapSchedule, normalizeBootstrapAudience, normalizeBootstrapProductKeys } from "./campaign-bootstrap.mjs";
 import { projectBrowserRuntime } from "./runtime-projection.mjs";
 import { projectGpmAccountCatalog } from "./gpm-account-catalog-projection.mjs";
+import { projectSessionReadiness } from "./session-readiness-projection.mjs";
 
 export async function pollConfiguredDiscoveries(service, { actor = "scheduled-discovery-observer", shuttingDown = false } = {}) {
   const state = await service.snapshot();
@@ -1857,6 +1858,7 @@ export class SeedingService {
     this.browserRuntimeRouter = options.browserRuntimeRouter || null;
     // Optional read-only observation supplied by an adapter; never queried or persisted here.
     this.gpmAccountCatalogObservation = options.gpmAccountCatalogObservation ?? null;
+    this.sessionReadinessObservation = options.sessionReadinessObservation ?? null;
     const explicitProductRoots = options.productRepoRoots !== undefined || Boolean(String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").trim());
     this.productRepoRoots = (options.productRepoRoots || String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").split(path.delimiter))
       .map((value) => String(value || "").trim())
@@ -6776,6 +6778,35 @@ export class SeedingService {
       state.executionAccounts,
       { now: new Date() }
     );
+    let sessionReadinessObservation = this.sessionReadinessObservation;
+    if (typeof sessionReadinessObservation === "function") {
+      try {
+        sessionReadinessObservation = await sessionReadinessObservation();
+      } catch (error) {
+        sessionReadinessObservation = { state: "UNKNOWN", code: String(error?.code || "SESSION_READINESS_OBSERVATION_FAILED").slice(0, 120), sessions: [] };
+      }
+    }
+    let sessionReadiness;
+    try {
+      const observedSessions = Array.isArray(sessionReadinessObservation?.sessions) ? sessionReadinessObservation.sessions : [];
+      sessionReadiness = projectSessionReadiness(
+        Array.isArray(state.executionAccounts) ? state.executionAccounts.map((account) => ({
+          platform: account.platform,
+          accountId: account.accountId,
+          profileRef: account.profileId,
+          sessionHealth: account.health,
+          risk: account.status === "enabled" ? "normal" : "disabled",
+          authorized: account.status === "enabled"
+        })) : [],
+        observedSessions,
+        { now: new Date() }
+      );
+      if (sessionReadinessObservation?.state && String(sessionReadinessObservation.state).toUpperCase() !== "OBSERVED") {
+        sessionReadiness = { ...sessionReadiness, rows: sessionReadiness.rows.map((row) => ({ ...row, status: "UNKNOWN", executionEligible: false, reasons: ["session_observation_unavailable"] })), summary: { ...sessionReadiness.summary, ready: 0, executionEligible: 0, unknown: sessionReadiness.rows.length } };
+      }
+    } catch {
+      sessionReadiness = projectSessionReadiness([], [], { now: new Date() });
+    }
     const latestMetrics = new Map();
     for (const metric of state.metricSnapshots) {
       const current = latestMetrics.get(metric.postId);
@@ -6864,6 +6895,7 @@ export class SeedingService {
       productFactorySandbox,
       browserRuntime,
       gpmAccountCatalog,
+      sessionReadiness,
       communityMemberships: state.communityMemberships,
       statuses,
       totals,

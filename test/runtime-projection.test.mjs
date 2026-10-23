@@ -99,3 +99,35 @@ test("service dashboard resolves injected catalog provider and fails closed", as
   assert.equal(unknown.gpmAccountCatalog.catalog.state, "UNKNOWN");
   assert.equal(unknown.gpmAccountCatalog.catalog.profiles.length, 0);
 });
+
+test("service dashboard projects injected session readiness without state mutation", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "session-readiness-dashboard-"));
+  const service = new SeedingService(new JsonStore(path.join(directory, "state.json")), {
+    sessionReadinessObservation: async () => ({
+      state: "OBSERVED",
+      sessions: [{ platform: "linkedin", accountId: "acct-a", profileRef: "profile-a", state: "healthy", expiresAt: "2099-01-01T00:00:00Z" }]
+    })
+  });
+  await service.init();
+  await service.store.mutate("fixture", "session_readiness_fixture", (state) => {
+    state.executionAccounts.push({ id: "linkedin:acct-a", platform: "linkedin", accountId: "acct-a", profileId: "profile-a", status: "enabled", health: "healthy" });
+  });
+  const before = (await service.snapshot()).revision;
+  const dashboard = await service.dashboard();
+  assert.equal(dashboard.sessionReadiness.readOnly, true);
+  assert.equal(dashboard.sessionReadiness.summary.accounts, 1);
+  assert.equal(dashboard.sessionReadiness.rows[0].status, "READY");
+  assert.equal(dashboard.sessionReadiness.rows[0].executionEligible, true);
+  assert.equal(JSON.stringify(dashboard).includes("profile-a"), false);
+  assert.equal((await service.snapshot()).revision, before);
+  const unavailable = new SeedingService(new JsonStore(path.join(directory, "unavailable.json")), {
+    sessionReadinessObservation: async () => { throw Object.assign(new Error("offline"), { code: "OFFLINE" }); }
+  });
+  await unavailable.init();
+  await unavailable.store.mutate("fixture", "session_readiness_fixture", (state) => {
+    state.executionAccounts.push({ id: "linkedin:acct-b", platform: "linkedin", accountId: "acct-b", profileId: "profile-b", status: "enabled", health: "healthy" });
+  });
+  const unknown = await unavailable.dashboard();
+  assert.equal(unknown.sessionReadiness.rows[0].status, "UNKNOWN");
+  assert.equal(unknown.sessionReadiness.rows[0].executionEligible, false);
+});

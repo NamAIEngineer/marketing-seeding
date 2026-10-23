@@ -1163,6 +1163,8 @@ function MissionControlPanel({ data }: { data: R }) {
   const gpmCatalog = data?.gpmAccountCatalog && typeof data.gpmAccountCatalog === "object" ? data.gpmAccountCatalog : null
   const gpmProfiles = Array.isArray(gpmCatalog?.catalog?.profiles) ? gpmCatalog.catalog.profiles.slice(0, 12) : []
   const gpmAccounts = Array.isArray(gpmCatalog?.accounts) ? gpmCatalog.accounts.slice(0, 12) : []
+  const sessionReadiness = data?.sessionReadiness && typeof data.sessionReadiness === "object" ? data.sessionReadiness : null
+  const sessionRows = Array.isArray(sessionReadiness?.rows) ? sessionReadiness.rows.slice(0, 12) : []
   const unsupportedClaimCount = productIntelligence.reduce((total: number, item: R) => {
     const document = item?.document && typeof item.document === "object" ? item.document : {}
     return total + (Array.isArray(document.CLAIMS_WE_CANNOT_MAKE) ? document.CLAIMS_WE_CANNOT_MAKE.length : 0)
@@ -1363,6 +1365,17 @@ function MissionControlPanel({ data }: { data: R }) {
             {gpmAccounts.map((row: R) => <article key={`account-${String(row.profileFingerprint)}-${String(row.accountId)}`}><div className="mission-account-title"><strong>{compactText(row.platform, "UNKNOWN", 40)} account</strong><span className="status">{row.catalogLinkage || "UNKNOWN"}</span></div><small>Profile fingerprint: {compactText(row.profileFingerprint, "UNKNOWN", 20)}</small></article>)}
           </div>
         ) : <div className="empty-state">Catalog UNKNOWN hoặc chưa có GPM endpoint.</div>}
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head">
+          <div><span className="mission-eyebrow">Session readiness</span><small>Read-only exact binding · không tạo lease hoặc authority</small></div>
+          <span className="status">{sessionReadiness?.summary?.ready ?? 0}/{sessionReadiness?.summary?.accounts ?? 0} READY</span>
+        </div>
+        {sessionRows.length ? (
+          <div className="mission-account-list">
+            {sessionRows.map((row: R) => <article key={`${String(row.platform)}-${String(row.accountId)}-${String(row.profileFingerprint)}`}><div className="mission-account-title"><strong>{compactText(row.platform, "UNKNOWN", 40)} account</strong><span className={row.executionEligible === true ? "status completed" : "status draft"}>{compactText(row.status, "UNKNOWN", 24)}</span></div><small>Profile fingerprint: {compactText(row.profileFingerprint, "UNKNOWN", 20)} · observed: {compactText(row.observedProfileFingerprint, "UNKNOWN", 20)}</small><small>Reason: {Array.isArray(row.reasons) && row.reasons.length ? row.reasons.map((reason: unknown) => compactText(reason, "UNKNOWN", 80)).join(" · ") : "UNKNOWN"}</small></article>)}
+          </div>
+        ) : <div className="empty-state">Session readiness UNKNOWN hoặc chưa có account.</div>}
       </div>
       <div className="mission-advisory-runtime">
         <div className="mission-account-head">
