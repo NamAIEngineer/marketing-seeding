@@ -38,7 +38,7 @@ account switching or Post controls.
 
 ## Verification evidence
 
-- Full Node suite after the final source changes: **609 total / 607 pass / 0
+- Full Node suite after the final source changes: **610 total / 608 pass / 0
   fail / 2 skip**.
 - Wave 2 focused batch (runtime probes, router, service/server/UI projections):
   **123 pass / 0 fail / 0 skip**.
