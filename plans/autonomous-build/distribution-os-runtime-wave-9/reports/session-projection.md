@@ -13,12 +13,13 @@
 - A3: exact account/profile binding and deterministic fingerprint projection.
 - A4: challenge, quarantine, unknown, mismatch, and expiry are explicit.
 - A5: execution eligibility fails closed unless exact healthy observed binding exists.
+- Safety fix: missing or invalid `expiresAt` is explicit `EXPIRED` with `readiness_expiry_invalid`; it is never eligible.
 - C2: read-only; no lifecycle, lease, authority, or state mutation.
 - C3: no identity inference from profile names, tags, or browser metadata; no secrets accepted.
 
 ## Verification
 
-- `node --test test/session-readiness-projection.test.mjs`: 4 pass, 0 fail.
+- `node --test test/session-readiness-projection.test.mjs`: 5 pass, 0 fail.
 - `node --check src/session-readiness-projection.mjs`: pass.
 - `git diff --check`: pass.
 

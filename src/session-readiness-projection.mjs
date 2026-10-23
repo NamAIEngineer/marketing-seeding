@@ -43,6 +43,7 @@ function normalizeObserved(raw) {
     state: lower(raw.state || raw.status || raw.health || "unknown"),
     checkedAt: iso(raw.checkedAt || raw.observedAt),
     expiresAt: iso(raw.expiresAt || raw.validUntil),
+    expiryProvided: raw.expiresAt !== undefined || raw.validUntil !== undefined,
     challenge: raw.challenge === true || raw.challengeRequired === true
   };
 }
@@ -64,7 +65,8 @@ function projectRow(account, observed, nowMs) {
   else if (!observed) { status = "UNKNOWN"; reasons.push("session_not_observed"); }
   else if (!exactIdentity) { status = "MISMATCH"; reasons.push("exact_binding_mismatch"); }
   else if (observed.challenge || CHALLENGE.has(observed.state) || CHALLENGE.has(account.sessionHealth)) { status = "CHALLENGE"; reasons.push("human_action_required"); }
-  else if (observed?.expiresAt && (!Number.isFinite(expiryMs) || expiryMs <= nowMs)) { status = "EXPIRED"; reasons.push("readiness_expired"); }
+  else if (!observed.expiryProvided || !observed.expiresAt || !Number.isFinite(expiryMs)) { status = "EXPIRED"; reasons.push("readiness_expiry_invalid"); }
+  else if (expiryMs <= nowMs) { status = "EXPIRED"; reasons.push("readiness_expired"); }
   else if (!HEALTHY.has(observed.state) || !HEALTHY.has(account.sessionHealth)) { status = "UNKNOWN"; reasons.push("healthy_observed_binding_required"); }
   else { status = "READY"; executionEligible = true; }
   return {

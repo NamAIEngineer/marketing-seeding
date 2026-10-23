@@ -27,10 +27,21 @@ test("challenge, expiry and quarantine are projected without mutation", () => {
     { platform: "linkedin", accountId: "acct-1", profileRef: "profile-1", state: "healthy", expiresAt: "2026-10-22T00:00:00Z" },
     { platform: "linkedin", accountId: "acct-2", profileRef: "profile-2", state: "mfa_required" },
     { platform: "linkedin", accountId: "acct-3", profileRef: "profile-3", state: "healthy" },
-    { platform: "linkedin", accountId: "acct-4", profileRef: "profile-4", state: "healthy" }
+    { platform: "linkedin", accountId: "acct-4", profileRef: "profile-4", state: "healthy", expiresAt: "2026-10-23T01:00:00Z" }
   ], { now });
   assert.deepEqual(result.rows.map((r) => r.status), ["EXPIRED", "CHALLENGE", "QUARANTINED", "READY"]);
   assert.equal(result.readOnly, true);
+});
+
+test("missing or invalid readiness expiry fails closed", () => {
+  const result = projectSessionReadiness([account, { ...account, accountId: "acct-2", profileRef: "profile-2" }], [
+    { platform: "linkedin", accountId: "acct-1", profileRef: "profile-1", state: "healthy" },
+    { platform: "linkedin", accountId: "acct-2", profileRef: "profile-2", state: "healthy", expiresAt: "not-a-date" }
+  ], { now });
+  assert.deepEqual(result.rows.map((row) => [row.status, row.executionEligible, row.reasons]), [
+    ["EXPIRED", false, ["readiness_expiry_invalid"]],
+    ["EXPIRED", false, ["readiness_expiry_invalid"]]
+  ]);
 });
 
 test("secret-like metadata is rejected", () => { assert.throws(() => projectSessionReadiness([{ ...account, cookie: "x" }]), /secret-like/); });
