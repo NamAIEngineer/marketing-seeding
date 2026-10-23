@@ -36,6 +36,7 @@ import { canonicalAudienceSerialization, deriveBootstrapAuthorizationId, deriveB
 import { projectBrowserRuntime } from "./runtime-projection.mjs";
 import { projectGpmAccountCatalog } from "./gpm-account-catalog-projection.mjs";
 import { projectSessionReadiness } from "./session-readiness-projection.mjs";
+import { projectGpmSessionCapability } from "./gpm-session-capability-projection.mjs";
 
 export async function pollConfiguredDiscoveries(service, { actor = "scheduled-discovery-observer", shuttingDown = false } = {}) {
   const state = await service.snapshot();
@@ -1859,6 +1860,9 @@ export class SeedingService {
     // Optional read-only observation supplied by an adapter; never queried or persisted here.
     this.gpmAccountCatalogObservation = options.gpmAccountCatalogObservation ?? null;
     this.sessionReadinessObservation = options.sessionReadinessObservation ?? null;
+    // Optional read-only composed-session capability observation. This is
+    // resolved on dashboard reads only; it never acquires or starts a session.
+    this.gpmSessionCapabilityObservation = options.gpmSessionCapabilityObservation ?? null;
     const explicitProductRoots = options.productRepoRoots !== undefined || Boolean(String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").trim());
     this.productRepoRoots = (options.productRepoRoots || String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").split(path.delimiter))
       .map((value) => String(value || "").trim())
@@ -6807,6 +6811,20 @@ export class SeedingService {
     } catch {
       sessionReadiness = projectSessionReadiness([], [], { now: new Date() });
     }
+    let gpmSessionCapabilityObservation = this.gpmSessionCapabilityObservation;
+    if (typeof gpmSessionCapabilityObservation === "function") {
+      try {
+        gpmSessionCapabilityObservation = await gpmSessionCapabilityObservation();
+      } catch (error) {
+        gpmSessionCapabilityObservation = { configured: false, provider: "gpm", health: { state: "UNKNOWN", reason: String(error?.code || "GPM_SESSION_CAPABILITY_OBSERVATION_FAILED").slice(0, 120) } };
+      }
+    }
+    let gpmSessionCapability;
+    try {
+      gpmSessionCapability = projectGpmSessionCapability(gpmSessionCapabilityObservation, { expectedProvider: "gpm" });
+    } catch {
+      gpmSessionCapability = projectGpmSessionCapability({ configured: false, provider: "gpm" });
+    }
     const latestMetrics = new Map();
     for (const metric of state.metricSnapshots) {
       const current = latestMetrics.get(metric.postId);
@@ -6896,6 +6914,7 @@ export class SeedingService {
       browserRuntime,
       gpmAccountCatalog,
       sessionReadiness,
+      gpmSessionCapability,
       communityMemberships: state.communityMemberships,
       statuses,
       totals,
