@@ -93,7 +93,7 @@ const service = new SeedingService(store, {
     orcaBrowser,
     gpm: {
       endpointCandidates: gpmProcessDiscovery.endpoints,
-      probe: ({ runtime }) => probeGpmRuntime({ endpointCandidates: runtime.endpointCandidates })
+      probe: ({ runtime }) => probeGpmRuntime({ endpointCandidates: runtime.endpointCandidates, profileCatalogPath: "/api/v1/profiles" })
     }
   })
 });

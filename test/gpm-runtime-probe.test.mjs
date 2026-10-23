@@ -56,6 +56,28 @@ test("GPM identity-only root response exposes a bounded version without claiming
   assert.equal(result.runtimeIdentity.providerVersion, "5.1.2-stable");
 });
 
+test("GPM profile catalog uses GET-only same-origin metadata and drops secret-like fields", async () => {
+  const calls = [];
+  const result = await probeGpmRuntime({ endpoint: "http://127.0.0.1:18000", profileCatalogPath: "/api/v1/profiles", fetchImpl: async (url, options) => {
+    calls.push({ url, method: options.method });
+    if (url.endsWith("/profiles")) return { ok: true, status: 200, async json() { return { success: true, data: { total: 1, data: [{ id: "profile-1", name: "Demo", group_id: null, browser: { name: "Chrome", version: "1" }, os: "macOS", pinned: true, tags: [{ name: "safe" }], storage_path: "/private/path", raw_proxy: "secret", note: "private" }] } }; } };
+    return { ok: true, status: 200, async json() { return { success: true, sender: "GPMLoginGlobal v5.1.2-stable", data: "GPMLogin Global API" }; } };
+  } });
+  assert.deepEqual(calls, [{ url: "http://127.0.0.1:18000", method: "GET" }, { url: "http://127.0.0.1:18000/api/v1/profiles", method: "GET" }]);
+  assert.equal(result.profileCatalog.state, "OBSERVED");
+  assert.equal(result.profileCatalog.count, 1);
+  assert.deepEqual(result.profileCatalog.profiles[0], { profileId: "profile-1", name: "Demo", groupId: null, browser: { name: "Chrome", version: "1" }, os: "macOS", pinned: true, tags: ["safe"], createdAt: null, updatedAt: null });
+  assert.equal(Object.hasOwn(result.profileCatalog.profiles[0], "storage_path"), false);
+  assert.equal(Object.hasOwn(result.profileCatalog.profiles[0], "raw_proxy"), false);
+});
+
+test("GPM profile catalog stays UNKNOWN on schema drift and never becomes account readiness", async () => {
+  const result = await probeGpmRuntime({ endpoint: "http://127.0.0.1:18000", profileCatalogPath: "/api/v1/profiles", fetchImpl: async (url) => ({ ok: true, status: 200, async json() { return url.endsWith("/profiles") ? { success: true, data: { total: 1, data: "not-an-array" } } : { success: true, sender: "GPMLoginGlobal v5.1.2-stable", data: "GPMLogin Global API" }; } }) });
+  assert.equal(result.profileCatalog.state, "UNKNOWN");
+  assert.equal(result.profileCatalog.code, "GPM_PROFILE_CATALOG_SCHEMA_UNKNOWN");
+  assert.equal(result.profile, null);
+});
+
 test("GPM probe reports unknown on endpoint failures and never mutates profiles", async () => {
   let calls = 0;
   const result = await probeGpmRuntime({ endpointCandidates: ["http://127.0.0.1:18001"], fetchImpl: async () => { calls += 1; throw Object.assign(new Error("offline"), { code: "ECONNREFUSED" }); } });

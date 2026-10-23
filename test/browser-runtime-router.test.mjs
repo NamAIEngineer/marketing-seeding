@@ -31,7 +31,7 @@ test("construction never claims readiness and preserves only bounded references"
 });
 
 test("GPM endpoint candidates are projected from the discovered listener without profile readiness", async () => {
-  const transport = new GpmChromeTransport({ endpointCandidates: ["http://127.0.0.1:19495"], profileReference: null, probe: async () => ({ state: "READY", providerVersion: "5.1.2-stable", observedProviderVersion: "5.1.2-stable" }) });
+  const transport = new GpmChromeTransport({ endpointCandidates: ["http://127.0.0.1:19495"], profileReference: null, probe: async () => ({ state: "READY", providerVersion: "5.1.2-stable", observedProviderVersion: "5.1.2-stable", profileCatalog: { state: "OBSERVED", count: 1, profiles: [{ profileId: "p-1", name: "Demo", storage_path: "drop" }] } }) });
   assert.equal(transport.runtimeIdentity().endpoint, "http://127.0.0.1:19495/");
   assert.deepEqual(transport.runtimeIdentity().endpointCandidates, ["http://127.0.0.1:19495/"]);
   const health = await transport.health();

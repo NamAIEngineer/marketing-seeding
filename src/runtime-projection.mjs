@@ -49,8 +49,26 @@ function safeHealth(value) {
     state,
     reason: bounded(value.code || value.reason || value.error?.code || null, 120),
     observedProviderVersion: bounded(value.observedProviderVersion, 80),
-    profileBindingRequired: value.profileBindingRequired === true
+    profileBindingRequired: value.profileBindingRequired === true,
+    profileCatalog: safeProfileCatalog(value.profileCatalog)
   };
+}
+
+function safeProfileCatalog(value) {
+  if (!value || typeof value !== "object") return null;
+  const state = ["OBSERVED", "UNKNOWN", "UNAVAILABLE"].includes(String(value.state || "").toUpperCase()) ? String(value.state).toUpperCase() : "UNKNOWN";
+  const profiles = Array.isArray(value.profiles) ? value.profiles.slice(0, 32).map((row) => ({
+    profileId: bounded(row?.profileId, 120),
+    name: bounded(row?.name, 160),
+    groupId: bounded(row?.groupId, 120),
+    browser: row?.browser && typeof row.browser === "object" ? { name: bounded(row.browser.name, 80), version: bounded(row.browser.version, 80) } : null,
+    os: bounded(row?.os, 80),
+    pinned: row?.pinned === true,
+    tags: Array.isArray(row?.tags) ? row.tags.slice(0, 16).map((tag) => bounded(tag, 80)).filter(Boolean) : [],
+    createdAt: bounded(row?.createdAt, 64),
+    updatedAt: bounded(row?.updatedAt, 64)
+  })).filter((row) => row.profileId) : [];
+  return { state, code: bounded(value.code, 120), count: Number.isSafeInteger(value.count) ? value.count : profiles.length, profiles };
 }
 
 /** Read-only route/health projection for Mission Control. Never starts a runtime. */
