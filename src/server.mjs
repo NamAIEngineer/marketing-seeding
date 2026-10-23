@@ -104,6 +104,30 @@ const service = new SeedingService(store, {
       profileCatalogPath: "/api/v1/profiles"
     });
     return observation?.profileCatalog || { state: observation?.state === "UNAVAILABLE" ? "UNAVAILABLE" : "UNKNOWN", code: observation?.code || "GPM_CATALOG_UNKNOWN", profiles: [] };
+  },
+  // Read-only composed-session capability observation. Dynamic listener
+  // candidates are discovered once at startup, then probed with GET only;
+  // profile lifecycle, browser attach, login, and execution remain untouched.
+  gpmSessionCapabilityObservation: async () => {
+    const observation = await probeGpmRuntime({
+      endpointCandidates: gpmProcessDiscovery.endpoints,
+      profileCatalogPath: null
+    });
+    const runtimeIdentity = observation?.runtimeIdentity && typeof observation.runtimeIdentity === "object"
+      ? {
+          ...observation.runtimeIdentity,
+          provider: "gpm",
+          profileReference: null,
+          sessionReference: null
+        }
+      : { provider: "gpm", transport: "gpm-chrome" };
+    return {
+      provider: "gpm",
+      configured: gpmProcessDiscovery.endpoints.length > 0,
+      runtimeIdentity,
+      health: { state: observation?.state || "UNKNOWN", reason: observation?.code || "GPM_CAPABILITY_UNKNOWN", observedProviderVersion: observation?.observedProviderVersion || observation?.providerVersion || null },
+      sessions: []
+    };
   }
 });
 const platformAdapterRegistry = new PlatformAdapterRegistry();
