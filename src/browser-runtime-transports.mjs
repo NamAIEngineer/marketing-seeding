@@ -34,9 +34,11 @@ function unavailable(code, message, details = {}) {
  * readiness; health() must observe an injected probe or report UNKNOWN.
  */
 export class BrowserRuntimeTransport extends BrowserInteractionTransport {
-  constructor({ id, provider, providerVersion = null, endpoint = null, profileReference = null, sessionReference = null, executable = null, client = null, probe = null } = {}) {
+  constructor({ id, provider, providerVersion = null, endpoint = null, endpointCandidates = [], profileReference = null, sessionReference = null, executable = null, client = null, probe = null } = {}) {
     super({ id, provider, providerVersion });
-    this.endpoint = safeEndpoint(endpoint);
+    const candidates = [endpoint, ...(Array.isArray(endpointCandidates) ? endpointCandidates : [])].map(safeEndpoint).filter(Boolean);
+    this.endpoint = candidates[0] || null;
+    this.endpointCandidates = [...new Set(candidates)];
     this.profileReference = bounded(profileReference);
     this.sessionReference = bounded(sessionReference);
     this.executable = bounded(executable);
@@ -48,6 +50,7 @@ export class BrowserRuntimeTransport extends BrowserInteractionTransport {
     return {
       ...super.runtimeIdentity(),
       endpoint: this.endpoint,
+      endpointCandidates: [...this.endpointCandidates],
       executable: this.executable,
       profileReference: this.profileReference,
       sessionReference: this.sessionReference
@@ -62,10 +65,10 @@ export class BrowserRuntimeTransport extends BrowserInteractionTransport {
     return { sessionReference: this.sessionReference };
   }
 
-  async health() {
+  async health({ allowUnboundProfile = false } = {}) {
     const missing = [];
     if (!this.endpoint && !this.executable && !this.client) missing.push("endpoint_or_executable");
-    if (!this.profileReference && !this.client) missing.push("profile_reference");
+    if (!this.profileReference && !this.client && !allowUnboundProfile) missing.push("profile_reference");
     if (missing.length) return { state: "UNAVAILABLE", ...this.runtimeIdentity(), missing };
     if (!this.probe) return { state: "UNKNOWN", ...this.runtimeIdentity(), reason: "READINESS_PROBE_NOT_CONFIGURED" };
     try {
@@ -103,6 +106,12 @@ export class BrowserRuntimeTransport extends BrowserInteractionTransport {
 export class GpmChromeTransport extends BrowserRuntimeTransport {
   constructor(options = {}) {
     super({ ...options, id: options.id || "gpm-chrome", provider: "gpm-chrome" });
+  }
+
+  async health() {
+    const observed = await super.health({ allowUnboundProfile: true });
+    if (this.profileReference || observed.state === "UNAVAILABLE") return observed;
+    return { ...observed, state: "UNKNOWN", reason: "GPM_PROFILE_REFERENCE_NOT_BOUND", profileBindingRequired: true };
   }
 }
 

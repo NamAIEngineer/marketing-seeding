@@ -30,6 +30,17 @@ test("construction never claims readiness and preserves only bounded references"
   assert.equal((await unavailable.health()).state, "UNAVAILABLE");
 });
 
+test("GPM endpoint candidates are projected from the discovered listener without profile readiness", async () => {
+  const transport = new GpmChromeTransport({ endpointCandidates: ["http://127.0.0.1:19495"], profileReference: null, probe: async () => ({ state: "READY", providerVersion: "5.1.2-stable", observedProviderVersion: "5.1.2-stable" }) });
+  assert.equal(transport.runtimeIdentity().endpoint, "http://127.0.0.1:19495/");
+  assert.deepEqual(transport.runtimeIdentity().endpointCandidates, ["http://127.0.0.1:19495/"]);
+  const health = await transport.health();
+  assert.equal(health.state, "UNKNOWN");
+  assert.equal(health.reason, "GPM_PROFILE_REFERENCE_NOT_BOUND");
+  assert.equal(health.profileBindingRequired, true);
+  assert.equal(health.observedProviderVersion, "5.1.2-stable");
+});
+
 test("generic runtime click requires validation before provider input", async () => {
   const calls = [];
   const transport = new GpmChromeTransport({

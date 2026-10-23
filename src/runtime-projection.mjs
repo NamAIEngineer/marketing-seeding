@@ -33,7 +33,9 @@ function safeIdentity(value) {
     transport: bounded(value.transport, 80),
     provider: bounded(value.provider, 80),
     providerVersion: bounded(value.providerVersion, 80),
+    observedProviderVersion: bounded(value.observedProviderVersion, 80),
     endpoint: value.endpoint ? safeEndpoint(value.endpoint) : null,
+    endpointCandidates: Array.isArray(value.endpointCandidates) ? value.endpointCandidates.slice(0, 8).map((item) => safeEndpoint(item)).filter(Boolean) : [],
     executable: value.executable ? bounded(value.executable, 240) : null,
     profileReference: value.profileReference ? bounded(value.profileReference, 160) : null,
     sessionReference: value.sessionReference ? bounded(value.sessionReference, 160) : null
@@ -43,7 +45,12 @@ function safeIdentity(value) {
 function safeHealth(value) {
   if (!value || typeof value !== "object") return { state: "UNKNOWN", reason: "HEALTH_NOT_OBSERVED" };
   const state = ["READY", "UNKNOWN", "UNAVAILABLE"].includes(String(value.state || "").toUpperCase()) ? String(value.state).toUpperCase() : "UNKNOWN";
-  return { state, reason: bounded(value.code || value.reason || value.error?.code || null, 120) };
+  return {
+    state,
+    reason: bounded(value.code || value.reason || value.error?.code || null, 120),
+    observedProviderVersion: bounded(value.observedProviderVersion, 80),
+    profileBindingRequired: value.profileBindingRequired === true
+  };
 }
 
 /** Read-only route/health projection for Mission Control. Never starts a runtime. */

@@ -17,6 +17,7 @@ import { PlatformAdapterRegistry, ReadinessProviderRegistry } from "./platform-r
 import { isAuthorizedLocalShutdown, runtimeMetadata } from "./service-lifecycle.mjs";
 import { consumeSystemAgenticHandoff } from "./system-agentic-handoff-bridge.mjs";
 import { createDefaultBrowserRuntimeRouter } from "./browser-runtime-router.mjs";
+import { discoverGpmProcessEndpoints, probeGpmRuntime } from "./gpm-runtime-probe.mjs";
 
 async function loadLocalEnv() {
   try {
@@ -80,12 +81,21 @@ const store = new JsonStore(stateFile, { requireLease: true });
 await store.acquireWriterLease();
 const readinessTtlMs = configuredReadinessTtlMs();
 const orcaBrowser = new OrcaCliClient();
+// Metadata-only discovery of an already-running GPM listener. It never starts
+// a profile and does not make authenticated work eligible without a binding.
+const gpmProcessDiscovery = await discoverGpmProcessEndpoints();
 const readinessProviderRegistry = new ReadinessProviderRegistry();
 readinessProviderRegistry.register("linkedin", new LinkedInReadinessProvider(orcaBrowser, { ttlMs: readinessTtlMs }));
 const service = new SeedingService(store, {
   readinessTtlMs,
   readinessProviderRegistry,
-  browserRuntimeRouter: createDefaultBrowserRuntimeRouter({ orcaBrowser })
+  browserRuntimeRouter: createDefaultBrowserRuntimeRouter({
+    orcaBrowser,
+    gpm: {
+      endpointCandidates: gpmProcessDiscovery.endpoints,
+      probe: ({ runtime }) => probeGpmRuntime({ endpointCandidates: runtime.endpointCandidates })
+    }
+  })
 });
 const platformAdapterRegistry = new PlatformAdapterRegistry();
 // The production lane is fail-closed until an explicit, platform/runtime
