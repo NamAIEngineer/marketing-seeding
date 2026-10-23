@@ -32,3 +32,16 @@ Summary: provider-neutral, fake-injected GPM attach seam implemented with exact 
 Evidence: commit `168a664`; focused suite 7/7; syntax and diff checks pass.
 Confidence: high for fake seam and fail-closed binding; unknown for live provider integration.
 Out-of-scope: real GPM/CDP attach, profile lifecycle, Mission Control projection A3, deployment, merge, publication.
+
+## Follow-up hardening
+
+- Replaced prototype inheritance wrapper with frozen explicit delegate methods, preserving transport behavior without private-brand failures.
+- Added navigate invocation and JSON serialization regression proving profile references, client, and secret values are absent.
+- Verification: focused suite 7 pass, 0 fail; syntax and diff checks pass.
+- Follow-up commit: `566952d`.
+
+Status: DONE
+Summary: explicit delegate wrapper hardened against private-brand invocation and enumerable secret leakage.
+Evidence: focused 7/7; navigate invocation passed; serialized handle excludes `profileReference`, `profile-a`, `client`, and secret.
+Confidence: high for fake attach seam.
+Out-of-scope: live GPM/CDP attach and all external side effects.
