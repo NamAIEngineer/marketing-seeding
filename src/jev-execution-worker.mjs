@@ -37,12 +37,18 @@ function recoveryClass(result) {
   return "NONE";
 }
 
+function sameTransportIdentity(left, right) {
+  if (!left || !right) return false;
+  return ["transport", "provider", "providerVersion"].every((key) => String(left[key] || "") === String(right[key] || ""));
+}
+
 export class JevExecutionWorker {
-  constructor({ service, adapterRegistry, workerId = `jev-${process.pid}`, env = process.env, leaseMs = 120_000, now = () => new Date() } = {}) {
+  constructor({ service, adapterRegistry, executionSessionResolver = null, workerId = `jev-${process.pid}`, env = process.env, leaseMs = 120_000, now = () => new Date() } = {}) {
     if (!service) throw new Error("JEV worker requires the control-plane service");
     this.service = service;
     if (!(adapterRegistry instanceof PlatformAdapterRegistry)) throw new Error("JEV worker requires a PlatformAdapterRegistry");
     this.adapterRegistry = adapterRegistry;
+    this.executionSessionResolver = executionSessionResolver;
     this.workerId = String(workerId).trim();
     if (!this.workerId) throw new Error("workerId is required");
     this.env = env;
@@ -193,6 +199,7 @@ export class JevExecutionWorker {
       finally { heartbeatBusy = false; }
     }, Math.max(1_000, Math.floor(this.leaseMs / 3)));
     heartbeat.unref?.();
+    let executionSession = null;
     try {
       if (!initial.account || initial.account.status !== "enabled" || initial.account.health !== "healthy" || initial.account.profileId !== initial.request.profileId || initial.account.accountId !== initial.request.accountId) {
         return { status: "HUMAN_REQUIRED", executionId, reasonCode: "account_profile_binding_invalid" };
@@ -228,6 +235,15 @@ export class JevExecutionWorker {
       const context = await this.service.executionContext(executionId);
       const liveEnabled = !dryRun && this.#liveEnabled(executionId, context, { exactOperatorDispatch });
       if (!dryRun && !liveEnabled) return { status: "LIVE_NOT_AUTHORIZED", executionId };
+      if (!dryRun && this.executionSessionResolver) {
+        const resolver = this.executionSessionResolver;
+        const acquire = typeof resolver.resolve === "function" ? resolver.resolve.bind(resolver) : resolver.acquire?.bind(resolver);
+        if (typeof acquire !== "function") throw Object.assign(new Error("execution session resolver is invalid"), { code: "EXECUTION_SESSION_RESOLVER_INVALID" });
+        const resolved = await acquire({ request: context.request, account: context.account, context, executionId });
+        executionSession = resolved?.session || resolved;
+        if (!executionSession || typeof executionSession !== "object") throw Object.assign(new Error("execution session unavailable"), { code: "EXECUTION_SESSION_UNAVAILABLE" });
+        if (typeof executionSession.assertUsable === "function") executionSession.assertUsable();
+      }
       await this.service.markExecutionStarted(executionId, lease, { dryRun });
 
       const queueToWorkerMs = Math.max(0, workerStartedAt - Date.parse(context.request.createdAt));
@@ -238,6 +254,9 @@ export class JevExecutionWorker {
         dryRun,
         liveEnabled,
         account: context.account,
+        executionSession: executionSession ? Object.freeze({ ...executionSession }) : undefined,
+        transport: executionSession?.transport || undefined,
+        transportIdentity: executionSession?.transportIdentity || executionSession?.runtimeIdentity || undefined,
         beforeProviderSend: async () => {
           if (dryRun) return null;
           return this.service.assertExecutionSendable(executionId, lease);
@@ -293,6 +312,11 @@ export class JevExecutionWorker {
             throw error;
           }
           try {
+            const selectedTransportIdentity = executionSession?.transportIdentity || executionSession?.runtimeIdentity || null;
+            const suppliedTransportIdentity = submitBoundaryEvidence.transportIdentity || selectedTransportIdentity;
+            if (selectedTransportIdentity && !sameTransportIdentity(selectedTransportIdentity, suppliedTransportIdentity)) {
+              throw Object.assign(new Error("Submit transport differs from acquired execution session"), { code: "TRANSPORT_SWITCH_AFTER_SESSION_ACQUIRE" });
+            }
             return await this.service.beginExecutionSubmitIntent(executionId, lease, {
               liveEnabled,
               liveExecutionId: this.env.SEEDING_JEV_LIVE_EXECUTION_ID,
@@ -300,7 +324,7 @@ export class JevExecutionWorker {
               exactLiveDispatchEnabled: exactOperatorDispatch && this.env.SEEDING_JEV_EXACT_LIVE_ENABLED === "true",
               verifiedGates,
               requireTransportCertification: adapter.requiresCertifiedTransport === true,
-              transportIdentity: submitBoundaryEvidence.transportIdentity,
+              transportIdentity: suppliedTransportIdentity,
               transportCertification: submitBoundaryEvidence.transportCertification,
               preSubmitControlEvidence: submitBoundaryEvidence.preSubmitControlEvidence
             });
@@ -349,6 +373,10 @@ export class JevExecutionWorker {
       return { status: dryRun ? (dryRunPassed ? "DRY_RUN_COMPLETE" : "DRY_RUN_FAILED") : receipt.submitState, executionId, receipt };
     } finally {
       clearInterval(heartbeat);
+      if (executionSession) {
+        const release = this.executionSessionResolver?.release || executionSession.release || executionSession.detach;
+        if (typeof release === "function") await Promise.resolve().then(() => release.call(this.executionSessionResolver || executionSession, executionSession)).catch(() => undefined);
+      }
       await this.service.releaseExecutionLease(lease.id, lease.token);
     }
   }
