@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "packageType": "LINKEDIN_HARMLESS_CERTIFICATION_LANE",
   "packageStatus": "READY_FOR_EXTERNAL_CERTIFICATION_INPUT",
-  "createdAt": "2026-10-24T07:11:57Z",
+  "createdAt": "2026-10-24T12:46:00Z",
   "source": {
     "repository": "marketing-seeding",
     "baseHead": "2e4d72f",
-  "candidateHead": "9300623",
-  "candidateTreeState": "DIRTY_DECLARED_WAVE_13_14_CHANGES",
+  "candidateHead": "5adaab147f2d60445647d383b673a81af8c70035",
+  "candidateTreeState": "CLEAN_DECLARED_WAVE_13_14_COMMIT",
   "latestVerification": {
     "npmTest": { "total": 698, "pass": 696, "fail": 0, "skip": 2 },
     "syntax": "PASS",
