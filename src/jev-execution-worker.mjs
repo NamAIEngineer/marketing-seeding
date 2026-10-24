@@ -200,6 +200,9 @@ export class JevExecutionWorker {
     }, Math.max(1_000, Math.floor(this.leaseMs / 3)));
     heartbeat.unref?.();
     let executionSession = null;
+    let resolvedSessionEnvelope = null;
+    let executionTransport = null;
+    let executionBrowserSurface = null;
     try {
       if (!initial.account || initial.account.status !== "enabled" || initial.account.health !== "healthy" || initial.account.profileId !== initial.request.profileId || initial.account.accountId !== initial.request.accountId) {
         return { status: "HUMAN_REQUIRED", executionId, reasonCode: "account_profile_binding_invalid" };
@@ -239,8 +242,10 @@ export class JevExecutionWorker {
         const resolver = this.executionSessionResolver;
         const acquire = typeof resolver.resolve === "function" ? resolver.resolve.bind(resolver) : resolver.acquire?.bind(resolver);
         if (typeof acquire !== "function") throw Object.assign(new Error("execution session resolver is invalid"), { code: "EXECUTION_SESSION_RESOLVER_INVALID" });
-        const resolved = await acquire({ request: context.request, account: context.account, context, executionId });
-        executionSession = resolved?.session || resolved;
+        resolvedSessionEnvelope = await acquire({ request: context.request, account: context.account, context, executionId });
+        executionSession = resolvedSessionEnvelope?.session || resolvedSessionEnvelope;
+        executionTransport = resolvedSessionEnvelope?.transport || executionSession?.transport || null;
+        executionBrowserSurface = resolvedSessionEnvelope?.browserSurface || executionSession?.browserSurface || null;
         if (!executionSession || typeof executionSession !== "object") throw Object.assign(new Error("execution session unavailable"), { code: "EXECUTION_SESSION_UNAVAILABLE" });
         if (typeof executionSession.assertUsable === "function") executionSession.assertUsable();
       }
@@ -254,9 +259,10 @@ export class JevExecutionWorker {
         dryRun,
         liveEnabled,
         account: context.account,
-        executionSession: executionSession ? Object.freeze({ ...executionSession }) : undefined,
-        transport: executionSession?.transport || undefined,
-        transportIdentity: executionSession?.transportIdentity || executionSession?.runtimeIdentity || undefined,
+        executionSession: executionSession || undefined,
+        transport: executionTransport || undefined,
+        browserSurface: executionBrowserSurface || undefined,
+        transportIdentity: executionSession?.transportIdentity || executionSession?.runtimeIdentity || executionTransport?.runtimeIdentity?.() || undefined,
         beforeProviderSend: async () => {
           if (dryRun) return null;
           return this.service.assertExecutionSendable(executionId, lease);
