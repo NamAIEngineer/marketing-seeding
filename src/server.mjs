@@ -1,5 +1,6 @@
 import http from "node:http";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { JsonStore } from "./store.mjs";
@@ -32,6 +33,40 @@ async function loadLocalEnv() {
   }
 }
 
+async function loadConfiguredExecutionSessionResolver(env = process.env) {
+  // Session authority is an explicit host integration. Never infer GPM from
+  // discovery, ORCA, or browser runtime defaults; absent/incomplete config
+  // leaves JEV without a resolver (safe dry-run/pre-submit behavior).
+  const moduleSpecifier = String(env.SEEDING_EXECUTION_SESSION_RESOLVER_MODULE || "").trim();
+  const provider = String(env.SEEDING_EXECUTION_SESSION_PROVIDER || "").trim().toLowerCase();
+  const profileReference = String(env.SEEDING_EXECUTION_SESSION_PROFILE_REFERENCE || "").trim();
+  const sessionAuthority = String(env.SEEDING_EXECUTION_SESSION_AUTHORITY || "").trim();
+  const attestationRaw = String(env.SEEDING_EXECUTION_SESSION_HOST_ATTESTATION || "").trim();
+  if (!moduleSpecifier || !provider || !profileReference || !sessionAuthority || !attestationRaw) return null;
+  if (provider !== "gpm") return null;
+  let hostAttestation;
+  try { hostAttestation = JSON.parse(attestationRaw); } catch { return null; }
+  if (!hostAttestation || typeof hostAttestation !== "object" || Array.isArray(hostAttestation) ||
+      !String(hostAttestation.host || "").trim() || !String(hostAttestation.runtime || "").trim() ||
+      !String(hostAttestation.version || "").trim() || !String(hostAttestation.evidence || "").trim()) return null;
+  let module;
+  try {
+    const specifier = moduleSpecifier.startsWith(".") || moduleSpecifier.startsWith("/")
+      ? pathToFileURL(path.resolve(appRoot, moduleSpecifier)).href : moduleSpecifier;
+    module = await import(specifier);
+  } catch { return null; }
+  const factory = module?.createExecutionSessionResolver || module?.default;
+  if (typeof factory !== "function") return null;
+  let resolver;
+  try {
+    resolver = await factory({ provider, profileReference, sessionAuthority, hostAttestation });
+  } catch { return null; }
+  if (!resolver || typeof resolver !== "object" || (typeof resolver.resolve !== "function" && typeof resolver.acquire !== "function")) return null;
+  const declaredProvider = String(resolver.provider || resolver.runtimeProvider || provider).trim().toLowerCase();
+  if (declaredProvider !== provider) return null;
+  return resolver;
+}
+
 async function loadTransportCertifications() {
   const file = String(process.env.SEEDING_TRANSPORT_CERTIFICATIONS_FILE || "").trim();
   if (!file) return [];
@@ -47,6 +82,7 @@ async function loadTransportCertifications() {
 
 await loadLocalEnv();
 const configuredTransportCertifications = await loadTransportCertifications();
+const configuredExecutionSessionResolver = await loadConfiguredExecutionSessionResolver();
 
 // Keep loopback as the safe local default; VPS deployments can set SEEDING_HOST
 // explicitly (usually 127.0.0.1 behind nginx, or 0.0.0.0 with a firewall).
@@ -143,7 +179,11 @@ platformAdapterRegistry.register("linkedin", new LinkedInAdapter(orcaBrowser, {
   transportRuntime: { provider: "orca", providerVersion: orcaBrowser.runtimeVersion },
   requireCertifiedTransport: true
 }));
-const jevWorker = new JevExecutionWorker({ service, adapterRegistry: platformAdapterRegistry, workerId: `jev-server-${process.pid}` });
+const jevWorker = new JevExecutionWorker({
+  service, adapterRegistry: platformAdapterRegistry,
+  executionSessionResolver: configuredExecutionSessionResolver || null,
+  workerId: `jev-server-${process.pid}`
+});
 let initializedState;
 try {
   initializedState = await service.init();
