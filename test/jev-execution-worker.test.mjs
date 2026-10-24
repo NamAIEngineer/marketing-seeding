@@ -812,6 +812,7 @@ test("LinkedIn adapter dry-run fills and verifies a draft, then closes without c
     media: [{ artifactId: "artifact-1", reference: mediaPath, sha256: mediaHash, type: "video/mp4" }]
   };
   const browser = {
+    legacyMutationEvaluation: true,
     async listTabs() { return [{ id: "page-1", profileId: "profile-1", url: "https://www.linkedin.com/feed/" }]; },
     async showTab() { return { pageId: "page-1", profileId: "profile-1", url: "https://www.linkedin.com/feed/" }; },
     async navigate(_id, url) { calls.push(["navigate", url]); },
@@ -949,6 +950,7 @@ test("LinkedIn adapter waits for the authenticated shell after navigation instea
     audience: "public", content: { contentId: "content-1", sha256: createHash("sha256").update("draft").digest("hex"), payload: "draft" }, media: []
   };
   const browser = {
+    legacyMutationEvaluation: true,
     async listTabs() { return [{ id: "page-1", profileId: "profile-1", url: "https://www.linkedin.com/feed/" }]; },
     async showTab() { return { pageId: "page-1", profileId: "profile-1", url: "https://www.linkedin.com/feed/" }; },
     async navigate() { hydrated = false; },
@@ -1010,6 +1012,7 @@ test("LinkedIn composer trigger uses one strictly guarded direct DOM activation 
     audience: "public", content: { contentId: "content-1", sha256: createHash("sha256").update("draft").digest("hex"), payload: "draft" }, media: []
   };
   const browser = {
+    legacyMutationEvaluation: true,
     async listTabs() { return [{ id: "page-1", profileId: "profile-1", url: "https://www.linkedin.com/feed/" }]; },
     async showTab() { return { pageId: "page-1", profileId: "profile-1", url: "https://www.linkedin.com/feed/" }; },
     async navigate() {}, async waitForUrl() {}, async waitForFeed() {},

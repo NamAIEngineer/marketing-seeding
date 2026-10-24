@@ -208,14 +208,48 @@ export class JevExecutionWorker {
         return { status: "HUMAN_REQUIRED", executionId, reasonCode: "account_profile_binding_invalid" };
       }
 
+      const dryRunRequest = dryRun === true || initial.request?.dryRun === true;
+      const liveEnabledAtAcquire = !dryRunRequest && this.#liveEnabled(executionId, initial, { exactOperatorDispatch });
+      // Resolve the provider session before readiness so the readiness check
+      // and the adapter consume the same selected browser surface. No session
+      // is acquired for dry-run work.
+      if (!dryRunRequest && liveEnabledAtAcquire && this.executionSessionResolver) {
+        const resolver = this.executionSessionResolver;
+        const acquire = typeof resolver.resolve === "function" ? resolver.resolve.bind(resolver) : resolver.acquire?.bind(resolver);
+        if (typeof acquire !== "function") throw Object.assign(new Error("execution session resolver is invalid"), { code: "EXECUTION_SESSION_RESOLVER_INVALID" });
+        resolvedSessionEnvelope = await acquire({ request: initial.request, account: initial.account, context: initial, executionId });
+        executionSession = resolvedSessionEnvelope?.session || resolvedSessionEnvelope;
+        executionTransport = resolvedSessionEnvelope?.transport || executionSession?.transport || null;
+        executionBrowserSurface = resolvedSessionEnvelope?.browserSurface || executionSession?.browserSurface || null;
+        if (!executionSession || typeof executionSession !== "object") throw Object.assign(new Error("execution session unavailable"), { code: "EXECUTION_SESSION_UNAVAILABLE" });
+        const sessionLifecycle = String(executionSession.lifecycle || "").toUpperCase();
+        if (sessionLifecycle !== "READY") throw Object.assign(new Error("execution session is not ready"), { code: sessionLifecycle === "CHALLENGED" ? "SESSION_CHALLENGE" : sessionLifecycle === "STALE" ? "SESSION_STALE" : "EXECUTION_SESSION_NOT_READY" });
+        if (typeof executionSession.assertUsable === "function") executionSession.assertUsable();
+        if (String(executionSession.platform || "").toLowerCase() !== String(initial.request.platform || "").toLowerCase() ||
+            String(executionSession.accountId || "") !== String(initial.request.accountId || "")) {
+          throw Object.assign(new Error("execution session binding does not match request"), { code: "EXECUTION_SESSION_BINDING_MISMATCH" });
+        }
+        if (!executionTransport || typeof executionTransport.runtimeIdentity !== "function") {
+          throw Object.assign(new Error("execution session transport is unavailable"), { code: "EXECUTION_TRANSPORT_UNAVAILABLE" });
+        }
+        const observedTransportIdentity = executionTransport.runtimeIdentity();
+        const expectedProvider = String(executionSession.provider || "").toLowerCase();
+        if (String(observedTransportIdentity?.provider || "").toLowerCase() !== expectedProvider ||
+            !sameTransportIdentity(executionSession.transportIdentity || observedTransportIdentity, observedTransportIdentity)) {
+          throw Object.assign(new Error("execution session transport identity does not match"), { code: "EXECUTION_TRANSPORT_IDENTITY_MISMATCH" });
+        }
+        if (initial.request.platform === "linkedin" && (!executionBrowserSurface || typeof executionBrowserSurface !== "object")) {
+          throw Object.assign(new Error("LinkedIn execution browser surface is unavailable"), { code: "EXECUTION_SESSION_SURFACE_MISSING" });
+        }
+      }
+
       const readinessStarted = Date.now();
       // The request already carries bound READY readiness. Reuse it while fresh;
       // the service refreshes automatically when it is stale or missing.
-      const readiness = await this.service.refreshCampaignJobReadiness(initial.post.id, this.workerId, {
-        executionId: initial.request.executionId
-      });
+      const readinessOptions = { executionId: initial.request.executionId };
+      if (executionBrowserSurface) readinessOptions.browserSurface = executionBrowserSurface;
+      const readiness = await this.service.refreshCampaignJobReadiness(initial.post.id, this.workerId, readinessOptions);
       const readinessRefreshMs = Date.now() - readinessStarted;
-      const dryRunRequest = initial.request?.dryRun === true;
       if ((dryRunRequest ? readiness.readinessState !== "READY" : readiness.status !== "queued" || readiness.readinessState !== "READY")) {
         // A readiness gate is evaluated before the adapter and before the
         // durable submit boundary.  Its UNKNOWN/BLOCKED result is therefore
@@ -238,17 +272,6 @@ export class JevExecutionWorker {
       const context = await this.service.executionContext(executionId);
       const liveEnabled = !dryRun && this.#liveEnabled(executionId, context, { exactOperatorDispatch });
       if (!dryRun && !liveEnabled) return { status: "LIVE_NOT_AUTHORIZED", executionId };
-      if (!dryRun && this.executionSessionResolver) {
-        const resolver = this.executionSessionResolver;
-        const acquire = typeof resolver.resolve === "function" ? resolver.resolve.bind(resolver) : resolver.acquire?.bind(resolver);
-        if (typeof acquire !== "function") throw Object.assign(new Error("execution session resolver is invalid"), { code: "EXECUTION_SESSION_RESOLVER_INVALID" });
-        resolvedSessionEnvelope = await acquire({ request: context.request, account: context.account, context, executionId });
-        executionSession = resolvedSessionEnvelope?.session || resolvedSessionEnvelope;
-        executionTransport = resolvedSessionEnvelope?.transport || executionSession?.transport || null;
-        executionBrowserSurface = resolvedSessionEnvelope?.browserSurface || executionSession?.browserSurface || null;
-        if (!executionSession || typeof executionSession !== "object") throw Object.assign(new Error("execution session unavailable"), { code: "EXECUTION_SESSION_UNAVAILABLE" });
-        if (typeof executionSession.assertUsable === "function") executionSession.assertUsable();
-      }
       await this.service.markExecutionStarted(executionId, lease, { dryRun });
 
       const queueToWorkerMs = Math.max(0, workerStartedAt - Date.parse(context.request.createdAt));
@@ -283,10 +306,9 @@ export class JevExecutionWorker {
             submitReadiness = readinessEvidence(current);
             const expiresAt = Date.parse(submitReadiness?.expiresAt || "");
             if (!Number.isFinite(expiresAt) || expiresAt - this.now().getTime() <= SUBMIT_READINESS_SAFETY_MARGIN_MS) {
-              const refreshed = await this.service.refreshCampaignJobReadiness(context.request.jobId, `jev-worker:${this.workerId}`, {
-                force: true,
-                executionId
-              });
+              const readinessRefreshOptions = { force: true, executionId };
+              if (executionBrowserSurface) readinessRefreshOptions.browserSurface = executionBrowserSurface;
+              const refreshed = await this.service.refreshCampaignJobReadiness(context.request.jobId, `jev-worker:${this.workerId}`, readinessRefreshOptions);
               current = await this.service.executionContext(executionId);
               submitReadiness = readinessEvidence(current);
               const refreshedExpiresAt = Date.parse(submitReadiness?.expiresAt || "");
@@ -380,8 +402,16 @@ export class JevExecutionWorker {
     } finally {
       clearInterval(heartbeat);
       if (executionSession) {
-        const release = this.executionSessionResolver?.release || executionSession.release || executionSession.detach;
-        if (typeof release === "function") await Promise.resolve().then(() => release.call(this.executionSessionResolver || executionSession, executionSession)).catch(() => undefined);
+        const envelopeRelease = resolvedSessionEnvelope && typeof resolvedSessionEnvelope.release === "function"
+          ? resolvedSessionEnvelope.release.bind(resolvedSessionEnvelope) : null;
+        const resolverRelease = typeof this.executionSessionResolver?.release === "function"
+          ? this.executionSessionResolver.release.bind(this.executionSessionResolver) : null;
+        const sessionRelease = typeof executionSession.release === "function"
+          ? executionSession.release.bind(executionSession) : typeof executionSession.detach === "function"
+            ? executionSession.detach.bind(executionSession) : null;
+        if (envelopeRelease) await Promise.resolve().then(() => envelopeRelease()).catch(() => undefined);
+        else if (resolverRelease) await Promise.resolve().then(() => resolverRelease(resolvedSessionEnvelope?.handle || executionSession)).catch(() => undefined);
+        else if (sessionRelease) await Promise.resolve().then(() => sessionRelease()).catch(() => undefined);
       }
       await this.service.releaseExecutionLease(lease.id, lease.token);
     }

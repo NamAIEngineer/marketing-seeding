@@ -14,6 +14,7 @@ function browserFixture(options = {}) {
   let phase = "composer";
   const calls = [];
   const browser = {
+    legacyMutationEvaluation: true,
     calls,
     async evaluate(_pageId, expression) {
       new Function(`return ${expression}`);
@@ -111,6 +112,7 @@ test("cleanup removes the video, selects composer Cancel over preview Close, and
   const calls = [];
   let phase = "composer-video";
   const browser = {
+    legacyMutationEvaluation: true,
     async evaluate(_pageId, expression) {
       new Function(`return ${expression}`);
       const name = expression.match(/LINKEDIN_MEDIA_[A-Z_]+/)?.[0];

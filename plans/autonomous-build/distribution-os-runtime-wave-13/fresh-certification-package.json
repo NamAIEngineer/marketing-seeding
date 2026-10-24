@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "packageType": "LINKEDIN_HARMLESS_CERTIFICATION_LANE",
+  "packageStatus": "READY_FOR_EXTERNAL_CERTIFICATION_INPUT",
+  "createdAt": "2026-10-24T07:11:57Z",
+  "source": {
+    "repository": "marketing-seeding",
+    "baseHead": "2e4d72f",
+  "candidateHead": "9300623",
+  "candidateTreeState": "DIRTY_DECLARED_WAVE_13_14_CHANGES",
+  "latestVerification": {
+    "npmTest": { "total": 698, "pass": 696, "fail": 0, "skip": 2 },
+    "syntax": "PASS",
+    "diffCheck": "PASS",
+    "uiTypecheck": "PASS",
+    "uiBuild": "PASS"
+  },
+    "wave": "13",
+    "softwareResult": "CONTROLLED_RUNTIME_READY_FOR_EXTERNAL_CERTIFICATION"
+  },
+  "freshIdentityPolicy": {
+    "executionId": "DERIVE_PER_LANE",
+    "campaignId": "DERIVE_FROM_EXACT_INPUT",
+    "jobId": "DERIVE_PER_LANE",
+    "windowId": "DERIVE_PER_LANE",
+    "grantId": "DERIVE_PER_LANE",
+    "leaseId": "DERIVE_PER_LANE",
+    "contentId": "DERIVE_FROM_EXACT_PAYLOAD_BYTES",
+    "contentSha256": "DERIVE_FROM_EXACT_PAYLOAD_BYTES",
+    "idempotencyKey": "DERIVE_FROM_FRESH_EXECUTION_SCOPE",
+    "publicationIdentity": "NEVER_REUSE_HISTORICAL_UNKNOWN"
+  },
+  "product": {
+    "repository": null,
+    "sourceCommit": null,
+    "evidenceReference": null,
+    "artifactIds": [],
+    "artifactHashes": []
+  },
+  "campaign": {
+    "objective": null,
+    "scope": "ONE_HARMLESS_LINKEDIN_CERTIFICATION_ATTEMPT",
+    "platform": "linkedin",
+    "target": {
+      "targetId": null,
+      "url": null,
+      "permission": null
+    }
+  },
+  "account": {
+    "accountId": null,
+    "profileReference": null,
+    "expectedIdentityUrl": null,
+    "permissionReference": null,
+    "sessionAuthorityReference": null,
+    "credentials": "NOT_ACCEPTED",
+    "cookies": "NOT_ACCEPTED",
+    "rawTokens": "NOT_ACCEPTED"
+  },
+  "session": {
+    "provider": "gpm",
+    "transport": "gpm-execution",
+    "providerProfileRef": null,
+    "sessionAuthority": null,
+    "hostAttestationReference": null,
+    "freshness": {
+      "validFrom": null,
+      "validUntil": null,
+      "maxAgeMs": 300000
+    },
+    "challengePolicy": "FAIL_CLOSED_AND_REQUIRE_HUMAN_ACTION",
+    "sessionSecrets": "NEVER_SERIALIZE"
+  },
+  "contentPolicy": {
+    "approvedPayloadBytes": null,
+    "contentId": null,
+    "contentSha256": null,
+    "audience": "PUBLIC",
+    "media": [],
+    "mediaPolicy": "NO_MEDIA_UNLESS_EXPLICITLY_APPROVED",
+    "claimEvidenceReferences": [],
+    "disclosure": null
+  },
+  "authorization": {
+    "standingAuthorizationReference": null,
+    "authorizationBinding": null,
+    "allowLiveExecution": false,
+    "validFrom": null,
+    "validUntil": null,
+    "maxExecutions": 1,
+    "cadence": {
+      "minimumIntervalSeconds": null,
+      "dailyQuota": 1,
+      "concurrency": 1
+    },
+    "window": "DERIVE_EXACTLY_FROM_VALIDITY_AND_SCHEDULE",
+    "grant": "DERIVE_EXACTLY_FROM_FRESH_EXECUTION",
+    "lease": "DERIVE_AT_DISPATCH",
+    "historicalUnknownReuse": false
+  },
+  "readiness": {
+    "required": [
+      "session_attached",
+      "host_attestation_fresh",
+      "expected_linkedin_identity_observed",
+      "account_profile_binding_matches",
+      "no_security_challenge",
+      "target_reachable",
+      "composer_reachable",
+      "reversible_transport_certified",
+      "fresh_exact_authorization",
+      "quota_cadence_concurrency_available"
+    ],
+    "finalSubmit": "DISABLED_UNTIL_ALL_REQUIRED_GATES_PASS",
+    "verification": "INDEPENDENT_PUBLIC_OBSERVER_WHERE_PERMITTED"
+  },
+  "externalInputRequired": {
+    "authorizedAccountProfileSession": true,
+    "targetPermission": true,
+    "approvedHarmlessContentMediaPolicy": true,
+    "utcValidityWindow": true,
+    "standingAuthorizationReference": true,
+    "mfaOrSecurityChallengeResolution": "ONLY_IF_TRIGGERED"
+  },
+  "safety": {
+    "maxFinalPostClicks": 1,
+    "retryUnknown": false,
+    "reuseHistoricalUnknown": false,
+    "transportSwitchAfterIntent": false,
+    "credentialExtraction": false,
+    "profileImpersonation": false
+  }
+}

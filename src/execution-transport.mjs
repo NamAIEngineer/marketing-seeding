@@ -10,6 +10,7 @@ export class ExecutionTransport {
   async resolve(_query) { throw new Error("resolve not implemented"); }
   async findControl(query) { return this.resolve(query); }
   async type(_target, _value) { throw new Error("type not implemented"); }
+  async screenshot(_options) { throw new Error("screenshot not implemented"); }
   async click(target, options = {}) {
     assertPreClickValidation(options);
     await options.validate();
@@ -17,6 +18,7 @@ export class ExecutionTransport {
   }
   async observeTransition(_options) { throw new Error("observeTransition not implemented"); }
   async verifyActivation(_options) { throw new Error("verifyActivation not implemented"); }
+  async evaluateMutation(_pageId, _expression, _options) { throw Object.assign(new Error("evaluateMutation not implemented"), { code: "TRANSPORT_CAPABILITY_UNSUPPORTED" }); }
   async detach() { throw new Error("detach not implemented"); }
   async closeOwnedResources() { return this.detach(); }
 }

@@ -948,6 +948,7 @@ test("human-required pre-submit adapter failures pause only the affected job and
 test("LinkedIn readiness uses the bound ORCA profile and stops before content or submission", async () => {
   const calls = [];
   const browser = {
+    legacyMutationEvaluation: true,
     async listProfiles() { calls.push("profiles"); return [{ id: "linkedin-profile-1" }]; },
     async listTabs() { calls.push("tabs"); return [{ id: "page-1", pageId: "page-1", profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }]; },
     async showTab(id) { calls.push(`show:${id}`); return { pageId: id, profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }; },
@@ -982,10 +983,39 @@ test("LinkedIn readiness uses the bound ORCA profile and stops before content or
   assert.equal(calls.some((call) => call === "fill" || call === "submit"), false);
 });
 
+test("LinkedIn readiness consumes an injected GPM browser surface", async () => {
+  const calls = [];
+  const orca = new Proxy({}, { get() { return () => { throw new Error("ORCA must not be used"); }; } });
+  const browserSurface = {
+    async listTabs() { calls.push("tabs"); return [{ pageId: "gpm-page", profileId: "gpm-profile", url: "https://www.linkedin.com/feed/" }]; },
+    async showTab(id) { calls.push(`show:${id}`); return { pageId: id, profileId: "gpm-profile", url: "https://www.linkedin.com/feed/" }; },
+    async navigate() { calls.push("navigate"); },
+    async waitForFeed() { calls.push("wait"); },
+    async evaluate(_id, expression) {
+      calls.push(expression.includes("const expectedPath") ? "context" : "composer");
+      if (expression.includes("const expectedPath")) return { linkedinDomain: true, loginRequired: false, securityChallenge: false, sessionAuthenticated: true, identityVerified: true, feedReachable: true };
+      return { linkedinDomain: true, route: true, dialogCount: 1, editorCount: 1, audience: true, postButton: true, mediaControl: true, advertisingControls: 0 };
+    },
+    async evaluateMutation(_id, expression) {
+      calls.push(expression.includes("const cancelButtons") ? "close" : "trigger");
+      return { clicked: true, closed: true };
+    },
+    async snapshot() { return '- textbox "Post editor" [ref=e11]'; }
+  };
+  const result = await new LinkedInReadinessProvider(orca).checkReadiness({
+    platform: "linkedin", profileId: "gpm-profile", expectedIdentityUrl: "https://www.linkedin.com/in/test-owner",
+    browserSurface
+  });
+  assert.equal(result.state, "READY");
+  assert.equal(calls.includes("tabs"), true);
+  assert.equal(calls.includes("close"), true);
+});
+
 test("LinkedIn readiness serializes profile observations across concurrent jobs", async () => {
   let active = 0;
   let peak = 0;
   const browser = {
+    legacyMutationEvaluation: true,
     async step() { active += 1; peak = Math.max(peak, active); await new Promise((resolve) => setTimeout(resolve, 2)); active -= 1; },
     async listProfiles() { await this.step(); return [{ id: "linkedin-profile-1" }]; },
     async listTabs() { await this.step(); return [{ id: "page-1", profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }]; },
@@ -1009,6 +1039,7 @@ test("LinkedIn readiness uses the owned React trigger handler when ORCA DOM clic
   let phase = "feed";
   let handlerActivations = 0;
   const browser = {
+    legacyMutationEvaluation: true,
     async listProfiles() { return [{ id: "linkedin-profile-1" }]; },
     async listTabs() { return [{ id: "page-1", profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }]; },
     async showTab(id) { return { pageId: id, profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }; },
@@ -1041,6 +1072,7 @@ test("LinkedIn readiness verifies composer close with a bounded feed-state wait"
   let escaped = false;
   let closeChecks = 0;
   const browser = {
+    legacyMutationEvaluation: true,
     async listProfiles() { return [{ id: "linkedin-profile-1" }]; },
     async listTabs() { return [{ id: "page-1", profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }]; },
     async showTab(id) { return { pageId: id, profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }; },
@@ -1068,6 +1100,7 @@ test("LinkedIn readiness closes the empty dialog composer when LinkedIn keeps it
   let phase = "feed";
   let closeRouteAccepted = false;
   const browser = {
+    legacyMutationEvaluation: true,
     async listProfiles() { return [{ id: "linkedin-profile-1" }]; },
     async listTabs() { return [{ id: "page-1", profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }]; },
     async showTab(id) { return { pageId: id, profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }; },
@@ -1103,6 +1136,7 @@ test("LinkedIn readiness recovers once from the explicit composer load error and
   let activations = 0;
   let feedNavigations = 0;
   const browser = {
+    legacyMutationEvaluation: true,
     async listProfiles() { return [{ id: "linkedin-profile-1" }]; },
     async listTabs() { return [{ id: "page-1", profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }]; },
     async showTab(id) { return { pageId: id, profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }; },
@@ -1271,6 +1305,7 @@ test("LinkedIn readiness waits for an asynchronously mounted composer before cla
   let composerChecks = 0;
   let triggerActivations = 0;
   const browser = {
+    legacyMutationEvaluation: true,
     async listProfiles() { return [{ id: "linkedin-profile-1" }]; },
     async listTabs() { return [{ id: "page-1", profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }]; },
     async showTab(id) { return { pageId: id, profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }; },
@@ -1305,6 +1340,7 @@ test("LinkedIn readiness retries once when the compose route commits before its 
   let routeOnlyChecks = 0;
   let triggerActivations = 0;
   const browser = {
+    legacyMutationEvaluation: true,
     async listProfiles() { return [{ id: "linkedin-profile-1" }]; },
     async listTabs() { return [{ id: "page-1", profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }]; },
     async showTab(id) { return { pageId: id, profileId: "linkedin-profile-1", url: phase === "route" ? "https://www.linkedin.com/sharing/compose" : "https://www.linkedin.com/feed/" }; },
@@ -1341,6 +1377,7 @@ test("LinkedIn readiness retries once when the compose route commits before its 
 
 test("LinkedIn readiness reports UNKNOWN for a partially loaded composer after bounded wait", async () => {
   const browser = {
+    legacyMutationEvaluation: true,
     async listProfiles() { return [{ id: "linkedin-profile-1" }]; },
     async listTabs() { return [{ id: "page-1", profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }]; },
     async showTab(id) { return { pageId: id, profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }; },
@@ -1368,6 +1405,7 @@ test("LinkedIn readiness reports UNKNOWN for a partially loaded composer after b
 
 test("partially loaded LinkedIn page does not become authentication_required", async () => {
   const browser = {
+    legacyMutationEvaluation: true,
     async listProfiles() { return [{ id: "linkedin-profile-1" }]; },
     async listTabs() { return [{ id: "page-1", profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }]; },
     async showTab(id) { return { pageId: id, profileId: "linkedin-profile-1", url: "https://www.linkedin.com/feed/" }; },

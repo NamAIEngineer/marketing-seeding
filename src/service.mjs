@@ -4778,7 +4778,7 @@ export class SeedingService {
     return results;
   }
 
-  async refreshCampaignJobReadiness(postId, actor = "scheduler", { force = false, executionId = null } = {}) {
+  async refreshCampaignJobReadiness(postId, actor = "scheduler", { force = false, executionId = null, browserSurface = null } = {}) {
     if (this.readinessInFlight.has(postId)) return { postId, status: "blocked", readinessState: "READINESS_CHECKING", reasons: ["readiness_check_in_progress"] };
     this.readinessInFlight.add(postId);
     try {
@@ -4823,7 +4823,8 @@ export class SeedingService {
       const context = {
         jobId: post.id, campaignId: post.campaignId, platform: target.channel,
         accountId: target.accountId, profileId: target.profileId, targetId: target.id,
-        targetUrl: target.url, identityReference: executionAccountIdentityReference(account)
+        targetUrl: target.url, identityReference: executionAccountIdentityReference(account),
+        browserSurface: browserSurface && typeof browserSurface === "object" ? browserSurface : undefined
       };
       if (!force && isReadinessFresh(target.readiness, context, new Date(), this.readinessTtlMs)) {
         const readiness = normalizeReadinessResult({

@@ -27,9 +27,54 @@ test("GPM transport requires injected attestation/protocol and verifies identity
   assert.equal((await transport.detach()).status, "ALREADY_DETACHED");
 });
 
+test("GPM transport attaches an inert protocol client before identity observation", async () => {
+  const calls = [];
+  const transport = new GpmExecutionTransport({
+    profileReference: "profile-1", sessionHandle: "s1",
+    protocolFactory: async () => ({
+      async attach() { calls.push("attach"); },
+      async observeIdentity() { calls.push("identity"); return { state: "READY", platform: "linkedin", accountId: "acct-1" }; },
+      async navigate() {}, async snapshot() {}, async resolve() {}, async type() {}, async click() {},
+      async observeTransition() {}, async verifyActivation() {}, async detach() {}
+    }),
+    hostAttestation: attestation
+  });
+  await transport.attach(new ExecutionSession({ lifecycle: "READY", provider: "gpm", profileReference: "profile-1", platform: "linkedin", accountId: "acct-1", transportRef: { id: "gpm" }, transportIdentity: transport.runtimeIdentity(), attestation }));
+  assert.deepEqual(calls, ["attach", "identity"]);
+  await transport.detach();
+});
+
 test("GPM transport fails closed on challenge and identity mismatch", async () => {
   const challenged = new GpmExecutionTransport({ profileReference: "profile-1", sessionHandle: "s1", protocolFactory: async () => ({ ...client(), async observeIdentity() { return { state: "CHALLENGED", platform: "linkedin", accountId: "acct-1" }; } }), hostAttestation: attestation });
   await assert.rejects(() => challenged.attach(session()), /challenge/);
   const mismatch = new GpmExecutionTransport({ profileReference: "profile-1", sessionHandle: "s1", protocolFactory: async () => ({ ...client(), async observeIdentity() { return { state: "READY", platform: "linkedin", accountId: "other" }; } }), hostAttestation: attestation });
   await assert.rejects(() => mismatch.attach(session()), /match/);
+});
+
+test("browser surface delegates generic protocol methods and preserves identity", async () => {
+  const calls = [];
+  const names = ["listTabs","showTab","navigate","waitForUrl","waitForExpression","evaluate","snapshot","fill","upload","uploadSelector","browserCommandCount"];
+  const c = client();
+  for (const name of names) c[name] = async (...args) => { calls.push([name, ...args]); return name === "browserCommandCount" ? 7 : { name }; };
+  const transport = new GpmExecutionTransport({ profileReference: "profile-1", sessionHandle: "s1", protocolFactory: async () => c, hostAttestation: attestation });
+  await transport.attach(session());
+  const surface = transport.asBrowserSurface();
+  for (const name of names) await surface[name]("x");
+  assert.equal(calls.length, names.length);
+  assert.equal(surface.runtimeIdentity, undefined);
+  assert.deepEqual(transport.runtimeIdentity(), { transport: "gpm-execution", provider: "gpm", providerVersion: "5.1.2" });
+});
+
+test("unsupported browser surface capability fails closed", async () => {
+  const transport = new GpmExecutionTransport({ profileReference: "profile-1", sessionHandle: "s1", protocolFactory: async () => client(), hostAttestation: attestation });
+  await transport.attach(session());
+  assert.throws(() => transport.asBrowserSurface().evaluate("p", "x"), { code: "GPM_PROTOCOL_CAPABILITY_UNSUPPORTED" });
+});
+
+test("browser surface serialization excludes profile and attestation secrets", async () => {
+  const transport = new GpmExecutionTransport({ profileReference: "profile-secret", sessionHandle: "session-secret", protocolFactory: async () => client(), hostAttestation: { ...attestation, evidence: "token-secret" } });
+  const serialized = JSON.stringify({ identity: transport.runtimeIdentity(), surface: transport.browserSurface });
+  assert.equal(serialized.includes("profile-secret"), false);
+  assert.equal(serialized.includes("session-secret"), false);
+  assert.equal(serialized.includes("token-secret"), false);
 });

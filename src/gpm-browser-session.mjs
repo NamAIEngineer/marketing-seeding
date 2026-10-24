@@ -3,6 +3,8 @@ import { GpmChromeTransport } from "./browser-runtime-transports.mjs";
 const text = (value) => typeof value === "string" ? value.trim() : "";
 const fail = (code, message) => Object.assign(new Error(message), { code });
 const safe = (value, limit = 120) => text(value).slice(0, limit);
+const BROWSER_SURFACE = ["listTabs", "showTab", "navigate", "waitForUrl", "waitForFeed", "waitForExpression", "evaluate", "evaluateMutation", "snapshot", "fill", "upload", "uploadSelector", "browserCommandCount"];
+const UNSAFE_TRANSPORT_KEY = /(cookie|password|token|secret|credential|sessionhandle|rawsession|storagestate|privatekey|accesskey)/i;
 
 function observedIdentity(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -46,7 +48,19 @@ export class GpmBrowserSession {
     if (["challenge", "challenged", "unknown", "unavailable", "not_ready"].includes(state)) throw fail(state === "challenge" || state === "challenged" ? "SESSION_CHALLENGE" : "SESSION_IDENTITY_UNKNOWN", "GPM session identity is not ready");
     if (!identity || !["ready", "healthy", "attached", ""].includes(state)) throw fail("SESSION_IDENTITY_UNKNOWN", "GPM session identity is unknown");
     if (identity.platform !== this.#selection.platform || identity.accountId !== this.#selection.accountId || identity.profileReference !== this.#selection.profileReference) throw fail("SESSION_BINDING_MISMATCH", "observed GPM identity does not match selected binding");
+    const providedTransport = result?.transport;
     const client = result?.client || result?.transportClient;
+    if (providedTransport) {
+      if (Object.keys(providedTransport).some((key) => UNSAFE_TRANSPORT_KEY.test(key))) throw fail("GPM_TRANSPORT_SECRET_FIELD", "attached transport contains secret-like material");
+      if (typeof providedTransport.runtimeIdentity !== "function") throw fail("GPM_TRANSPORT_IDENTITY_MISSING", "attached GPM transport identity is missing");
+      const runtimeIdentity = providedTransport.runtimeIdentity();
+      if (String(runtimeIdentity?.provider || "").toLowerCase() !== "gpm") throw fail("GPM_PROVIDER_MISMATCH", "attached transport is not GPM");
+      const browserSurface = result?.browserSurface || providedTransport.browserSurface || providedTransport.browser;
+      if (!browserSurface || typeof browserSurface !== "object") throw fail("GPM_BROWSER_SURFACE_MISSING", "attached GPM browser surface is missing");
+      const capabilities = Array.isArray(result?.capabilities) ? result.capabilities : ["health", "runtimeIdentity", "profileIdentity", "sessionIdentity", "navigate", "snapshot", "findControl", "type", "click", "screenshot", "observeTransition", "verifyActivation", "closeOwnedResources", ...BROWSER_SURFACE];
+      this.#attached = Object.freeze({ status: "ATTACHED", transport: providedTransport, browserSurface, runtimeIdentity, attestation: result?.attestation || providedTransport.attestation || null, capabilities: Object.freeze([...new Set(capabilities)]) });
+      return this.#attached;
+    }
     if (!client || typeof client !== "object") throw fail("GPM_CLIENT_MISSING", "attached GPM client is missing");
     const base = new GpmChromeTransport({ client, providerVersion: result?.providerVersion || null });
     const runtimeIdentity = () => Object.freeze({ transport: "gpm-chrome", provider: "gpm", providerVersion: base.providerVersion, attached: true });
@@ -65,8 +79,13 @@ export class GpmBrowserSession {
       verifyActivation: (...args) => base.verifyActivation(...args),
       closeOwnedResources: (...args) => base.closeOwnedResources(...args)
     };
+    const browserSurface = result?.browserSurface || Object.fromEntries(BROWSER_SURFACE.map((name) => [name, (...args) => {
+      if (typeof client[name] !== "function") throw fail("GPM_PROTOCOL_CAPABILITY_UNSUPPORTED", `GPM protocol capability unsupported: ${name}`);
+      return client[name](...args);
+    }]));
+    Object.freeze(browserSurface);
     Object.freeze(transport);
-    this.#attached = Object.freeze({ status: "ATTACHED", transport, runtimeIdentity: transport.runtimeIdentity(), capabilities: Object.freeze(["health", "runtimeIdentity", "profileIdentity", "sessionIdentity", "navigate", "snapshot", "findControl", "type", "click", "screenshot", "observeTransition", "verifyActivation", "closeOwnedResources"]) });
+    this.#attached = Object.freeze({ status: "ATTACHED", transport, browserSurface, runtimeIdentity: transport.runtimeIdentity(), capabilities: Object.freeze(["health", "runtimeIdentity", "profileIdentity", "sessionIdentity", "navigate", "snapshot", "findControl", "type", "click", "screenshot", "observeTransition", "verifyActivation", "closeOwnedResources", ...BROWSER_SURFACE]) });
     return this.#attached;
   }
 }

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { classifyReadinessError } from "./readiness.mjs";
 import { LINKEDIN_FEED_URL_FOR_READINESS } from "./orca-browser-client.mjs";
+import { evaluateBrowser } from "./browser-evaluation.mjs";
 
 const CONTEXT_EXPRESSION = (expectedPath) => `(() => {
   const path = location.pathname || '';
@@ -168,7 +169,7 @@ export async function openLinkedInComposer(browser, pageId, { mountTimeoutMs = 8
     // ORCA's current click command acknowledges this custom role=button without
     // dispatching a page click. Use the accessible label and strict feed/dialog
     // preconditions to activate that one control directly through the browser DOM.
-    const activation = await browser.evaluate(pageId, COMPOSER_TRIGGER_DOM_CLICK);
+    const activation = await evaluateBrowser(browser, pageId, COMPOSER_TRIGGER_DOM_CLICK, { mutation: true, operation: "LINKEDIN_COMPOSER_TRIGGER" });
     let state = await browser.evaluate(pageId, COMPOSER_EXPRESSION);
     domFallbackUsed ||= activation?.clicked === true;
     if (classifyLinkedInComposerState(state) === "CONFIRMED") return { state, domFallbackUsed };
@@ -226,21 +227,30 @@ export class LinkedInReadinessProvider {
   async #checkReadiness(context) {
     const checkedAt = new Date();
     try {
+      // A live worker may pass its already-attached provider-neutral surface.
+      // Readiness must consume that exact surface; the ORCA browser remains
+      // the compatibility provider only when no injected surface exists.
+      const browser = context.browserSurface || this.browser;
+      const injectedSurface = Boolean(context.browserSurface);
       const identityReference = context.identityReference || context.expectedIdentityUrl;
       if (!context.profileId || !identityReference) {
         return { state: "HUMAN_REQUIRED", reasonCode: "account_identity_not_configured", retryable: false, recoveryClassification: "HUMAN_REQUIRED", checkedAt: checkedAt.toISOString() };
       }
-      const profile = (await this.browser.listProfiles()).find((item) => (typeof item === "string" ? item : item.id || item.profileId) === context.profileId);
+      const profiles = typeof browser.listProfiles === "function" ? await browser.listProfiles() : null;
+      const profile = profiles ? profiles.find((item) => (typeof item === "string" ? item : item.id || item.profileId) === context.profileId) : injectedSurface ? { id: context.profileId } : null;
       if (!profile) {
         return { state: "HUMAN_REQUIRED", reasonCode: "expected_profile_missing", retryable: false, recoveryClassification: "HUMAN_REQUIRED", checkedAt: checkedAt.toISOString() };
       }
 
-      const tabs = (await this.browser.listTabs()).filter((tab) => {
+      const tabs = (await browser.listTabs()).filter((tab) => {
         const profileId = typeof tab.profile === "string" ? tab.profile : tab.profile?.id || tab.profile?.profileId || tab.profileId;
         return profileId === context.profileId;
       });
       let pageId;
-      if (tabs.length === 0) pageId = await this.browser.createTab(context.profileId);
+      if (tabs.length === 0) {
+        if (injectedSurface) return { state: "UNKNOWN", reasonCode: "gpm_linkedin_tab_missing", retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString() };
+        pageId = await browser.createTab(context.profileId);
+      }
       else {
         const linkedinTabs = tabs.filter((tab) => /(^|\.)linkedin\.com$/i.test(new URL(tab.url || "about:blank").hostname));
         if (linkedinTabs.length > 1) {
@@ -252,17 +262,17 @@ export class LinkedInReadinessProvider {
       }
       if (!pageId) return { state: "UNKNOWN", reasonCode: "browser_page_identity_missing", retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString() };
 
-      let tab = await this.browser.showTab(pageId);
+      let tab = await browser.showTab(pageId);
       if (tab.profileId !== context.profileId) {
         return { state: "HUMAN_REQUIRED", reasonCode: "browser_profile_mismatch", retryable: false, recoveryClassification: "HUMAN_REQUIRED", checkedAt: checkedAt.toISOString() };
       }
       if (!/(^|\.)linkedin\.com$/i.test(new URL(tab.url || "about:blank").hostname) || !/\/feed\/?$/i.test(new URL(tab.url).pathname)) {
-        await this.browser.navigate(pageId, LINKEDIN_FEED_URL_FOR_READINESS);
-        await this.browser.waitForFeed(pageId);
-        tab = await this.browser.showTab(pageId);
+        await browser.navigate(pageId, LINKEDIN_FEED_URL_FOR_READINESS);
+        await browser.waitForFeed(pageId);
+        tab = await browser.showTab(pageId);
       }
 
-      let contextState = await this.browser.evaluate(pageId, CONTEXT_EXPRESSION(linkedInPath(identityReference)));
+      let contextState = await browser.evaluate(pageId, CONTEXT_EXPRESSION(linkedInPath(identityReference)));
       if (contextState.securityChallenge) {
         return { state: "HUMAN_REQUIRED", reasonCode: "security_challenge", retryable: false, recoveryClassification: "HUMAN_REQUIRED", checkedAt: checkedAt.toISOString() };
       }
@@ -279,21 +289,21 @@ export class LinkedInReadinessProvider {
         return { state: "UNKNOWN", reasonCode: "linkedin_feed_unavailable", retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString() };
       }
 
-      const opened = await openLinkedInComposer(this.browser, pageId, { expectedIdentityPath: linkedInPath(identityReference) });
+      const opened = await openLinkedInComposer(browser, pageId, { expectedIdentityPath: linkedInPath(identityReference) });
       const composer = opened.state;
       if (opened.reasonCode) return { state: "BLOCKED", reasonCode: "composer_trigger_missing", retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString() };
       const composerClassification = classifyLinkedInComposerState(composer);
       if (composerClassification !== "CONFIRMED") {
-        await this.browser.pressEscape(pageId).catch(() => undefined);
+        if (typeof browser.pressEscape === "function") await browser.pressEscape(pageId).catch(() => undefined);
         return {
           state: composerClassification === "UNKNOWN" ? "UNKNOWN" : "BLOCKED",
           reasonCode: composerClassification === "UNKNOWN" ? "composer_state_incomplete" : "composer_not_confirmed",
           retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString()
         };
       }
-      const closeResult = await this.browser.evaluate(pageId, CLOSE_EMPTY_COMPOSER_EXPRESSION);
+      const closeResult = await evaluateBrowser(browser, pageId, CLOSE_EMPTY_COMPOSER_EXPRESSION, { mutation: true, operation: "LINKEDIN_COMPOSER_CLOSE" });
       if (!closeResult?.closed) return { state: "UNKNOWN", reasonCode: closeResult?.reason || "composer_close_unverified", retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString() };
-      contextState = await waitForLinkedInFeed(this.browser, pageId, linkedInPath(identityReference));
+      contextState = await waitForLinkedInFeed(browser, pageId, linkedInPath(identityReference));
       const composerClosed = contextState.feedReachable && contextState.identityVerified && contextState.sessionAuthenticated;
       if (!composerClosed) return { state: "UNKNOWN", reasonCode: "composer_close_unverified", retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString() };
       const finishedAt = new Date();

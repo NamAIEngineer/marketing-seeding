@@ -438,19 +438,26 @@ export class LinkedInAdapter {
   });
 
   constructor(browser, {
-    verifier = new LinkedInPublicationVerifier(browser), mediaTimeoutMs = 60_000,
+    verifier = null, mediaTimeoutMs = 60_000,
     postClickEvidenceTimeoutMs = 5_000, transport = null, transportCandidates = null,
-    transportCertifications = [], transportRuntime = null, requireCertifiedTransport = false
+    transportCertifications = [], transportRuntime = null, requireCertifiedTransport = false,
+    session = null, browserSurface = null
   } = {}) {
-    this.browser = browser;
-    this.verifier = verifier;
+    // A worker may inject a composed session `{ transport, browserSurface }`.
+    // Once injected, this adapter never creates or silently replaces it with ORCA.
+    const injectedTransport = session?.transport || transport;
+    const injectedSurface = browserSurface || session?.browserSurface || injectedTransport?.browserSurface || injectedTransport?.browser;
+    this.browser = injectedSurface || browser;
+    this.verifier = verifier || new LinkedInPublicationVerifier(this.browser);
     this.mediaTimeoutMs = mediaTimeoutMs;
     this.postClickEvidenceTimeoutMs = postClickEvidenceTimeoutMs;
-    this.transport = transport || new OrcaAccessibilityTransport(browser);
-    this.transportCandidates = Array.isArray(transportCandidates) && transportCandidates.length
-      ? transportCandidates.slice() : [this.transport];
+    this.injectedTransport = Boolean(injectedTransport);
+    this.transport = injectedTransport || new OrcaAccessibilityTransport(browser);
+    this.transportCandidates = this.injectedTransport
+      ? [this.transport]
+      : (Array.isArray(transportCandidates) && transportCandidates.length ? transportCandidates.slice() : [this.transport]);
     this.transportCertifications = Array.isArray(transportCertifications) ? transportCertifications.slice() : [];
-    this.transportRuntime = transportRuntime || browser?.runtimeIdentity?.() || { providerVersion: browser?.runtimeVersion || null };
+    this.transportRuntime = transportRuntime || injectedTransport?.runtimeIdentity?.() || browser?.runtimeIdentity?.() || { providerVersion: browser?.runtimeVersion || null };
     this.requireCertifiedTransport = requireCertifiedTransport === true;
     this.requiresCertifiedTransport = this.requireCertifiedTransport;
     this.selectedTransport = this.transport.runtimeIdentity?.().transport || "browser-interaction";
@@ -459,6 +466,9 @@ export class LinkedInAdapter {
   }
 
   #selectSubmitTransport(executionBinding = null) {
+    // Session/worker selection is authoritative. Re-selection here could
+    // switch transports after the worker has bound an execution.
+    if (this.injectedTransport && !this.requireCertifiedTransport) return this.transport;
     if (!this.requireCertifiedTransport) return this.transport;
     const selected = selectCertifiedTransport({
       transports: this.transportCandidates,
@@ -964,7 +974,39 @@ export class LinkedInAdapter {
     await cleanupLinkedInComposer(this.browser, pageId, request.content.sha256);
   }
 
-  async execute(request, { dryRun = true, liveEnabled = false, beforeSubmitIntent, beforeProviderSend, onSubmitSent, account, expectedIdentityUrl = account?.identityReference || account?.expectedIdentityUrl } = {}) {
+  /** Execute one request with optional per-execution injected session.
+   * The injected session is authoritative for this call; no ORCA fallback is
+   * created when transport/browserSurface is supplied.
+   */
+  async execute(request, options = {}) {
+    const { executionSession = null, transport = null, browserSurface = null } = options;
+    const selectedTransport = executionSession?.transport || transport;
+    const selectedSurface = browserSurface || executionSession?.browserSurface || selectedTransport?.browserSurface || selectedTransport?.browser;
+    if (selectedTransport || selectedSurface) {
+      if (!selectedTransport || !selectedSurface) {
+        return { submitState: "FAILED", reasonCode: "EXECUTION_SESSION_SURFACE_INCOMPLETE", errorClassification: "VALIDATION_ERROR", recoveryClassification: "NONE" };
+      }
+      const required = ["listTabs", "showTab", "navigate", "waitForUrl", "waitForFeed", "evaluate", "snapshot", "fill"];
+      const missing = required.filter((name) => typeof selectedSurface[name] !== "function");
+      if (missing.length) {
+        return { submitState: "FAILED", reasonCode: "EXECUTION_SESSION_SURFACE_UNSUPPORTED", missingCapabilities: missing, errorClassification: "VALIDATION_ERROR", recoveryClassification: "NONE" };
+      }
+      const prior = { browser: this.browser, verifierBrowser: this.verifier?.browser, transport: this.transport, transportCandidates: this.transportCandidates, injectedTransport: this.injectedTransport, selectedTransport: this.selectedTransport, selectedTransportIdentity: this.selectedTransportIdentity, transportRuntime: this.transportRuntime };
+      this.browser = selectedSurface;
+      if (this.verifier?.browser) this.verifier.browser = selectedSurface;
+      this.transport = selectedTransport;
+      this.transportCandidates = [selectedTransport];
+      this.injectedTransport = true;
+      this.selectedTransportIdentity = selectedTransport.runtimeIdentity?.() || { transport: "browser-interaction" };
+      this.selectedTransport = this.selectedTransportIdentity.transport || "browser-interaction";
+      this.transportRuntime = this.selectedTransportIdentity;
+      try { return await this.#executeInternal(request, options); }
+      finally { Object.assign(this, prior); if (this.verifier?.browser && prior.verifierBrowser) this.verifier.browser = prior.verifierBrowser; }
+    }
+    return this.#executeInternal(request, options);
+  }
+
+  async #executeInternal(request, { dryRun = true, liveEnabled = false, beforeSubmitIntent, beforeProviderSend, onSubmitSent, account, expectedIdentityUrl = account?.identityReference || account?.expectedIdentityUrl } = {}) {
     const startedAt = new Date().toISOString();
     const began = Date.now();
     let pageId;
