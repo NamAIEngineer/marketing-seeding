@@ -1,0 +1,734 @@
+{
+  "schemaVersion": 1,
+  "kind": "GPM_LINKEDIN_REVERSIBLE_COMPOSER_CALIBRATION",
+  "provider": "GPM",
+  "profileReference": "82614dc6-2b75-4515-896c-32f73cb5ec51",
+  "profileLabel": "Profile 5671",
+  "browser": "Chrome/154.0.8037.98",
+  "target": "linkedin.com/feed/",
+  "attempts": 20,
+  "positiveActivations": 19,
+  "wrongTargetActivations": 0,
+  "activationSuccessRate": 0.95,
+  "silentFallbacks": 0,
+  "providerSwitches": 0,
+  "finalPostClicks": 0,
+  "publicationAttempts": 0,
+  "policy": {
+    "minimumTrials": 20,
+    "minimumActivationRate": 0.95,
+    "maximumWrongTargetActivations": 0
+  },
+  "certified": true,
+  "identityBinding": {
+    "runtimeVersion": "Chrome/154.0.8037.98",
+    "profileReferenceHash": "sha256:4aa099c99f37445307998cb6e80298e8",
+    "sessionReferenceHash": "sha256:a74f03508455489795023db68eef0bc6",
+    "adapterVersion": "wave/distribution-os-runtime-wave-13-bridge@117fe08040ec46d664dbf54ef157d01099897a4b"
+  },
+  "attestationReference": "sha256:18118ff2d3eb03b5c638d6b8299c8c2d",
+  "rows": [
+    {
+      "trial": 1,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": false,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_NOT_OBSERVED",
+      "error": {
+        "code": "GPM_CDP_TIMEOUT",
+        "message": "GPM CDP command timed out: Runtime.evaluate"
+      }
+    },
+    {
+      "trial": 2,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 3,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 4,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 5,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 6,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 7,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 8,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": false,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 9,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": false,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 10,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 11,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 12,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 13,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": false,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 14,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": false,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 15,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": false,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 16,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": false,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 17,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": false,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 18,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 19,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": false,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    },
+    {
+      "trial": 20,
+      "identity": {
+        "feedReachable": true,
+        "sessionAuthenticated": true,
+        "identityVerified": true,
+        "securityChallenge": false
+      },
+      "before": "NOT_COMPOSER",
+      "preflight": {
+        "targetCount": 2,
+        "roleButtonCount": 1,
+        "host": "linkedin.com",
+        "path": "/feed",
+        "passed": true
+      },
+      "command": {
+        "completed": true,
+        "activationMethod": "owned_react_handler"
+      },
+      "after": {
+        "route": false,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "cleanup": {
+        "closed": true
+      }
+    }
+  ],
+  "finishedAt": "2026-10-25T23:52:38.437Z"
+}

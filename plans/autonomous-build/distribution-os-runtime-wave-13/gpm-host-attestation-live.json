@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "kind": "GPM_HOST_ATTESTATION",
+  "provider": "gpm",
+  "providerVersion": "GPMLoginGlobal v5.1.2-stable",
+  "profile": {
+    "providerProfileRef": "82614dc6-2b75-4515-896c-32f73cb5ec51",
+    "label": "Profile 5671",
+    "processId": 6884,
+    "profileContinuity": "PASS"
+  },
+  "runtime": {
+    "browser": "Chrome/154.0.8037.98",
+    "runtimeIdentity": "GPM browser PID 6884; GPM PID 6723",
+    "cdpEndpointReference": "sha256:7906f7e8dc21855e0f50e03d2448a9a3",
+    "attachReference": "loopback-port:50058"
+  },
+  "binding": {
+    "platform": "linkedin",
+    "accountId": "linkedin_primary",
+    "observedIdentity": "Nam Phạm Phương",
+    "expectedIdentityUrl": "https://www.linkedin.com/in/nam-ph%E1%BA%A1m-ph%C6%B0%C6%A1ng-b48897278/",
+    "identityMatch": "PASS",
+    "feedReachable": "PASS",
+    "authwall": "ABSENT",
+    "securityChallenge": "ABSENT"
+  },
+  "capabilities": [
+    "health",
+    "runtimeIdentity",
+    "profileIdentity",
+    "sessionIdentity",
+    "navigate",
+    "snapshot",
+    "findControl",
+    "type",
+    "click",
+    "observeTransition",
+    "verifyActivation",
+    "closeOwnedResources"
+  ],
+  "attestationReference": "sha256:b7d441ea88c404bc3fc679df649532e9",
+  "attestedAt": "2026-10-25T23:52:56Z",
+  "expiresAt": "2026-10-25T23:57:56Z",
+  "secretsPersisted": false,
+  "rawWebsocketUrlPersisted": false,
+  "rawCredentialsPersisted": false
+}
