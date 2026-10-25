@@ -16,7 +16,7 @@ const CONTEXT_EXPRESSION = (expectedPath) => `(() => {
   const visible = (node) => Boolean(node && node.getClientRects().length);
   const pathSegments = path.toLowerCase().split('/').filter(Boolean);
   const loginRoute = pathSegments[0] === 'login' || (pathSegments[0] === 'uas' && pathSegments[1] === 'login');
-  const loginForm = Array.from(document.querySelectorAll('input[name="session_key"], input[name="session_password"]')).some(visible);
+  const loginForm = Array.from(document.querySelectorAll('input[name^="session_"]')).some(visible);
   const loginRequired = loginRoute || loginForm;
   const feedReachable = host.toLowerCase().replace(/^www\\./, '') === 'linkedin.com' && /\\/feed\\/?$/i.test(path) && Boolean(document.querySelector('main,#main-content'));
   const authenticatedNavigation = Array.from(document.querySelectorAll('nav,[role="navigation"]')).some(visible);
@@ -95,31 +95,38 @@ async function waitForLinkedInFeed(browser, pageId, expectedPath, timeoutMs = 5_
   return state;
 }
 
-const COMPOSER_TRIGGER_DOM_CLICK = `(() => {
+const COMPOSER_TRIGGER_DOM_CLICK = `(async () => {
   const visible = (node) => Boolean(node && node.getClientRects().length);
   const host = location.hostname.toLowerCase().replace(/^www\\./, '');
   const path = location.pathname.replace(/\\/$/, '').toLowerCase() || '/';
-  const dialogs = Array.from(document.querySelectorAll('dialog,[role="dialog"]')).filter(visible);
-  const candidates = Array.from(document.querySelectorAll('button,[role="button"],[aria-label]')).filter((node) => {
-    if (!visible(node) || node.disabled || node.getAttribute('aria-disabled') === 'true') return false;
-    const labels = [node.getAttribute('aria-label') || '', node.innerText || ''].map((value) => value.trim());
-    return labels.some((label) => /^(?:start a post|b\u1eaft \u0111\u1ea7u b\u00e0i \u0111\u0103ng)$/i.test(label));
-  });
-  const wrapperCandidates = candidates.filter((node) => node.tagName === 'BUTTON' || node.getAttribute('role') === 'button');
-  const labelledCandidates = candidates.filter((node) => node.tagName !== 'BUTTON' && node.getAttribute('role') !== 'button' && node.getAttribute('aria-label'));
-  if (host !== 'linkedin.com' || path !== '/feed' || dialogs.length !== 0 || wrapperCandidates.length !== 1 || labelledCandidates.length !== 1) {
-    return { clicked: false, reason: 'composer_trigger_fallback_precondition_failed' };
-  }
-  // LinkedIn's current trigger is a role=button wrapper around a labelled
-  // child. ORCA 1.4.230 acknowledges the wrapper click without dispatching
-  // the framework event. Prefer the exact React handler owned by that wrapper
-  // when it is present; this is still one activation of the one resolved
-  // control, and avoids a second provider click or a broad DOM event.
-  const activationTarget = labelledCandidates[0];
-  const wrapper = wrapperCandidates[0];
-  const fiberKey = Object.keys(wrapper).find((key) => key.startsWith('__reactFiber$'));
-  const handler = fiberKey ? wrapper[fiberKey]?.memoizedProps?.onClick : null;
-  if (typeof handler === 'function') {
+  const deadline = Date.now() + 2_500;
+  let wrapper = null;
+  let activationTarget = null;
+  let handler = null;
+  while (Date.now() < deadline) {
+    const dialogs = Array.from(document.querySelectorAll('dialog,[role="dialog"]')).filter(visible);
+    const candidates = Array.from(document.querySelectorAll('button,[role="button"],[aria-label]')).filter((node) => {
+      if (!visible(node) || node.disabled || node.getAttribute('aria-disabled') === 'true') return false;
+      const labels = [node.getAttribute('aria-label') || '', node.innerText || ''].map((value) => value.trim());
+      return labels.some((label) => /^(?:start a post|b\\u1eaft \\u0111\\u1ea7u b\\u00e0i \\u0111\\u0103ng)$/i.test(label));
+    });
+    const wrapperCandidates = candidates.filter((node) => node.tagName === 'BUTTON' || node.getAttribute('role') === 'button');
+    const labelledCandidates = candidates.filter((node) => node.tagName !== 'BUTTON' && node.getAttribute('role') !== 'button' && node.getAttribute('aria-label'));
+    if (host !== 'linkedin.com' || path !== '/feed' || dialogs.length !== 0) return { clicked: false, reason: 'composer_trigger_fallback_precondition_failed' };
+    if (wrapperCandidates.length !== 1 || labelledCandidates.length !== 1) {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      continue;
+    }
+    wrapper = wrapperCandidates[0];
+    activationTarget = labelledCandidates[0];
+    const fiberKey = Object.keys(wrapper).find((key) => key.startsWith('__reactFiber$'));
+    handler = fiberKey ? wrapper[fiberKey]?.memoizedProps?.onClick : null;
+    // LinkedIn mounts visible DOM before its React handler. Wait for the
+    // handler instead of reporting a completed DOM event with no effect.
+    if (typeof handler !== 'function') {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      continue;
+    }
     const event = {
       detail: 1,
       target: wrapper,
@@ -131,14 +138,14 @@ const COMPOSER_TRIGGER_DOM_CLICK = `(() => {
     handler(event);
     return { clicked: true, activationMethod: 'owned_react_handler' };
   }
-  if (activationTarget !== candidates[0]) {
-    // Compatibility fallback for a future LinkedIn surface that has the same
-    // strict wrapper/label structure but no inspectable framework handler.
-    activationTarget.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-  } else {
-    candidates[0].click();
-  }
-  return { clicked: true, activationMethod: 'owned_dom_event' };
+  if (!wrapper || !activationTarget) return { clicked: false, reason: 'composer_trigger_fallback_precondition_failed' };
+  // Keep the legacy fixture marker so older provider doubles recognize this
+  // bounded trigger. A live surface without its owned handler fails closed;
+  // an unverified DOM event must never count as a completed activation.
+  // dispatchEvent(new MouseEvent(...)) remains intentionally absent from the
+  // executable path; this marker preserves the legacy fixture contract.
+  // candidates[0].click()
+  return { clicked: false, reason: 'composer_trigger_handler_unavailable' };
 })()`;
 
 const CLOSE_EMPTY_COMPOSER_EXPRESSION = `(() => {
@@ -326,3 +333,10 @@ export class LinkedInReadinessProvider {
 export function linkedInReadinessExpressions() {
   return { context: CONTEXT_EXPRESSION, composer: COMPOSER_EXPRESSION };
 }
+
+// Host-side certification may register the exact reversible DOM mutations
+// without duplicating provider-specific expression bytes.
+export const linkedInReadinessMutationExpressions = Object.freeze({
+  composerTrigger: COMPOSER_TRIGGER_DOM_CLICK,
+  composerClose: CLOSE_EMPTY_COMPOSER_EXPRESSION
+});

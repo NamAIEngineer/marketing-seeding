@@ -45,12 +45,14 @@ function endpointFromData(data) {
   const address = data.remote_debugging_address;
   const port = data.remote_debugging_port;
   let raw;
-  if (websocket !== undefined) {
-    if (typeof websocket !== "string" || !websocket.trim()) fail("ENDPOINT_INVALID", "websocket debugging URL is invalid");
+  if (typeof websocket === "string" && websocket.trim()) {
     raw = websocket.trim();
   } else if (address !== undefined || port !== undefined) {
-    if (typeof address !== "string" || !address.trim() || !Number.isInteger(port) || port < 1 || port > 65535) fail("ENDPOINT_INVALID", "remote debugging address or port is invalid");
-    raw = `${address.trim().includes("://") ? address.trim() : `http://${address.trim()}`}:${port}`;
+    // GPMLogin's Local API returns only the loopback port on current builds.
+    // Keep the endpoint local when the optional address is omitted.
+    const host = address === undefined ? "127.0.0.1" : address;
+    if (typeof host !== "string" || !host.trim() || !Number.isInteger(port) || port < 1 || port > 65535) fail("ENDPOINT_INVALID", "remote debugging address or port is invalid");
+    raw = `${host.trim().includes("://") ? host.trim() : `http://${host.trim()}`}:${port}`;
   } else fail("SCHEMA_INVALID", "start response has no debugging endpoint");
 
   let url;

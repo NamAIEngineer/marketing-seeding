@@ -8,9 +8,9 @@ const MAX_TEXT = 32_000;
 const DEFAULT_TIMEOUT_MS = 8_000;
 const WS_OPEN = 1;
 const FORBIDDEN_EXPRESSION = /(?:document\s*\[|window\s*\[|globalThis\s*\[|navigator\s*\[|localStorage|sessionStorage|indexedDB|document\s*\.\s*cookie|(?:^|[^\w])(?:fetch|XMLHttpRequest|WebSocket|EventSource|sendBeacon|eval|Function)\s*\(|(?:Object|Reflect)\s*\[|Object\s*\.\s*getOwnPropertyDescriptor|Reflect\s*\.|new\s+Image\s*\(|\.\s*(?:src|href)\s*=|\.\s*value\s*(?!=)|location\s*=|location\s*\.\s*(?:assign|replace|reload)\s*\(|constructor\s*\.\s*constructor|document\s*\.\s*createElement)/i;
-const MUTATING_EXPRESSION = /(?:\.\s*(?:click|dispatchEvent|focus|setAttribute|removeAttribute|deleteContents|append|prepend|remove|replaceWith|insertAdjacent(?:Element|HTML|Text))\s*\(|\.\s*(?:value|textContent|innerText|innerHTML|outerHTML)\s*=|(?:\.[A-Za-z_$][\w$]*|\[[^\]]+\])\s*=|\b(?:InputEvent|MouseEvent)\s*\(|crypto\s*\.\s*subtle\s*\.|document\s*\.\s*createRange\s*\()/i;
+const MUTATING_EXPRESSION = /(?:\.\s*(?:click|dispatchEvent|focus|setAttribute|removeAttribute|deleteContents|append|prepend|remove|replaceWith|insertAdjacent(?:Element|HTML|Text))\s*\(|\.\s*(?:value|textContent|innerText|innerHTML|outerHTML)\s*=(?!=)|(?:\.[A-Za-z_$][\w$]*|\[[^\]]+\])\s*=(?!=)|\b(?:InputEvent|MouseEvent)\s*\(|document\s*\.\s*execCommand\s*\(|crypto\s*\.\s*subtle\s*\.|document\s*\.\s*createRange\s*\()/i;
 const SAFE_GLOBAL_PROPERTIES = Object.freeze({
-  document: new Set(["activeElement", "body", "createRange", "documentElement", "elementFromPoint", "querySelector", "querySelectorAll", "title"]),
+  document: new Set(["activeElement", "body", "createRange", "documentElement", "elementFromPoint", "execCommand", "querySelector", "querySelectorAll", "title"]),
   location: new Set(["href", "hostname", "pathname", "origin"]),
   window: new Set(["scrollX", "scrollY"]),
   crypto: new Set(["subtle"])
@@ -141,7 +141,7 @@ function assertBoundedExpression(script, { allowMutation = false } = {}) {
  * sends credential/session material. Provider-specific handles remain private.
  */
 export class GpmCdpClient {
-  #endpoint; #profileReference; #sessionAuthority; #targetId; #identityObserver; #expressionPolicy; #mutationExpressionHashes; #mutationExpressionAuthorizer; #socketFactory; #timeoutMs;
+  #endpoint; #profileReference; #sessionAuthority; #targetId; #identityObserver; #expressionPolicy; #mutationExpressionHashes; #mutationExpressionAuthorizer; #socketFactory; #timeoutMs; #snapshotRefs = new Map();
   #socket = null; #socketHandlers = null; #opened = false; #closed = false; #connectPromise = null; #nextId = 1; #pending = new Map();
   #sessionId = null; #commandCount = 0; #runtimeIdentity;
 
@@ -390,13 +390,71 @@ export class GpmCdpClient {
   }
 
   async snapshot(pageId) {
-    const value = await this.#evaluateBounded(pageId, "({url:location.href,title:document.title,text:document.body?.innerText||''})", { operation: "snapshot" });
-    return redactText(typeof value === "string" ? value : value?.text || "");
+    const value = await this.#evaluateBounded(pageId, `(() => {
+      const visible = (node) => Boolean(node && node.getClientRects().length);
+      const nameOf = (node) => String(node?.getAttribute?.('aria-label') || node?.innerText || node?.textContent || '').replace(/\\s+/g, ' ').trim().slice(0, 180);
+      const stableSelectorOf = (node) => {
+        if (!node || node.nodeType !== 1) return null;
+        const tag = node.tagName.toLowerCase();
+        if (node.id && /^[A-Za-z_][\\w-]{0,80}$/.test(node.id)) return tag + '#' + node.id;
+        for (const name of ['componentkey', 'data-testid', 'aria-label']) {
+          const value = node.getAttribute(name);
+          if (value && value.length <= 180 && !/[\\u0000-\\u001f]/.test(value)) return tag + '[' + name + '=' + JSON.stringify(value) + ']';
+        }
+        return null;
+      };
+      const selectorOf = (node, stopAt = document.body) => {
+        const parts = [];
+        let current = node;
+        while (current && current.nodeType === 1 && current !== stopAt && parts.length < 12) {
+          let part = current.tagName.toLowerCase();
+          const stable = stableSelectorOf(current);
+          if (stable) { parts.unshift(stable); break; }
+          const parent = current.parentElement;
+          if (!parent) { parts.unshift(part); break; }
+          const siblings = Array.from(parent.children).filter((child) => child.tagName === current.tagName);
+          const index = siblings.indexOf(current);
+          part += ':nth-of-type(' + String(index + 1) + ')';
+          parts.unshift(part);
+          current = parent;
+        }
+        return parts.join('>');
+      };
+      const dialogs = Array.from(document.querySelectorAll('dialog,[role="dialog"]')).filter(visible);
+      const root = dialogs.length === 1 ? dialogs[0] : document;
+      const controls = Array.from(root.querySelectorAll('button,[role="button"],[role="textbox"],[role="combobox"],input,textarea,[contenteditable="true"]'))
+        .filter(visible).slice(0, 256).map((node, index) => {
+          const role = node.getAttribute('role') || (node.matches('[contenteditable="true"],textarea,input') ? 'textbox' : node.tagName.toLowerCase());
+          const label = nameOf(node);
+          const ref = 'gpm-' + index;
+          const rootSelector = selectorOf(root);
+          const nodeSelector = selectorOf(node, root);
+          const selector = dialogs.length === 1
+            ? rootSelector + (node === root ? '' : (nodeSelector.startsWith('[') || nodeSelector.includes('[') ? ' ' : '>')) + (node === root ? '' : nodeSelector)
+            : nodeSelector;
+          return { ref, selector, line: '- ' + role + (label ? ' "' + label.replace(/"/g, '\\"') + '"' : '') + ' [ref=' + ref + ']' };
+        });
+      return { url: location.href, title: document.title, text: document.body?.innerText || '', controls };
+    })()`, { operation: "snapshot" });
+    if (typeof value === "string") return redactText(value);
+    const refs = new Map((Array.isArray(value?.controls) ? value.controls : []).filter((control) => control?.ref && control?.selector).map((control) => [String(control.ref), String(control.selector)]));
+    this.#snapshotRefs.set(String(pageId), refs);
+    // Build real line breaks without relying on nested template-literal
+    // escaping.  Snapshot refs are line-oriented contracts consumed by the
+    // adapter; a literal `\\n` would collapse the whole snapshot into one
+    // line and make the last ref appear to own every control.
+    const accessibility = redactText((Array.isArray(value?.controls) ? value.controls.map((control) => control.line).join(String.fromCharCode(10)) : ""));
+    return accessibility || redactText(value?.text || "");
+  }
+
+  #selectorFor(pageId, value) {
+    const raw = safeSelector(value);
+    return this.#snapshotRefs.get(String(pageId))?.get(raw) || raw;
   }
 
   async fill(pageId, selector, value) {
-    const target = safeSelector(selector); const textValue = text(value, 20_000);
-    const expression = `(()=>{const e=document.querySelector(${JSON.stringify(target)});if(!e)return false;const v=${JSON.stringify(textValue)};if(e.isContentEditable){e.textContent=v;}else{e.value=v;}e.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText',data:v}));return true;})()`;
+    const target = this.#selectorFor(pageId, selector); const textValue = text(value, 20_000);
+    const expression = `(()=>{const e=document.querySelector(${JSON.stringify(target)});if(!e)return false;const v=${JSON.stringify(textValue)};if(e.isContentEditable){e.focus();document.execCommand('selectAll',false,null);if(!document.execCommand('insertText',false,v))return false;}else{e.value=v;e.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText',data:v}));}return true;})()`;
     const result = await this.#evaluateBounded(pageId, expression, { allowMutation: true, operation: "fill" });
     if (result !== true) throw fail("GPM_CDP_CONTROL_NOT_FOUND", "GPM CDP fill target was not found");
     return { status: "COMMAND_COMPLETED", selector: target };
@@ -410,7 +468,7 @@ export class GpmCdpClient {
 
   async resolve(query = {}) {
     const pageId = query.pageId || this.#targetId;
-    const selector = safeSelector(query.selector || query.targetRef || query);
+    const selector = this.#selectorFor(pageId, query.selector || query.targetRef || query);
     const expression = `(()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e)return null;const r=e.getBoundingClientRect();return {selector:${JSON.stringify(selector)},visible:!!(r.width&&r.height),enabled:!e.disabled,boundingBox:{x:r.x,y:r.y,width:r.width,height:r.height}};})()`;
     return this.#evaluateBounded(pageId, expression, { operation: "resolve" });
   }
@@ -421,7 +479,7 @@ export class GpmCdpClient {
     if (typeof validate !== "function") throw fail("TRANSPORT_VALIDATION_REQUIRED", "GPM CDP click requires pre-provider validation");
     await validate();
     const pageId = target?.pageId || this.#targetId;
-    const selector = safeSelector(target?.selector || target?.targetRef);
+    const selector = this.#selectorFor(pageId, target?.selector || target?.targetRef);
     const expression = `(()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e)return false;e.click();return true;})()`;
     const result = await this.#evaluateBounded(pageId, expression, { allowMutation: true, operation: "click" });
     if (result !== true) throw fail("GPM_CDP_CONTROL_NOT_FOUND", "GPM CDP click target was not found");

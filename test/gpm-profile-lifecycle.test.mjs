@@ -26,6 +26,14 @@ test("start and stop use exact GET paths with configurable API prefixes", async 
   assert.equal(calls[1].options.method, "GET");
 });
 
+test("start accepts the official port-only attach response", async () => {
+  const lifecycle = new GpmProfileLifecycle({
+    endpoint: "http://127.0.0.1:9495",
+    fetchImpl: async () => response({ data: { profile_id: "p", remote_debugging_port: 50058, websocket_debugging_url: "" } })
+  });
+  assert.deepEqual(await lifecycle.start("p"), { profileId: "p", endpoint: "http://127.0.0.1:50058" });
+});
+
 test("stop returns bounded acknowledgement", async () => {
   const lifecycle = new GpmProfileLifecycle({ endpoint: "http://localhost:1", fetchImpl: async () => response({ success: true, data: true }) });
   assert.deepEqual(await lifecycle.stop("p"), { profileId: "p", acknowledged: true });

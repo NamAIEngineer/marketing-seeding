@@ -938,7 +938,7 @@ export class LinkedInAdapter {
     const feed = await this.browser.evaluate(pageId, linkedInReadinessExpressions().context(new URL(expectedIdentityUrl).pathname));
     if (!feed.sessionAuthenticated || !feed.identityVerified) throw Object.assign(new Error("LinkedIn session/account verification failed"), { code: "ACCOUNT_MISMATCH" });
     const { state, domFallbackUsed } = await openLinkedInComposer(this.browser, pageId, { expectedIdentityPath: new URL(expectedIdentityUrl).pathname.replace(/\/$/, "").toLowerCase() || "/" });
-    if (state.linkedinDomain !== true || state.route !== true || state.dialogCount !== 1 || state.editorCount !== 1 || state.audience !== true || state.postButton !== true || state.mediaControl !== true || state.advertisingControls !== 0) {
+    if (state.linkedinDomain !== true || (state.route !== true && state.routeCompatible !== true) || state.dialogCount !== 1 || state.editorCount !== 1 || state.audience !== true || state.postButton !== true || state.mediaControl !== true || state.advertisingControls !== 0) {
       throw Object.assign(new Error("LinkedIn composer structure is not confirmed"), { code: "UNKNOWN_COMPOSER" });
     }
     const visibility = await this.browser.evaluate(pageId, VISIBILITY_EXPRESSION(request.publicationVisibility || "PUBLIC"));

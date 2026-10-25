@@ -73,6 +73,29 @@ test("GPM CDP attaches one exact page and exposes bounded browser operations", a
   assert.equal(factory.sockets[0].socket.closed, true);
 });
 
+test("GPM CDP snapshot returns accessibility refs that resolve back to bounded DOM selectors", async () => {
+  const factory = socketFactoryFor();
+  const original = factory;
+  const wrapped = (url) => {
+    const socket = original(url);
+    const send = socket.send.bind(socket);
+    socket.send = (body) => {
+      const request = JSON.parse(body);
+      if (request.method === "Runtime.evaluate" && request.params?.expression?.includes("const controls")) {
+        queueMicrotask(() => socket.emit("message", { data: JSON.stringify({ id: request.id, result: { result: { type: "object", value: { url: "https://www.linkedin.com/feed/", title: "Feed", text: "", controls: [{ ref: "gpm-0", selector: "main>div:nth-of-type(1)", line: '- textbox "Post editor" [ref=gpm-0]' }] } } } }) }));
+        return;
+      }
+      send(body);
+    };
+    return socket;
+  };
+  const client = new GpmCdpClient({ ...base, websocketFactory: wrapped, targetId: "target-1" });
+  await client.attach();
+  assert.equal(await client.snapshot("target-1"), '- textbox "Post editor" [ref=gpm-0]');
+  assert.equal((await client.fill("target-1", "gpm-0", "hello")).status, "COMMAND_COMPLETED");
+  await client.detach();
+});
+
 test("GPM CDP fails closed for ambiguous targets, mismatches, restricted expressions and unsupported media", async () => {
   const factory = socketFactoryFor({ targets: [{ targetId: "a", type: "page", url: "https://a.test" }, { targetId: "b", type: "page", url: "https://b.test" }] });
   const client = new GpmCdpClient({ ...base, websocketFactory: factory });
