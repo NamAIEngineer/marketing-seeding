@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "packageType": "LINKEDIN_HARMLESS_CERTIFICATION_LANE",
   "packageStatus": "VALID_FOR_NON_PUBLISHING_PREFLIGHT",
-  "createdAt": "2026-10-26T01:11:07.562Z",
+  "createdAt": "2026-10-26T01:17:19.817Z",
   "source": {
     "repository": "marketing-seeding",
     "candidateHead": "be0f6cf783aea340306e4a3446ce0467c5f3e6e2",
@@ -19,9 +19,9 @@
       "linkedInIdentity": "PASS",
       "reversibleCalibration": {
         "attempts": 20,
-        "positiveActivations": 20,
+        "positiveActivations": 19,
         "wrongTargetActivations": 0,
-        "activationSuccessRate": 1,
+        "activationSuccessRate": 0.95,
         "certified": true
       },
       "finalPostClicks": 0,
@@ -60,25 +60,25 @@
     "transport": "gpm-execution",
     "providerProfileRef": "82614dc6-2b75-4515-896c-32f73cb5ec51",
     "sessionAuthority": "human-confirmed-gpm-profile-5671-session",
-    "hostAttestationReference": "sha256:b6573981350e0fa1e9aa1d831daea7a5",
+    "hostAttestationReference": "sha256:dc44fa24b7b924e1205469274d7da535",
     "freshness": {
-      "validFrom": "2026-10-26T01:11:07.562Z",
-      "validUntil": "2026-10-26T01:16:07.562Z",
+      "validFrom": "2026-10-26T01:17:19.817Z",
+      "validUntil": "2026-10-26T01:22:19.817Z",
       "maxAgeMs": 300000
     },
     "challengePolicy": "FAIL_CLOSED_AND_REQUIRE_HUMAN_ACTION",
     "sessionSecrets": "NEVER_SERIALIZE"
   },
   "contentPolicy": {
-    "approvedPayloadBytes": "Running a bounded, reversible LinkedIn transport certification.",
-    "contentId": "sha256:d9d7bb0fef66bb354a56b9d7e460d3bf042ae0610d6bb3c55da869eed6eb693b",
-    "contentSha256": "d9d7bb0fef66bb354a56b9d7e460d3bf042ae0610d6bb3c55da869eed6eb693b",
+    "approvedPayloadBytes": "Running a fresh, bounded LinkedIn transport certification with reversible controls.",
+    "contentId": "sha256:5d9b5299dcbd5d47f41f369fa92d2e385b18ba584acf291e351c20da303c2c24",
+    "contentSha256": "5d9b5299dcbd5d47f41f369fa92d2e385b18ba584acf291e351c20da303c2c24",
     "audience": "PUBLIC",
     "media": [],
     "mediaPolicy": "NO_MEDIA_UNLESS_EXPLICITLY_APPROVED",
     "claimEvidenceReferences": [],
     "disclosure": null,
-    "publicationIdentity": "linkedin-certification:d9d7bb0fef66bb354a56b9d7e460d3bf042ae0610d6bb3c55da869eed6eb693b"
+    "publicationIdentity": "linkedin-certification:5d9b5299dcbd5d47f41f369fa92d2e385b18ba584acf291e351c20da303c2c24"
   },
   "authorization": {
     "standingAuthorizationReference": "human-task-scope:wave-13-linkedin-gpm-certification",
@@ -87,12 +87,12 @@
       "accountId": "linkedin_primary",
       "profileReference": "82614dc6-2b75-4515-896c-32f73cb5ec51",
       "targetId": "linkedin-member-feed-linkedin_primary",
-      "contentSha256": "d9d7bb0fef66bb354a56b9d7e460d3bf042ae0610d6bb3c55da869eed6eb693b",
+      "contentSha256": "5d9b5299dcbd5d47f41f369fa92d2e385b18ba584acf291e351c20da303c2c24",
       "publicationVisibility": "PUBLIC"
     },
     "allowLiveExecution": true,
-    "validFrom": "2026-10-26T01:11:07.562Z",
-    "validUntil": "2026-10-26T01:16:07.562Z",
+    "validFrom": "2026-10-26T01:17:19.817Z",
+    "validUntil": "2026-10-26T01:22:19.817Z",
     "maxExecutions": 1,
     "cadence": {
       "minimumIntervalSeconds": null,
