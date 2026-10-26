@@ -92,4 +92,3 @@ Classification: **EXTERNAL_SYSTEM_REQUIRED**, with minimum human/authority input
 ## Next best action
 
 Obtain/confirm the official Camoufox launch/attach protocol plus an authorized persistent LinkedIn profile mapping. Then perform a short-lived read-only host attestation and reversible identity/readiness/restart/isolation certification. Stop before authority creation until those proofs pass.
-
