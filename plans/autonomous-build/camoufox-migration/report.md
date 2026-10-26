@@ -8,6 +8,9 @@ identity binding is enforced by an injected Camoufox transport and resolver.
 Missing resolver causes a pre-submit stop; no ORCA fallback is possible for a
 provider-aware Camoufox live request.
 
+Final source commit: `e4c64c26de1e0bd574d8c4b8439993ec26f38ba7`.
+The worktree is clean after the commit.
+
 ## Files
 
 - `src/camoufox-execution-transport.mjs`
@@ -26,6 +29,8 @@ provider-aware Camoufox live request.
 - Final focused transport/router/worker/LinkedIn run: `45 pass / 0 fail / 0 skip`.
 - Final full suite after the provider-aware guard: `716 total / 714 pass / 0 fail / 2 skip`.
 - `git diff --check`: passed.
+- Final post-commit state: branch `wave/distribution-os-runtime-wave-13-bridge`,
+  HEAD `e4c64c26de1e0bd574d8c4b8439993ec26f38ba7`, clean worktree.
 - No browser launch, live execution, authority package, execution control,
   durable submit intent, Post click, or historical UNKNOWN reconciliation
   occurred.
