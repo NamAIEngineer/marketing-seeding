@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "packageType": "LINKEDIN_HARMLESS_CERTIFICATION_LANE",
   "packageStatus": "VALID_FOR_NON_PUBLISHING_PREFLIGHT",
-  "createdAt": "2026-10-26T01:23:13.468Z",
+  "createdAt": "2026-10-26T01:30:01.808Z",
   "source": {
     "repository": "marketing-seeding",
-    "candidateHead": "b363f1975f576fd88e16e547bae0233bfadf34e2",
+    "candidateHead": "be0f6cf783aea340306e4a3446ce0467c5f3e6e2",
     "softwareResult": "CONTROLLED_RUNTIME_READY_FOR_EXTERNAL_CERTIFICATION",
     "candidateTreeState": "CLEAN_WITH_FRESH_LIVE_GPM_EVIDENCE",
     "latestVerification": {
@@ -19,9 +19,9 @@
       "linkedInIdentity": "PASS",
       "reversibleCalibration": {
         "attempts": 20,
-        "positiveActivations": 19,
+        "positiveActivations": 20,
         "wrongTargetActivations": 0,
-        "activationSuccessRate": 0.95,
+        "activationSuccessRate": 1,
         "certified": true
       },
       "finalPostClicks": 0,
@@ -60,10 +60,10 @@
     "transport": "gpm-execution",
     "providerProfileRef": "82614dc6-2b75-4515-896c-32f73cb5ec51",
     "sessionAuthority": "human-confirmed-gpm-profile-5671-session",
-    "hostAttestationReference": "sha256:b3a34d4768fdf77d85ec6ac85783a09b",
+    "hostAttestationReference": "sha256:b779a58ef094e9a856021c6dd4e06fb1",
     "freshness": {
-      "validFrom": "2026-10-26T01:23:13.468Z",
-      "validUntil": "2026-10-26T01:28:13.468Z",
+      "validFrom": "2026-10-26T01:30:01.808Z",
+      "validUntil": "2026-10-26T01:35:01.808Z",
       "maxAgeMs": 300000
     },
     "challengePolicy": "FAIL_CLOSED_AND_REQUIRE_HUMAN_ACTION",
@@ -91,8 +91,8 @@
       "publicationVisibility": "PUBLIC"
     },
     "allowLiveExecution": true,
-    "validFrom": "2026-10-26T01:23:13.468Z",
-    "validUntil": "2026-10-26T01:28:13.468Z",
+    "validFrom": "2026-10-26T01:30:01.808Z",
+    "validUntil": "2026-10-26T01:35:01.808Z",
     "maxExecutions": 1,
     "cadence": {
       "minimumIntervalSeconds": null,

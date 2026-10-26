@@ -6,7 +6,7 @@ READY_FOR_ONE_GPM_LINKEDIN_CERTIFICATION_SHOT
 
 Official GPM Local API, Profile 5671, fresh CDP attach, real LinkedIn identity, injected LinkedInAdapter, reversible composer calibration.
 
-- Candidate implementation: wave/distribution-os-runtime-wave-13-bridge @ b363f1975f576fd88e16e547bae0233bfadf34e2.
+- Candidate implementation: wave/distribution-os-runtime-wave-13-bridge @ be0f6cf783aea340306e4a3446ce0467c5f3e6e2.
 - GPM API: http://127.0.0.1:9495; sender: GPMLoginGlobal v5.1.2-stable.
 - Profile: Profile 5671; provider ID: 82614dc6-2b75-4515-896c-32f73cb5ec51; Chrome: Chrome/154.0.8037.98; CDP port: 60407; endpoint reference: sha256:58ff52971cffeb6952d38173bdbcf4d7.
 - Identity: Nam Phạm Phương; expected URL matched; authwall/challenge absent.
@@ -19,7 +19,7 @@ Official GPM Local API, Profile 5671, fresh CDP attach, real LinkedIn identity, 
 
 ## Artifacts
 
-- gpm-host-attestation-live.json — fresh, secret-free, expires 2026-10-26T01:28:13.468Z.
+- gpm-host-attestation-live.json — fresh, secret-free, expires 2026-10-26T01:35:01.808Z.
 - external-input.json — exact one-shot package, no credentials/tokens/cookies.
 - gpm-reversible-calibration-live.json — raw 20-trial evidence.
 

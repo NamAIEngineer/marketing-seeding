@@ -23,12 +23,12 @@
   "identityBinding": {
     "runtimeVersion": "Chrome/154.0.8037.98",
     "profileReferenceHash": "sha256:4aa099c99f37445307998cb6e80298e8",
-    "sessionReferenceHash": "sha256:100b1a706a80001bf2723cb45929b062",
-    "adapterVersion": "wave/distribution-os-runtime-wave-13-bridge@b363f1975f576fd88e16e547bae0233bfadf34e2"
+    "sessionReferenceHash": "sha256:39402bbc491080f86c69f6f76a9f18ac",
+    "adapterVersion": "wave/distribution-os-runtime-wave-13-bridge@0cfde51ae70e067bd3a8f020d95eba9704c3f375"
   },
-  "attestationReference": "sha256:b3a34d4768fdf77d85ec6ac85783a09b",
-  "startedAt": "2026-10-26T01:23:13.468Z",
-  "finishedAt": "2026-10-26T01:31:12.651Z",
+  "attestationReference": "sha256:b779a58ef094e9a856021c6dd4e06fb1",
+  "startedAt": "2026-10-26T01:30:01.808Z",
+  "finishedAt": "2026-10-26T01:32:03.467Z",
   "rows": [
     {
       "trial": 1,
