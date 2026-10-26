@@ -10,12 +10,10 @@
 
 - Workspace: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`
 - Branch: `wave/distribution-os-runtime-wave-13-bridge`
-- HEAD: `d5d62227eb7c6ed0cabad4b0532eedea3332b850`
+- Audit-start HEAD: `d5d62227eb7c6ed0cabad4b0532eedea3332b850`
 - Worktree: clean
 - Main: `98a499e25c2fab75de6aef85f265e6c2a7364651`
-- Ahead of main: 68 commits
 - Latest source migration commit: `e4c64c26de1e0bd574d8c4b8439993ec26f38ba7`
-- Latest documentation commit: `d5d62227eb7c6ed0cabad4b0532eedea3332b850`
 
 Canonical state was not mutated:
 
