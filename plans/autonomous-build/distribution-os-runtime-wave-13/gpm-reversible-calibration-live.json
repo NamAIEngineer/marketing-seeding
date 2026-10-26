@@ -7,9 +7,9 @@
   "browser": "Chrome/154.0.8037.98",
   "target": "linkedin.com/feed/",
   "attempts": 20,
-  "positiveActivations": 19,
+  "positiveActivations": 20,
   "wrongTargetActivations": 0,
-  "activationSuccessRate": 0.95,
+  "activationSuccessRate": 1,
   "silentFallbacks": 0,
   "providerSwitches": 0,
   "finalPostClicks": 0,
@@ -23,12 +23,12 @@
   "identityBinding": {
     "runtimeVersion": "Chrome/154.0.8037.98",
     "profileReferenceHash": "sha256:4aa099c99f37445307998cb6e80298e8",
-    "sessionReferenceHash": "sha256:4c10961a272bf2bc1ec9431c8fe31bc2",
-    "adapterVersion": "wave/distribution-os-runtime-wave-13-bridge@be0f6cf783aea340306e4a3446ce0467c5f3e6e2"
+    "sessionReferenceHash": "sha256:100b1a706a80001bf2723cb45929b062",
+    "adapterVersion": "wave/distribution-os-runtime-wave-13-bridge@b363f1975f576fd88e16e547bae0233bfadf34e2"
   },
-  "attestationReference": "sha256:dc44fa24b7b924e1205469274d7da535",
-  "startedAt": "2026-10-26T01:17:19.817Z",
-  "finishedAt": "2026-10-26T01:19:50.201Z",
+  "attestationReference": "sha256:b3a34d4768fdf77d85ec6ac85783a09b",
+  "startedAt": "2026-10-26T01:23:13.468Z",
+  "finishedAt": "2026-10-26T01:24:33.947Z",
   "rows": [
     {
       "trial": 1,
@@ -383,18 +383,15 @@
       "after": {
         "route": true,
         "dialogCount": 1,
-        "editorCount": 0,
-        "audience": false,
-        "postButton": false,
-        "mediaControl": false,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
         "closeControl": true,
-        "confirmed": false
+        "confirmed": true
       },
-      "activation": "CONTROL_NOT_OBSERVED",
-      "error": {
-        "code": "CONTROL_NOT_OBSERVED",
-        "message": "composer not confirmed"
-      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
       "cleanup": true
     },
     {

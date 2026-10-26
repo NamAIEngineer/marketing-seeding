@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "packageType": "LINKEDIN_HARMLESS_CERTIFICATION_LANE",
   "packageStatus": "VALID_FOR_NON_PUBLISHING_PREFLIGHT",
-  "createdAt": "2026-10-26T01:17:19.817Z",
+  "createdAt": "2026-10-26T01:23:13.468Z",
   "source": {
     "repository": "marketing-seeding",
-    "candidateHead": "be0f6cf783aea340306e4a3446ce0467c5f3e6e2",
+    "candidateHead": "b363f1975f576fd88e16e547bae0233bfadf34e2",
     "softwareResult": "CONTROLLED_RUNTIME_READY_FOR_EXTERNAL_CERTIFICATION",
     "candidateTreeState": "CLEAN_WITH_FRESH_LIVE_GPM_EVIDENCE",
     "latestVerification": {
@@ -60,10 +60,10 @@
     "transport": "gpm-execution",
     "providerProfileRef": "82614dc6-2b75-4515-896c-32f73cb5ec51",
     "sessionAuthority": "human-confirmed-gpm-profile-5671-session",
-    "hostAttestationReference": "sha256:dc44fa24b7b924e1205469274d7da535",
+    "hostAttestationReference": "sha256:b3a34d4768fdf77d85ec6ac85783a09b",
     "freshness": {
-      "validFrom": "2026-10-26T01:17:19.817Z",
-      "validUntil": "2026-10-26T01:22:19.817Z",
+      "validFrom": "2026-10-26T01:23:13.468Z",
+      "validUntil": "2026-10-26T01:28:13.468Z",
       "maxAgeMs": 300000
     },
     "challengePolicy": "FAIL_CLOSED_AND_REQUIRE_HUMAN_ACTION",
@@ -91,8 +91,8 @@
       "publicationVisibility": "PUBLIC"
     },
     "allowLiveExecution": true,
-    "validFrom": "2026-10-26T01:17:19.817Z",
-    "validUntil": "2026-10-26T01:22:19.817Z",
+    "validFrom": "2026-10-26T01:23:13.468Z",
+    "validUntil": "2026-10-26T01:28:13.468Z",
     "maxExecutions": 1,
     "cadence": {
       "minimumIntervalSeconds": null,

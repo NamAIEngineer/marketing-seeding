@@ -39,10 +39,10 @@
     "verifyActivation",
     "closeOwnedResources"
   ],
-  "attestedAt": "2026-10-26T01:17:19.817Z",
-  "expiresAt": "2026-10-26T01:22:19.817Z",
+  "attestedAt": "2026-10-26T01:23:13.468Z",
+  "expiresAt": "2026-10-26T01:28:13.468Z",
   "secretsPersisted": false,
   "rawWebsocketUrlPersisted": false,
   "rawCredentialsPersisted": false,
-  "attestationReference": "sha256:dc44fa24b7b924e1205469274d7da535"
+  "attestationReference": "sha256:b3a34d4768fdf77d85ec6ac85783a09b"
 }
