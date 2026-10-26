@@ -6,14 +6,14 @@
   "profile": {
     "providerProfileRef": "82614dc6-2b75-4515-896c-32f73cb5ec51",
     "label": "Profile 5671",
-    "processId": 6884,
+    "processId": 24480,
     "profileContinuity": "PASS"
   },
   "runtime": {
     "browser": "Chrome/154.0.8037.98",
-    "runtimeIdentity": "GPM browser PID 6884; GPM PID 6723",
-    "cdpEndpointReference": "sha256:7906f7e8dc21855e0f50e03d2448a9a3",
-    "attachReference": "loopback-port:50058"
+    "runtimeIdentity": "GPM browser PID 24480; GPM PID 6723",
+    "cdpEndpointReference": "sha256:58ff52971cffeb6952d38173bdbcf4d7",
+    "attachReference": "loopback-port:60407"
   },
   "binding": {
     "platform": "linkedin",
@@ -39,10 +39,10 @@
     "verifyActivation",
     "closeOwnedResources"
   ],
-  "attestationReference": "sha256:b7d441ea88c404bc3fc679df649532e9",
-  "attestedAt": "2026-10-25T23:52:56Z",
-  "expiresAt": "2026-10-25T23:57:56Z",
+  "attestedAt": "2026-10-26T01:11:07.562Z",
+  "expiresAt": "2026-10-26T01:16:07.562Z",
   "secretsPersisted": false,
   "rawWebsocketUrlPersisted": false,
-  "rawCredentialsPersisted": false
+  "rawCredentialsPersisted": false,
+  "attestationReference": "sha256:b6573981350e0fa1e9aa1d831daea7a5"
 }
