@@ -19,9 +19,9 @@
       "linkedInIdentity": "PASS",
       "reversibleCalibration": {
         "attempts": 20,
-        "positiveActivations": 19,
+        "positiveActivations": 20,
         "wrongTargetActivations": 0,
-        "activationSuccessRate": 0.95,
+        "activationSuccessRate": 1,
         "certified": true
       },
       "finalPostClicks": 0,
