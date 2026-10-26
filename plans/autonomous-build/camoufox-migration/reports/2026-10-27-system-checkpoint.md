@@ -78,7 +78,7 @@ Auto-GTM `main` at `9368098477d78f75d57fdf5db276129948f3a183`; local report reco
 
 `CAMOUFOX_RUNTIME_AND_AUTHENTICATED_IDENTITY_UNPROVEN`
 
-Observed facts: the target repository has no Camoufox dependency or runtime implementation; Camoufox 0.5.8 exists only in the unrelated `any-auto-register/.venv`; persistent contexts are in-process, its WebSocket launcher rejects persistent contexts/`user_data_dir`, and CDP attach is unproven. No current Camoufox process, authorized profile mapping, fresh host attestation, or authenticated LinkedIn identity evidence exists.
+Observed facts: the target repository has no Camoufox dependency or runtime implementation; Camoufox 0.5.8 exists only in the unrelated `any-auto-register/.venv`; persistent contexts are in-process, its WebSocket launcher rejects persistent contexts/`user_data_dir`, and CDP attach is unproven. A disposable `about:blank` persistent-context smoke probe could not launch because the Camoufox binary was absent and the package downloader received GitHub API `403 rate limit exceeded`. No current Camoufox process, authorized profile mapping, fresh host attestation, or authenticated LinkedIn identity evidence exists.
 
 Classification: **EXTERNAL_SYSTEM_REQUIRED**, with minimum human/authority input required for an authorized disposable persistent LinkedIn profile mapping. No cookies, passwords, tokens, localStorage, or raw session material are requested.
 
@@ -87,6 +87,7 @@ Classification: **EXTERNAL_SYSTEM_REQUIRED**, with minimum human/authority input
 - Focused migration/LinkedIn run: 45 pass, 0 fail, 0 skip.
 - Full `npm test`: 716 total, 714 pass, 0 fail, 2 skip.
 - `git diff --check`: pass.
+- Isolated Camoufox smoke: launch failed before browser creation; no persistent profile or account state was retained.
 - No browser launch, authority/window/grant/lease/execution creation, durable submit intent, Post click, canonical mutation, UNKNOWN retry, or reconciliation.
 
 ## Next best action
