@@ -1,6 +1,7 @@
 import { GpmBrowserSession } from "./gpm-browser-session.mjs";
 import { selectAccountRuntimeCandidate } from "./account-runtime-registry.mjs";
 import { ExecutionSession } from "./execution-session.mjs";
+import { canonicalIdentityUrl } from "./execution-binding.mjs";
 
 const text = (value) => typeof value === "string" ? value.trim() : "";
 const safeCode = (value, fallback = "EXECUTION_FAILED") => text(value).toUpperCase().replace(/[^A-Z0-9_]/g, "_").slice(0, 48) || fallback;
@@ -31,14 +32,31 @@ export class GpmExecutionSession {
     const platform = text(selected?.platform).toLowerCase();
     const accountId = text(selected?.accountId);
     const profileRef = text(selected?.profileRef || selected?.profileReference);
-    if (!selected || !platform || !accountId || !profileRef) return failure("PROFILE_BINDING_MISSING", "selected account lacks exact profile binding", selection?.status || null);
+    const provider = text(selected?.provider).toLowerCase();
+    const providerProfileId = text(selected?.providerProfileId || profileRef);
+    const identityReference = canonicalIdentityUrl(selected?.identityReference || selected?.expectedIdentityUrl);
+    const requestedProvider = text(request.provider).toLowerCase();
+    const requestedPlatform = text(request.platform).toLowerCase();
+    const requestedAccountId = text(request.accountId);
+    const requestedProfile = text(request.providerProfileId || request.profileReference || request.profileRef || request.profileId);
+    const requestedIdentityReference = canonicalIdentityUrl(request.identityReference || request.expectedIdentityUrl);
+    if (!selected || provider !== "gpm" || !platform || !accountId || !profileRef || providerProfileId !== profileRef) return failure("PROFILE_BINDING_MISSING", "selected account lacks exact GPM provider/profile binding", selection?.status || null);
+    if (requestedProvider && requestedProvider !== provider) return failure("PROVIDER_BINDING_MISMATCH", "selected account provider does not match the execution request", selection?.status || null);
+    if (requestedPlatform && requestedPlatform !== platform) return failure("PLATFORM_BINDING_MISMATCH", "selected account platform does not match the execution request", selection?.status || null);
+    if (requestedAccountId && requestedAccountId !== accountId) return failure("ACCOUNT_BINDING_MISMATCH", "selected account does not match the execution request", selection?.status || null);
+    if (requestedProfile && requestedProfile !== providerProfileId) return failure("PROFILE_BINDING_MISMATCH", "selected provider profile does not match the execution request", selection?.status || null);
+    if (platform === "linkedin" && !identityReference) return failure("IDENTITY_BINDING_MISSING", "selected LinkedIn account lacks verified identity binding", selection?.status || null);
+    if (requestedIdentityReference && identityReference !== requestedIdentityReference) return failure("IDENTITY_BINDING_MISMATCH", "selected account identity does not match the execution request", selection?.status || null);
 
     const coordinated = await this.#coordinator.acquire(request);
     if (!coordinated?.ready || !coordinated.handle) return Object.freeze({ ...coordinated, selectionStatus: coordinated?.selectionStatus || selection?.status || null });
 
     let attached;
     try {
-      const session = new GpmBrowserSession({ selection: { platform, accountId, profileReference: profileRef }, attach: this.#attach });
+      const session = new GpmBrowserSession({ selection: {
+        provider: "gpm", platform, accountId, profileReference: profileRef,
+        providerProfileId, identityReference
+      }, attach: this.#attach });
       attached = await session.attach();
     } catch (error) {
       // The coordinator owns the started profile. One release is the sole cleanup path.
@@ -58,7 +76,9 @@ export class GpmExecutionSession {
     // host/session identity observation before this session is returned.
     const typedSession = new ExecutionSession({
       lifecycle: "READY", provider: "gpm", profileReference: profileRef, platform, accountId,
-      expectedIdentity: { platform, accountId }, capabilities: attached.capabilities,
+      providerProfileId: profileRef,
+      identityReference,
+      expectedIdentity: { platform, accountId, provider: "gpm", providerProfileId, identityReference }, capabilities: attached.capabilities,
       transportRef: { id: runtimeIdentity.transport || "gpm-browser" },
       transportIdentity: runtimeIdentity,
       attestation,

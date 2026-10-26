@@ -78,9 +78,16 @@ function normalizeAccounts(accounts) {
     const profileId = text(raw.profileId, 160);
     const accountId = text(raw.accountId, 160);
     if (!profileId || !accountId) return null;
+    // This projection is explicitly the GPM catalog lane. Older fixtures and
+    // persisted catalog rows omitted provider; retain that compatibility only
+    // here, while an explicit non-GPM provider never binds to this catalog.
+    const provider = (text(raw.provider) || "gpm").toLowerCase();
+    const providerProfileId = text(raw.providerProfileId || profileId, 160);
     return {
       sourceIndex: index,
       profileId,
+      provider,
+      providerProfileId,
       profileFingerprint: profileFingerprint(profileId),
       platform: text(raw.platform, 80),
       accountId,
@@ -125,13 +132,14 @@ export function projectGpmAccountCatalog(catalog, executionAccounts = [], { now 
   const accounts = normalizeAccounts(executionAccounts);
   const byProfile = new Map();
   for (const account of accounts) {
-    const rows = byProfile.get(account.profileId) || [];
+    if (account.provider !== "gpm") continue;
+    const rows = byProfile.get(`${account.provider}\u0000${account.providerProfileId}`) || [];
     rows.push(account);
-    byProfile.set(account.profileId, rows);
+    byProfile.set(`${account.provider}\u0000${account.providerProfileId}`, rows);
   }
   const catalogObserved = normalizedCatalog.state === "OBSERVED";
   const catalogProfiles = normalizedCatalog.rows.map((profile) => {
-    const bound = catalogObserved ? (byProfile.get(profile.profileId) || []) : [];
+    const bound = catalogObserved ? (byProfile.get(`gpm\u0000${profile.profileId}`) || []) : [];
     const linkage = !catalogObserved ? "NOT_OBSERVED" : bound.length > 1 ? "AMBIGUOUS" : bound.length === 1 ? "EXACT" : "UNBOUND";
     return {
       profileFingerprint: profile.profileFingerprint,
@@ -153,9 +161,9 @@ export function projectGpmAccountCatalog(catalog, executionAccounts = [], { now 
   }).sort((left, right) => `${left.name || ""}\u0000${left.profileFingerprint}`.localeCompare(`${right.name || ""}\u0000${right.profileFingerprint}`));
   const accountRows = accounts.map((account) => {
     if (!catalogObserved) return accountView(account, "NOT_OBSERVED", [`catalog:${normalizedCatalog.state.toLowerCase()}`]);
-    const matches = normalizedCatalog.rows.filter((profile) => profile.profileId === account.profileId);
+    const matches = account.provider === "gpm" ? normalizedCatalog.rows.filter((profile) => profile.profileId === account.providerProfileId) : [];
     if (matches.length === 0) return accountView(account, "MISSING", ["catalog:profile_missing"]);
-    const sameProfile = byProfile.get(account.profileId) || [];
+    const sameProfile = byProfile.get(`${account.provider}\u0000${account.providerProfileId}`) || [];
     if (sameProfile.length > 1) return accountView(account, "AMBIGUOUS", ["catalog:duplicate_account_profile"]);
     return accountView(account, "EXACT");
   });

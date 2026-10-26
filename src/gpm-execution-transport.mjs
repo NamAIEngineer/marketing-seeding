@@ -1,6 +1,7 @@
 const assertPreClickValidation = ({ validate } = {}) => { if (typeof validate !== "function") throw Object.assign(new Error("Browser transport requires pre-provider validation"), { code: "TRANSPORT_VALIDATION_REQUIRED" }); return true; };
 import { ExecutionSession } from "./execution-session.mjs";
 import { ExecutionTransport } from "./execution-transport.mjs";
+import { canonicalIdentityUrl } from "./execution-binding.mjs";
 
 const fail = (code, message) => Object.assign(new Error(message), { code });
 const METHODS = ["navigate", "snapshot", "resolve", "type", "click", "observeTransition", "verifyActivation", "detach"];
@@ -55,7 +56,7 @@ export class GpmExecutionTransport extends ExecutionTransport {
     if (this.#detached) throw fail("GPM_TRANSPORT_DETACHED", "transport was detached");
     const health = await this.health();
     if (health.state !== "READY") throw fail(health.reason, "GPM host or protocol is not attested");
-    if (session.provider !== "gpm" || session.profileReference !== this.#profileReference) throw fail("GPM_PROFILE_BINDING_MISMATCH", "session profile binding mismatch");
+    if (session.provider !== "gpm" || session.profileReference !== this.#profileReference || session.expectedIdentity?.provider !== "gpm" || session.expectedIdentity?.providerProfileId !== this.#profileReference) throw fail("GPM_PROFILE_BINDING_MISMATCH", "session provider/profile binding mismatch");
     if (session.lifecycle === "CHALLENGED") throw fail("GPM_SESSION_CHALLENGE", "session requires human action");
     let client;
     try { client = await this.#protocolFactory({ profileReference: this.#profileReference, sessionHandle: this.#sessionHandle, runtimeIdentity: this.transportIdentity }); }
@@ -76,7 +77,12 @@ export class GpmExecutionTransport extends ExecutionTransport {
     const state = String(observed.state || "").toUpperCase();
     if (["CHALLENGED", "CHALLENGE"].includes(state)) throw fail("GPM_SESSION_CHALLENGE", "GPM session has a challenge");
     if (["STALE", "EXPIRED"].includes(state)) throw fail("GPM_SESSION_STALE", "GPM session is stale");
-    if (String(observed.platform || "").toLowerCase() !== session.expectedIdentity.platform || String(observed.accountId || "") !== session.expectedIdentity.accountId) throw fail("GPM_IDENTITY_MISMATCH", "observed account does not match session binding");
+    const observedProvider = String(observed.provider || "").toLowerCase();
+    const observedProfile = String(observed.providerProfileId || observed.profileReference || "");
+    const expectedIdentity = session.expectedIdentity || {};
+    if (observedProvider !== "gpm" || String(observed.platform || "").toLowerCase() !== expectedIdentity.platform || String(observed.accountId || "") !== expectedIdentity.accountId ||
+        observedProfile !== expectedIdentity.providerProfileId ||
+        (expectedIdentity.identityReference && canonicalIdentityUrl(observed.identityReference) !== canonicalIdentityUrl(expectedIdentity.identityReference))) throw fail("GPM_IDENTITY_MISMATCH", "observed account/profile/identity does not match session binding");
     this.#client = client;
     this.#session = session;
     return Object.freeze({ ...this.transportIdentity, profileReference: this.#profileReference, accountId: session.accountId, attestation: this.#attestation, capabilities: session.capabilities });

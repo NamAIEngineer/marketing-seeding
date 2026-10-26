@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { canonicalIdentityUrl } from "./execution-binding.mjs";
 
 const MAX_ACCOUNTS = 128;
 const SECRET_KEY = /(password|passwd|cookie|bearer|token|credential|mfa|passkey|sessionstorage|localstorage|secret|authorizationheader|privatekey|accesskey)/i;
@@ -9,7 +10,11 @@ const QUARANTINED = new Set(["quarantined", "blocked", "suspended", "disabled", 
 function text(value) { return String(value ?? "").trim(); }
 function list(value) { return Array.isArray(value) ? [...new Set(value.map(text).filter(Boolean))].sort() : []; }
 function validDate(value) { const t = Date.parse(value || ""); return Number.isFinite(t) ? new Date(t).toISOString() : null; }
-function keyOf(account) { return `${account.platform}\u0000${account.accountId}\u0000${account.profileRef}`; }
+function keyOf(account) {
+  const provider = text(account.provider).toLowerCase() || "orca";
+  const profile = text(account.providerProfileId || account.profileRef);
+  return `${account.platform}\u0000${account.accountId}\u0000${provider}\u0000${profile}`;
+}
 function fingerprint(value) { return createHash("sha256").update(text(value)).digest("hex"); }
 function deepFreeze(value) {
   if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
@@ -40,6 +45,11 @@ export function normalizeAccountRuntimeEntry(input = {}) {
   const platform = text(input.platform).toLowerCase();
   const accountId = text(input.accountId);
   const profileRef = text(input.profileRef || input.profileReference);
+  const provider = text(input.provider).toLowerCase() || null;
+  if (!provider && text(input.providerProfileId)) throw new Error("provider is required when providerProfileId is supplied");
+  const providerProfileId = provider ? text(input.providerProfileId || profileRef) || null : null;
+  if (provider && providerProfileId && profileRef && providerProfileId !== profileRef) throw new Error("providerProfileId must match profileRef");
+  const identityReference = canonicalIdentityUrl(input.identityReference || input.expectedIdentityUrl);
   if (!platform || !accountId || !profileRef) throw new Error("platform, accountId and profileRef are required");
   const sessionHealth = text(input.sessionHealth || "unknown").toLowerCase();
   const risk = text(input.risk || "normal").toLowerCase();
@@ -47,7 +57,7 @@ export function normalizeAccountRuntimeEntry(input = {}) {
   const cadence = input.cadence && typeof input.cadence === "object" ? structuredClone(input.cadence) : {};
   const cooldown = input.cooldown && typeof input.cooldown === "object" ? structuredClone(input.cooldown) : {};
   return deepFreeze({
-    platform, accountId, profileRef,
+    platform, accountId, profileRef, provider, providerProfileId, identityReference,
     sessionHealth,
     permissions: cleanPermissions(input.permissions),
     allowedCampaigns: list(input.allowedCampaigns),
@@ -78,8 +88,15 @@ function eligibility(account, request, now) {
   const campaignId = text(request.campaignId);
   const targetId = text(request.targetId);
   const requestedPlatform = text(request.platform || request.workloadPlatform).toLowerCase();
+  const requestedProvider = text(request.provider || request.executionProvider).toLowerCase();
+  const requestedProfile = text(request.providerProfileId || request.profileReference || request.profileRef);
+  const accountProvider = text(account.provider).toLowerCase() || "orca";
+  const accountProfile = text(account.providerProfileId || account.profileRef);
   const health = account.sessionHealth;
   if (requestedPlatform && account.platform !== requestedPlatform) reasons.push("platform:mismatch");
+  if (requestedProvider && accountProvider !== requestedProvider) reasons.push("provider:mismatch");
+  if (requestedProfile && accountProfile !== requestedProfile) reasons.push("profile:mismatch");
+  if (request.identityReference && (!account.identityReference || account.identityReference !== canonicalIdentityUrl(request.identityReference))) reasons.push("identity:mismatch");
   if (CHALLENGE.has(health)) reasons.push(`session:${health}`);
   else if (!HEALTHY.has(health)) reasons.push(`session:${health || "unknown"}`);
   if (QUARANTINED.has(account.risk)) reasons.push(`risk:${account.risk}`);
@@ -110,7 +127,7 @@ export function selectAccountRuntimeCandidate(registry = [], request = {}) {
   const preferred = list(request.preferredAccountIds || request.accountPreference);
   const eligible = rows.filter((row) => row.eligible).sort((a, b) => {
     const ai = preferred.indexOf(a.account.accountId); const bi = preferred.indexOf(b.account.accountId);
-    return (ai < 0 ? Number.MAX_SAFE_INTEGER : ai) - (bi < 0 ? Number.MAX_SAFE_INTEGER : bi) || `${a.account.platform}\u0000${a.account.accountId}\u0000${a.account.profileRef}`.localeCompare(`${b.account.platform}\u0000${b.account.accountId}\u0000${b.account.profileRef}`);
+    return (ai < 0 ? Number.MAX_SAFE_INTEGER : ai) - (bi < 0 ? Number.MAX_SAFE_INTEGER : bi) || keyOf(a.account).localeCompare(keyOf(b.account));
   });
   const selected = eligible[0] || null;
   return Object.freeze({
@@ -124,8 +141,11 @@ export function selectAccountRuntimeCandidate(registry = [], request = {}) {
 function missionControlAccount(account) {
   return {
     platform: account.platform,
+    provider: account.provider,
     accountId: account.accountId,
     profileRef: account.profileRef,
+    providerProfileId: account.providerProfileId,
+    identityReference: account.identityReference,
     profileFingerprint: fingerprint(account.profileRef),
     sessionHealth: account.sessionHealth,
     permissions: [...account.permissions],

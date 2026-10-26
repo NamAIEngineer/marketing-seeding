@@ -778,7 +778,7 @@ const server = http.createServer(async (request, response) => {
     if (request.method === "PATCH" && match) {
       const input = await readJson(request);
       return sendJson(response, 200, await service.updateCampaignAuthorizationProfileBinding(
-        match[1], match[2], match[3], input.profileId, actor
+        match[1], match[2], match[3], input, actor
       ));
     }
     match = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/authorization\/(pause|resume)$/);

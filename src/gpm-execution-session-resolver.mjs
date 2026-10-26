@@ -48,7 +48,13 @@ export function createGpmExecutionSessionResolver(options = {}) {
   const selector = typeof config.selector === "function" ? config.selector : (registry, request) => {
     const result = selectAccountRuntimeCandidate(registry, request);
     const selected = result?.selected;
-    if (selected && (selected.profileRef !== config.profileReference || (request.accountId && selected.accountId !== text(request.accountId)))) {
+    if (selected && (text(selected.provider).toLowerCase() !== config.provider ||
+        selected.profileRef !== config.profileReference ||
+        (selected.providerProfileId || selected.profileRef) !== config.profileReference ||
+        (request.provider && text(request.provider).toLowerCase() !== config.provider) ||
+        (request.accountId && selected.accountId !== text(request.accountId)) ||
+        (request.providerProfileId && (selected.providerProfileId || selected.profileRef) !== text(request.providerProfileId)) ||
+        (request.identityReference && text(selected.identityReference) !== text(request.identityReference)))) {
       return { ...result, status: "NO_ELIGIBLE_ACCOUNT", selected: null, selectionReason: "configured_profile_binding_mismatch" };
     }
     return result;
@@ -58,7 +64,7 @@ export function createGpmExecutionSessionResolver(options = {}) {
     accountRegistry: config.accountRegistry,
     selectAccountRuntimeCandidate: selector,
     attach: async (binding) => {
-      if (String(binding.profileReference || "") !== config.profileReference) throw fail("GPM_RESOLVER_PROFILE_MISMATCH", "selected profile does not match resolver binding");
+      if (String(binding.profileReference || "") !== config.profileReference || String(binding.provider || "gpm").toLowerCase() !== config.provider) throw fail("GPM_RESOLVER_PROFILE_MISMATCH", "selected provider/profile does not match resolver binding");
       return config.attach({ ...binding, provider: config.provider, sessionAuthority: config.sessionAuthority, hostAttestation: config.hostAttestation });
     }
   });

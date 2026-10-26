@@ -1601,6 +1601,48 @@ test("provider-send fence rejects changed execution identity and target binding"
   service.executionContext = async () => structuredClone(base);
   const allowed = await service.assertExecutionSendable("execution-1", { id: "lease-1", token: "lease-token" });
   assert.equal(allowed.executionId, "execution-1");
+
+  const gpm = structuredClone(base);
+  const identityReference = "https://www.linkedin.com/in/nam-ph%E1%BA%A1m-ph%C6%B0%C6%A1ng-b48897278";
+  for (const row of [gpm.request, gpm.target, gpm.account]) {
+    row.provider = "gpm";
+    row.providerProfileId = "82614dc6-2b75-4515-896c-32f73cb5ec51";
+    row.profileId = "82614dc6-2b75-4515-896c-32f73cb5ec51";
+  }
+  gpm.account.platform = "linkedin";
+  gpm.account.identityReference = identityReference;
+  gpm.target.identityReference = identityReference;
+  gpm.request.identityReference = identityReference;
+  gpm.request.target.identityReference = identityReference;
+  gpm.target.readiness = {
+    ...gpm.target.readiness,
+    profileId: gpm.account.profileId,
+    provider: "gpm",
+    providerProfileId: gpm.account.providerProfileId,
+    identityReference,
+    targetUrl: gpm.target.url,
+    binding: readinessBinding({
+      platform: "linkedin", accountId: "account-1", profileId: gpm.account.profileId,
+      provider: "gpm", providerProfileId: gpm.account.providerProfileId,
+      identityReference, targetId: "target-1", targetUrl: gpm.target.url
+    })
+  };
+  gpm.request.provider = "gpm";
+  gpm.request.providerProfileId = gpm.account.providerProfileId;
+  service.executionContext = async () => structuredClone(gpm);
+  const gpmAllowed = await service.assertExecutionSendable("execution-1", { id: "lease-1", token: "lease-token" });
+  assert.equal(gpmAllowed.provider, "gpm");
+  assert.equal(gpmAllowed.providerProfileId, gpm.account.providerProfileId);
+  const wrongProvider = structuredClone(gpm);
+  wrongProvider.request.provider = "orca";
+  service.executionContext = async () => wrongProvider;
+  await assert.rejects(service.assertExecutionSendable("execution-1", { id: "lease-1", token: "lease-token" }), { code: "IDENTITY_MISMATCH" });
+  for (const field of ["provider", "providerProfileId"]) {
+    const incompleteBinding = structuredClone(gpm);
+    delete incompleteBinding.request[field];
+    service.executionContext = async () => incompleteBinding;
+    await assert.rejects(service.assertExecutionSendable("execution-1", { id: "lease-1", token: "lease-token" }), { code: "IDENTITY_MISMATCH" });
+  }
 });
 
 test("R19 bootstrap is idempotent and does not fabricate publication evidence", async () => {

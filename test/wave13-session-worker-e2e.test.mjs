@@ -8,6 +8,9 @@ import { PlatformAdapterRegistry, PLATFORM_CAPABILITIES } from "../src/platform-
 
 const now = new Date().toISOString();
 const future = new Date(Date.now() + 120_000).toISOString();
+const GPM_PROFILE = "wave13-profile";
+const LINKEDIN_IDENTITY = "https://www.linkedin.com/in/wave13-owner";
+const TARGET_URL = "https://www.linkedin.com/feed/";
 
 function requestFixture() {
   const request = {
@@ -17,8 +20,11 @@ function requestFixture() {
     campaignId: "wave13-e2e-campaign",
     platform: "linkedin",
     accountId: "wave13-account",
-    profileId: "wave13-profile",
-    target: { targetId: "wave13-target", url: "https://www.linkedin.com/feed/" },
+    provider: "gpm",
+    providerProfileId: GPM_PROFILE,
+    profileId: GPM_PROFILE,
+    identityReference: LINKEDIN_IDENTITY,
+    target: { targetId: "wave13-target", url: TARGET_URL, identityReference: LINKEDIN_IDENTITY },
     audience: "public",
     content: { contentId: "wave13-content", sha256: "a".repeat(64), payload: "Wave 13 bounded fixture" },
     media: [],
@@ -31,7 +37,9 @@ function requestFixture() {
     schemaVersion: 1, grantId: "wave13-grant", campaignAuthorizationId: request.authorization.authorizationId,
     campaignAuthorizationBinding: request.authorization.binding, campaignId: request.campaignId,
     jobId: request.jobId, boundExecutionId: request.executionId, platform: request.platform,
-    accountId: request.accountId, profileId: request.profileId, targetId: request.target.targetId,
+    accountId: request.accountId, provider: request.provider, providerProfileId: request.providerProfileId,
+    profileId: request.profileId, identityReference: request.identityReference,
+    targetId: request.target.targetId, targetUrl: request.target.url,
     content: { contentId: request.content.contentId, canonicalSha256: "b".repeat(64), rawSha256: request.content.sha256 },
     media: [], audience: request.audience, idempotencyKey: request.idempotencyKey,
     validFrom: new Date(Date.now() - 1_000).toISOString(), validUntil: future,
@@ -42,8 +50,8 @@ function requestFixture() {
     request,
     requestRow: { executionId: request.executionId, jobId: request.jobId, attempt: 1, state: "REQUEST_READY", submitState: "NOT_STARTED" },
     post: { id: request.jobId, status: "queued" },
-    target: { id: request.target.targetId, channel: "linkedin", accountId: request.accountId, profileId: request.profileId, readiness: request.readiness },
-    account: { status: "enabled", health: "healthy", accountId: request.accountId, profileId: request.profileId, expectedIdentityUrl: "https://www.linkedin.com/in/wave13-owner" },
+    target: { id: request.target.targetId, channel: "linkedin", accountId: request.accountId, provider: request.provider, providerProfileId: request.providerProfileId, profileId: request.profileId, identityReference: LINKEDIN_IDENTITY, url: TARGET_URL, readiness: request.readiness },
+    account: { status: "enabled", health: "healthy", platform: "linkedin", provider: request.provider, providerProfileId: request.providerProfileId, accountId: request.accountId, profileId: request.profileId, identityReference: LINKEDIN_IDENTITY, expectedIdentityUrl: LINKEDIN_IDENTITY },
     authorization: { id: request.authorization.authorizationId, binding: request.authorization.binding, allowLiveExecution: true },
     liveGrant: grant,
     state: { executionReceipts: [] }
@@ -66,7 +74,7 @@ function registry(adapter) {
 function gpmResolverRig() {
   const calls = [];
   const client = {
-    async observeIdentity() { calls.push("observeIdentity"); return { state: "READY", platform: "linkedin", accountId: "wave13-account" }; },
+    async observeIdentity() { calls.push("observeIdentity"); return { state: "READY", provider: "gpm", providerProfileId: GPM_PROFILE, profileReference: GPM_PROFILE, platform: "linkedin", accountId: "wave13-account", identityReference: LINKEDIN_IDENTITY }; },
     async navigate() {}, async snapshot() {}, async resolve() {}, async type() {}, async click() {},
     async observeTransition() {}, async verifyActivation() {}, async detach() { calls.push("transportDetach"); },
     async listTabs() { return []; }, async showTab() {}, async waitForUrl() {}, async waitForFeed() {},
@@ -74,7 +82,7 @@ function gpmResolverRig() {
     async browserCommandCount() { return 0; }
   };
   const transport = new GpmExecutionTransport({
-    profileReference: "wave13-profile", sessionHandle: "opaque-wave13-session", protocolFactory: async () => client,
+    profileReference: GPM_PROFILE, sessionHandle: "opaque-wave13-session", protocolFactory: async () => client,
     hostAttestation: { host: "fixture", runtime: "gpm", version: "5.1.2", evidence: "wave13-fixture", observedAt: now, expiresAt: future }
   });
   const coordinator = {
@@ -83,11 +91,11 @@ function gpmResolverRig() {
   };
   const composed = new GpmExecutionSession({
     coordinator,
-    accountRegistry: [{ platform: "linkedin", accountId: "wave13-account", profileRef: "wave13-profile", profileFingerprint: "wave13-fingerprint" }],
-    selectAccountRuntimeCandidate: () => ({ status: "SELECTED", selected: { platform: "linkedin", accountId: "wave13-account", profileRef: "wave13-profile", profileFingerprint: "wave13-fingerprint" } }),
+    accountRegistry: [{ platform: "linkedin", accountId: "wave13-account", provider: "gpm", providerProfileId: GPM_PROFILE, profileRef: GPM_PROFILE, identityReference: LINKEDIN_IDENTITY, profileFingerprint: "wave13-fingerprint" }],
+    selectAccountRuntimeCandidate: () => ({ status: "SELECTED", selected: { platform: "linkedin", accountId: "wave13-account", provider: "gpm", providerProfileId: GPM_PROFILE, profileRef: GPM_PROFILE, identityReference: LINKEDIN_IDENTITY, profileFingerprint: "wave13-fingerprint" } }),
     attach: async () => ({
       state: "READY",
-      identity: { platform: "linkedin", accountId: "wave13-account", profileReference: "wave13-profile" },
+      identity: { platform: "linkedin", accountId: "wave13-account", provider: "gpm", providerProfileId: GPM_PROFILE, profileReference: GPM_PROFILE, identityReference: LINKEDIN_IDENTITY },
       transport,
       browserSurface: transport.browserSurface
     }),
@@ -125,7 +133,7 @@ test("Wave 13 worker consumes GPM session through LinkedIn adapter and detaches 
   const worker = new JevExecutionWorker({
     service,
     adapterRegistry: registry(adapter),
-    executionSessionResolver: { provider: "gpm", async resolve() { return composed.acquire({ platform: "linkedin", accountId: "wave13-account" }); } },
+    executionSessionResolver: { provider: "gpm", async resolve() { return composed.acquire({ platform: "linkedin", accountId: "wave13-account", provider: "gpm", providerProfileId: GPM_PROFILE, identityReference: LINKEDIN_IDENTITY }); } },
     env: { SEEDING_JEV_LIVE_ENABLED: "true", SEEDING_JEV_LIVE_EXECUTION_ID: request.executionId }
   });
   const result = await worker.run(request.executionId, { dryRun: false });
@@ -148,10 +156,10 @@ test("Wave 13 GPM transport provider mismatch fails closed before profile lease 
       async acquire() { calls.push("acquire"); return { ready: true, handle: { profileFingerprint: "fp" } }; },
       async release() { calls.push("release"); return { released: true }; }
     },
-    accountRegistry: [{ platform: "linkedin", accountId: "wave13-account", profileRef: "wave13-profile" }],
-    selectAccountRuntimeCandidate: () => ({ selected: { platform: "linkedin", accountId: "wave13-account", profileRef: "wave13-profile" } }),
+    accountRegistry: [{ platform: "linkedin", accountId: "wave13-account", provider: "gpm", providerProfileId: "wave13-profile", profileRef: "wave13-profile", identityReference: LINKEDIN_IDENTITY }],
+    selectAccountRuntimeCandidate: () => ({ selected: { platform: "linkedin", accountId: "wave13-account", provider: "gpm", providerProfileId: "wave13-profile", profileRef: "wave13-profile", identityReference: LINKEDIN_IDENTITY } }),
     attach: async () => ({
-      state: "READY", identity: { platform: "linkedin", accountId: "wave13-account", profileReference: "wave13-profile" },
+      state: "READY", identity: { provider: "gpm", providerProfileId: "wave13-profile", platform: "linkedin", accountId: "wave13-account", profileReference: "wave13-profile", identityReference: LINKEDIN_IDENTITY },
       transport: { runtimeIdentity: () => ({ transport: "orca", provider: "orca", providerVersion: "1" }), browserSurface: {} }
     })
   });

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { canonicalIdentityUrl, canonicalProvider } from "./execution-binding.mjs";
 
 const MAX_ROWS = 128;
 const HEALTHY = new Set(["healthy", "ready", "active"]);
@@ -24,9 +25,12 @@ function normalizeAccount(raw) {
   const platform = lower(raw.platform);
   const accountId = text(raw.accountId, 160);
   const profileRef = text(raw.profileRef || raw.profileReference, 160);
+  const provider = lower(raw.provider) || "orca";
+  const providerProfileId = text(raw.providerProfileId || profileRef, 160);
+  const identityReference = canonicalIdentityUrl(raw.identityReference || raw.expectedIdentityUrl);
   if (!platform || !accountId || !profileRef) return null;
   return {
-    platform, accountId, profileRef,
+    platform, accountId, profileRef, provider, providerProfileId, identityReference,
     profileFingerprint: text(raw.profileFingerprint, 160) || fingerprint(profileRef),
     sessionHealth: lower(raw.sessionHealth || raw.health || "unknown"),
     risk: lower(raw.risk || "normal"),
@@ -39,6 +43,9 @@ function normalizeObserved(raw) {
   return {
     platform: lower(raw.platform), accountId: text(raw.accountId, 160),
     profileRef: text(raw.profileRef || raw.profileReference, 160),
+    provider: lower(raw.provider) || "orca",
+    providerProfileId: text(raw.providerProfileId || raw.profileRef || raw.profileReference, 160),
+    identityReference: canonicalIdentityUrl(raw.identityReference || raw.expectedIdentityUrl),
     profileFingerprint: text(raw.profileFingerprint, 160),
     state: lower(raw.state || raw.status || raw.health || "unknown"),
     checkedAt: iso(raw.checkedAt || raw.observedAt),
@@ -49,14 +56,15 @@ function normalizeObserved(raw) {
 }
 
 function observedFor(account, observed) {
-  return observed.find((item) => item && item.platform === account.platform && item.accountId === account.accountId) || null;
+  const candidates = observed.filter((item) => item && item.platform === account.platform && item.accountId === account.accountId);
+  return candidates.find((item) => item.provider === account.provider && item.providerProfileId === account.providerProfileId && (account.provider === "orca" || item.identityReference === account.identityReference)) || candidates[0] || null;
 }
 
 function projectRow(account, observed, nowMs) {
   const expectedFp = account.profileFingerprint;
   const expiryMs = Date.parse(observed?.expiresAt || "");
   const exactProfile = Boolean(observed && ((observed.profileRef && observed.profileRef === account.profileRef) || (observed.profileFingerprint && observed.profileFingerprint === expectedFp)));
-  const exactIdentity = Boolean(observed && observed.platform === account.platform && observed.accountId === account.accountId && exactProfile);
+  const exactIdentity = Boolean(observed && observed.platform === account.platform && observed.accountId === account.accountId && observed.provider === account.provider && observed.providerProfileId === account.providerProfileId && (account.provider === "orca" || observed.identityReference === account.identityReference) && exactProfile);
   const reasons = [];
   let status = "UNKNOWN";
   let executionEligible = false;

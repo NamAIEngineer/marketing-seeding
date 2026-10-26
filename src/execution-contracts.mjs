@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { normalizePublicationVisibility } from "./publication-visibility.mjs";
+import { canonicalIdentityUrl, canonicalProvider } from "./execution-binding.mjs";
 
 export const EXECUTION_REQUEST_SCHEMA_VERSION = 1;
 export const EXECUTION_RECEIPT_SCHEMA_VERSION = 1;
@@ -263,11 +264,15 @@ export function validateExecutionRequestV1(input) {
     jobId: required(input.jobId, "jobId"),
     campaignId: required(input.campaignId, "campaignId"),
     platform: required(input.platform, "platform"),
+    provider: canonicalProvider(input.provider, { allowLegacy: true }),
     accountId: required(input.accountId, "accountId"),
     profileId: required(input.profileId, "profileId"),
+    providerProfileId: required(input.providerProfileId || input.profileId, "providerProfileId"),
+    identityReference: canonicalIdentityUrl(input.identityReference || input.expectedIdentityUrl),
     target: {
       targetId: required(input.target?.targetId, "target.targetId"),
-      url: required(input.target?.url, "target.url")
+      url: required(input.target?.url, "target.url"),
+      identityReference: canonicalIdentityUrl(input.target?.identityReference || input.target?.expectedIdentityUrl)
     },
     audience: required(input.audience, "audience"),
     publicationVisibility: normalizePublicationVisibility(input.publicationVisibility || "PUBLIC"),
@@ -304,6 +309,7 @@ export function validateExecutionRequestV1(input) {
   }
   if (request.media.some((item) => !sha256Pattern.test(item.sha256))) throw new Error("ExecutionRequestV1 media entries require SHA-256 digests");
   if (request.readiness.state !== "READY") throw new Error("ExecutionRequestV1 requires READY readiness");
+  if (request.provider !== "orca" && !request.identityReference) throw new Error("Provider-aware ExecutionRequestV1 requires verified identityReference");
   for (const field of ["checkedAt", "expiresAt", "createdAt"]) {
     if (!Number.isFinite(Date.parse(request[field] || request.readiness[field] || ""))) throw new Error(`ExecutionRequestV1 ${field} must be an ISO timestamp`);
   }
@@ -320,6 +326,10 @@ export function validateExecutionReceiptV1(input) {
     schemaVersion: 1,
     executionId: required(input.executionId, "executionId"),
     jobId: required(input.jobId, "jobId"),
+    ...(input.provider ? { provider: canonicalProvider(input.provider, { allowLegacy: true }) } : {}),
+    ...(input.providerProfileId ? { providerProfileId: String(input.providerProfileId).trim() } : {}),
+    ...(input.identityReference ? { identityReference: canonicalIdentityUrl(input.identityReference) } : {}),
+    ...(input.targetUrl ? { targetUrl: String(input.targetUrl).trim() } : {}),
     attempt: Number(input.attempt),
     startedAt: required(input.startedAt, "startedAt"),
     finishedAt: required(input.finishedAt, "finishedAt"),
@@ -435,6 +445,10 @@ export function validateExecutionReceiptV1(input) {
       : null
   };
   if (!Number.isSafeInteger(receipt.attempt) || receipt.attempt < 1) throw new Error("ExecutionReceiptV1 attempt must be a positive integer");
+  if (receipt.providerProfileId && !receipt.providerProfileId.length) throw new Error("ExecutionReceiptV1 providerProfileId must not be empty");
+  if (receipt.provider && receipt.provider !== "orca" && (!receipt.providerProfileId || !receipt.identityReference || !receipt.targetUrl)) {
+    throw new Error("Provider-aware ExecutionReceiptV1 requires exact profile, identity, and target binding");
+  }
   for (const field of ["startedAt", "finishedAt"]) if (!Number.isFinite(Date.parse(receipt[field]))) throw new Error(`ExecutionReceiptV1 ${field} must be an ISO timestamp`);
   if (receipt.submitBoundaryAttemptedAt && !Number.isFinite(Date.parse(receipt.submitBoundaryAttemptedAt))) throw new Error("ExecutionReceiptV1 submitBoundaryAttemptedAt must be an ISO timestamp");
   if (Date.parse(receipt.finishedAt) < Date.parse(receipt.startedAt)) throw new Error("ExecutionReceiptV1 finishedAt cannot precede startedAt");
@@ -504,9 +518,12 @@ export function createExecutionRequestV1({ executionId, post, target, account, a
     jobId: post.id,
     campaignId: post.campaignId,
     platform: target.channel,
+    provider: target.provider || account.provider,
     accountId: account.accountId,
     profileId: account.profileId,
-    target: { targetId: target.id, url: target.url },
+    providerProfileId: target.providerProfileId || account.providerProfileId || target.profileId,
+    identityReference: target.identityReference || target.expectedIdentityUrl || account.identityReference || account.expectedIdentityUrl,
+    target: { targetId: target.id, url: target.url, identityReference: target.identityReference || target.expectedIdentityUrl || account.identityReference || account.expectedIdentityUrl },
     audience: post.audience,
     publicationVisibility: post.publicationVisibility || "PUBLIC",
     testJob: post.testJob === true,

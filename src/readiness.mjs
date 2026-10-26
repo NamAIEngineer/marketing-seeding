@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { defaultPlatformPolicies } from "./platform-policies.mjs";
+import { canonicalIdentityUrl, canonicalProvider, canonicalTargetUrl } from "./execution-binding.mjs";
 
 export const DEFAULT_READINESS_TTL_MS = 5 * 60 * 1000;
 export const MAX_READINESS_TTL_MS = 60 * 60 * 1000;
@@ -33,21 +34,46 @@ export function configuredReadinessTtlMs(value = process.env.SEEDING_READINESS_T
   return ttl;
 }
 
-export function readinessBinding({ platform, accountId, profileId, targetId }) {
-  return digest({
+export function readinessBinding({ platform, accountId, profileId, targetId, provider, providerProfileId, identityReference, expectedIdentityUrl, targetUrl, url }) {
+  const binding = {
     platform: required(platform, "readiness platform"),
     accountId: required(accountId, "readiness accountId"),
     profileId: required(profileId, "readiness profileId"),
     targetId: required(targetId, "readiness targetId")
-  });
+  };
+  // Legacy readiness rows retain their historical digest. Provider-aware rows
+  // include the complete execution identity and exact target URL.
+  if (provider || providerProfileId) {
+    binding.provider = canonicalProvider(provider, { allowLegacy: true });
+    binding.providerProfileId = required(providerProfileId || profileId, "readiness providerProfileId");
+    binding.identityReference = canonicalIdentityUrl(identityReference || expectedIdentityUrl) || null;
+    binding.targetUrl = String(targetUrl || url || "").trim() || null;
+  }
+  return digest(binding);
 }
 
 export function normalizeExecutionAccount(input, now = new Date(), platformPolicies = defaultPlatformPolicies) {
   const platform = required(input.platform, "account platform");
   const accountId = required(input.accountId, "account accountId");
-  const profileId = required(input.profileId, "account profileId");
-  if (platform === "linkedin" && !isCanonicalOrcaProfileId(profileId)) {
+  const profileId = required(input.profileId || input.providerProfileId || input.profileReference, "account profileId");
+  const explicitProvider = String(input.provider || "").trim();
+  const explicitProviderProfileId = String(input.providerProfileId || input.profileReference || "").trim();
+  if (!explicitProvider && explicitProviderProfileId) throw new Error("provider is required when providerProfileId is supplied");
+  const provider = explicitProvider ? canonicalProvider(explicitProvider, { allowLegacy: false }) : null;
+  const providerProfileId = explicitProvider || explicitProviderProfileId ? required(explicitProviderProfileId || profileId, "account providerProfileId") : null;
+  const legacyOrcaLane = !explicitProvider && !explicitProviderProfileId;
+  // The old record format is an explicit ORCA compatibility lane. A new
+  // provider must declare itself; UUID shape never selects a provider.
+  if (platform === "linkedin" && legacyOrcaLane && !isCanonicalOrcaProfileId(profileId)) {
     throw new Error("LinkedIn profileId must be the immutable ORCA profile UUID");
+  }
+  if (platform === "linkedin" && (provider || providerProfileId) && provider === "orca" && !isCanonicalOrcaProfileId(providerProfileId)) {
+    throw new Error("LinkedIn ORCA profileId must be an immutable provider profile UUID; declare provider for non-ORCA profiles");
+  }
+  if (platform === "linkedin" && ((legacyOrcaLane) || provider === "orca") && !input.identityReference && !input.expectedIdentityUrl) {
+    // Preserve the existing LinkedIn account contract and its diagnostic while
+    // allowing explicit non-ORCA providers to carry their own identity source.
+    throw new Error("Expected identity URL is required for linkedin");
   }
   const status = String(input.status || "enabled");
   if (!new Set(["enabled", "disabled"]).has(status)) throw new Error("Account status must be enabled or disabled");
@@ -60,6 +86,8 @@ export function normalizeExecutionAccount(input, now = new Date(), platformPolic
     id: `${platform}:${accountId}`,
     platform,
     accountId,
+    ...(provider ? { provider } : {}),
+    ...(providerProfileId ? { providerProfileId } : {}),
     profileId,
     identityReference,
     expectedIdentityUrl: identityReference,
@@ -73,6 +101,25 @@ export function normalizeExecutionAccount(input, now = new Date(), platformPolic
 
 export function executionAccountIdentityReference(account) {
   return String(account?.identityReference || account?.expectedIdentityUrl || "").trim() || null;
+}
+
+/** Build the readiness binding without changing legacy ORCA digest shape. */
+export function readinessContextForTarget(target, account = null) {
+  const context = {
+    platform: target?.channel || target?.platform,
+    accountId: target?.accountId || account?.accountId,
+    profileId: target?.profileId || account?.profileId,
+    targetId: target?.id || target?.targetId
+  };
+  const provider = target?.provider || account?.provider;
+  const providerProfileId = target?.providerProfileId || account?.providerProfileId;
+  if (provider || providerProfileId) {
+    context.provider = provider;
+    context.providerProfileId = providerProfileId || context.profileId;
+    context.identityReference = canonicalIdentityUrl(target?.identityReference || target?.expectedIdentityUrl || account?.identityReference || account?.expectedIdentityUrl);
+    context.targetUrl = canonicalTargetUrl(target?.url || target?.targetUrl);
+  }
+  return context;
 }
 
 function assertNoSecrets(value, path = "result") {
@@ -110,6 +157,10 @@ export function normalizeReadinessResult(input, context, { now = new Date(), ttl
     accountId: context.accountId,
     platform: context.platform,
     profileId: context.profileId,
+    provider: context.provider || null,
+    providerProfileId: context.providerProfileId || null,
+    identityReference: context.identityReference || context.expectedIdentityUrl || null,
+    targetUrl: context.targetUrl || context.url || null,
     targetId: context.targetId
   };
   if (!new Set(["RECOVERABLE", "HUMAN_REQUIRED", "UNKNOWN", "NONE"]).has(result.recoveryClassification)) {
@@ -127,9 +178,14 @@ export function isReadinessFresh(readiness, expected, now = new Date(), ttlMs = 
   const current = now instanceof Date ? now.getTime() : Number(now);
   if (!Number.isFinite(checkedAt) || !Number.isFinite(expiresAt) || !Number.isFinite(current)) return false;
   if (checkedAt > current + 30_000 || current - checkedAt > ttlMs || expiresAt <= current || expiresAt - checkedAt > ttlMs) return false;
+  const providerAware = Boolean(expected.provider || expected.providerProfileId);
   return readiness.binding === readinessBinding(expected) &&
     readiness.accountId === expected.accountId && readiness.profileId === expected.profileId &&
-    readiness.platform === expected.platform && readiness.targetId === expected.targetId;
+    readiness.platform === expected.platform && readiness.targetId === expected.targetId &&
+    (!providerAware || readiness.provider === expected.provider) &&
+    (!providerAware || readiness.providerProfileId === expected.providerProfileId) &&
+    (!providerAware || !expected.identityReference || readiness.identityReference === expected.identityReference) &&
+    (!providerAware || !expected.targetUrl || readiness.targetUrl === expected.targetUrl);
 }
 
 const HUMAN_ERROR_CODES = new Set(["MFA_REQUIRED", "PASSKEY_REQUIRED", "SECURITY_CHALLENGE", "ACCOUNT_LOCKED", "ACCOUNT_MISMATCH", "IDENTITY_AMBIGUOUS"]);

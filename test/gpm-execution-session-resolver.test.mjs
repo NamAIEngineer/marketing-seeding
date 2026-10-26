@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createGpmExecutionSessionResolver } from "../src/gpm-execution-session-resolver.mjs";
 
 const attestation = { host: "local", runtime: "gpm", version: "5.1.2", evidence: "fixture", observedAt: "2026-01-01T00:00:00.000Z", expiresAt: "2999-01-01T00:00:00.000Z" };
-const account = { platform: "linkedin", accountId: "acct-a", profileRef: "profile-a", sessionHealth: "healthy", risk: "normal" };
+const account = { platform: "linkedin", accountId: "acct-a", provider: "gpm", providerProfileId: "profile-a", profileRef: "profile-a", identityReference: "https://www.linkedin.com/in/acct-a", sessionHealth: "healthy", risk: "normal" };
 
 function rig(overrides = {}) {
   const calls = [];
@@ -11,7 +11,7 @@ function rig(overrides = {}) {
     async acquire() { calls.push("profile-acquire"); return { ready: true, status: "READY", handle: { profileFingerprint: "fp-a" } }; },
     async release() { calls.push("profile-release"); return { released: true, status: "RELEASED" }; }
   };
-  const attach = async (binding) => { calls.push(["attach", binding]); return { state: "READY", identity: { platform: "linkedin", accountId: "acct-a", profileReference: "profile-a" }, transport: { runtimeIdentity: () => ({ transport: "gpm-fixture", provider: "gpm", providerVersion: "5.1.2" }), async attach() { calls.push("transport-attach"); }, async detach() { calls.push("transport-detach"); } }, browserSurface: { listTabs() {}, showTab() {}, navigate() {}, waitForUrl() {}, waitForFeed() {}, waitForExpression() {}, evaluate() {}, snapshot() {}, fill() {} } }; };
+  const attach = async (binding) => { calls.push(["attach", binding]); return { state: "READY", identity: { provider: "gpm", platform: "linkedin", accountId: "acct-a", profileReference: "profile-a", providerProfileId: "profile-a", identityReference: "https://www.linkedin.com/in/acct-a" }, transport: { runtimeIdentity: () => ({ transport: "gpm-fixture", provider: "gpm", providerVersion: "5.1.2" }), async attach() { calls.push("transport-attach"); }, async detach() { calls.push("transport-detach"); } }, browserSurface: { listTabs() {}, showTab() {}, navigate() {}, waitForUrl() {}, waitForFeed() {}, waitForExpression() {}, evaluate() {}, snapshot() {}, fill() {} } }; };
   const resolver = createGpmExecutionSessionResolver({ provider: "gpm", profileReference: "profile-a", sessionAuthority: "authority-a", hostAttestation: attestation, accountRegistry: [account], coordinator, attach, ...overrides });
   return { resolver, calls };
 }
@@ -38,7 +38,7 @@ test("resolver binds exact profile/account and returns a releasable typed sessio
 });
 
 test("resolver fails closed on configured profile drift and secret-like input", async () => {
-  const { resolver } = rig({ accountRegistry: [{ ...account, profileRef: "other-profile" }] });
+  const { resolver } = rig({ accountRegistry: [{ ...account, profileRef: "other-profile", providerProfileId: "other-profile" }] });
   const result = await resolver.acquire({ platform: "linkedin", accountId: "acct-a" });
   assert.equal(result.ready, false);
   assert.equal(result.code, "PROFILE_BINDING_MISSING");

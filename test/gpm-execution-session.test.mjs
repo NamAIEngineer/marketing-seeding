@@ -4,8 +4,8 @@ import { GpmExecutionSession } from "../src/gpm-execution-session.mjs";
 import { ExecutionSession } from "../src/execution-session.mjs";
 import { GpmExecutionTransport } from "../src/gpm-execution-transport.mjs";
 
-const account = { platform: "linkedin", accountId: "acct-a", profileRef: "profile-a", profileFingerprint: "fingerprint-a" };
-function rig({ attach = async ({ platform, accountId, profileReference }) => ({ state: "READY", identity: { platform, accountId, profileReference }, client: {} }) } = {}) {
+const account = { platform: "linkedin", accountId: "acct-a", provider: "gpm", providerProfileId: "profile-a", profileRef: "profile-a", identityReference: "https://www.linkedin.com/in/acct-a", profileFingerprint: "fingerprint-a" };
+function rig({ attach = async ({ provider, platform, accountId, profileReference, providerProfileId, identityReference }) => ({ state: "READY", identity: { provider, platform, accountId, profileReference, providerProfileId, identityReference }, client: {} }) } = {}) {
   const calls = { acquire: 0, release: 0, attach: 0 };
   const coordinator = { acquire: async () => { calls.acquire++; return { ready: true, status: "READY", handle: { profileFingerprint: "fingerprint-a", runtimeIdentity: { provider: "gpm" } } }; }, release: async () => { calls.release++; return { released: true, status: "RELEASED" }; } };
   const session = new GpmExecutionSession({ coordinator, accountRegistry: [account], selectAccountRuntimeCandidate: () => ({ status: "SELECTED", selected: account }), attach: async (binding) => { calls.attach++; return attach(binding); }, clock: () => new Date("2026-01-01T00:00:00Z") });
@@ -31,8 +31,21 @@ test("missing binding fails before coordinator or attach", async () => {
   const { session, calls } = rig(); const result = await new GpmExecutionSession({ coordinator: { acquire: async () => { calls.acquire++; }, release: async () => {} }, accountRegistry: [{}], selectAccountRuntimeCandidate: () => ({ status: "SELECTED", selected: { platform: "linkedin", accountId: "acct-a" } }), attach: async () => { calls.attach++; } }).acquire();
   assert.equal(result.code, "PROFILE_BINDING_MISSING"); assert.equal(calls.acquire, 0);
 });
+test("selected GPM session rejects request provider/account/profile/identity drift before coordinator", async () => {
+  for (const [request, code] of [
+    [{ provider: "orca" }, "PROVIDER_BINDING_MISMATCH"],
+    [{ accountId: "other-account" }, "ACCOUNT_BINDING_MISMATCH"],
+    [{ providerProfileId: "other-profile" }, "PROFILE_BINDING_MISMATCH"],
+    [{ identityReference: "https://www.linkedin.com/in/other" }, "IDENTITY_BINDING_MISMATCH"]
+  ]) {
+    const { session, calls } = rig();
+    const result = await session.acquire({ platform: "linkedin", accountId: "acct-a", ...request });
+    assert.equal(result.code, code);
+    assert.equal(calls.acquire, 0);
+  }
+});
 test("handle serialization excludes profile and secret material", async () => {
-  const { session } = rig({ attach: async ({ platform, accountId, profileReference }) => ({ state: "READY", identity: { platform, accountId, profileReference }, client: { token: "secret" } }) });
+  const { session } = rig({ attach: async ({ provider, platform, accountId, profileReference, providerProfileId, identityReference }) => ({ state: "READY", identity: { provider, platform, accountId, profileReference, providerProfileId, identityReference }, client: { token: "secret" } }) });
   const result = await session.acquire(); const serialized = JSON.stringify(result); assert.equal(serialized.includes("profile-a"), false); assert.equal(serialized.includes("secret"), false);
 });
 
@@ -79,7 +92,7 @@ test("transport attach failure releases both transport and profile lease exactly
 test("real GPM transport contract is consumed by the composed execution session", async () => {
   const calls = [];
   const client = {
-    async observeIdentity() { calls.push("identity"); return { state: "READY", platform: "linkedin", accountId: "acct-a" }; },
+    async observeIdentity() { calls.push("identity"); return { state: "READY", provider: "gpm", providerProfileId: "profile-a", profileReference: "profile-a", platform: "linkedin", accountId: "acct-a", identityReference: "https://www.linkedin.com/in/acct-a" }; },
     async navigate() {}, async snapshot() {}, async resolve() {}, async type() {}, async click() {},
     async observeTransition() {}, async verifyActivation() {}, async detach() {},
     async listTabs() { return []; }, async showTab() {}, async waitForUrl() {}, async waitForExpression() {},

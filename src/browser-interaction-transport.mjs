@@ -1,3 +1,5 @@
+import { canonicalIdentityUrl, canonicalProvider, canonicalTargetUrl } from "./execution-binding.mjs";
+
 /**
  * Provider-neutral boundary for normal browser interaction.
  *
@@ -352,20 +354,29 @@ function matchesExecutionBinding(record, binding) {
   if (!record.evidenceReference || typeof record.evidenceReference !== "string") return false;
   const expected = {
     executionId: binding.executionId, campaignId: binding.campaignId, jobId: binding.jobId,
-    accountId: binding.accountId, profileId: binding.profileId, targetId: binding.targetId,
-    targetUrl: binding.targetUrl, authorizationId: binding.authorizationId,
+    accountId: binding.accountId, provider: canonicalProvider(binding.provider, { allowLegacy: true }),
+    providerProfileId: binding.providerProfileId || binding.profileId, profileId: binding.profileId || binding.providerProfileId,
+    identityReference: canonicalIdentityUrl(binding.identityReference || binding.expectedIdentityUrl),
+    targetId: binding.targetId, targetUrl: canonicalTargetUrl(binding.targetUrl), authorizationId: binding.authorizationId,
     authorizationBinding: binding.authorizationBinding, contentSha256: binding.contentSha256,
     visibility: String(binding.visibility || "PUBLIC").toUpperCase(),
     mediaSha256: Array.isArray(binding.mediaSha256) ? [...binding.mediaSha256].map(String).sort() : []
   };
-  const required = ["executionId", "campaignId", "jobId", "accountId", "profileId", "targetId", "targetUrl", "authorizationId", "authorizationBinding", "contentSha256"];
+  const required = ["executionId", "campaignId", "jobId", "accountId", "providerProfileId", "targetId", "targetUrl", "authorizationId", "authorizationBinding", "contentSha256"];
   if (required.some((key) => !String(expected[key] || "").trim())) return false;
   const actual = record.executionBinding || {};
+  const actualProvider = canonicalProvider(actual.provider, { allowLegacy: true });
+  const actualProfile = actual.providerProfileId || actual.profileId;
+  const actualIdentity = canonicalIdentityUrl(actual.identityReference || actual.expectedIdentityUrl);
+  const actualTargetUrl = canonicalTargetUrl(actual.targetUrl);
   if (actual.executionId !== expected.executionId || actual.campaignId !== expected.campaignId ||
-      actual.jobId !== expected.jobId || actual.accountId !== expected.accountId || actual.profileId !== expected.profileId ||
-      actual.targetId !== expected.targetId || actual.targetUrl !== expected.targetUrl ||
+      actual.jobId !== expected.jobId || actual.accountId !== expected.accountId || actualProvider !== expected.provider ||
+      actualProfile !== expected.providerProfileId ||
+      actual.targetId !== expected.targetId || actualTargetUrl !== expected.targetUrl ||
       actual.authorizationId !== expected.authorizationId || actual.authorizationBinding !== expected.authorizationBinding ||
       actual.contentSha256 !== expected.contentSha256 || String(actual.visibility || "").toUpperCase() !== expected.visibility) return false;
+  if (expected.provider !== "orca" && (!expected.identityReference || actualIdentity !== expected.identityReference)) return false;
+  if (expected.identityReference && actualIdentity && actualIdentity !== expected.identityReference) return false;
   const media = Array.isArray(actual.mediaSha256) ? [...actual.mediaSha256].map(String).sort() : [];
   return JSON.stringify(media) === JSON.stringify(expected.mediaSha256);
 }

@@ -29,7 +29,11 @@ function targetReady(target, nowMs) {
   const hasBindingFields = ["platform", "accountId", "profileId", "targetId", "binding"]
     .every((field) => readiness[field] !== undefined && readiness[field] !== null);
   if (hasBindingFields && (readiness.platform !== target.channel || readiness.accountId !== target.accountId ||
-      readiness.profileId !== target.profileId || readiness.targetId !== target.id)) return false;
+      readiness.profileId !== target.profileId || readiness.targetId !== target.id ||
+      (target.provider && readiness.provider !== target.provider) ||
+      (target.providerProfileId && readiness.providerProfileId !== target.providerProfileId) ||
+      (target.identityReference && readiness.identityReference !== target.identityReference) ||
+      (target.url && readiness.targetUrl && readiness.targetUrl !== target.url))) return false;
   return true;
 }
 

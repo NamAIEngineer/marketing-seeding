@@ -2,7 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { GpmBrowserSession } from "../src/gpm-browser-session.mjs";
 
-const selection = { platform: "linkedin", accountId: "acct-a", profileReference: "profile-a" };
+const selection = {
+  provider: "gpm",
+  platform: "linkedin",
+  accountId: "acct-a",
+  profileReference: "profile-a",
+  providerProfileId: "profile-a",
+  identityReference: "https://www.linkedin.com/in/acct-a"
+};
 const client = { async navigate() { return { status: "COMMAND_COMPLETED" }; }, async snapshot() { return {}; }, async closeOwnedResources() {}, secret: "raw-secret" };
 
 test("construction is inert and attach exposes bounded transport", async () => {

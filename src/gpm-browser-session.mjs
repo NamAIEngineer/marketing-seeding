@@ -1,4 +1,5 @@
 import { GpmChromeTransport } from "./browser-runtime-transports.mjs";
+import { canonicalIdentityUrl } from "./execution-binding.mjs";
 
 const text = (value) => typeof value === "string" ? value.trim() : "";
 const fail = (code, message) => Object.assign(new Error(message), { code });
@@ -9,9 +10,12 @@ const UNSAFE_TRANSPORT_KEY = /(cookie|password|token|secret|credential|sessionha
 function observedIdentity(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   return {
-    platform: text(value.platform || value.provider).toLowerCase(),
+    provider: text(value.provider).toLowerCase() || null,
+    platform: text(value.platform).toLowerCase(),
     accountId: text(value.accountId || value.account || value.identity),
-    profileReference: text(value.profileReference || value.profileRef),
+    profileReference: text(value.profileReference || value.profileRef || value.providerProfileId),
+    providerProfileId: text(value.providerProfileId || value.profileReference || value.profileRef),
+    identityReference: canonicalIdentityUrl(value.identityReference || value.expectedIdentityUrl),
     profileFingerprint: text(value.profileFingerprint),
     state: text(value.state || value.status).toLowerCase()
   };
@@ -30,9 +34,12 @@ export class GpmBrowserSession {
     const platform = text(selection.platform).toLowerCase();
     const accountId = text(selection.accountId);
     const profileReference = text(selection.profileReference || selection.profileRef);
-    if (!platform || !accountId || !profileReference) throw fail("SESSION_BINDING_REQUIRED", "platform, account, and profile binding are required");
+    const provider = text(selection.provider).toLowerCase() || "gpm";
+    const providerProfileId = text(selection.providerProfileId || profileReference);
+    const identityReference = canonicalIdentityUrl(selection.identityReference || selection.expectedIdentityUrl);
+    if (provider !== "gpm" || !platform || !accountId || !profileReference || providerProfileId !== profileReference) throw fail("SESSION_BINDING_REQUIRED", "GPM platform, account, and exact profile binding are required");
     if (typeof attach !== "function") throw new TypeError("injected attach function is required");
-    this.#selection = Object.freeze({ platform, accountId, profileReference });
+    this.#selection = Object.freeze({ provider: "gpm", platform, accountId, profileReference, providerProfileId, ...(identityReference ? { identityReference } : {}) });
     this.#attach = attach;
   }
 
@@ -47,7 +54,7 @@ export class GpmBrowserSession {
     const state = text(result?.state || result?.status || identity?.state).toLowerCase();
     if (["challenge", "challenged", "unknown", "unavailable", "not_ready"].includes(state)) throw fail(state === "challenge" || state === "challenged" ? "SESSION_CHALLENGE" : "SESSION_IDENTITY_UNKNOWN", "GPM session identity is not ready");
     if (!identity || !["ready", "healthy", "attached", ""].includes(state)) throw fail("SESSION_IDENTITY_UNKNOWN", "GPM session identity is unknown");
-    if (identity.platform !== this.#selection.platform || identity.accountId !== this.#selection.accountId || identity.profileReference !== this.#selection.profileReference) throw fail("SESSION_BINDING_MISMATCH", "observed GPM identity does not match selected binding");
+    if (identity.provider !== "gpm" || identity.platform !== this.#selection.platform || identity.accountId !== this.#selection.accountId || identity.profileReference !== this.#selection.profileReference || identity.providerProfileId !== this.#selection.providerProfileId || (this.#selection.identityReference && canonicalIdentityUrl(identity.identityReference) !== this.#selection.identityReference)) throw fail("SESSION_BINDING_MISMATCH", "observed GPM identity does not match selected binding");
     const providedTransport = result?.transport;
     const client = result?.client || result?.transportClient;
     if (providedTransport) {

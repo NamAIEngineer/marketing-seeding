@@ -1,6 +1,7 @@
 import { validateExecutionReceiptV1 } from "./execution-contracts.mjs";
 import { normalizePublicationVerification, PlatformAdapterRegistry } from "./platform-registries.mjs";
 import { assertLiveGrantMatchesExecution } from "./live-execution-grant.mjs";
+import { bindingMatches, canonicalIdentityUrl, canonicalProvider } from "./execution-binding.mjs";
 
 export const SUBMIT_READINESS_SAFETY_MARGIN_MS = 30_000;
 
@@ -40,6 +41,33 @@ function recoveryClass(result) {
 function sameTransportIdentity(left, right) {
   if (!left || !right) return false;
   return ["transport", "provider", "providerVersion"].every((key) => String(left[key] || "") === String(right[key] || ""));
+}
+
+function requestBindingMatchesContext(request, target, account) {
+  const platform = String(request?.platform || target?.channel || account?.platform || "").toLowerCase();
+  const identity = (value, allowPlatformAlias = false) => value?.identityReference ||
+    (allowPlatformAlias && platform === "linkedin" ? value?.expectedIdentityUrl : undefined);
+  return bindingMatches({
+    platform: request?.platform,
+    accountId: request?.accountId,
+    provider: request?.provider,
+    ...(request?.provider || request?.providerProfileId ? { providerProfileId: request?.providerProfileId || request?.profileId } : {}),
+    profileId: request?.profileId,
+    identityReference: request?.identityReference || request?.target?.identityReference || identity(request, true) || identity(request?.target, true),
+    targetId: request?.target?.targetId,
+    targetUrl: request?.target?.url
+  }, {
+    platform: target?.channel,
+    accountId: target?.accountId,
+    provider: target?.provider || account?.provider,
+    ...((target?.provider || target?.providerProfileId || account?.provider || account?.providerProfileId)
+      ? { providerProfileId: target?.providerProfileId || account?.providerProfileId || target?.profileId }
+      : {}),
+    profileId: target?.profileId,
+    identityReference: target?.identityReference || identity(target, true) || account?.identityReference || identity(account, true),
+    targetId: target?.id,
+    targetUrl: target?.url
+  }, { requireIdentity: true, requireTarget: true });
 }
 
 export class JevExecutionWorker {
@@ -106,6 +134,12 @@ export class JevExecutionWorker {
       schemaVersion: 1,
       executionId: request.executionId,
       jobId: request.jobId,
+      ...(request.provider || request.providerProfileId ? {
+        provider: request.provider,
+        providerProfileId: request.providerProfileId || request.profileId,
+        identityReference: request.identityReference || request.target?.identityReference,
+        targetUrl: request.target?.url
+      } : {}),
       attempt: requestRow.attempt,
       startedAt,
       finishedAt,
@@ -204,7 +238,7 @@ export class JevExecutionWorker {
     let executionTransport = null;
     let executionBrowserSurface = null;
     try {
-      if (!initial.account || initial.account.status !== "enabled" || initial.account.health !== "healthy" || initial.account.profileId !== initial.request.profileId || initial.account.accountId !== initial.request.accountId) {
+      if (!initial.account || initial.account.status !== "enabled" || initial.account.health !== "healthy" || initial.account.accountId !== initial.request.accountId || !requestBindingMatchesContext(initial.request, initial.target, initial.account)) {
         return { status: "HUMAN_REQUIRED", executionId, reasonCode: "account_profile_binding_invalid" };
       }
 
@@ -217,7 +251,10 @@ export class JevExecutionWorker {
         const resolver = this.executionSessionResolver;
         const acquire = typeof resolver.resolve === "function" ? resolver.resolve.bind(resolver) : resolver.acquire?.bind(resolver);
         if (typeof acquire !== "function") throw Object.assign(new Error("execution session resolver is invalid"), { code: "EXECUTION_SESSION_RESOLVER_INVALID" });
-        resolvedSessionEnvelope = await acquire({ request: initial.request, account: initial.account, context: initial, executionId });
+        // The resolver must receive the exact execution binding at its top
+        // level. Keep context metadata alongside it; never hide provider,
+        // profile, account, or verified identity under a nested field.
+        resolvedSessionEnvelope = await acquire({ ...initial.request, account: initial.account, context: initial, executionId });
         executionSession = resolvedSessionEnvelope?.session || resolvedSessionEnvelope;
         executionTransport = resolvedSessionEnvelope?.transport || executionSession?.transport || null;
         executionBrowserSurface = resolvedSessionEnvelope?.browserSurface || executionSession?.browserSurface || null;
@@ -226,7 +263,10 @@ export class JevExecutionWorker {
         if (sessionLifecycle !== "READY") throw Object.assign(new Error("execution session is not ready"), { code: sessionLifecycle === "CHALLENGED" ? "SESSION_CHALLENGE" : sessionLifecycle === "STALE" ? "SESSION_STALE" : "EXECUTION_SESSION_NOT_READY" });
         if (typeof executionSession.assertUsable === "function") executionSession.assertUsable();
         if (String(executionSession.platform || "").toLowerCase() !== String(initial.request.platform || "").toLowerCase() ||
-            String(executionSession.accountId || "") !== String(initial.request.accountId || "")) {
+            String(executionSession.accountId || "") !== String(initial.request.accountId || "") ||
+            (executionSession.provider && canonicalProvider(executionSession.provider, { allowLegacy: true }) !== canonicalProvider(initial.request.provider, { allowLegacy: true })) ||
+            (executionSession.expectedIdentity?.providerProfileId && String(executionSession.expectedIdentity.providerProfileId) !== String(initial.request.providerProfileId || initial.request.profileId)) ||
+            (executionSession.expectedIdentity?.identityReference && canonicalIdentityUrl(executionSession.expectedIdentity.identityReference) !== canonicalIdentityUrl(initial.request.identityReference || initial.request.target?.identityReference))) {
           throw Object.assign(new Error("execution session binding does not match request"), { code: "EXECUTION_SESSION_BINDING_MISMATCH" });
         }
         if (!executionTransport || typeof executionTransport.runtimeIdentity !== "function") {
@@ -300,7 +340,7 @@ export class JevExecutionWorker {
                 current.request?.accountId !== context.request.accountId || current.request?.profileId !== context.request.profileId ||
                 current.request?.target?.targetId !== context.request.target.targetId || current.target?.id !== context.request.target.targetId ||
                 current.target?.accountId !== context.request.accountId || current.target?.profileId !== context.request.profileId ||
-                current.target?.channel !== context.request.platform) {
+                current.target?.channel !== context.request.platform || !requestBindingMatchesContext(current.request, current.target, current.account)) {
               throw Object.assign(new Error("Execution context changed before submit"), { code: "execution_context_mismatch" });
             }
             submitReadiness = readinessEvidence(current);

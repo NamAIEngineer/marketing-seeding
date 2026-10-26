@@ -27,10 +27,20 @@ export class ExecutionSession {
     const expiresAt = clean(input.expiresAt);
     if (!Number.isFinite(Date.parse(createdAt))) throw Object.assign(new TypeError("session creation time is invalid"), { code: "SESSION_CREATED_AT_INVALID" });
     const sessionId = clean(input.sessionId, 120) || `session-${createHash("sha256").update(`${clean(input.provider)}\u0000${clean(input.profileReference)}\u0000${createdAt}`).digest("hex").slice(0, 32)}`;
+    const explicitProviderProfileId = clean(input.providerProfileId || input.expectedIdentity?.providerProfileId || input.profileReference);
+    if (explicitProviderProfileId !== clean(input.profileReference)) throw Object.assign(new TypeError("execution session provider profile does not match profileReference"), { code: "SESSION_PROFILE_BINDING_MISMATCH" });
+    const explicitExpectedProvider = clean(input.expectedIdentity?.provider || input.provider).toLowerCase();
+    if (explicitExpectedProvider !== clean(input.provider).toLowerCase()) throw Object.assign(new TypeError("execution session expected provider does not match provider"), { code: "SESSION_PROVIDER_BINDING_MISMATCH" });
     const allowed = {
       sessionId, lifecycle, provider: clean(input.provider).toLowerCase(), profileReference: clean(input.profileReference),
       platform: clean(input.platform).toLowerCase(), accountId: clean(input.accountId),
-      expectedIdentity: freezeRecord({ platform: clean(input.expectedIdentity?.platform || input.platform).toLowerCase(), accountId: clean(input.expectedIdentity?.accountId || input.accountId) }),
+      expectedIdentity: freezeRecord({
+        platform: clean(input.expectedIdentity?.platform || input.platform).toLowerCase(),
+        accountId: clean(input.expectedIdentity?.accountId || input.accountId),
+        provider: clean(input.expectedIdentity?.provider || input.provider).toLowerCase(),
+        providerProfileId: clean(input.expectedIdentity?.providerProfileId || input.providerProfileId || input.profileReference),
+        identityReference: clean(input.expectedIdentity?.identityReference || input.identityReference || input.expectedIdentityUrl, 300)
+      }),
       capabilities: Object.freeze(Array.isArray(input.capabilities) ? [...new Set(input.capabilities.map((x) => clean(x, 48)).filter(Boolean))] : []),
       transportRef: boundedRecord(input.transportRef, "transportRef"),
       transportIdentity: freezeRecord({
@@ -49,6 +59,12 @@ export class ExecutionSession {
 
   /** Persist only bounded metadata; provider handles and raw profile refs stay in memory. */
   toJSON() {
+    const expectedIdentity = {
+      ...this.expectedIdentity,
+      providerProfileId: this.expectedIdentity.providerProfileId
+        ? `sha256:${createHash("sha256").update(this.expectedIdentity.providerProfileId).digest("hex")}`
+        : null
+    };
     return {
       sessionId: this.sessionId || null,
       lifecycle: this.lifecycle,
@@ -56,7 +72,7 @@ export class ExecutionSession {
       providerProfileRef: this.profileReference ? `sha256:${createHash("sha256").update(this.profileReference).digest("hex")}` : null,
       platform: this.platform,
       accountId: this.accountId,
-      expectedIdentity: this.expectedIdentity,
+      expectedIdentity,
       capabilities: this.capabilities,
       transportRef: this.transportRef,
       transportIdentity: this.transportIdentity,
