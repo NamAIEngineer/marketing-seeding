@@ -2,7 +2,10 @@ import { assertTransportCannotChangeAfterIntent } from "./browser-interaction-tr
 import { CamoufoxTransport, GpmChromeTransport, OrcaAccessibilityTransport, OrcaPointerTransport } from "./browser-runtime-transports.mjs";
 
 export const WORKLOAD_TRANSPORT_POLICY = Object.freeze({
-  AUTHENTICATED_SOCIAL_EXECUTION: "gpm",
+  // GPM remains available only as historical/compatibility input. The active
+  // authenticated social lane is Camoufox and fails closed until its runtime
+  // is explicitly attached and identity-verified.
+  AUTHENTICATED_SOCIAL_EXECUTION: "camoufox",
   PUBLIC_DISCOVERY: "camoufox",
   COMMUNITY_RESEARCH: "camoufox",
   PRODUCT_WEB_DEMO: "camoufox",

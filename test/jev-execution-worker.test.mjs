@@ -422,6 +422,39 @@ test("campaign-authorized autonomous live mode also requires a bound one-job gra
   assert.ok(fixture.calls.some(([name]) => name === "sent"));
 });
 
+test("provider-aware Camoufox live execution never falls back to the host-session surface", async () => {
+  const fixture = executionFixture();
+  fixture.request.provider = "camoufox";
+  fixture.request.providerProfileId = fixture.request.profileId;
+  fixture.request.identityReference = fixture.context.account.expectedIdentityUrl;
+  fixture.request.target.identityReference = fixture.context.account.expectedIdentityUrl;
+  fixture.context.target.provider = "camoufox";
+  fixture.context.target.providerProfileId = fixture.request.profileId;
+  fixture.context.target.identityReference = fixture.context.account.expectedIdentityUrl;
+  fixture.context.target.url = fixture.request.target.url;
+  fixture.context.account.provider = "camoufox";
+  fixture.context.account.providerProfileId = fixture.request.profileId;
+  fixture.context.account.profileRef = fixture.request.profileId;
+  fixture.context.authorization.allowLiveExecution = true;
+  attachFixtureGrant(fixture);
+  fixture.context.liveGrant.provider = "camoufox";
+  fixture.context.liveGrant.providerProfileId = fixture.request.profileId;
+  fixture.context.liveGrant.identityReference = fixture.context.account.expectedIdentityUrl;
+  fixture.context.liveGrant.targetUrl = fixture.request.target.url;
+  let adapterCalls = 0;
+  const worker = new JevExecutionWorker({
+    service: fixture.service,
+    adapterRegistry: adapterRegistry({ linkedin: { async execute() { adapterCalls += 1; } } }),
+    env: { SEEDING_JEV_LIVE_ENABLED: "true", SEEDING_JEV_LIVE_EXECUTION_ID: "exec-1" }
+  });
+  const result = await worker.run("exec-1", { dryRun: false });
+  assert.equal(result.status, "PRE_SUBMIT_STOPPED");
+  assert.equal(result.reasonCode, "camoufox_execution_resolver_unavailable");
+  assert.equal(adapterCalls, 0);
+  assert.equal(fixture.calls.some(([name]) => name === "readiness"), false);
+  assert.equal(fixture.calls.some(([name]) => name === "intent"), false);
+});
+
 test("worker lease collision stops before readiness or adapter calls", async () => {
   const fixture = executionFixture({ service: { async acquireExecutionLease() { return { acquired: false, reason: "execution_lease_held" }; } } });
   let adapterCalls = 0;

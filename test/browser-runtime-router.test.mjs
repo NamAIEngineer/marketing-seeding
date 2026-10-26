@@ -3,11 +3,11 @@ import assert from "node:assert/strict";
 import { BrowserRuntimeRouter, WORKLOAD_TRANSPORT_POLICY, createDefaultBrowserRuntimeRouter } from "../src/browser-runtime-router.mjs";
 import { CamoufoxTransport, GpmChromeTransport } from "../src/browser-runtime-transports.mjs";
 
-test("default policy routes authenticated and public workloads deterministically", () => {
+test("default policy routes authenticated and public workloads to Camoufox deterministically", () => {
   const gpm = new GpmChromeTransport({ endpoint: "http://127.0.0.1:1234", profileReference: "profile-a" });
   const camoufox = new CamoufoxTransport({ executable: "/usr/bin/camoufox", profileReference: "isolated-a" });
   const router = new BrowserRuntimeRouter({ transports: [gpm, camoufox] });
-  assert.equal(router.select({ workload: "AUTHENTICATED_SOCIAL_EXECUTION" }).route, "gpm");
+  assert.equal(router.select({ workload: "AUTHENTICATED_SOCIAL_EXECUTION" }).route, "camoufox");
   assert.equal(router.select({ workload: "PUBLIC_DISCOVERY" }).route, "camoufox");
   assert.equal(router.select({ workload: "SCREENSHOT_CAPTURE" }).transport, camoufox);
 });
@@ -16,7 +16,7 @@ test("missing provider or ambiguous policy fails closed", () => {
   const router = new BrowserRuntimeRouter({ transports: [] });
   assert.throws(() => router.select({ workload: "PUBLIC_DISCOVERY" }), (error) => error.code === "ROUTE_TRANSPORT_UNAVAILABLE");
   assert.throws(() => router.select({ workload: "UNDECLARED" }), (error) => error.code === "ROUTE_WORKLOAD_UNSUPPORTED");
-  const duplicate = new BrowserRuntimeRouter({ transports: [new GpmChromeTransport({ profileReference: "a" }), new GpmChromeTransport({ profileReference: "b" })] });
+  const duplicate = new BrowserRuntimeRouter({ transports: [new CamoufoxTransport({ profileReference: "a" }), new CamoufoxTransport({ profileReference: "b" })] });
   assert.throws(() => duplicate.select({ workload: "AUTHENTICATED_SOCIAL_EXECUTION" }), (error) => error.code === "ROUTE_POLICY_AMBIGUOUS");
 });
 
@@ -57,14 +57,14 @@ test("generic runtime click requires validation before provider input", async ()
 });
 
 test("route decision is bound before irreversible intent and cannot silently switch", () => {
-  const router = createDefaultBrowserRuntimeRouter({ gpm: { endpoint: "http://localhost:1", profileReference: "p" }, camoufox: { executable: "/bin/camoufox", profileReference: "p2" } });
+  const router = createDefaultBrowserRuntimeRouter({ gpm: { endpoint: "http://localhost:1", profileReference: "p" }, camoufox: { executable: "/bin/camoufox", profileReference: "p2" }, policy: { ...WORKLOAD_TRANSPORT_POLICY, PUBLIC_DISCOVERY: "gpm" } });
   const first = router.select({ workload: "AUTHENTICATED_SOCIAL_EXECUTION" });
   assert.equal(first.selectedBeforeIrreversibleIntent, true);
   assert.throws(() => router.select({ workload: "PUBLIC_DISCOVERY", intentPersisted: true, selectedTransport: first.transport }), /cannot change/i);
 });
 
 test("policy remains explicit and provider-neutral", () => {
-  assert.equal(WORKLOAD_TRANSPORT_POLICY.AUTHENTICATED_SOCIAL_EXECUTION, "gpm");
+  assert.equal(WORKLOAD_TRANSPORT_POLICY.AUTHENTICATED_SOCIAL_EXECUTION, "camoufox");
   assert.equal(WORKLOAD_TRANSPORT_POLICY.INDEPENDENT_PUBLICATION_VERIFY, "camoufox");
   assert.equal(WORKLOAD_TRANSPORT_POLICY.HOST_SESSION_SPECIAL_CASE, "orca-accessibility");
 });

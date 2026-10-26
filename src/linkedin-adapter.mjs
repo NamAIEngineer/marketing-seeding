@@ -488,7 +488,7 @@ export class LinkedInAdapter {
   async #getPage(request) {
     const tabs = await this.browser.listTabs();
     const owned = tabs.filter((tab) => profileId(tab) === request.profileId);
-    if (owned.length === 0) throw Object.assign(new Error("Expected ORCA browser profile has no open tab"), { code: "PROFILE_NOT_FOUND" });
+    if (owned.length === 0) throw Object.assign(new Error("Expected browser profile has no open tab"), { code: "PROFILE_NOT_FOUND" });
     const current = owned.filter((tab) => /(^|\.)linkedin\.com$/i.test(new URL(tab.url || "about:blank").hostname));
     if (current.length > 1) throw Object.assign(new Error("Multiple LinkedIn tabs exist in the expected profile"), { code: "IDENTITY_AMBIGUOUS" });
     const selected = current[0] || (owned.length === 1 ? owned[0] : null);
@@ -496,7 +496,7 @@ export class LinkedInAdapter {
     const pageId = selected.browserPageId || selected.pageId || selected.id;
     if (!pageId) throw Object.assign(new Error("Browser page identity is missing"), { code: "ORCA_PROTOCOL_ERROR" });
     const tab = await this.browser.showTab(pageId);
-    if (tab.profileId !== request.profileId) throw Object.assign(new Error("ORCA returned a different browser profile"), { code: "ACCOUNT_MISMATCH" });
+    if (tab.profileId !== request.profileId) throw Object.assign(new Error("Browser runtime returned a different profile"), { code: "ACCOUNT_MISMATCH" });
     return { pageId, tab };
   }
 
@@ -513,7 +513,7 @@ export class LinkedInAdapter {
     await this.browser.navigate(pageId, LINKEDIN_FEED_URL_FOR_READINESS);
     await this.browser.waitForUrl(pageId, LINKEDIN_FEED_URL_FOR_READINESS, 15_000);
     const actual = await this.browser.showTab(pageId);
-    if (actual.profileId !== request.profileId) throw Object.assign(new Error("Profile changed during navigation"), { code: "ACCOUNT_MISMATCH" });
+    if (actual.profileId !== request.profileId) throw Object.assign(new Error("Browser profile changed during navigation"), { code: "ACCOUNT_MISMATCH" });
     await waitForLinkedInIdentity(this.browser, pageId, identityPath);
   }
 

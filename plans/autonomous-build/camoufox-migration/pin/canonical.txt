@@ -1,0 +1,10 @@
+{
+  "path": "/Users/nam/build-agentic-AI/.agentic/marketing-seeding/state.json",
+  "revision": 54861,
+  "sha256": "2ed58f8972072c9f5a0921830c0af6a1502b443017c0db2c2f82856f388eb1d7",
+  "unknowns": 6,
+  "grants": 1,
+  "windows": 1,
+  "leases": 0,
+  "executionRequests": 151
+}

@@ -34,16 +34,18 @@ async function loadLocalEnv() {
 }
 
 async function loadConfiguredExecutionSessionResolver(env = process.env) {
-  // Session authority is an explicit host integration. Never infer GPM from
-  // discovery, ORCA, or browser runtime defaults; absent/incomplete config
-  // leaves JEV without a resolver (safe dry-run/pre-submit behavior).
+  // Session authority is an explicit host integration. Never infer a provider
+  // from discovery, ORCA, GPM, or browser runtime defaults; absent/incomplete
+  // config leaves JEV without a resolver (safe dry-run/pre-submit behavior).
+  // GPM is retired from the active lane. Historical GPM modules may remain
+  // installed, but stale GPM configuration is deliberately ignored.
   const moduleSpecifier = String(env.SEEDING_EXECUTION_SESSION_RESOLVER_MODULE || "").trim();
   const provider = String(env.SEEDING_EXECUTION_SESSION_PROVIDER || "").trim().toLowerCase();
   const profileReference = String(env.SEEDING_EXECUTION_SESSION_PROFILE_REFERENCE || "").trim();
   const sessionAuthority = String(env.SEEDING_EXECUTION_SESSION_AUTHORITY || "").trim();
   const attestationRaw = String(env.SEEDING_EXECUTION_SESSION_HOST_ATTESTATION || "").trim();
   if (!moduleSpecifier || !provider || !profileReference || !sessionAuthority || !attestationRaw) return null;
-  if (provider !== "gpm") return null;
+  if (provider !== "camoufox") return null;
   let hostAttestation;
   try { hostAttestation = JSON.parse(attestationRaw); } catch { return null; }
   if (!hostAttestation || typeof hostAttestation !== "object" || Array.isArray(hostAttestation) ||

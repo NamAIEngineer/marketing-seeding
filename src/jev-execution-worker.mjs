@@ -244,6 +244,13 @@ export class JevExecutionWorker {
 
       const dryRunRequest = dryRun === true || initial.request?.dryRun === true;
       const liveEnabledAtAcquire = !dryRunRequest && this.#liveEnabled(executionId, initial, { exactOperatorDispatch });
+      // Provider-aware Camoufox execution must consume the exact injected
+      // session. Never fall back to the configured host-session/ORCA surface
+      // when the resolver is absent; legacy rows without an explicit provider
+      // retain their historical compatibility lane.
+      if (!dryRunRequest && liveEnabledAtAcquire && canonicalProvider(initial.request.provider, { allowLegacy: true }) === "camoufox" && !this.executionSessionResolver) {
+        return { status: "PRE_SUBMIT_STOPPED", executionId, reasonCode: "camoufox_execution_resolver_unavailable" };
+      }
       // Resolve the provider session before readiness so the readiness check
       // and the adapter consume the same selected browser surface. No session
       // is acquired for dry-run work.

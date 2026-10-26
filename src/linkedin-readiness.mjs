@@ -210,10 +210,10 @@ function safeEvidence(value) {
 
 export class LinkedInReadinessProvider {
   constructor(browser, { ttlMs } = {}) {
-    if (!browser) throw new Error("LinkedIn readiness requires an ORCA browser adapter");
+    if (!browser) throw new Error("LinkedIn readiness requires a browser surface");
     this.browser = browser;
     this.ttlMs = ttlMs;
-    // One ORCA profile is a serialized browser surface.  Queue readiness
+    // One authenticated profile is a serialized browser surface. Queue readiness
     // observations so scheduler refreshes for different posts cannot race
     // navigation, composer mounting, or cleanup in the same tab.
     this.readinessTail = Promise.resolve();
@@ -235,8 +235,8 @@ export class LinkedInReadinessProvider {
     const checkedAt = new Date();
     try {
       // A live worker may pass its already-attached provider-neutral surface.
-      // Readiness must consume that exact surface; the ORCA browser remains
-      // the compatibility provider only when no injected surface exists.
+      // Readiness must consume that exact surface; the configured host surface
+      // is used only when no injected surface exists.
       const browser = context.browserSurface || this.browser;
       const injectedSurface = Boolean(context.browserSurface);
       const identityReference = context.identityReference || context.expectedIdentityUrl;
@@ -255,7 +255,7 @@ export class LinkedInReadinessProvider {
       });
       let pageId;
       if (tabs.length === 0) {
-        if (injectedSurface) return { state: "UNKNOWN", reasonCode: "gpm_linkedin_tab_missing", retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString() };
+        if (injectedSurface) return { state: "UNKNOWN", reasonCode: "linkedin_tab_missing", retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString() };
         pageId = await browser.createTab(context.profileId);
       }
       else {
