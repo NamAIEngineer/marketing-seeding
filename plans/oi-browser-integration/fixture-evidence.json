@@ -2,6 +2,8 @@
   "schemaVersion": 1,
   "evidenceStatus": "FIXTURE_VERIFIED",
   "provenance": {
+    "artifactStatus": "HISTORICAL_SUMMARY",
+    "candidateEvidence": "fixture-run-6600387.json",
     "fixtureHost": "fixture.test",
     "fixtureSnapshotUrl": "https://fixture.test/community",
     "execution": "isolated temporary JsonStore and BrowserInteractionFixture",

@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 2,
+  "runRevision": "6600387b254db13bf0494fc14a8f512a6f990e1a",
+  "runAt": "2026-10-27T18:21:25.239Z",
+  "sourceDirty": false,
+  "evidenceStatus": "FIXTURE_VERIFIED",
+  "fixtureProvenance": {
+    "host": "fixture.test",
+    "snapshotUrl": "https://fixture.test/community",
+    "stateFile": "temporary JsonStore",
+    "transport": "BrowserInteractionFixture",
+    "externalSideEffects": false,
+    "credentialsUsed": false
+  },
+  "scenario": {
+    "campaign": {
+      "id": "41dfd6a9-4d8b-4d5e-8396-8252b894da24",
+      "objective": "Developer awareness",
+      "product": "Product X"
+    },
+    "communities": {
+      "A": {
+        "targetId": "74eb9952-b409-499d-8580-73ee85543127",
+        "evidence": "technical educational content accepted",
+        "discoveryId": "a57228325b8f03af20ff5b1b76f48a235a7174bb59a1242a34868c58cd5c6c05"
+      },
+      "B": {
+        "targetId": "63d9e698-36a4-4313-813b-4fce781d1dc5",
+        "evidence": "direct promotion prohibited",
+        "discoveryId": "bc86195aec05ea8a365101f2f633877b93c344a1ee33130bc0bb62555285f798",
+        "policyMemoryId": "memory-46a02a4afa73c82335ee8b53"
+      }
+    }
+  },
+  "controlCycle": {
+    "entrypoint": "SeedingService.runCampaignControlCycle",
+    "before": {
+      "decisionId": "strategy-5f01cbe29f70153493c3f5e7",
+      "action": "publish",
+      "candidateId": "5a115539-966c-41c2-9a54-3d2254c1254e",
+      "evidence": [
+        "memory:memory-46a02a4afa73c82335ee8b53",
+        "post:5a115539-966c-41c2-9a54-3d2254c1254e",
+        "target:63d9e698-36a4-4313-813b-4fce781d1dc5"
+      ],
+      "reasons": [
+        "oi_memory_observed",
+        "product_intelligence_ready",
+        "target_policy_and_queue_checks_pass"
+      ]
+    },
+    "learning": {
+      "id": "learning-93cf67e0d7e0823241caed52",
+      "kind": "LEARNING",
+      "support": {
+        "sampleSupport": 2,
+        "evidenceCount": 2,
+        "verifiedCount": 2
+      },
+      "evidenceRefs": [
+        "publication:fixture-1",
+        "publication:fixture-2"
+      ],
+      "decisionHint": "prefer_target:74eb9952-b409-499d-8580-73ee85543127",
+      "confidence": 0.88
+    },
+    "after": {
+      "decisionId": "strategy-ecafba6359c14830624f4b0b",
+      "action": "publish",
+      "candidateId": "82701bb1-2928-4dd9-ab5b-8b4c9aa7d892",
+      "changed": true,
+      "evidence": [
+        "learning:learning-35e72e33fad8d73e34b3ca1c",
+        "memory:learning-93cf67e0d7e0823241caed52",
+        "memory:memory-46a02a4afa73c82335ee8b53",
+        "memory:memory-7a3357a1b185314257c293de",
+        "outcome:outcome-52b1b27bc15f9df39dfa2983",
+        "post:82701bb1-2928-4dd9-ab5b-8b4c9aa7d892",
+        "provider:provider-decision-30e6e819188185c6f91b3895",
+        "target:74eb9952-b409-499d-8580-73ee85543127"
+      ],
+      "reasons": [
+        "current_learning_feedback_observed",
+        "oi_memory_observed",
+        "oi_memory_strategy_applied",
+        "product_intelligence_ready",
+        "provider_route_observed",
+        "target_policy_and_queue_checks_pass"
+      ],
+      "providerContext": {
+        "decisionId": "provider-decision-30e6e819188185c6f91b3895",
+        "providerId": "local-fixture-provider",
+        "status": "SUCCEEDED",
+        "failure": null
+      }
+    },
+    "providerDecision": {
+      "schemaVersion": 1,
+      "decisionId": "provider-decision-30e6e819188185c6f91b3895",
+      "providerId": "local-fixture-provider",
+      "status": "SUCCEEDED",
+      "startedAt": "2026-10-27T18:21:25.000Z",
+      "completedAt": "2026-10-27T18:21:25.194Z",
+      "attempted": [
+        {
+          "providerId": "local-fixture-provider",
+          "status": "executionSucceeded"
+        }
+      ],
+      "availability": [
+        {
+          "id": "local-fixture-provider",
+          "installed": true,
+          "authReady": true,
+          "healthy": true,
+          "health": null,
+          "executionSucceeded": true,
+          "available": true,
+          "capabilities": [
+            "strategy-context"
+          ],
+          "tools": [],
+          "reasoningClasses": [
+            "deterministic"
+          ],
+          "successRate": 0
+        }
+      ],
+      "telemetry": {
+        "capability": "strategy-context",
+        "privacyClass": "local",
+        "reasoningClass": "deterministic",
+        "tools": [],
+        "providerId": "local-fixture-provider",
+        "successRate": null
+      },
+      "outputDigest": "72d7e29f7d0c0d5a12ac65ab1de5f62ad1f8e3cef3645c64eb7b15075759a51a",
+      "recordedAt": "2026-10-27T18:21:25.195Z"
+    }
+  },
+  "browser": {
+    "snapshot": {
+      "fingerprint": "21952b207987617d3e7df2a741554cb0ea2e6dbd5b096008cb6bb7bd8d9a7487",
+      "source": "STATIC_HTTP",
+      "evidenceStatus": "FIXTURE_VERIFIED",
+      "url": "https://fixture.test/community",
+      "elementId": "oi-element-f6abaefdea7c35295e698550"
+    },
+    "intent": {
+      "intentId": "intent-99ad67637c357e73fdf1b85e",
+      "action": "CLICK",
+      "snapshotFingerprint": "21952b207987617d3e7df2a741554cb0ea2e6dbd5b096008cb6bb7bd8d9a7487",
+      "targetIdentity": "df6737ee28b6e0cfd5efc2513eebefde"
+    },
+    "execution": {
+      "executionStatus": "COMMAND_COMPLETED",
+      "commandStatus": "COMMAND_COMPLETED",
+      "verification": {
+        "status": "CONTROL_ACTIVATED",
+        "observedAt": null,
+        "signals": [],
+        "evidenceRefs": [
+          "fixture:before",
+          "fixture:after"
+        ],
+        "reasonCode": null
+      },
+      "evidenceStatus": "FIXTURE_VERIFIED",
+      "externalSideEffects": false,
+      "fixtureClicks": 1
+    },
+    "replay": {
+      "replayed": true,
+      "executionStatus": "COMMAND_COMPLETED",
+      "fixtureClicksAfterReplay": 1
+    },
+    "restart": {
+      "memoryItems": 3,
+      "learningVisible": true,
+      "snapshotVisible": 1,
+      "executionVisible": 1,
+      "providerDecisionVisible": 1,
+      "strategyVisible": 3,
+      "replayed": true,
+      "nextCandidateId": "82701bb1-2928-4dd9-ab5b-8b4c9aa7d892"
+    }
+  },
+  "state": {
+    "revision": 19,
+    "schemaVersion": 8,
+    "dashboardEvidenceStatus": "IMPLEMENTED",
+    "dashboardProviderSuccesses": 1
+  },
+  "sourcePins": {
+    "oiBrowser": "1e471c44b5d63aa5aadb708623b21090b6f325b2",
+    "autoGtm": "9368098477d78f75d57fdf5db276129948f3a183"
+  },
+  "livePublication": false
+}

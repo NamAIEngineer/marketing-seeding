@@ -1,5 +1,7 @@
 {
   "schemaVersion": 1,
+  "artifactStatus": "HISTORICAL_SUPERSEDED",
+  "supersededBy": "fixture-run-6600387.json",
   "runRevision": "2e92827511ec48d68cb02cf048360997c2d91e26",
   "evidenceStatus": "FIXTURE_VERIFIED",
   "fixtureHost": "fixture.test",
