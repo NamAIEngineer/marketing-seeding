@@ -79,6 +79,8 @@ Latest isolated rerun: `plans/oi-browser-integration/server-smoke-d75ce02.json`.
 
 Final isolated rerun: `plans/oi-browser-integration/server-smoke-17993d2.json`. Exact candidate HEAD `17993d287a4a047a5994af140799c8963b86d94f` produced the same bounded result on port `4325`: local Qwen route `SUCCEEDED`, unauthorized route `401`, scoped memory and static snapshot retained after restart, provider decision visible after restart, schema v8, and Auto-GTM `feed_not_generated`. The run used a private temporary state directory and no external side effect.
 
+Final provenance rerun: `plans/oi-browser-integration/server-smoke-3794177.json`. Exact final candidate `379417778e1bd007e990030b12c7d448af6b02ba` produced the same result on isolated port `4325`; restart retained one memory item, one static snapshot, and one successful provider decision. No external side effect occurred.
+
 ## Verification evidence
 
 Commands run in C worktree:
