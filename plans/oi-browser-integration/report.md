@@ -7,7 +7,7 @@
 ## Baseline and ownership
 
 - C base: `79985bb411afc141f0edf10ae635fb91824d8bc9`, branch `integration/session-c-oi-browser`.
-- C implementation commit: `e10c2f02f3f4afba3fd17b07e9f76a9a51ed0bd1` (`feat: absorb oi-browser primitives into distribution OS`).
+- C implementation commits: `f2ccb030be6d118320c1c5ced9d51c523ea83a89` (`feat: absorb oi-browser primitives into distribution OS`) and `9ce01f9` (`feat: route provider context through strategy`).
 - SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, `wave/distribution-os-runtime-wave-13-bridge`, HEAD `52072ce`, dirty Camoufox/runtime/server/UI files. Observed server `127.0.0.1:4318` reports source commit `52072ce` and dirty state; it is not this C revision.
 - SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, `integration/autonomous-build`, HEAD `6899679`, dirty authority/service/standing-delegation files.
 - No live Orca agent terminal was observed. A/B files were not edited or committed by C.
@@ -17,7 +17,7 @@
 - `src/oi-browser-integration.mjs`: bounded memory contracts/consolidation, provider routing, BrowserSnapshot normalization/semantic identity, validated CLICK/TYPE/UPLOAD seam, redaction, dashboard projection.
 - `src/store.mjs`: additive `memoryItems`, `browserSnapshots`, `browserExecutions`, `providerDecisions` collections; existing migration/lease remains canonical.
 - `src/service.mjs`: service/API call paths for persistence, retrieval, consolidation, routing, snapshot/intent/execution, replay and failure recording.
-- `src/strategy.mjs`: campaign-scoped fresh memory retrieval; verified supported `prefer_target:<targetId>` learning changes candidate selection and rationale.
+- `src/strategy.mjs`: campaign-scoped fresh memory retrieval; verified supported `prefer_target:<targetId>` learning changes candidate selection and rationale; optional provider routing context is persisted through the same `deriveStrategy` and control-cycle entrypoints.
 - `src/server.mjs`: authenticated operator/automation routes under `/api/oi-browser/*`.
 - `docs/integrations/oi-browser-audit.md`: source-grounded decisions and risks.
 
@@ -64,10 +64,10 @@ Commands run in C worktree:
 
 ```text
 node --test test/oi-browser-integration.test.mjs
-10 tests, 10 pass, 0 fail
+11 tests, 11 pass, 0 fail
 
 node --test test/*.test.mjs
-586 tests, 584 pass, 0 fail, 2 skipped
+587 tests, 585 pass, 0 fail, 2 skipped
 
 node --check src/oi-browser-integration.mjs
 node --check src/service.mjs
@@ -75,7 +75,7 @@ node --check src/server.mjs
 git diff --check
 ```
 
-The full-suite result above is from the final post-review tree, including transient-value binding, semantic identity validation, provider nonzero/reasoning/tool/cost selection, authenticated memory query scoping, and live runtime hook boundaries. No external write, credential use, live social submit, merge, deploy, or publication was performed.
+The full-suite result above is from the final C tree, including transient-value binding, semantic identity validation, provider nonzero/reasoning/tool/cost selection, authenticated memory query scoping, live runtime hook boundaries, and provider routing through the production strategy entrypoint. No external write, credential use, live social submit, merge, deploy, or publication was performed.
 
 Independent read-only review was dispatched through the local queue as `session-c-oi-browser-final-review-local` (`local-qwen`, one attempt, `COMPLETED`). It reported no critical findings across persistence, memory, routing, snapshot redaction, live/static boundaries, authority, and API safety. Host review also covered source paths and A/B overlap.
 
@@ -85,4 +85,4 @@ Independent read-only review was dispatched through the local queue as `session-
 - Current runtime at `127.0.0.1:4318` is A's `52072ce`, not C's branch. Do not treat its health or Camoufox process as proof of C integration.
 - Auto-GTM feed generation is unavailable; no artifact is fabricated.
 - Fresh Camoufox identity/readiness and live publication/verification remain blocked or unproven.
-- Next autonomous action: owner cherry-picks C commit into the reconciled integration branch, resolves owned hunks, reruns focused/full checks, then performs only an explicitly authorized safe/runtime verification. Live publication still requires valid standing authority, healthy account, certified transport, and independent verification.
+- Next autonomous action: owner cherry-picks `f2ccb03` and `9ce01f9` into the reconciled integration branch, resolves owned hunks, reruns focused/full checks, then performs only an explicitly authorized safe/runtime verification. Live publication still requires valid standing authority, healthy account, certified transport, and independent verification.
