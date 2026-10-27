@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "runRevision": "2e92827511ec48d68cb02cf048360997c2d91e26",
+  "evidenceStatus": "FIXTURE_VERIFIED",
+  "fixtureHost": "fixture.test",
+  "externalSideEffects": false,
+  "credentialsUsed": false,
+  "controlCycle": {
+    "entrypoint": "SeedingService.runCampaignControlCycle",
+    "campaignId": "74afece7-41aa-4fc0-9b8d-0ab84d5678f7",
+    "advisory": true,
+    "authoritySideEffects": false,
+    "externalSideEffects": false,
+    "before": {
+      "action": "publish",
+      "candidateId": "0728a002-71b3-43af-9783-db0dd4f068dd"
+    },
+    "learning": {
+      "count": 1,
+      "sampleSupport": 2,
+      "evidenceCount": 2,
+      "verifiedCount": 2,
+      "evidenceRefs": ["publication:fixture-1", "publication:fixture-2"],
+      "decisionHint": "prefer_target:62705edd-30a4-43fb-aa24-d3b26e9eaa0f"
+    },
+    "after": {
+      "action": "publish",
+      "candidateId": "d24a3e47-3bee-46ae-9f47-2dcb74694266",
+      "changed": true,
+      "providerId": "local-fixture-provider",
+      "providerStatus": "SUCCEEDED",
+      "reasons": [
+        "current_learning_feedback_observed",
+        "oi_memory_observed",
+        "oi_memory_strategy_applied",
+        "product_intelligence_ready",
+        "provider_route_observed",
+        "target_policy_and_queue_checks_pass"
+      ]
+    }
+  },
+  "browser": {
+    "snapshotSource": "STATIC_HTTP",
+    "snapshotUrl": "https://fixture.test/community",
+    "intentAction": "CLICK",
+    "executionStatus": "COMMAND_COMPLETED",
+    "verification": "CONTROL_ACTIVATED",
+    "evidenceRefs": ["fixture:before", "fixture:after"],
+    "fixtureClicks": 1
+  },
+  "restart": {
+    "memoryItems": 2,
+    "learningVisible": true,
+    "snapshotVisible": 1,
+    "executionVisible": 1,
+    "providerDecisionVisible": 1,
+    "strategyVisible": 2
+  },
+  "livePublication": false
+}

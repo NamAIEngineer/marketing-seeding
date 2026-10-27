@@ -58,6 +58,8 @@ Controlled fixture campaign has two eligible targets. Before memory consolidatio
 
 Machine-readable summary: `plans/oi-browser-integration/fixture-evidence.json`.
 
+Latest controlled run artifact: `plans/oi-browser-integration/fixture-run-20261027.json`. It executed `SeedingService.runCampaignControlCycle` on C revision `2e92827` with a temporary `JsonStore`, then crossed the persisted static snapshot → CLICK intent → validated fixture transport → `CONTROL_ACTIVATED` path. Before/after candidate IDs differ after a supported learning (`sampleSupport=2`, `verifiedCount=2`), provider routing is `SUCCEEDED`, and restart retains memory, snapshot, execution, provider decision, and strategy records. This remains `FIXTURE_VERIFIED`; no public publication occurred.
+
 ## Verification evidence
 
 Commands run in C worktree:

@@ -7,4 +7,5 @@
 - C implementation commits: `f2ccb030be6d118320c1c5ced9d51c523ea83a89` and `9ce01f9` (provider routing through strategy).
 - Verification: focused `11/11` pass; full suite `587 tests, 585 pass, 0 fail, 2 skipped`; `node --check` and `git diff --check` pass after the strategy guard/provider wiring.
 - Fixture evidence is `FIXTURE_VERIFIED` only. No live publication or external side effect.
+- Latest controlled case: `plans/oi-browser-integration/fixture-run-20261027.json`; `runCampaignControlCycle` changed the candidate after supported learning and persisted provider/browser evidence across restart.
 - State: `PARTIAL` until A/B are serially reconciled and fresh Camoufox/Auto-GTM/live evidence exists.

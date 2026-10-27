@@ -10,6 +10,7 @@
 - Safe fixture proof: static snapshot → semantic click intent → validated fixture transport → `CONTROL_ACTIVATED`, evidence refs `fixture:before`, `fixture:after`; restart and idempotent replay verified. Memory evidence uses `publication:fixture-1` and `publication:fixture-2`; strategy before/after candidate changes through a persisted `LEARNING`.
 - Focused: `node --test test/oi-browser-integration.test.mjs` → `11/11`. Full final run: `node --test test/*.test.mjs` → `587 tests, 585 pass, 0 fail, 2 skipped`.
 - Fixture summary: `plans/oi-browser-integration/fixture-evidence.json`.
+- Latest controlled case artifact: `plans/oi-browser-integration/fixture-run-20261027.json` (`runCampaignControlCycle`, learning-driven candidate change, provider route, static snapshot click, restart persistence; `FIXTURE_VERIFIED`).
 - A/B worktrees remain untouched. Reconcile C commit with A Camoufox/runtime and B authority/standing-delegation changes serially; resolve overlapping `src/server.mjs`, `src/service.mjs`, and `src/strategy.mjs` hunks by owner evidence.
 - Do not call fixture evidence live. Current Auto-GTM feed is unavailable (`feed_not_generated`); fresh Camoufox identity/readiness/live publication remains unproven.
 - `deriveStrategy` now accepts an optional provider task, routes through the persisted native provider decision path, and records bounded provider rationale without creating authority or execution artifacts.
