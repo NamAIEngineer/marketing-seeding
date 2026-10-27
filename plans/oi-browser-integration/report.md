@@ -3,7 +3,8 @@
 ## Current candidate
 
 - Candidate branch: `integration/session-c-candidate`.
-- Candidate revision: `6600387b254db13bf0494fc14a8f512a6f990e1a`.
+- Candidate code revision: `6600387b254db13bf0494fc14a8f512a6f990e1a`.
+- Latest evidence/documentation revision: `4f1066f4e263f1d88a1c8666498716fa4c5560fc` (no source/test changes after the code checkpoint).
 - Candidate source tree was clean before review artifacts were generated; evidence artifacts are C-owned.
 
 ## Outcome
@@ -16,7 +17,7 @@
 - C implementation commits: `f2ccb030be6d118320c1c5ced9d51c523ea83a89` (`feat: absorb oi-browser primitives into distribution OS`) and `9ce01f9` (`feat: route provider context through strategy`).
 - SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, `wave/distribution-os-runtime-wave-13-bridge`, HEAD `52072ce`, dirty Camoufox/runtime/server/UI files. Observed server `127.0.0.1:4318` reports source commit `52072ce` and dirty state; it is not this C revision.
 - SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, `integration/autonomous-build`, HEAD `6899679`, dirty authority/service/standing-delegation files.
-- Orca records A and B as worktree metadata only. `orca terminal list` has no terminal attached to either path, and `orca orchestration inbox` is empty. No live native session ID, receiver, handshake, ACK, or task consumption was observed. A/B files were not edited or committed by C.
+- Orca records A and B as worktree metadata only. `orca terminal list` has no terminal attached to either path, and `orca orchestration inbox` is empty. Handshake sends returned `terminal_not_found`; no live native session ID, receiver, handshake, ACK, or task consumption was observed. A/B files were not edited or committed by C.
 
 ## Files and architecture
 

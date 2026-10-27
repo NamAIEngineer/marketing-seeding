@@ -2,10 +2,10 @@
 
 ## C → integration owner
 
-- Current candidate: `integration/session-c-candidate` at `6600387b254db13bf0494fc14a8f512a6f990e1a`.
+- Current candidate code: `integration/session-c-candidate` at `6600387b254db13bf0494fc14a8f512a6f990e1a`; latest evidence/documentation commit: `4f1066f4e263f1d88a1c8666498716fa4c5560fc`.
 - Runtime evidence: `plans/oi-browser-integration/server-smoke-6600387-rerun.json` (`RUNTIME_VERIFIED`, isolated port `4323`, local Qwen loopback route, unauthorized POST `401`, no external side effect).
 - Review receipt: `plans/oi-browser-integration/independent-review-6600387.md`; queue verifier failed on no-progress guard, so manual review is `DONE_WITH_CONCERNS`, not independent PASS.
-- A/B native handshake remains `UNVERIFIED`; Orca worktree metadata exists but no A/B terminal or inbox receiver is attached.
+- A/B native handshake remains `UNVERIFIED`; Orca worktree metadata exists but no A/B terminal or inbox receiver is attached. Handshake sends returned `terminal_not_found` for both worktrees.
 
 - Branch: `integration/session-c-oi-browser`; base `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Implementation commits: `f2ccb030be6d118320c1c5ced9d51c523ea83a89` and `9ce01f9`.
