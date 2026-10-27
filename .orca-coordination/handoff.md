@@ -7,6 +7,7 @@
 - Final rerun: isolated port `4324`, exact source `df2f775`, local Qwen route succeeded, restart retained memory/snapshot, unauthorized provider route returned `401`, no external side effect.
 - Machine-readable final rerun: `plans/oi-browser-integration/server-smoke-df2f775.json`.
 - Latest rerun: `plans/oi-browser-integration/server-smoke-d75ce02.json` on port `4325`, exact candidate HEAD `d75ce02`, with restart persistence for memory, static snapshot, and provider decision; no external side effect.
+- Final rerun: `plans/oi-browser-integration/server-smoke-17993d2.json` on port `4325`, exact candidate HEAD `17993d2`, with restart persistence for memory, static snapshot, and provider decision; no external side effect.
 - Review receipt: `plans/oi-browser-integration/independent-review-6600387.md`; queue verifier failed on no-progress guard, so manual review is `DONE_WITH_CONCERNS`, not independent PASS.
 - A/B native handshake remains `UNVERIFIED`; Orca worktree metadata exists but no A/B terminal or inbox receiver is attached. Handshake sends returned `terminal_not_found` for both worktrees.
 
