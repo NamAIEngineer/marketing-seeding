@@ -526,12 +526,17 @@ export function normalizeProviderRecord(input = {}) {
   const capabilities = boundedArray(input.capabilities, 32);
   const costClass = text(input.costClass, 40).toLowerCase() || "unknown";
   const successRate = Number.isFinite(Number(input.successRate)) ? Math.min(1, Math.max(0, Number(input.successRate))) : null;
-  return { id, capabilities, tools: boundedArray(input.tools, 32), reasoningClasses: boundedArray(input.reasoningClasses || (input.reasoningClass ? [input.reasoningClass] : []), 8), installed: input.installed === true, authReady: input.authReady === true, healthy: input.healthy === true, privacyClasses: boundedArray(input.privacyClasses || ["local"], 8), contextSize: Math.max(0, Number(input.contextSize) || 0), costClass, latencyMs: Number.isFinite(Number(input.latencyMs)) ? Math.max(0, Number(input.latencyMs)) : null, successRate, adapter: input.adapter || null };
+  const health = input.health && typeof input.health === "object" ? {
+    state: text(input.health.state, 40).toUpperCase() || "UNKNOWN",
+    reason: redacted(input.health.reason, 160) || null,
+    model: text(input.health.model, 160) || null
+  } : null;
+  return { id, capabilities, tools: boundedArray(input.tools, 32), reasoningClasses: boundedArray(input.reasoningClasses || (input.reasoningClass ? [input.reasoningClass] : []), 8), installed: input.installed === true, authReady: input.authReady === true, healthy: input.healthy === true, health, privacyClasses: boundedArray(input.privacyClasses || ["local"], 8), contextSize: Math.max(0, Number(input.contextSize) || 0), costClass, latencyMs: Number.isFinite(Number(input.latencyMs)) ? Math.max(0, Number(input.latencyMs)) : null, successRate, adapter: input.adapter || null };
 }
 
 export function providerAvailability(record) {
   const provider = normalizeProviderRecord(record);
-  return { id: provider.id, installed: provider.installed, authReady: provider.authReady, healthy: provider.healthy, executionSucceeded: false, available: provider.installed && provider.authReady && provider.healthy, capabilities: provider.capabilities, tools: provider.tools, reasoningClasses: provider.reasoningClasses, successRate: provider.successRate };
+  return { id: provider.id, installed: provider.installed, authReady: provider.authReady, healthy: provider.healthy, health: provider.health || null, executionSucceeded: false, available: provider.installed && provider.authReady && provider.healthy, capabilities: provider.capabilities, tools: provider.tools, reasoningClasses: provider.reasoningClasses, successRate: provider.successRate };
 }
 
 export async function routeAgentTask(task = {}, { providers = [], now = new Date(), timeoutMs = 20_000 } = {}) {

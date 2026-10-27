@@ -79,8 +79,13 @@ export class BrowserRuntimeRouter {
   }
 }
 
-export function createDefaultBrowserRuntimeRouter({ gpm = {}, camoufox = {}, orcaBrowser = null, orca = null, policy = WORKLOAD_TRANSPORT_POLICY } = {}) {
-  const transports = [new GpmChromeTransport(gpm), new CamoufoxTransport(camoufox)];
+export function createDefaultBrowserRuntimeRouter({ gpm = null, camoufox = {}, orcaBrowser = null, orca = null, policy = WORKLOAD_TRANSPORT_POLICY } = {}) {
+  // GPM is a historical compatibility adapter. It is never registered by the
+  // product default; callers must opt into the explicit legacy lane.
+  const transports = [
+    ...(gpm && typeof gpm === "object" ? [new GpmChromeTransport(gpm)] : []),
+    ...(camoufox && typeof camoufox === "object" ? [new CamoufoxTransport(camoufox)] : [])
+  ];
   const orcaTransports = orca ? (Array.isArray(orca) ? orca : [orca]) : (orcaBrowser ? [new OrcaAccessibilityTransport(orcaBrowser), new OrcaPointerTransport(orcaBrowser)] : []);
   return new BrowserRuntimeRouter({ transports: [...transports, ...orcaTransports], policy });
 }

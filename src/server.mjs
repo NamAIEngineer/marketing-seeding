@@ -18,7 +18,7 @@ import { PlatformAdapterRegistry, ReadinessProviderRegistry } from "./platform-r
 import { isAuthorizedLocalShutdown, runtimeMetadata } from "./service-lifecycle.mjs";
 import { consumeSystemAgenticHandoff } from "./system-agentic-handoff-bridge.mjs";
 import { createDefaultBrowserRuntimeRouter } from "./browser-runtime-router.mjs";
-import { discoverGpmProcessEndpoints, probeGpmRuntime } from "./gpm-runtime-probe.mjs";
+import { loadConfiguredLocalProvider } from "./oi-browser-provider-adapters.mjs";
 
 async function loadLocalEnv() {
   try {
@@ -119,54 +119,17 @@ const store = new JsonStore(stateFile, { requireLease: true });
 await store.acquireWriterLease();
 const readinessTtlMs = configuredReadinessTtlMs();
 const orcaBrowser = new OrcaCliClient();
-// Metadata-only discovery of an already-running GPM listener. It never starts
-// a profile and does not make authenticated work eligible without a binding.
-const gpmProcessDiscovery = await discoverGpmProcessEndpoints();
+// GPM is retired from the active runtime. Historical GPM projections remain
+// available only when an explicit compatibility observer is injected by a
+// caller; the product server does not discover or attach GPM.
+const configuredOiBrowserProvider = await loadConfiguredLocalProvider();
 const readinessProviderRegistry = new ReadinessProviderRegistry();
 readinessProviderRegistry.register("linkedin", new LinkedInReadinessProvider(orcaBrowser, { ttlMs: readinessTtlMs }));
 const service = new SeedingService(store, {
   readinessTtlMs,
   readinessProviderRegistry,
-  browserRuntimeRouter: createDefaultBrowserRuntimeRouter({
-    orcaBrowser,
-    gpm: {
-      endpointCandidates: gpmProcessDiscovery.endpoints,
-      probe: ({ runtime }) => probeGpmRuntime({ endpointCandidates: runtime.endpointCandidates, profileCatalogPath: "/api/v1/profiles" })
-    }
-  }),
-  // Dashboard catalog observation is a bounded, read-only GET. It never
-  // starts/stops a profile and returns UNKNOWN when no listener is available.
-  gpmAccountCatalogObservation: async () => {
-    const observation = await probeGpmRuntime({
-      endpointCandidates: gpmProcessDiscovery.endpoints,
-      profileCatalogPath: "/api/v1/profiles"
-    });
-    return observation?.profileCatalog || { state: observation?.state === "UNAVAILABLE" ? "UNAVAILABLE" : "UNKNOWN", code: observation?.code || "GPM_CATALOG_UNKNOWN", profiles: [] };
-  },
-  // Read-only composed-session capability observation. Dynamic listener
-  // candidates are discovered once at startup, then probed with GET only;
-  // profile lifecycle, browser attach, login, and execution remain untouched.
-  gpmSessionCapabilityObservation: async () => {
-    const observation = await probeGpmRuntime({
-      endpointCandidates: gpmProcessDiscovery.endpoints,
-      profileCatalogPath: null
-    });
-    const runtimeIdentity = observation?.runtimeIdentity && typeof observation.runtimeIdentity === "object"
-      ? {
-          ...observation.runtimeIdentity,
-          provider: "gpm",
-          profileReference: null,
-          sessionReference: null
-        }
-      : { provider: "gpm", transport: "gpm-chrome" };
-    return {
-      provider: "gpm",
-      configured: gpmProcessDiscovery.endpoints.length > 0,
-      runtimeIdentity,
-      health: { state: observation?.state || "UNKNOWN", reason: observation?.code || "GPM_CAPABILITY_UNKNOWN", observedProviderVersion: observation?.observedProviderVersion || observation?.providerVersion || null },
-      sessions: []
-    };
-  }
+  browserRuntimeRouter: createDefaultBrowserRuntimeRouter({ orcaBrowser }),
+  ...(configuredOiBrowserProvider ? { oiBrowserProviders: [configuredOiBrowserProvider] } : {})
 });
 const platformAdapterRegistry = new PlatformAdapterRegistry();
 // The production lane is fail-closed until an explicit, platform/runtime

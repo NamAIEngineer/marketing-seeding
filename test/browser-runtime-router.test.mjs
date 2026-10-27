@@ -63,6 +63,12 @@ test("route decision is bound before irreversible intent and cannot silently swi
   assert.throws(() => router.select({ workload: "PUBLIC_DISCOVERY", intentPersisted: true, selectedTransport: first.transport }), /cannot change/i);
 });
 
+test("default router does not register legacy GPM unless explicitly supplied", () => {
+  const router = createDefaultBrowserRuntimeRouter({ camoufox: { executable: "/bin/camoufox", profileReference: "p" } });
+  assert.equal(router.transports.some((transport) => transport.runtimeIdentity().provider === "gpm-chrome"), false);
+  assert.equal(router.select({ workload: "PUBLIC_DISCOVERY" }).route, "camoufox");
+});
+
 test("policy remains explicit and provider-neutral", () => {
   assert.equal(WORKLOAD_TRANSPORT_POLICY.AUTHENTICATED_SOCIAL_EXECUTION, "camoufox");
   assert.equal(WORKLOAD_TRANSPORT_POLICY.INDEPENDENT_PUBLICATION_VERIFY, "camoufox");
