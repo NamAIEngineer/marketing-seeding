@@ -431,6 +431,7 @@ function automationCanMutate(method, pathname) {
   if (/^\/api\/campaigns\/[^/]+\/content-candidates\/materialize$/.test(pathname)) return true;
   if (/^\/api\/campaigns\/[^/]+\/discoveries\/observe$/.test(pathname)) return true;
   if (/^\/api\/campaigns\/[^/]+\/control-cycle$/.test(pathname)) return true;
+  if (pathname === "/api/oi-browser/memory" || pathname === "/api/oi-browser/memory/consolidate" || pathname === "/api/oi-browser/memory/retract" || pathname === "/api/oi-browser/snapshots" || pathname === "/api/oi-browser/provider-route" || pathname === "/api/oi-browser/browser-intent" || pathname === "/api/oi-browser/browser-execute") return true;
   if (/^\/api\/posts\/[^/]+\/execution-request$/.test(pathname)) return true;
   if (/^\/api\/execution-requests\/[^/]+\/receipt$/.test(pathname)) return true;
   return [
@@ -629,6 +630,34 @@ const server = http.createServer(async (request, response) => {
     }
     if (request.method === "GET" && url.pathname === "/api/leads") {
       return sendJson(response, 200, await readAutoGtmFeed(autoGtmFeedFile));
+    }
+    if (request.method === "GET" && url.pathname === "/api/oi-browser/memory") {
+      if (!role) return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      const query = Object.fromEntries(url.searchParams.entries());
+      const scope = Object.fromEntries(["campaignId", "accountId", "communityId", "platform", "channel"].filter((key) => query[key]).map((key) => [key, query[key]]));
+      return sendJson(response, 200, await service.retrieveOiMemory({ ...query, scope }));
+    }
+    if (request.method === "POST" && url.pathname === "/api/oi-browser/memory") {
+      return sendJson(response, 201, await service.recordOiMemory(await readJson(request), actor));
+    }
+    if (request.method === "POST" && url.pathname === "/api/oi-browser/memory/consolidate") {
+      return sendJson(response, 200, await service.consolidateOiMemory(await readJson(request), actor));
+    }
+    if (request.method === "POST" && url.pathname === "/api/oi-browser/memory/retract") {
+      const input = await readJson(request);
+      return sendJson(response, 200, await service.retractOiMemoryEvidence(input.evidenceRef, actor));
+    }
+    if (request.method === "POST" && url.pathname === "/api/oi-browser/snapshots") {
+      return sendJson(response, 201, await service.recordBrowserSnapshot(await readJson(request), actor));
+    }
+    if (request.method === "POST" && url.pathname === "/api/oi-browser/provider-route") {
+      return sendJson(response, 200, await service.routeOiAgentTask(await readJson(request), actor));
+    }
+    if (request.method === "POST" && url.pathname === "/api/oi-browser/browser-intent") {
+      return sendJson(response, 200, await service.createBrowserIntent(await readJson(request)));
+    }
+    if (request.method === "POST" && url.pathname === "/api/oi-browser/browser-execute") {
+      return sendJson(response, 200, await service.executeBrowserIntent(await readJson(request), actor));
     }
     if (request.method === "GET" && url.pathname === "/api/flow-graph") {
       return sendJson(response, 200, await service.flowGraph());

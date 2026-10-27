@@ -3,6 +3,7 @@ import { evaluateQueue } from "./guards.mjs";
 import { publicationIdentityKeysForPost } from "./campaign-authorization.mjs";
 import { isNormalizedPostAttributionContext, normalizePostAttributionContext } from "./learning.mjs";
 import { projectEngagementContext } from "./engagement-context.mjs";
+import { retrieveBoundedMemory } from "./oi-browser-integration.mjs";
 
 const ACTIONS = new Set(["publish", "engage", "research", "wait", "do_nothing"]);
 const MAX_DECISIONS = 24;
@@ -199,6 +200,10 @@ function dynamicWaitReasons(posts, schedules, now) {
   return [...new Set(reasonsFound)].sort();
 }
 
+function memoryTargetPreference(memoryItems = []) {
+  return memoryItems.find((item) => item.kind === "LEARNING" && item.evidenceStatus === "VERIFIED" && Number(item.supportCount) >= 2 && /^prefer_target:[^\s]+$/.test(String(item.decisionHint || ""))) || null;
+}
+
 /** Deterministic advisory strategy. It reads state and never creates execution authority. */
 export function deriveStrategyDecision(state, campaignId, { now = new Date() } = {}) {
   const campaign = (state.campaigns || []).find((item) => item.id === campaignId);
@@ -213,12 +218,17 @@ export function deriveStrategyDecision(state, campaignId, { now = new Date() } =
   let reasonList = [];
   let refs = [];
   let learning = null;
+  let memoryContext = null;
   let engagementContext = null;
   if (!productReady(campaign)) {
     reasonList = ["product_intelligence_incomplete"];
   } else if (unknownForCampaign(state, campaignId, posts)) {
     reasonList = ["submission_unknown_quarantined"];
   } else {
+    const remembered = retrieveBoundedMemory(state, { scope: { campaignId }, limit: 8, now });
+    if (remembered.length) {
+      memoryContext = remembered.map((item) => ({ id: item.id, kind: item.kind, confidence: item.confidence, supportCount: item.supportCount, evidenceRefs: item.evidenceRefs, decisionHint: item.decisionHint }));
+    }
     learning = currentLearningContext(state, campaign);
     const publishable = [];
     for (const post of posts) {
@@ -229,10 +239,17 @@ export function deriveStrategyDecision(state, campaignId, { now = new Date() } =
       if (decision.allowed) publishable.push({ post, decision });
     }
     if (publishable.length) {
-      const selected = publishable[0];
+      const preference = memoryTargetPreference(remembered);
+      const selected = preference
+        ? publishable.find(({ post }) => `prefer_target:${post.targetId}` === preference.decisionHint) || publishable[0]
+        : publishable[0];
       action = "publish"; score = 100; eligible = true; candidateId = selected.post.id;
       reasonList = ["product_intelligence_ready", "target_policy_and_queue_checks_pass"];
       refs = [`post:${selected.post.id}`, `target:${selected.post.targetId}`];
+      if (preference && `prefer_target:${selected.post.targetId}` === preference.decisionHint) {
+        reasonList.push("oi_memory_strategy_applied");
+        refs.push(`memory:${preference.id}`);
+      }
     } else if (discoveries.length) {
       engagementContext = engagementContextSummary(state, campaignId, now);
       const reply = campaignReplies(state, campaignId);
@@ -259,9 +276,14 @@ export function deriveStrategyDecision(state, campaignId, { now = new Date() } =
       refs.push(`learning:${learning.feedbackId}`);
       if (learning.outcomeSummaryId) refs.push(`outcome:${learning.outcomeSummaryId}`);
     }
+    if (memoryContext) {
+      reasonList.push("oi_memory_observed");
+      refs.push(...memoryContext.slice(0, 4).map((item) => `memory:${item.id}`));
+    }
   }
   const core = { ...base, action, score, eligible, candidateId, reasons: reasons(reasonList), evidence: evidence(refs) };
   if (learning) core.learningContext = learning;
+  if (memoryContext) core.memoryContext = memoryContext;
   if (engagementContext) core.engagementContext = engagementContext;
   return { ...core, decisionId: `strategy-${digest(core).slice(0, 24)}`, createdAt: now.toISOString(), advisory: true, authoritySideEffects: false };
 }

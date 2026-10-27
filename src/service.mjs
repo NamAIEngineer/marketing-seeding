@@ -33,6 +33,7 @@ import { projectChannelCapabilities } from "./channel-capability-projection.mjs"
 import { projectProductIntelligence } from "./product-intelligence-projection.mjs";
 import { appRoot } from "./paths.mjs";
 import { canonicalAudienceSerialization, deriveBootstrapAuthorizationId, deriveBootstrapIdentity, deriveBootstrapSchedule, normalizeBootstrapAudience, normalizeBootstrapProductKeys } from "./campaign-bootstrap.mjs";
+import { applyMemoryConsolidation, createBrowserExecutionIntent, createBrowserSnapshot, executeBrowserIntent, normalizeBrowserSnapshot, projectOiBrowserIntegration, recordMemoryObservation, retrieveBoundedMemory, retractMemoryEvidence, routeAgentTask, sanitizeBrowserExecutionResult } from "./oi-browser-integration.mjs";
 
 export async function pollConfiguredDiscoveries(service, { actor = "scheduled-discovery-observer", shuttingDown = false } = {}) {
   const state = await service.snapshot();
@@ -1844,6 +1845,8 @@ export class SeedingService {
       : new ReadinessProviderRegistry(options.readinessProviders || {});
     this.readinessTimeoutMs = options.readinessTimeoutMs ?? 20_000;
     this.readinessInFlight = new Set();
+    this.browserIntentTransport = options.browserIntentTransport || null;
+    this.browserIntentHooks = options.browserIntentHooks && typeof options.browserIntentHooks === "object" ? options.browserIntentHooks : {};
     this.productFactorySandboxProbe = typeof options.productFactorySandboxProbe === "function"
       ? options.productFactorySandboxProbe
       : (typeof options.systemAgenticSandboxProbe === "function"
@@ -1899,6 +1902,122 @@ export class SeedingService {
 
   async snapshot() {
     return this.store.read();
+  }
+
+  /** Persist a bounded oi-browser-derived observation in the canonical store. */
+  async recordOiMemory(input = {}, actor = "oi-browser-observer") {
+    const result = await this.store.mutate(actor, "oi_browser_memory_observed", (state) => {
+      const memory = recordMemoryObservation(state, input, { now: input.now || new Date().toISOString() });
+      return memory;
+    });
+    return { ...result.result, persisted: true, externalSideEffects: false };
+  }
+
+  async retrieveOiMemory(input = {}) {
+    const state = await this.store.read();
+    return { items: retrieveBoundedMemory(state, { scope: input.scope || {}, entityRef: input.entityRef || null, limit: input.limit, now: input.now ? new Date(input.now) : new Date() }), evidenceStatus: "IMPLEMENTED", externalSideEffects: false };
+  }
+
+  async consolidateOiMemory(input = {}, actor = "oi-browser-consolidator") {
+    const result = await this.store.mutate(actor, "oi_browser_memory_consolidated", (state) => applyMemoryConsolidation(state, { scope: input.scope || {}, now: input.now ? new Date(input.now) : new Date() }));
+    return { learnings: result.result, persisted: true, externalSideEffects: false };
+  }
+
+  async retractOiMemoryEvidence(evidenceRef, actor = "oi-browser-retraction") {
+    const result = await this.store.mutate(actor, "oi_browser_memory_retracted", (state) => retractMemoryEvidence(state, evidenceRef));
+    return { ...result.result, persisted: true, externalSideEffects: false };
+  }
+
+  async recordBrowserSnapshot(input = {}, actor = "oi-browser-snapshot") {
+    const suppliedSnapshot = input.snapshot?.schemaVersion === 1 ? input.snapshot : input;
+    if (suppliedSnapshot.source === "LIVE_DOM") {
+      const validator = this.browserIntentHooks.validateLiveSnapshot;
+      if (typeof validator !== "function" || (await validator({ snapshot: suppliedSnapshot, input })) !== true) {
+        throw Object.assign(new Error("LIVE_DOM snapshot requires an attached runtime validator"), { code: "LIVE_DOM_RUNTIME_UNVERIFIED" });
+      }
+    }
+    const snapshot = input.snapshot?.schemaVersion === 1 ? normalizeBrowserSnapshot(input.snapshot) : createBrowserSnapshot(input);
+    const result = await this.store.mutate(actor, "oi_browser_snapshot_recorded", (state) => {
+      state.browserSnapshots ||= [];
+      const existing = state.browserSnapshots.find((item) => item.fingerprint === snapshot.fingerprint && item.url === snapshot.url);
+      if (existing) return existing;
+      const persisted = { ...snapshot, html: undefined, campaignId: String(input.campaignId || "").trim() || null, communityId: String(input.communityId || "").trim() || null };
+      state.browserSnapshots.push(persisted);
+      state.browserSnapshots = state.browserSnapshots.slice(-200);
+      return persisted;
+    });
+    return { snapshot: result.result, persisted: true, externalSideEffects: false };
+  }
+
+  async routeOiAgentTask(input = {}, actor = "oi-browser-router") {
+    const result = await routeAgentTask(input, { providers: input.providers || [], timeoutMs: input.timeoutMs });
+    const persisted = await this.store.mutate(actor, "oi_browser_provider_decision_recorded", (state) => {
+      state.providerDecisions ||= [];
+      const safe = { ...result, output: undefined };
+      state.providerDecisions.push({ ...safe, outputDigest: result.output ? contentSha256(result.output) : null, recordedAt: nowIso() });
+      state.providerDecisions = state.providerDecisions.slice(-200);
+      return safe;
+    });
+    return { ...result, output: undefined, persisted: persisted.result, externalSideEffects: false };
+  }
+
+  async createBrowserIntent(input = {}) {
+    const state = await this.store.read();
+    const snapshot = (state.browserSnapshots || []).find((item) => item.fingerprint === input.snapshotFingerprint || item.fingerprint === input.snapshot?.fingerprint);
+    if (!snapshot) throw Object.assign(new Error("Browser snapshot is not persisted"), { code: "DOM_SNAPSHOT_MISSING" });
+    return createBrowserExecutionIntent(snapshot, { ...input, includeTransientValue: false, value: input.transientValue ?? input.value });
+  }
+
+  /** Execute one explicitly authorized safe/fixture intent through a supplied transport. */
+  async executeBrowserIntent(input = {}, actor = "oi-browser-executor") {
+    const state = await this.store.read();
+    const snapshot = (state.browserSnapshots || []).find((item) => item.fingerprint === input.snapshotFingerprint || item.fingerprint === input.intent?.snapshotFingerprint);
+    if (!snapshot) throw Object.assign(new Error("Browser snapshot is not persisted"), { code: "DOM_SNAPSHOT_MISSING" });
+    const intent = input.intent?.schemaVersion === 1 ? input.intent : createBrowserExecutionIntent(snapshot, { ...input, includeTransientValue: true, value: input.transientValue ?? input.value });
+    const executionIntent = ["TYPE", "UPLOAD"].includes(intent.action)
+      ? { ...intent, value: input.transientValue ?? input.value ?? intent.value }
+      : intent;
+    if (["TYPE", "UPLOAD"].includes(executionIntent.action) && !executionIntent.value) throw Object.assign(new Error("Browser intent requires a transient value at execution time"), { code: "BROWSER_TRANSIENT_VALUE_REQUIRED" });
+    if (snapshot.source === "LIVE_DOM") {
+      const authorize = this.browserIntentHooks.authorizeLiveIntent;
+      if (typeof authorize !== "function" || (await authorize({ snapshot, intent: executionIntent, authority: input.authority })) !== true) {
+        throw Object.assign(new Error("LIVE_DOM intent requires attached runtime authority"), { code: "LIVE_DOM_AUTHORITY_UNVERIFIED" });
+      }
+    }
+    const prior = (state.browserExecutions || []).find((item) => item.intentId === executionIntent.intentId);
+    if (prior) return { execution: prior, persisted: true, replayed: true, externalSideEffects: false };
+    const persist = async (safe) => this.store.mutate(actor, "oi_browser_execution_recorded", (nextState) => {
+      nextState.browserExecutions ||= [];
+      const existing = nextState.browserExecutions.find((item) => item.intentId === safe.intentId);
+      if (existing) return existing;
+      nextState.browserExecutions.push(safe);
+      nextState.browserExecutions = nextState.browserExecutions.slice(-200);
+      return safe;
+    });
+    try {
+      const result = await executeBrowserIntent(snapshot, executionIntent, {
+        transport: input.transport || this.browserIntentTransport,
+        authority: input.authority,
+        pageId: input.pageId,
+        validate: input.validate || this.browserIntentHooks.validate,
+        resolveTarget: input.resolveTarget || this.browserIntentHooks.resolveTarget,
+        observe: input.observe || this.browserIntentHooks.observe,
+        verify: input.verify || this.browserIntentHooks.verify
+      });
+      const persisted = await persist(sanitizeBrowserExecutionResult(result));
+      return { execution: persisted.result, persisted: true, externalSideEffects: false };
+    } catch (error) {
+      const failure = sanitizeBrowserExecutionResult({
+        intentId: executionIntent.intentId, action: executionIntent.action, elementId: executionIntent.elementId, targetIdentity: executionIntent.targetIdentity,
+        executionStatus: error.executionStatus || "FAILED", commandStatus: error.providerCallStarted ? "OUTCOME_UNKNOWN" : "FAILED",
+        providerCallStarted: error.providerCallStarted === true, evidenceStatus: snapshot.source === "LIVE_DOM" ? "RUNTIME_VERIFIED" : "FIXTURE_VERIFIED",
+        externalSideEffects: false, failureCode: String(error.code || "BROWSER_EXECUTION_FAILED").slice(0, 100)
+      });
+      failure.failureCode = String(error.code || "BROWSER_EXECUTION_FAILED").slice(0, 100);
+      const persisted = await persist(failure);
+      error.browserExecution = persisted.result;
+      throw error;
+    }
   }
 
   /** Read-only, short-lived Product Factory sandbox capability projection. */
@@ -6551,6 +6670,10 @@ export class SeedingService {
     state.publicationAttempts ||= [];
     state.fixtureAutomationRuns ||= [];
     state.communityMemberships ||= [];
+    state.memoryItems ||= [];
+    state.browserSnapshots ||= [];
+    state.browserExecutions ||= [];
+    state.providerDecisions ||= [];
     const accountRuntime = projectExecutionAccountRuntime(state);
     const authorizedAccountCandidates = projectAuthorizedAccountCandidates(state, { readinessTtlMs: this.readinessTtlMs });
     const authorizedAccountPool = projectAuthorizedAccountPool(state, { readinessTtlMs: this.readinessTtlMs });
@@ -6648,6 +6771,7 @@ export class SeedingService {
       executionRuntime,
       productFactorySandbox,
       communityMemberships: state.communityMemberships,
+      oiBrowser: projectOiBrowserIntegration(state),
       statuses,
       totals,
       metricCoverage,
