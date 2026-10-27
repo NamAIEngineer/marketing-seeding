@@ -75,6 +75,8 @@ Final isolated rerun on port `4324` used exact source `df2f775ee23dd4475e9b358bc
 
 Machine-readable final rerun: `plans/oi-browser-integration/server-smoke-df2f775.json`.
 
+Latest isolated rerun: `plans/oi-browser-integration/server-smoke-d75ce02.json`. Exact candidate HEAD `d75ce028b4cfeef80822b760686afae1813634bb` ran on port `4325` with a private temporary state directory. Loopback Qwen routing returned `SUCCEEDED`; the unauthorized route returned `401`; a scoped memory observation and `STATIC_HTTP` snapshot persisted; after restart the same state exposed one memory item, one snapshot, and one successful provider route. The provider persistence field is deliberately described as verified by restart/dashboard because the API returns the persisted row object, not a boolean. Auto-GTM remained unavailable (`feed_not_generated`). No login, credential, publication, or external write occurred.
+
 ## Verification evidence
 
 Commands run in C worktree:

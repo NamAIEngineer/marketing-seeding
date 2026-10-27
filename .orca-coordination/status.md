@@ -12,6 +12,7 @@
 - Fixture evidence is `FIXTURE_VERIFIED` only. Isolated C server case is `RUNTIME_VERIFIED`; no live publication or external side effect.
 - Evidence: `plans/oi-browser-integration/fixture-run-6600387.json`, `server-smoke-6600387-rerun.json`, `independent-review-6600387.md`.
 - Final isolated smoke on port `4324` at `df2f775` verified exact source commit, provider success, memory/snapshot persistence after restart, unauthorized route `401`, and Auto-GTM `unavailable`; no external side effect.
+- Latest isolated smoke on port `4325` at `d75ce02` verified exact candidate HEAD, provider success, scoped memory + static snapshot persistence, restart recovery, unauthorized route `401`, and Auto-GTM `feed_not_generated`; no external side effect.
 - Latest controlled case: `plans/oi-browser-integration/fixture-run-6600387.json`; `runCampaignControlCycle` changed the candidate after supported learning and persisted provider/browser evidence across restart.
 - Review worker `oi-browser-candidate-independent-review-6600387-local`: `FAILED` due no-progress guard; manual review `DONE_WITH_CONCERNS`.
 - State: `PARTIAL` until A/B are serially reconciled and fresh Camoufox/Auto-GTM/live evidence exists.
