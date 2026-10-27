@@ -1,5 +1,21 @@
 # Milestone 1 — Autonomous LinkedIn publish + verify
 
+## Continuation update — 2026-10-21T23:15Z
+
+The zero-touch scheduler renewal seam is now locally implemented and
+regression-tested. It renewed six exact standing authorities from persisted
+campaign policy without creating a fresh execution or browser action. This
+does not change the M1 result: the only fresh real LinkedIn attempt remains
+execution `39e667ef-f564-4480-bdbb-0247f3213bd0`, quarantined as
+`SUBMIT_RESULT_UNKNOWN` after `COMMAND_COMPLETED` without observed semantic
+activation. No historical UNKNOWN row was retried or mutated.
+
+Current full suite: **583 total, 581 passed, 0 failed, 2 skipped**.
+
+See `plans/autonomous-build/standing-autonomous-renewal/` and
+`plans/autonomous-build/reports/post-renewal-bootstrap-audit-20261021.md` for
+the authority renewal evidence.
+
 ## Result
 
 `MILESTONE_RESULT = NOT_PROVEN`

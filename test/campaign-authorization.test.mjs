@@ -219,6 +219,58 @@ test("blocked pre-dispatch draft without an execution request does not block a n
   assert.equal(decision.reasons.includes("duplicate_content_for_account"), false);
 });
 
+test("ambiguous standing reference fails live campaign authorization eligibility", async () => {
+  const { service, campaign, targets, authorization } = await campaignFixture({ channels: ["linkedin"] });
+  const copy = "One exact standing scope only.";
+  const firstAuthorization = await authorization([copy], {
+    id: "standing-reference-first",
+    executionMode: "standing_autonomous",
+    standingAuthorizationReference: "one-reference-one-scope"
+  });
+  const post = await service.createPost({
+    campaignId: campaign.id,
+    targetId: targets[0].id,
+    content: copy,
+    audience: "public"
+  }, "producer");
+  const state = await service.snapshot();
+  const collisionCampaignId = "second-campaign-for-same-reference";
+  const collision = {
+    ...structuredClone(firstAuthorization),
+    id: "standing-reference-collision",
+    campaignId: collisionCampaignId
+  };
+  state.campaigns.push({ ...structuredClone(campaign), id: collisionCampaignId });
+  state.campaignAuthorizations.push(collision);
+
+  const decision = evaluateCampaignAuthorization(state.posts.find((item) => item.id === post.id), state);
+  assert.ok(decision.reasons.includes("standing_authorization_reference_ambiguous"));
+});
+
+test("standing authorization reference cannot be activated for a second campaign", async () => {
+  const { service, campaign, targets, authorization } = await campaignFixture({ channels: ["linkedin"] });
+  const copy = "One exact standing scope only.";
+  const firstAuthorization = await authorization([copy], {
+    id: "standing-reference-activation-first",
+    executionMode: "standing_autonomous",
+    standingAuthorizationReference: "one-reference-one-activation-scope"
+  });
+  const secondCampaign = await service.createCampaign({
+    name: "Second scope",
+    objective: "Must not inherit the first standing reference",
+    productRepo: campaign.productRepo
+  }, "operator");
+  await service.updateCampaign(secondCampaign.id, { status: "active" }, "operator");
+
+  await assert.rejects(service.authorizeCampaign(secondCampaign.id, {
+    ...firstAuthorization,
+    id: "standing-reference-activation-second",
+    campaignId: secondCampaign.id
+  }, "operator"), /already bound to a different campaign scope/i);
+  const state = await service.snapshot();
+  assert.equal(state.campaignAuthorizations.filter((item) => item.standingAuthorizationReference === "one-reference-one-activation-scope").length, 1);
+});
+
 test("same-platform/account copy duplicates are blocked across different targets", async () => {
   const { service, campaign, targets, authorization } = await campaignFixture();
   const secondTarget = await service.createTarget({

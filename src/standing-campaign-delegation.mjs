@@ -1,4 +1,4 @@
-import { campaignAuthorizationFingerprint, campaignContentHash, campaignScopeFingerprint, evaluateCampaignAuthorization } from "./campaign-authorization.mjs";
+import { campaignAuthorizationFingerprint, campaignContentHash, campaignScopeFingerprint, evaluateCampaignAuthorization, standingAuthorizationReferenceIsAmbiguous } from "./campaign-authorization.mjs";
 import { oneTimeExecutionWindowFingerprint, oneTimeExecutionWindowInBounds, oneTimeExecutionWindowStatus } from "./one-time-execution-window.mjs";
 import { assertLiveGrantMatchesExecution, liveGrantEffectiveStatus } from "./live-execution-grant.mjs";
 import { contentSha256 } from "./execution-contracts.mjs";
@@ -24,6 +24,7 @@ export function deriveStandingExecutionControlPlan({ authorization, state, post,
   if (authorization.status !== "active") reasons.push("campaign_authorization_not_active");
   if (authorization.allowLiveExecution !== true) reasons.push("live_execution_not_authorized");
   if (authorization.binding !== campaignAuthorizationFingerprint(authorization)) reasons.push("campaign_authorization_binding_stale");
+  if (standingAuthorizationReferenceIsAmbiguous(authorization, state)) reasons.push("standing_authorization_reference_ambiguous");
   if (post.campaignId !== authorization.campaignId || post.campaignAuthorizationId !== authorization.id || post.campaignAuthorizationBinding !== authorization.binding) reasons.push("campaign_binding_mismatch");
   if (target.id !== post.targetId) reasons.push("target_binding_mismatch");
   if (target.status && target.status !== "active") reasons.push("target_not_active");

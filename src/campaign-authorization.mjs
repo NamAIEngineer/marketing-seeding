@@ -270,6 +270,15 @@ export function campaignAuthorizationFingerprint(authorization) {
   return digest(scope);
 }
 
+export function standingAuthorizationReferenceIsAmbiguous(authorization, state) {
+  if (authorization?.executionMode !== "standing_autonomous" || !authorization.standingAuthorizationReference) return false;
+  const campaignIds = new Set((state?.campaignAuthorizations || [])
+    .filter((item) => item.executionMode === "standing_autonomous" &&
+      item.standingAuthorizationReference === authorization.standingAuthorizationReference)
+    .map((item) => item.campaignId));
+  return campaignIds.size > 1;
+}
+
 function localClock(now, timezone) {
   const parts = new Intl.DateTimeFormat("en-US", { timeZone: timezone, weekday: "short", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(now);
   const weekdayIndex = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(parts.find((part) => part.type === "weekday")?.value);
@@ -294,6 +303,9 @@ export function evaluateCampaignAuthorization(post, state, now = new Date(), { m
   if (!SUPPORTED_AUTH_STATUSES.has(authorization.status) || authorization.status !== "active") reasons.push("campaign_authorization_not_active");
   if (authorization.binding !== campaignAuthorizationFingerprint(authorization)) reasons.push("campaign_authorization_binding_stale");
   if (post.campaignAuthorizationBinding !== authorization.binding) reasons.push("job_authorization_binding_stale");
+  if (standingAuthorizationReferenceIsAmbiguous(authorization, state)) {
+    reasons.push("standing_authorization_reference_ambiguous");
+  }
   if (!Number.isFinite(Date.parse(authorization.validFrom)) || now < new Date(authorization.validFrom)) reasons.push("campaign_authorization_not_yet_valid");
   if (!Number.isFinite(Date.parse(authorization.validUntil)) || now > new Date(authorization.validUntil)) reasons.push("campaign_authorization_expired");
   if (!campaign || authorization.campaignBinding !== campaignScopeFingerprint(campaign)) reasons.push("campaign_scope_changed");

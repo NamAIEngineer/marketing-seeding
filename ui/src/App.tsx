@@ -1165,6 +1165,8 @@ function MissionControlPanel({ data }: { data: R }) {
   const gpmAccounts = Array.isArray(gpmCatalog?.accounts) ? gpmCatalog.accounts.slice(0, 12) : []
   const sessionReadiness = data?.sessionReadiness && typeof data.sessionReadiness === "object" ? data.sessionReadiness : null
   const sessionRows = Array.isArray(sessionReadiness?.rows) ? sessionReadiness.rows.slice(0, 12) : []
+  const camoufoxSession = data?.camoufoxSession && typeof data.camoufoxSession === "object" ? data.camoufoxSession : null
+  const camoufoxSessionRows = Array.isArray(camoufoxSession?.sessions) ? camoufoxSession.sessions.slice(0, 12) : []
   const unsupportedClaimCount = productIntelligence.reduce((total: number, item: R) => {
     const document = item?.document && typeof item.document === "object" ? item.document : {}
     return total + (Array.isArray(document.CLAIMS_WE_CANNOT_MAKE) ? document.CLAIMS_WE_CANNOT_MAKE.length : 0)
@@ -1376,6 +1378,24 @@ function MissionControlPanel({ data }: { data: R }) {
             {sessionRows.map((row: R) => <article key={`${String(row.platform)}-${String(row.accountId)}-${String(row.profileFingerprint)}`}><div className="mission-account-title"><strong>{compactText(row.platform, "UNKNOWN", 40)} account</strong><span className={row.executionEligible === true ? "status completed" : "status draft"}>{compactText(row.status, "UNKNOWN", 24)}</span></div><small>Profile fingerprint: {compactText(row.profileFingerprint, "UNKNOWN", 20)} · observed: {compactText(row.observedProfileFingerprint, "UNKNOWN", 20)}</small><small>Reason: {Array.isArray(row.reasons) && row.reasons.length ? row.reasons.map((reason: unknown) => compactText(reason, "UNKNOWN", 80)).join(" · ") : "UNKNOWN"}</small></article>)}
           </div>
         ) : <div className="empty-state">Session readiness UNKNOWN hoặc chưa có account.</div>}
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head">
+          <div><span className="mission-eyebrow">Camoufox authenticated session</span><small>Evidence đọc từ metadata profile đã bảo vệ · không tự cấp quyền publish</small></div>
+          <span className={camoufoxSession?.state === "OBSERVED" ? "status completed" : "status draft"}>{compactText(camoufoxSession?.state, "UNKNOWN", 24)}</span>
+        </div>
+        {camoufoxSessionRows.length ? (
+          <div className="mission-account-list">
+            {camoufoxSessionRows.map((row: R) => <article key={`${String(row.platform)}-${String(row.accountId)}-${String(row.profileFingerprint)}`}>
+              <div className="mission-account-title"><strong>{compactText(row.displayName || `${row.platform} account`, "UNKNOWN", 80)}</strong><span className={row.state === "READY" && row.identityStatus === "VERIFIED" && row.freshness !== "EXPIRED" ? "status completed" : "status draft"}>{compactText(row.state, "UNKNOWN", 24)}</span></div>
+              <small>{compactText(row.platform, "UNKNOWN", 40)} · {compactText(row.accountId, "UNKNOWN", 80)} · identity {compactText(row.identityStatus, "UNKNOWN", 24)}</small>
+              <small>Auth: {compactText(row.authState, "UNKNOWN", 24)} · Profile fingerprint: {compactText(row.profileFingerprint, "UNKNOWN", 20)}</small>
+              <small>Freshness: {compactText(row.freshness, "UNKNOWN", 24)} · observed: {compactText(row.checkedAt, "UNKNOWN", 40)} · expires: {compactText(row.expiresAt, "UNKNOWN", 40)}</small>
+              <small>Identity: {compactText(row.identityReference, "UNKNOWN", 120)}</small>
+              <small>Canonical execution authority/readiness remains evaluated separately.</small>
+            </article>)}
+          </div>
+        ) : <div className="empty-state">Camoufox session UNKNOWN hoặc chưa có sanitized metadata.</div>}
       </div>
       <div className="mission-advisory-runtime">
         <div className="mission-account-head">

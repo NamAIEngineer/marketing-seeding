@@ -55,11 +55,13 @@ export class CamoufoxExecutionSessionResolver {
   #config;
   #handles = new Map();
 
-  constructor({ accountRegistry, coordinator, protocolFactory, hostAttestation, profileReference = "", selector = selectAccountRuntimeCandidate, clock = () => new Date() } = {}) {
-    rejectSecrets({ accountRegistry, coordinator, protocolFactory, hostAttestation, profileReference });
+  constructor({ accountRegistry, coordinator, protocolFactory, hostAttestation, profileReference = "", sessionMetadataPath = "", sessionAuthorityReference = "", sessionAuthority = "", selector = selectAccountRuntimeCandidate, clock = () => new Date() } = {}) {
+    rejectSecrets({ accountRegistry, coordinator, protocolFactory, hostAttestation, profileReference, sessionMetadataPath, sessionAuthorityReference, sessionAuthority });
     if (!Array.isArray(accountRegistry)) throw fail("CAMOUFOX_RESOLVER_ACCOUNT_REGISTRY_REQUIRED", "account registry is required");
     if (!coordinator || typeof coordinator.acquire !== "function" || typeof coordinator.release !== "function") throw fail("CAMOUFOX_RESOLVER_COORDINATOR_REQUIRED", "profile coordinator is required");
     if (typeof protocolFactory !== "function") throw fail("CAMOUFOX_RESOLVER_PROTOCOL_FACTORY_REQUIRED", "Camoufox protocol factory is required");
+    const authorityReference = text(sessionAuthorityReference || sessionAuthority, 240);
+    if (!authorityReference) throw fail("CAMOUFOX_RESOLVER_AUTHORITY_REQUIRED", "Camoufox session authority reference is required");
     if (typeof selector !== "function") throw fail("CAMOUFOX_RESOLVER_SELECTOR_REQUIRED", "account selector is required");
     if (typeof clock !== "function") throw fail("CAMOUFOX_RESOLVER_CLOCK_INVALID", "clock must be a function");
     this.#config = Object.freeze({
@@ -68,6 +70,8 @@ export class CamoufoxExecutionSessionResolver {
       protocolFactory,
       hostAttestation: validateAttestation(hostAttestation),
       profileReference: text(profileReference, 160),
+      sessionMetadataPath: text(sessionMetadataPath, 2_000),
+      sessionAuthorityReference: authorityReference,
       selector,
       clock
     });
@@ -76,6 +80,8 @@ export class CamoufoxExecutionSessionResolver {
   get provider() { return "camoufox"; }
   get runtimeProvider() { return "camoufox"; }
   get hostAttestation() { return this.#config.hostAttestation; }
+  /** Bounded provenance reference; never an authorization decision. */
+  get sessionAuthorityReference() { return this.#config.sessionAuthorityReference; }
 
   async acquire(request = {}) {
     const now = request.now || this.#config.clock();
@@ -99,13 +105,14 @@ export class CamoufoxExecutionSessionResolver {
     catch { return failure("CAMOUFOX_PROFILE_ACQUIRE_FAILED", "Camoufox profile coordinator acquire failed", selected.result?.status || null); }
     if (!coordinated?.ready || !coordinated.handle) return Object.freeze({ ...coordinated, selectionStatus: selected.result?.status || null });
 
-    const transport = new CamoufoxExecutionTransport({ profileReference, protocolFactory: this.#config.protocolFactory, hostAttestation: this.#config.hostAttestation });
+    const transport = new CamoufoxExecutionTransport({ profileReference, protocolFactory: this.#config.protocolFactory, hostAttestation: this.#config.hostAttestation, sessionMetadataPath: this.#config.sessionMetadataPath });
     const runtimeIdentity = transport.runtimeIdentity();
     const session = new ExecutionSession({
       lifecycle: "READY", provider: "camoufox", profileReference, providerProfileId: profileReference,
       platform, accountId, identityReference,
       expectedIdentity: { provider: "camoufox", providerProfileId: profileReference, platform, accountId, identityReference },
       capabilities: ["health", "runtimeIdentity", "profileIdentity", "sessionIdentity", "navigate", "snapshot", "findControl", "type", "click", "screenshot", "observeTransition", "verifyActivation", "closeOwnedResources"],
+      authorityReference: this.#config.sessionAuthorityReference,
       transportRef: { id: runtimeIdentity.transport }, transportIdentity: runtimeIdentity,
       attestation: this.#config.hostAttestation, createdAt: this.#config.clock().toISOString?.() || undefined
     });
@@ -116,7 +123,7 @@ export class CamoufoxExecutionSessionResolver {
       const handle = Object.freeze({ accountId, profileFingerprint: coordinated.handle.profileFingerprint, runtimeIdentity, transport, browserSurface, session, release: () => this.release(handle) });
       entry.handle = handle;
       this.#handles.set(handle, entry);
-      return Object.freeze({ ready: true, status: "READY", handle, session, transport, browserSurface, transportIdentity: runtimeIdentity, release: () => this.release(handle) });
+      return Object.freeze({ ready: true, status: "READY", handle, session, transport, browserSurface, transportIdentity: runtimeIdentity, sessionAuthorityReference: this.#config.sessionAuthorityReference, release: () => this.release(handle) });
     } catch (error) {
       await transport.detach().catch(() => undefined);
       await this.#config.coordinator.release(coordinated.handle).catch(() => undefined);

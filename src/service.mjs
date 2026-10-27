@@ -39,6 +39,7 @@ import { projectSessionReadiness } from "./session-readiness-projection.mjs";
 import { projectGpmSessionCapability } from "./gpm-session-capability-projection.mjs";
 import { accountExecutionBinding, accountTargetBindingMatches, bindingMatches, canonicalIdentityUrl, canonicalProvider, canonicalTargetUrl, destinationBindingMatches, executionProfileKey, targetExecutionBinding } from "./execution-binding.mjs";
 import { applyMemoryConsolidation, createBrowserExecutionIntent, createBrowserSnapshot, executeBrowserIntent, normalizeBrowserSnapshot, projectOiBrowserIntegration, recordMemoryObservation, retrieveBoundedMemory, retractMemoryEvidence, routeAgentTask, sanitizeBrowserExecutionResult } from "./oi-browser-integration.mjs";
+import { projectAccountAgentMissionControl } from "./account-agent-registry.mjs";
 
 export async function pollConfiguredDiscoveries(service, { actor = "scheduled-discovery-observer", shuttingDown = false } = {}) {
   const state = await service.snapshot();
@@ -1516,6 +1517,32 @@ function projectExecutionAccountRuntime(state, { now = new Date() } = {}) {
   }).sort((left, right) => left.id.localeCompare(right.id));
 }
 
+function projectDashboardAccountAgents(state = {}) {
+  const observedAt = state.updatedAt || "1970-01-01T00:00:00.000Z";
+  const accounts = (Array.isArray(state.executionAccounts) ? state.executionAccounts : [])
+    // Account Agents are runtime-bound identities. Legacy rows without an
+    // explicit provider remain in the existing account/runtime projection.
+    .filter((account) => typeof account?.provider === "string" && account.provider.trim())
+    .map((account) => ({
+      platform: account.platform,
+      accountId: account.accountId,
+      provider: account.provider,
+      providerProfileId: account.providerProfileId || account.profileId,
+      profileRef: account.profileRef || account.profileId,
+      identityReference: account.identityReference || account.expectedIdentityUrl,
+      sessionHealth: account.sessionHealth || account.health || "unknown",
+      allowedCampaigns: account.allowedCampaigns,
+      allowedTargets: account.allowedTargets,
+      quota: account.quota,
+      cadence: account.cadence,
+      cooldown: account.cooldown,
+      risk: account.risk || (account.status === "enabled" ? "normal" : "disabled"),
+      health: account.health,
+      capabilities: account.capabilities
+    }));
+  return projectAccountAgentMissionControl(accounts, { now: observedAt });
+}
+
 const AUTHORIZED_ACCOUNT_CANDIDATE_MAX = 128;
 
 function authorizedAccountCandidateKey({ campaignId, authorizationId, platform, accountId, provider, providerProfileId, profileId, targetId }) {
@@ -2297,7 +2324,7 @@ export class SeedingService {
       : null;
     const state = await this.store.read();
     requireItem(state.campaigns, campaignId, "Campaign");
-    const decision = deriveStrategyDecision(state, campaignId, { now, providerDecision });
+    const decision = deriveStrategyDecision(state, campaignId, { now, providerDecision, marketOpportunities: input.marketOpportunities });
     const result = await this.store.mutate(actor, "strategy_decision_recorded", (nextState) => {
       const campaign = requireItem(nextState.campaigns, campaignId, "Campaign");
       appendStrategyDecision(campaign, decision);
@@ -2333,6 +2360,7 @@ export class SeedingService {
     const cycleInput = { now: cycleAt, ...(input.providerTask ? { providerTask: input.providerTask, providers: input.providers } : {}) };
     const outcome = await this.deriveOutcomeSummary(campaignId, cycleInput, `${actor}:control-cycle`);
     const learning = await this.deriveLearningFeedback(campaignId, cycleInput, `${actor}:control-cycle`);
+    cycleInput.marketOpportunities = input.marketOpportunities;
     const strategy = await this.deriveStrategy(campaignId, cycleInput, `${actor}:control-cycle`);
     return {
       campaignId,
@@ -2413,13 +2441,17 @@ export class SeedingService {
 
   async assertExecutionSendable(executionId, lease) {
     const snapshot = await this.executionContext(executionId);
-    const { requestRow, request, post, target, account } = snapshot;
+    const { requestRow, request, post, target, account, authorization, liveGrant } = snapshot;
     const persistedLease = (snapshot.state.executionLeases || []).find((item) => item.id === lease?.id && item.token === lease?.token && Date.parse(item.expiresAt) > Date.now());
     if (!persistedLease) throw Object.assign(new Error('Execution lease is not active before browser input'), { code: 'LEASE_INVALID' });
     if (requestRow.state !== 'SUBMIT_SENT_INTENT' || requestRow.submitState !== 'NOT_STARTED') throw Object.assign(new Error('Execution is not at the durable submit-intent boundary'), { code: 'NOT_DISPATCHABLE' });
     const killReasons = killSwitchReasons(post, snapshot.state);
     if (killReasons.length) throw Object.assign(new Error(`Live browser input blocked by global control: ${killReasons.join(', ')}`), { code: killReasons[0].toUpperCase() });
-    const authorization = snapshot.authorization;
+    if (authorization?.executionMode === "standing_autonomous") {
+      const window = (snapshot.state.oneTimeExecutionWindows || []).find((item) => item.windowId === request?.oneTimeWindow?.windowId);
+      const delegated = deriveStandingExecutionControlPlan({ authorization, state: snapshot.state, post, target, account, executionId, oneTimeWindow: window, liveGrant });
+      if (!delegated.allowed) throw Object.assign(new Error(`Execution blocked before browser input: ${delegated.reasons.join(", ")}`), { code: "STANDING_DELEGATION_INVALID" });
+    }
     const requestTargetUrl = request?.target?.url;
     let targetUrlMatches = false;
     try {
@@ -3069,6 +3101,25 @@ export class SeedingService {
     const requestedProfileId = String(input.profileId || "").trim() || null;
     const snapshot = bootstrapState;
     const existingCampaign = snapshot.campaigns?.find((item) => item.id === identity.campaignId) || null;
+    const conflictingCampaign = (snapshot.campaigns || []).find((item) => item.id !== identity.campaignId &&
+      (item.autonomousBootstrap?.authorizationReference === identity.authorizationReference ||
+        (snapshot.campaignAuthorizations || []).some((authorization) => authorization.campaignId === item.id &&
+          authorization.executionMode === "standing_autonomous" &&
+          authorization.standingAuthorizationReference === identity.authorizationReference)));
+    if (conflictingCampaign) {
+      return {
+        status: "BLOCKED",
+        code: "STANDING_AUTHORIZATION_REFERENCE_SCOPE_CONFLICT",
+        campaignId: identity.campaignId,
+        blockers: [{
+          code: "STANDING_AUTHORIZATION_REFERENCE_SCOPE_CONFLICT",
+          classification: "AUTHORIZATION_BLOCKER",
+          message: "This standing authorization reference is already bound to a different campaign scope"
+        }],
+        externalSideEffects: false,
+        authoritySideEffects: false
+      };
+    }
     // Repeated calls within a valid bounded schedule are idempotent. Once that
     // schedule has ended, renew only the campaign bootstrap schedule; all
     // historical authorizations, windows, grants, and executions remain
@@ -3179,6 +3230,12 @@ export class SeedingService {
       const created = await this.store.mutate(actor, "autonomous_campaign_bootstrapped", (state) => {
         const collision = state.campaigns.find((item) => item.id === identity.campaignId);
         if (collision) return collision;
+        const scopedReferenceConflict = state.campaigns.find((item) =>
+          item.autonomousBootstrap?.authorizationReference === identity.authorizationReference ||
+          (state.campaignAuthorizations || []).some((authorization) => authorization.campaignId === item.id &&
+            authorization.executionMode === "standing_autonomous" &&
+            authorization.standingAuthorizationReference === identity.authorizationReference));
+        if (scopedReferenceConflict) throw new Error("Standing authorization reference is already bound to a different campaign scope");
         const row = {
           id: identity.campaignId,
           name: identity.campaignName,
@@ -3806,6 +3863,11 @@ export class SeedingService {
     const result = await this.store.mutate(actor, "campaign_authorization_activated", async (state) => {
       const campaign = requireItem(state.campaigns, campaignId, "Campaign");
       const authorization = normalizeCampaignAuthorization(input, campaign);
+      if (authorization.executionMode === "standing_autonomous" && (state.campaignAuthorizations || []).some((item) =>
+        item.campaignId !== campaignId && item.executionMode === "standing_autonomous" &&
+        item.standingAuthorizationReference === authorization.standingAuthorizationReference)) {
+        throw new Error("Standing authorization reference is already bound to a different campaign scope");
+      }
       const productRepo = await requireProductRepo(campaign.productRepo);
       if ((state.campaignAuthorizations || []).some((item) => item.id === authorization.id)) throw new Error("Campaign authorization id already exists");
       for (const destination of authorization.destinations) {
@@ -5662,6 +5724,10 @@ export class SeedingService {
         const authorization = (state.campaignAuthorizations || []).find((item) => item.id === post.campaignAuthorizationId);
         const grant = (state.liveExecutionGrants || []).find((item) => item.grantId === request.request?.liveGrant?.grantId);
         if (authorization?.allowLiveExecution !== true) throw new Error("One-time window does not authorize live execution");
+        if (authorization?.executionMode === "standing_autonomous") {
+          const delegated = deriveStandingExecutionControlPlan({ authorization, state, post, target, account, executionId, oneTimeWindow: window, liveGrant: grant });
+          if (!delegated.allowed) throw new Error(`Execution blocked before worker start: ${delegated.reasons.join(", ")}`);
+        }
         assertLiveGrantMatchesExecution(grant, request.request, authorization);
         assertWindowExecutionBinding(window, executionId, "RESERVED");
         if (oneTimeExecutionWindowStatus(window, new Date()) !== "RESERVED" || !oneTimeExecutionWindowInBounds(window) || window.authorizationFingerprint !== campaignAuthorizationFingerprint(authorization)) {
@@ -7072,6 +7138,7 @@ export class SeedingService {
     state.browserExecutions ||= [];
     state.providerDecisions ||= [];
     const accountRuntime = projectExecutionAccountRuntime(state);
+    const accountAgents = projectDashboardAccountAgents(state);
     const authorizedAccountCandidates = projectAuthorizedAccountCandidates(state, { readinessTtlMs: this.readinessTtlMs });
     const authorizedAccountPool = projectAuthorizedAccountPool(state, { readinessTtlMs: this.readinessTtlMs });
     const authorizedAccountPoolSummary = projectAuthorizedAccountPoolSummary(authorizedAccountCandidates);
@@ -7127,6 +7194,31 @@ export class SeedingService {
     } catch {
       sessionReadiness = projectSessionReadiness([], [], { now: new Date() });
     }
+    const camoufoxSessionObservation = sessionReadinessObservation && typeof sessionReadinessObservation === "object"
+      ? {
+          readOnly: true,
+          state: String(sessionReadinessObservation.state || "UNKNOWN").toUpperCase(),
+          code: String(sessionReadinessObservation.code || "").slice(0, 120) || null,
+          observedAt: String(sessionReadinessObservation.observedAt || "").slice(0, 40) || null,
+          sessions: Array.isArray(sessionReadinessObservation.sessions)
+            ? sessionReadinessObservation.sessions.map((session) => ({
+                platform: String(session.platform || "").slice(0, 80),
+                accountId: String(session.accountId || "").slice(0, 160),
+                provider: String(session.provider || "").slice(0, 80),
+                profileFingerprint: String(session.profileFingerprint || "").slice(0, 160) || null,
+                identityReference: String(session.identityReference || "").slice(0, 400) || null,
+                displayName: String(session.displayName || "").slice(0, 160) || null,
+                state: String(session.state || "UNKNOWN").slice(0, 40),
+                authState: String(session.authState || "UNKNOWN").slice(0, 40),
+                identityStatus: String(session.identityStatus || "UNKNOWN").slice(0, 40),
+                checkedAt: String(session.checkedAt || "").slice(0, 40) || null,
+                expiresAt: String(session.expiresAt || "").slice(0, 40) || null,
+                freshness: String(session.freshness || "").slice(0, 24) || null,
+                evidence: String(session.evidence || "").slice(0, 180) || null
+              }))
+            : []
+        }
+      : { readOnly: true, state: "UNKNOWN", code: "CAMOUFOX_SESSION_NOT_OBSERVED", observedAt: null, sessions: [] };
     let gpmSessionCapabilityObservation = this.gpmSessionCapabilityObservation;
     if (typeof gpmSessionCapabilityObservation === "function") {
       try {
@@ -7218,6 +7310,7 @@ export class SeedingService {
       postCount: state.posts.length,
       accountRuntime,
       executionAccounts: accountRuntime,
+      accountAgents,
       authorizedAccountCandidates,
       authorizedAccountPool,
       authorizedAccountPoolSummary,
@@ -7230,6 +7323,7 @@ export class SeedingService {
       browserRuntime,
       gpmAccountCatalog,
       sessionReadiness,
+      camoufoxSession: camoufoxSessionObservation,
       gpmSessionCapability,
       communityMemberships: state.communityMemberships,
       oiBrowser: projectOiBrowserIntegration(state),

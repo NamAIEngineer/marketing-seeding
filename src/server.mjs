@@ -10,6 +10,7 @@ import { FixtureWorkerBridge } from "./fixture-worker-bridge.mjs";
 import { readAutoGtmFeed } from "./auto-gtm-feed.mjs";
 import { OrcaCliClient } from "./orca-browser-client.mjs";
 import { LinkedInReadinessProvider } from "./linkedin-readiness.mjs";
+import { CamoufoxLinkedInReadinessProvider } from "./camoufox-linkedin-readiness-provider.mjs";
 import { configuredReadinessTtlMs } from "./readiness.mjs";
 import { LinkedInAdapter } from "./linkedin-adapter.mjs";
 import { OrcaAccessibilityTransport, OrcaPointerTransport } from "./browser-interaction-transport.mjs";
@@ -19,6 +20,9 @@ import { isAuthorizedLocalShutdown, runtimeMetadata } from "./service-lifecycle.
 import { consumeSystemAgenticHandoff } from "./system-agentic-handoff-bridge.mjs";
 import { createDefaultBrowserRuntimeRouter } from "./browser-runtime-router.mjs";
 import { loadConfiguredLocalProvider } from "./oi-browser-provider-adapters.mjs";
+import { projectMarketDashboard, projectMarketOpportunities } from "./market-intelligence.mjs";
+import { observeCamoufoxSessionMetadata } from "./camoufox-session-observer.mjs";
+import { probeCamoufoxRuntime } from "./camoufox-runtime-probe.mjs";
 
 async function loadLocalEnv() {
   try {
@@ -99,6 +103,11 @@ const trafficPollMinutes = Number(process.env.SEEDING_TRAFFIC_POLL_MINUTES || 0)
 const controlCycleEnabled = process.env.SEEDING_CONTROL_CYCLE_ENABLED === "true";
 const controlCycleMinutes = Number(process.env.SEEDING_CONTROL_CYCLE_MINUTES || 0);
 const discoveryPollMinutes = Number(process.env.SEEDING_DISCOVERY_POLL_MINUTES || 0);
+const camoufoxSessionMetadataFile = String(process.env.SEEDING_CAMOUFOX_SESSION_METADATA_FILE || "").trim();
+const camoufoxExecutablePath = String(process.env.SEEDING_CAMOUFOX_EXECUTABLE_PATH || "").trim();
+const camoufoxRuntimeMetadataPath = String(process.env.SEEDING_CAMOUFOX_RUNTIME_METADATA_PATH || "").trim();
+const camoufoxProfileRoot = String(process.env.SEEDING_CAMOUFOX_PROFILE_ROOT || "").trim();
+const camoufoxProfileReference = String(process.env.SEEDING_EXECUTION_SESSION_PROFILE_REFERENCE || "").trim();
 if (operatorToken.length < 32) {
   throw new Error("SEEDING_OPERATOR_TOKEN must contain at least 32 characters");
 }
@@ -124,11 +133,29 @@ const orcaBrowser = new OrcaCliClient();
 // caller; the product server does not discover or attach GPM.
 const configuredOiBrowserProvider = await loadConfiguredLocalProvider();
 const readinessProviderRegistry = new ReadinessProviderRegistry();
-readinessProviderRegistry.register("linkedin", new LinkedInReadinessProvider(orcaBrowser, { ttlMs: readinessTtlMs }));
+const legacyLinkedInReadiness = new LinkedInReadinessProvider(orcaBrowser, { ttlMs: readinessTtlMs });
+readinessProviderRegistry.register("linkedin", new CamoufoxLinkedInReadinessProvider({
+  resolver: configuredExecutionSessionResolver,
+  fallbackProvider: legacyLinkedInReadiness,
+  ttlMs: readinessTtlMs
+}));
 const service = new SeedingService(store, {
   readinessTtlMs,
   readinessProviderRegistry,
-  browserRuntimeRouter: createDefaultBrowserRuntimeRouter({ orcaBrowser }),
+  browserRuntimeRouter: createDefaultBrowserRuntimeRouter({
+    orcaBrowser,
+    camoufox: {
+      executable: camoufoxExecutablePath || null,
+      profileReference: camoufoxProfileReference || null,
+      probe: ({ runtime }) => probeCamoufoxRuntime({
+        executablePath: runtime.executable || camoufoxExecutablePath,
+        metadataPath: camoufoxRuntimeMetadataPath,
+        profileRoot: camoufoxProfileRoot,
+        profileReference: runtime.profileReference || camoufoxProfileReference
+      })
+    }
+  }),
+  sessionReadinessObservation: () => observeCamoufoxSessionMetadata(camoufoxSessionMetadataFile),
   ...(configuredOiBrowserProvider ? { oiBrowserProviders: [configuredOiBrowserProvider] } : {})
 });
 const platformAdapterRegistry = new PlatformAdapterRegistry();
@@ -225,7 +252,11 @@ function scheduleControlCycle(delayMs = controlCycleMinutes * 60_000) {
       const results = [];
       for (const campaign of state.campaigns || []) {
         if (shuttingDown) break;
-        try { results.push(await service.runCampaignControlCycle(campaign.id, {}, "scheduled-control-cycle")); }
+        try {
+          const autoGtm = await readAutoGtmFeed(autoGtmFeedFile);
+          const marketOpportunities = projectMarketOpportunities(autoGtm, { productId: campaign.productId || campaign.id });
+          results.push(await service.runCampaignControlCycle(campaign.id, { marketOpportunities }, "scheduled-control-cycle"));
+        }
         catch (error) { results.push({ campaignId: campaign.id, ok: false, reason: error.code || error.message }); }
       }
       controlCycleRuntime.lastSummary = { campaigns: results.length, succeeded: results.filter((item) => item?.advisory === true).length, failed: results.filter((item) => item?.ok === false).length };
@@ -658,9 +689,11 @@ const server = http.createServer(async (request, response) => {
       return sendJson(response, 200, await service.readyExecutionRequests());
     }
     if (request.method === "GET" && url.pathname === "/api/dashboard") {
+      const autoGtm = await readAutoGtmFeed(autoGtmFeedFile);
       return sendJson(response, 200, {
         ...(await service.dashboard()),
-        autoGtm: await readAutoGtmFeed(autoGtmFeedFile),
+        autoGtm,
+        marketIntelligence: projectMarketDashboard(autoGtm),
         automation: {
           trafficCollector: trafficRuntime,
           campaignQueue: campaignQueueRuntime,

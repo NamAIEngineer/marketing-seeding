@@ -25,6 +25,7 @@ export class ExecutionSession {
     if (!input.transportRef || typeof input.transportRef !== "object") throw Object.assign(new TypeError("transportRef is required"), { code: "SESSION_TRANSPORT_REQUIRED" });
     const createdAt = clean(input.createdAt) || new Date().toISOString();
     const expiresAt = clean(input.expiresAt);
+    const authorityReference = clean(input.authorityReference || input.sessionAuthorityReference, 240);
     if (!Number.isFinite(Date.parse(createdAt))) throw Object.assign(new TypeError("session creation time is invalid"), { code: "SESSION_CREATED_AT_INVALID" });
     const sessionId = clean(input.sessionId, 120) || `session-${createHash("sha256").update(`${clean(input.provider)}\u0000${clean(input.profileReference)}\u0000${createdAt}`).digest("hex").slice(0, 32)}`;
     const explicitProviderProfileId = clean(input.providerProfileId || input.expectedIdentity?.providerProfileId || input.profileReference);
@@ -42,6 +43,9 @@ export class ExecutionSession {
         identityReference: clean(input.expectedIdentity?.identityReference || input.identityReference || input.expectedIdentityUrl, 300)
       }),
       capabilities: Object.freeze(Array.isArray(input.capabilities) ? [...new Set(input.capabilities.map((x) => clean(x, 48)).filter(Boolean))] : []),
+      // Provenance only. This reference never grants, expands, or refreshes
+      // execution authority; authorization remains owned by the grant path.
+      authorityReference,
       transportRef: boundedRecord(input.transportRef, "transportRef"),
       transportIdentity: freezeRecord({
         transport: clean(input.transportIdentity?.transport, 100),
@@ -73,6 +77,9 @@ export class ExecutionSession {
       platform: this.platform,
       accountId: this.accountId,
       expectedIdentity,
+      authorityReference: this.authorityReference
+        ? `sha256:${createHash("sha256").update(this.authorityReference).digest("hex")}`
+        : null,
       capabilities: this.capabilities,
       transportRef: this.transportRef,
       transportIdentity: this.transportIdentity,

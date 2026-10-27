@@ -18,7 +18,10 @@ const CONTEXT_EXPRESSION = (expectedPath) => `(() => {
   const loginRoute = pathSegments[0] === 'login' || (pathSegments[0] === 'uas' && pathSegments[1] === 'login');
   const loginForm = Array.from(document.querySelectorAll('input[name^="session_"]')).some(visible);
   const loginRequired = loginRoute || loginForm;
-  const feedReachable = host.toLowerCase().replace(/^www\\./, '') === 'linkedin.com' && /\\/feed\\/?$/i.test(path) && Boolean(document.querySelector('main,#main-content'));
+  // LinkedIn redirects the canonical feed URL to tab routes such as /feed/foryou/.
+  // Keep the match bounded to the feed subtree so authenticated feed tabs
+  // remain eligible without treating other LinkedIn pages as the feed.
+  const feedReachable = host.toLowerCase().replace(/^www\\./, '') === 'linkedin.com' && /^\\/feed(?:\\/|$)/i.test(path) && Boolean(document.querySelector('main,#main-content'));
   const authenticatedNavigation = Array.from(document.querySelectorAll('nav,[role="navigation"]')).some(visible);
   const composerTrigger = Array.from(document.querySelectorAll('button,[role="button"]')).some((node) => visible(node) && [node.getAttribute('aria-label') || '', node.innerText || ''].some((label) => /^(?:start a post|b\u1eaft \u0111\u1ea7u b\u00e0i \u0111\u0103ng)$/i.test(label.trim())));
   const sessionAuthenticated = !loginRequired && feedReachable && authenticatedNavigation && composerTrigger;
@@ -41,7 +44,7 @@ const COMPOSER_EXPRESSION = `(() => {
   const advertisingControls = controls.filter((control) => fields(control).some((field) => /budget|billing|campaign|ad account|boost|sponsor|ngân sách|thanh toán|chiến dịch|tài khoản quảng cáo|quảng bá/i.test(field))).length;
   const path = location.pathname.replace(/\\/$/, '').toLowerCase() || '/';
   const route = path === '/sharing/compose';
-  const feedWithComposerSurface = /\\/feed$/i.test(path) && dialogs.length === 1;
+  const feedWithComposerSurface = /^\\/feed(?:\\/|$)/i.test(path) && dialogs.length === 1;
   const routeCompatible = route || feedWithComposerSurface;
   const audience = has(/post to|audience|m\u1ecdi ng\u01b0\u1eddi|\u0111\u0103ng cho|anyone|everyone/i);
   const postButton = controls.some((control) => control.tag === 'button' && fields(control).some((field) => /^(\u0111\u0103ng b\u00e0i|post|publish)(?:$|[\s.\u2026])/i.test(field)));
@@ -112,7 +115,7 @@ const COMPOSER_TRIGGER_DOM_CLICK = `(async () => {
     });
     const wrapperCandidates = candidates.filter((node) => node.tagName === 'BUTTON' || node.getAttribute('role') === 'button');
     const labelledCandidates = candidates.filter((node) => node.tagName !== 'BUTTON' && node.getAttribute('role') !== 'button' && node.getAttribute('aria-label'));
-    if (host !== 'linkedin.com' || path !== '/feed' || dialogs.length !== 0) return { clicked: false, reason: 'composer_trigger_fallback_precondition_failed' };
+    if (host !== 'linkedin.com' || !/^\/feed(?:\/|$)/i.test(path) || dialogs.length !== 0) return { clicked: false, reason: 'composer_trigger_fallback_precondition_failed' };
     if (wrapperCandidates.length !== 1 || labelledCandidates.length !== 1) {
       await new Promise((resolve) => setTimeout(resolve, 50));
       continue;
@@ -158,7 +161,7 @@ const CLOSE_EMPTY_COMPOSER_EXPRESSION = `(() => {
   // when the strict dialog/editor/media/close checks below prove ownership of
   // the empty composer. Keep the route allowlist narrow so an unrelated
   // dialog can never be treated as readiness cleanup.
-  if (host !== 'linkedin.com' || !(['/sharing/compose', '/feed'].includes(path)) || dialogs.length !== 1) return { closed: false, reason: 'composer_identity_mismatch' };
+  if (host !== 'linkedin.com' || !(path === '/sharing/compose' || path === '/feed' || /^\/feed(?:\/|$)/i.test(path)) || dialogs.length !== 1) return { closed: false, reason: 'composer_identity_mismatch' };
   const dialog = dialogs[0];
   const editors = Array.from(dialog.querySelectorAll('[contenteditable="true"],[role="textbox"]')).filter(visible);
   if (editors.length !== 1 || editors.some((node) => String(node.innerText || node.textContent || '').trim())) return { closed: false, reason: 'composer_has_content' };
@@ -273,7 +276,7 @@ export class LinkedInReadinessProvider {
       if (tab.profileId !== context.profileId) {
         return { state: "HUMAN_REQUIRED", reasonCode: "browser_profile_mismatch", retryable: false, recoveryClassification: "HUMAN_REQUIRED", checkedAt: checkedAt.toISOString() };
       }
-      if (!/(^|\.)linkedin\.com$/i.test(new URL(tab.url || "about:blank").hostname) || !/\/feed\/?$/i.test(new URL(tab.url).pathname)) {
+      if (!/(^|\.)linkedin\.com$/i.test(new URL(tab.url || "about:blank").hostname) || !/^\/feed(?:\/|$)/i.test(new URL(tab.url).pathname)) {
         await browser.navigate(pageId, LINKEDIN_FEED_URL_FOR_READINESS);
         await browser.waitForFeed(pageId);
         tab = await browser.showTab(pageId);

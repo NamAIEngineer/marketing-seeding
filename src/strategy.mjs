@@ -19,6 +19,8 @@ const LEARNING_REASONS = new Set([
   "metrics_unknown_or_unsupported"
 ]);
 
+const MARKET_SOURCES = new Set(["auto-gtm", "social", "linkedin", "reddit", "facebook", "threads", "product-hunt", "indie-hackers"]);
+
 function text(value, max = MAX_TEXT) {
   return String(value ?? "").replace(/\s+/g, " ").trim().slice(0, max);
 }
@@ -160,6 +162,49 @@ function relevantDiscoveries(campaign) {
     .sort((a, b) => (b.score?.score || 0) - (a.score?.score || 0) || String(a.discoveryId).localeCompare(String(b.discoveryId)));
 }
 
+function marketOpportunityIdentity(value) {
+  const candidate = text(value, 180);
+  return /^[A-Za-z0-9._:-]{1,180}$/.test(candidate) ? candidate : null;
+}
+
+function relevantMarketOpportunities(campaign, opportunities = []) {
+  if (!Array.isArray(opportunities)) return [];
+  const campaignProductId = boundedIdentity(campaign?.productId, 200) || boundedIdentity(campaign?.id, 200);
+  return opportunities
+    .filter((item) => {
+      if (!item || typeof item !== "object" || item.advisory !== true || item.authoritySideEffects !== false || item.externalSideEffects !== false) return false;
+      const opportunityId = marketOpportunityIdentity(item.opportunityId);
+      const source = text(item.source, 80).toLowerCase();
+      const evidenceRefs = Array.isArray(item.evidenceRefs) ? item.evidenceRefs.filter((ref) => boundedIdentity(ref, 500)) : [];
+      const freshnessState = String(item.freshness?.state || "").toUpperCase();
+      const campaignMatch = item.campaignId != null && String(item.campaignId) === String(campaign.id);
+      const productMatch = item.campaignId == null && boundedIdentity(item.productId, 200) === campaignProductId;
+      return Boolean(opportunityId && MARKET_SOURCES.has(source) && evidenceRefs.length && freshnessState === "FRESH" && (campaignMatch || productMatch));
+    })
+    .map((item) => ({
+      opportunityId: marketOpportunityIdentity(item.opportunityId),
+      source: text(item.source, 80).toLowerCase(),
+      productId: boundedIdentity(item.productId, 200),
+      campaignId: boundedIdentity(item.campaignId, 200),
+      segment: text(item.segment, 180),
+      audience: text(item.audience, 180),
+      painPoint: text(item.painPoint, 240),
+      fitScore: Number.isFinite(item.fitScore) ? item.fitScore : null,
+      whyNowScore: Number.isFinite(item.whyNowScore) ? item.whyNowScore : null,
+      reachScore: Number.isFinite(item.reachScore) ? item.reachScore : null,
+      evidenceRefs: [...new Set(item.evidenceRefs.filter((ref) => boundedIdentity(ref, 500)))].slice(0, MAX_EVIDENCE),
+      discoveredAt: text(item.discoveredAt, 80),
+      freshness: { state: "FRESH", ageMs: Number.isFinite(item.freshness?.ageMs) ? item.freshness.ageMs : null },
+      provenance: item.provenance && typeof item.provenance === "object" ? {
+        source: text(item.provenance.source, 80),
+        feedGeneratedAt: text(item.provenance.feedGeneratedAt, 80),
+        leadId: marketOpportunityIdentity(item.provenance.leadId),
+        signalId: marketOpportunityIdentity(item.provenance.signalId)
+      } : null
+    }))
+    .sort((a, b) => (b.fitScore ?? -1) - (a.fitScore ?? -1) || (b.whyNowScore ?? -1) - (a.whyNowScore ?? -1) || a.opportunityId.localeCompare(b.opportunityId));
+}
+
 function campaignReplies(state, campaignId) {
   const postIds = new Set((state.posts || []).filter((post) => post.campaignId === campaignId).map((post) => post.id));
   const interactions = new Map((state.interactions || []).filter((item) => postIds.has(item.postId)).map((item) => [item.id, item]));
@@ -205,11 +250,12 @@ function memoryTargetPreference(memoryItems = []) {
 }
 
 /** Deterministic advisory strategy. It reads state and never creates execution authority. */
-export function deriveStrategyDecision(state, campaignId, { now = new Date(), providerDecision = null } = {}) {
+export function deriveStrategyDecision(state, campaignId, { now = new Date(), providerDecision = null, marketOpportunities = [] } = {}) {
   const campaign = (state.campaigns || []).find((item) => item.id === campaignId);
   if (!campaign) throw new Error(`Campaign not found: ${campaignId}`);
   const posts = (state.posts || []).filter((post) => post.campaignId === campaignId).sort((a, b) => String(a.id).localeCompare(String(b.id)));
   const discoveries = relevantDiscoveries(campaign);
+  const market = relevantMarketOpportunities(campaign, marketOpportunities);
   const base = { campaignId, timestampBucket: Math.floor(now.getTime() / (15 * 60 * 1000)) };
   let action = "do_nothing";
   let score = 0;
@@ -259,6 +305,11 @@ export function deriveStrategyDecision(state, campaignId, { now = new Date(), pr
         reasonList.push("oi_memory_strategy_applied");
         refs.push(`memory:${preference.id}`);
       }
+    } else if (market.length) {
+      const opportunity = market[0];
+      action = "research"; score = 50; eligible = true; candidateId = opportunity.opportunityId;
+      reasonList = ["market_opportunity", "evidence_backed_market_signal"];
+      refs = [`market-opportunity:${opportunity.opportunityId}`, ...opportunity.evidenceRefs];
     } else if (discoveries.length) {
       engagementContext = engagementContextSummary(state, campaignId, now);
       const reply = campaignReplies(state, campaignId);
@@ -295,6 +346,7 @@ export function deriveStrategyDecision(state, campaignId, { now = new Date(), pr
     }
   }
   const core = { ...base, action, score, eligible, candidateId, reasons: reasons(reasonList), evidence: evidence(refs) };
+  if (market.length && action === "research" && candidateId === market[0].opportunityId) core.marketOpportunity = market[0];
   if (learning) core.learningContext = learning;
   if (memoryContext) core.memoryContext = memoryContext;
   if (providerContext) core.providerContext = providerContext;

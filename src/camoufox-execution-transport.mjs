@@ -1,6 +1,7 @@
 import { ExecutionSession } from "./execution-session.mjs";
 import { ExecutionTransport } from "./execution-transport.mjs";
 import { canonicalIdentityUrl } from "./execution-binding.mjs";
+import { persistCamoufoxSessionMetadata } from "./camoufox-session-observer.mjs";
 
 const METHODS = ["navigate", "snapshot", "resolve", "type", "click", "observeTransition", "verifyActivation", "detach"];
 const SURFACE_METHODS = [
@@ -65,17 +66,19 @@ export class CamoufoxExecutionTransport extends ExecutionTransport {
   #profileReference;
   #protocolFactory;
   #attestation;
+  #sessionMetadataPath;
   #client = null;
   #session = null;
   #browserSurface = null;
   #detached = false;
 
-  constructor({ profileReference, protocolFactory, hostAttestation } = {}) {
+  constructor({ profileReference, protocolFactory, hostAttestation, sessionMetadataPath = "" } = {}) {
     super();
     rejectSecrets({ profileReference, protocolFactory, hostAttestation });
     this.#profileReference = text(profileReference, 160);
     this.#protocolFactory = protocolFactory;
     this.#attestation = hostAttestation ? attestation(hostAttestation) : null;
+    this.#sessionMetadataPath = text(sessionMetadataPath, 2_000);
     this.transportIdentity = Object.freeze({
       transport: "camoufox-execution",
       provider: "camoufox",
@@ -117,7 +120,12 @@ export class CamoufoxExecutionTransport extends ExecutionTransport {
     }
     let client;
     try {
-      client = await this.#protocolFactory({ profileReference: this.#profileReference, runtimeIdentity: this.transportIdentity });
+      client = await this.#protocolFactory({
+        profileReference: this.#profileReference,
+        runtimeIdentity: this.transportIdentity,
+        expectedIdentity: session.expectedIdentity,
+        session
+      });
     } catch {
       throw fail("CAMOUFOX_PROTOCOL_ATTACH_FAILED", "Camoufox protocol attach failed");
     }
@@ -133,9 +141,26 @@ export class CamoufoxExecutionTransport extends ExecutionTransport {
       const identity = observedIdentity(observed);
       if (!identity) throw fail("CAMOUFOX_IDENTITY_UNKNOWN", "Camoufox identity was not observed");
       if (["CHALLENGED", "CHALLENGE", "MFA", "SECURITY_CHALLENGE"].includes(identity.state)) throw fail("CAMOUFOX_SESSION_CHALLENGE", "Camoufox session has a security challenge");
+      if (["LOGIN_REQUIRED", "AUTH_REQUIRED"].includes(identity.state)) throw fail("CAMOUFOX_AUTH_REQUIRED", "Camoufox session requires authentication");
       if (["STALE", "EXPIRED", "UNKNOWN", "UNAVAILABLE"].includes(identity.state)) throw fail("CAMOUFOX_IDENTITY_UNKNOWN", "Camoufox identity is not ready");
       if (identity.provider !== "camoufox" || identity.platform !== expected.platform || identity.accountId !== expected.accountId || identity.providerProfileId !== expected.providerProfileId || (expected.identityReference && identity.identityReference !== canonicalIdentityUrl(expected.identityReference))) {
         throw fail("CAMOUFOX_IDENTITY_MISMATCH", "observed account/profile/identity does not match session binding");
+      }
+      if (this.#sessionMetadataPath) {
+        try {
+          await persistCamoufoxSessionMetadata(this.#sessionMetadataPath, {
+            provider: "camoufox",
+            platform: identity.platform,
+            accountId: identity.accountId,
+            profileReference: identity.providerProfileId,
+            identityReference: identity.identityReference,
+            status: "READY",
+            authState: "READY",
+            identityStatus: "VERIFIED"
+          });
+        } catch (error) {
+          throw fail("CAMOUFOX_SESSION_METADATA_PERSIST_FAILED", "Camoufox session metadata persistence failed");
+        }
       }
       this.#client = client;
       this.#session = session;

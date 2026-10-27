@@ -109,6 +109,25 @@ test("zero-touch bootstrap derives exact authority and is idempotent", async (t)
   assert.equal(after.submissionUncertainties.length, before.submissionUncertainties.length);
 });
 
+test("standing reference cannot bootstrap a second campaign scope", async (t) => {
+  const { service, productRepo, now } = await fixture(t);
+  const first = await service.bootstrapAutonomousCampaign(brief(productRepo, now));
+  assert.equal(first.status, "READY_FOR_AUTONOMOUS_EXECUTION");
+  const before = await service.snapshot();
+
+  const second = await service.bootstrapAutonomousCampaign(brief(productRepo, new Date(now.getTime() + 60_000), {
+    objective: "A differently worded objective must not fork the standing authority"
+  }));
+
+  assert.equal(second.status, "BLOCKED");
+  assert.equal(second.code, "STANDING_AUTHORIZATION_REFERENCE_SCOPE_CONFLICT");
+  assert.equal(second.blockers[0].classification, "AUTHORIZATION_BLOCKER");
+  const after = await service.snapshot();
+  assert.equal(after.campaigns.length, before.campaigns.length);
+  assert.equal(after.campaignAuthorizations.length, before.campaignAuthorizations.length);
+  assert.equal(after.executionRequests.length, before.executionRequests.length);
+});
+
 test("zero-touch bootstrap derives a new content identity when high-level story policy changes", async (t) => {
   const { service, productRepo, now } = await fixture(t);
   const first = await service.bootstrapAutonomousCampaign(brief(productRepo, now, {

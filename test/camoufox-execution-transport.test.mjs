@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { CamoufoxExecutionTransport } from "../src/camoufox-execution-transport.mjs";
 import { CamoufoxExecutionSessionResolver } from "../src/camoufox-execution-session-resolver.mjs";
 import { ExecutionSession } from "../src/execution-session.mjs";
@@ -94,12 +97,44 @@ test("Camoufox transport detaches a client when capability validation fails", as
   assert.deepEqual(calls, ["detach"]);
 });
 
+test("Camoufox transport persists verified identity metadata before exposing the session", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "camoufox-transport-persist-"));
+  const file = path.join(root, "session.json");
+  const { value } = client();
+  const transport = new CamoufoxExecutionTransport({
+    profileReference: PROFILE, sessionMetadataPath: file,
+    protocolFactory: async () => value, hostAttestation: ATTESTATION
+  });
+  await transport.attach(session());
+  const stored = JSON.parse(await readFile(file, "utf8"));
+  assert.equal(stored.provider, "camoufox");
+  assert.equal(stored.accountId, "linkedin_primary");
+  assert.equal(stored.status, "READY");
+  assert.equal(transport.sessionIdentity().identityVerified, true);
+  await transport.detach();
+});
+
+test("Camoufox transport fails closed when session metadata persistence fails", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "camoufox-transport-persist-failure-"));
+  const parent = path.join(root, "parent");
+  await writeFile(parent, "not-a-directory");
+  const { value, calls } = client();
+  const transport = new CamoufoxExecutionTransport({
+    profileReference: PROFILE, sessionMetadataPath: path.join(parent, "session.json"),
+    protocolFactory: async () => value, hostAttestation: ATTESTATION
+  });
+  await assert.rejects(() => transport.attach(session()), { code: "CAMOUFOX_SESSION_METADATA_PERSIST_FAILED" });
+  assert.equal(transport.sessionIdentity().attached, false);
+  assert.deepEqual(calls, ["attach", "identity", "detach"]);
+});
+
 test("Camoufox resolver preserves provider/profile/account/identity binding and cleanup", async () => {
   const calls = [];
   const { value } = client();
   const account = { platform: "linkedin", accountId: "linkedin_primary", provider: "camoufox", profileRef: PROFILE, providerProfileId: PROFILE, identityReference: IDENTITY, sessionHealth: "healthy" };
   const resolver = new CamoufoxExecutionSessionResolver({
     accountRegistry: [account], profileReference: PROFILE, hostAttestation: ATTESTATION,
+    sessionAuthorityReference: "standing-authority-fixture",
     coordinator: { async acquire() { calls.push("profile-acquire"); return { ready: true, handle: { profileFingerprint: "fp" } }; }, async release() { calls.push("profile-release"); return { released: true }; } },
     protocolFactory: async () => value
   });
@@ -107,6 +142,9 @@ test("Camoufox resolver preserves provider/profile/account/identity binding and 
   assert.equal(result.ready, true);
   assert.equal(result.session.provider, "camoufox");
   assert.equal(result.session.profileReference, PROFILE);
+  assert.equal(result.session.authorityReference, "standing-authority-fixture");
+  assert.equal(result.sessionAuthorityReference, "standing-authority-fixture");
+  assert.match(result.session.toJSON().authorityReference, /^sha256:[a-f0-9]{64}$/);
   assert.deepEqual(calls, ["profile-acquire"]);
   await result.release();
   assert.deepEqual(calls, ["profile-acquire", "profile-release"]);
@@ -117,7 +155,7 @@ test("Camoufox resolver preserves provider/profile/account/identity binding and 
 
 test("Camoufox resolver rejects same profile reference from another provider", async () => {
   const account = { platform: "linkedin", accountId: "linkedin_primary", provider: "gpm", profileRef: PROFILE, providerProfileId: PROFILE, identityReference: IDENTITY, sessionHealth: "healthy" };
-  const resolver = new CamoufoxExecutionSessionResolver({ accountRegistry: [account], profileReference: PROFILE, hostAttestation: ATTESTATION, coordinator: { acquire() {}, release() {} }, protocolFactory: async () => client().value });
+  const resolver = new CamoufoxExecutionSessionResolver({ accountRegistry: [account], profileReference: PROFILE, sessionAuthorityReference: "standing-authority-fixture", hostAttestation: ATTESTATION, coordinator: { acquire() {}, release() {} }, protocolFactory: async () => client().value });
   const result = await resolver.resolve({ platform: "linkedin", accountId: "linkedin_primary", provider: "camoufox", providerProfileId: PROFILE, identityReference: IDENTITY });
   assert.equal(result.ready, false);
   assert.equal(result.code, "PROVIDER_BINDING_MISMATCH");

@@ -1202,6 +1202,12 @@ test("LinkedIn auth detector accepts an authenticated feed shell without legacy 
   assert.equal(state.identityVerified, true);
 });
 
+test("LinkedIn auth detector accepts authenticated feed tab routes", () => {
+  const state = evaluateLinkedInContext({ path: "/feed/foryou/" });
+  assert.equal(state.feedReachable, true);
+  assert.equal(state.sessionAuthenticated, true);
+});
+
 test("LinkedIn auth detector recognizes the Vietnamese composer trigger", () => {
   const state = evaluateLinkedInContext({ locale: "vi" });
   assert.equal(state.composerTrigger, true);
