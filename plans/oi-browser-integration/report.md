@@ -40,6 +40,8 @@ Memory kinds: `RAW_EVENT`, `OBSERVATION`, `FACT`, `INFERENCE`, `LEARNING`, `POLI
 
 Provider records distinguish installed, auth-ready, healthy, and execution success. Routing filters capability, privacy class, context size, requested tools, reasoning class, then ranks bounded cost, success history, latency, and ID before timeout/fallback. Invalid/empty/nonzero/timeout outcomes fail closed. Telemetry stores metadata and output digest, never output text.
 
+The C HTTP server does not invent or auto-discover an inference adapter. Its provider route therefore returns `FAILED/unavailable` until a configured adapter is injected by the owning runtime. The controlled fixture injects `local-fixture-provider` and records `SUCCEEDED`; the server smoke verified the fail-closed production behavior and dashboard projection.
+
 ## Browser intelligence / execution
 
 `BrowserSnapshot` is versioned and includes URL/title/headings/text/forms/buttons/links/elements/frame/visibility/enabled/confidence/capturedAt/fingerprint/source/evidence status. Static HTTP and live DOM are distinct; `LIVE_DOM` requires verified provider runtime evidence plus a service-injected runtime validator. Intent identity binds action, element, snapshot fingerprint, target identity, and transient value digest. Executor requires explicit authority, immediate pre-provider validation, certified click transport, verification, and idempotent replay. Live execution additionally requires an injected runtime authority validator; static execution is restricted to safe fixture hosts and `externalSideEffects=false`. Provider-started failures become `OUTCOME_UNKNOWN`.
@@ -86,5 +88,6 @@ Independent read-only review was dispatched through the local queue as `session-
 - A/B dirty work remains unintegrated; overlapping server/service/strategy files need serial reconcile and rerun.
 - Current runtime at `127.0.0.1:4318` is A's `52072ce`, not C's branch. Do not treat its health or Camoufox process as proof of C integration.
 - Auto-GTM feed generation is unavailable; no artifact is fabricated.
+- The live server has no configured inference adapter, so provider routing is intentionally `FAILED/unavailable` there. Adapter registration and health evidence remain an integration dependency for the final runtime branch.
 - Fresh Camoufox identity/readiness and live publication/verification remain blocked or unproven.
 - Next autonomous action: owner cherry-picks `f2ccb03` and `9ce01f9` into the reconciled integration branch, resolves owned hunks, reruns focused/full checks, then performs only an explicitly authorized safe/runtime verification. Live publication still requires valid standing authority, healthy account, certified transport, and independent verification.

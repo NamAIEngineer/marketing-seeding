@@ -48,6 +48,13 @@
     "evidenceRefs": ["fixture:before", "fixture:after"],
     "fixtureClicks": 1
   },
+  "serverSmoke": {
+    "sourceCommit": "2e92827511ec48d68cb02cf048360997c2d91e26",
+    "sourceDirty": false,
+    "dashboardOiBrowserProjection": true,
+    "providerRouteWithoutConfiguredAdapter": "FAILED/unavailable",
+    "externalSideEffects": false
+  },
   "restart": {
     "memoryItems": 2,
     "learningVisible": true,
