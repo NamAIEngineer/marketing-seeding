@@ -4,7 +4,7 @@
 
 - Candidate branch: `integration/session-c-candidate`.
 - Candidate code revision: `6600387b254db13bf0494fc14a8f512a6f990e1a`.
-- Latest evidence/documentation revision: `4f1066f4e263f1d88a1c8666498716fa4c5560fc` (no source/test changes after the code checkpoint).
+- Isolated smoke source revision: `df2f775ee23dd4475e9b358bc42f5e1770b73e29`; this documentation commit may advance the candidate HEAD without changing the smoke provenance (no source/test changes after the code checkpoint).
 - Candidate source tree was clean before review artifacts were generated; evidence artifacts are C-owned.
 
 ## Outcome
@@ -70,6 +70,10 @@ Machine-readable summary: `plans/oi-browser-integration/fixture-evidence.json` (
 Latest controlled run artifact: `plans/oi-browser-integration/fixture-run-6600387.json`. It executed `SeedingService.runCampaignControlCycle` on exact candidate revision `6600387b254db13bf0494fc14a8f512a6f990e1a` with a temporary `JsonStore`, then crossed the persisted static snapshot → CLICK intent → validated fixture transport → `CONTROL_ACTIVATED` path. Before/after candidate IDs differ after a supported learning (`sampleSupport=2`, `verifiedCount=2`), provider routing is `SUCCEEDED`, and restart retains memory, snapshot, execution, provider decision, and strategy records. This remains `FIXTURE_VERIFIED`; no public publication occurred.
 
 Latest server case: `plans/oi-browser-integration/server-smoke-6600387-rerun.json`. Exact candidate server ran on isolated port `4323` with local Qwen model health observed from loopback `/models`; provider inference succeeded through the authenticated operator API and was persisted as a digest. Unauthorized provider POST returned `401`. Auto-GTM returned `feed_not_generated`; no external side effect occurred. This is `RUNTIME_VERIFIED`, not live publication proof.
+
+Final isolated rerun on port `4324` used exact source `df2f775ee23dd4475e9b358bc42f5e1770b73e29`, private state, and loopback Qwen. Health reported source clean/schema v8; provider route succeeded; memory and static snapshot remained visible after restart; unauthorized provider route returned `401`; Auto-GTM remained unavailable; no external side effect occurred. This is `RUNTIME_VERIFIED`, not live publication proof.
+
+Machine-readable final rerun: `plans/oi-browser-integration/server-smoke-df2f775.json`.
 
 ## Verification evidence
 
