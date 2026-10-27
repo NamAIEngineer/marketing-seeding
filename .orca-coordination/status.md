@@ -15,6 +15,7 @@
 - Latest isolated smoke on port `4325` at `d75ce02` verified exact candidate HEAD, provider success, scoped memory + static snapshot persistence, restart recovery, unauthorized route `401`, and Auto-GTM `feed_not_generated`; no external side effect.
 - Final isolated smoke on port `4325` at `17993d2` verified exact final candidate HEAD, provider success, scoped memory + static snapshot persistence, restart recovery, unauthorized route `401`, and Auto-GTM `feed_not_generated`; no external side effect.
 - Final provenance smoke on port `4325` at `3794177` verified exact final candidate SHA, provider success, scoped memory + static snapshot persistence, restart recovery, unauthorized route `401`, and Auto-GTM `feed_not_generated`; no external side effect.
+- Post-evidence regression at final candidate `9fb39cf` passed focused `24/24` and full `730/732` with `0` failures and `2` existing ACL skips.
 - Latest controlled case: `plans/oi-browser-integration/fixture-run-6600387.json`; `runCampaignControlCycle` changed the candidate after supported learning and persisted provider/browser evidence across restart.
 - Review worker `oi-browser-candidate-independent-review-6600387-local`: `FAILED` due no-progress guard; manual review `DONE_WITH_CONCERNS`.
 - State: `PARTIAL` until A/B are serially reconciled and fresh Camoufox/Auto-GTM/live evidence exists.

@@ -9,6 +9,7 @@
 - Latest rerun: `plans/oi-browser-integration/server-smoke-d75ce02.json` on port `4325`, exact candidate HEAD `d75ce02`, with restart persistence for memory, static snapshot, and provider decision; no external side effect.
 - Final rerun: `plans/oi-browser-integration/server-smoke-17993d2.json` on port `4325`, exact candidate HEAD `17993d2`, with restart persistence for memory, static snapshot, and provider decision; no external side effect.
 - Final provenance rerun: `plans/oi-browser-integration/server-smoke-3794177.json` on port `4325`, exact final SHA `3794177`, with restart persistence for memory, static snapshot, and provider decision; no external side effect.
+- Final regression: focused `24/24`; full `732` total, `730` pass, `0` fail, `2` skipped at candidate `9fb39cf`.
 - Review receipt: `plans/oi-browser-integration/independent-review-6600387.md`; queue verifier failed on no-progress guard, so manual review is `DONE_WITH_CONCERNS`, not independent PASS.
 - A/B native handshake remains `UNVERIFIED`; Orca worktree metadata exists but no A/B terminal or inbox receiver is attached. Handshake sends returned `terminal_not_found` for both worktrees.
 

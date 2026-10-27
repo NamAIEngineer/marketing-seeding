@@ -81,6 +81,8 @@ Final isolated rerun: `plans/oi-browser-integration/server-smoke-17993d2.json`. 
 
 Final provenance rerun: `plans/oi-browser-integration/server-smoke-3794177.json`. Exact final candidate `379417778e1bd007e990030b12c7d448af6b02ba` produced the same result on isolated port `4325`; restart retained one memory item, one static snapshot, and one successful provider decision. No external side effect occurred.
 
+Post-evidence regression at final candidate `9fb39cf8a670fe77323f5196c3bd5aab56053b33`: focused `24/24` pass; full `732` tests, `730` pass, `0` fail, `2` skipped. The only skips are existing ACL environment checks.
+
 ## Verification evidence
 
 Commands run in C worktree:
