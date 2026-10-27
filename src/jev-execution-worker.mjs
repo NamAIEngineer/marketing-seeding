@@ -2,6 +2,7 @@ import { validateExecutionReceiptV1 } from "./execution-contracts.mjs";
 import { normalizePublicationVerification, PlatformAdapterRegistry } from "./platform-registries.mjs";
 import { assertLiveGrantMatchesExecution } from "./live-execution-grant.mjs";
 import { bindingMatches, canonicalIdentityUrl, canonicalProvider } from "./execution-binding.mjs";
+import { createCamoufoxOiBrowserBridge } from "./oi-browser-camoufox-bridge.mjs";
 
 export const SUBMIT_READINESS_SAFETY_MARGIN_MS = 30_000;
 
@@ -311,6 +312,31 @@ export class JevExecutionWorker {
           reasonCodes: readiness.reasons || [reasonCode]
         };
       }
+      // Capture the live semantic DOM through the exact acquired Camoufox
+      // surface before the canonical platform adapter runs. The bridge is
+      // observational only; LinkedInAdapter remains the sole executor.
+      let oiBrowserSnapshot = null;
+      if (!dryRunRequest && liveEnabledAtAcquire && canonicalProvider(initial.request.provider, { allowLegacy: true }) === "camoufox" && executionBrowserSurface && executionTransport &&
+          typeof executionBrowserSurface.listTabs === "function" && typeof executionBrowserSurface.snapshot === "function") {
+        try {
+          const bridge = createCamoufoxOiBrowserBridge({ transport: executionTransport, browserSurface: executionBrowserSurface });
+          const captured = await bridge.capture({
+            pageId: executionSession?.pageId || null,
+            profileId: executionSession?.profileReference || executionSession?.expectedIdentity?.providerProfileId || initial.request.providerProfileId || initial.request.profileId || null,
+            url: initial.request.target?.url || null,
+            evidenceContext: { executionId }
+          });
+          oiBrowserSnapshot = await this.service.recordBrowserSnapshot({
+            snapshot: captured.snapshot,
+            executionId,
+            campaignId: initial.request.campaignId,
+            communityId: initial.request.target?.communityId || null,
+            runtimeBinding: { transport: executionTransport, browserSurface: executionBrowserSurface, pageId: captured.pageId, profileId: executionSession?.profileReference || executionSession?.expectedIdentity?.providerProfileId || initial.request.providerProfileId || initial.request.profileId }
+          }, `jev-worker:${this.workerId}:oi-browser`);
+        } catch (error) {
+          return { status: "PRE_SUBMIT_STOPPED", executionId, reasonCode: String(error?.code || "oi_browser_snapshot_failed").toLowerCase() };
+        }
+      }
       const refreshed = await this.service.prepareExecutionRequest(initial.post.id, `jev-worker:${this.workerId}`, { dryRun: dryRunRequest });
       if (refreshed.executionId !== executionId || refreshed.state !== "REQUEST_READY") {
         return { status: "NOT_DISPATCHABLE", executionId, state: refreshed.state };
@@ -418,6 +444,10 @@ export class JevExecutionWorker {
         },
         onSubmitSent: (submitAcceptanceEvidence) => this.service.markExecutionSubmitSent(executionId, lease, submitAcceptanceEvidence)
       });
+      if (oiBrowserSnapshot?.snapshot?.fingerprint) {
+        result.oiBrowserSnapshotFingerprint = oiBrowserSnapshot.snapshot.fingerprint;
+        result.oiBrowserEvidenceStatus = oiBrowserSnapshot.snapshot.evidenceStatus;
+      }
       if (preSubmitFailure) {
         result.preSubmitFailure = preSubmitFailure;
       }

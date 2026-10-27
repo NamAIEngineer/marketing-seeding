@@ -1336,7 +1336,11 @@ function normalizeCommunityMembership(input, platformPolicies = defaultPlatformP
   if (notes.length > 1000 || evidence.length > 2000) throw new Error("Community notes/evidence are too long");
   const checkedAt = input.checkedAt == null ? nowIso() : String(input.checkedAt).trim();
   if (!Number.isFinite(Date.parse(checkedAt))) throw new Error("checkedAt must be an ISO timestamp");
-  return { productRepo, track, platform, communityName, communityUrl, membershipStatus, postStatus, accountId: String(input.accountId || "").trim() || null, notes, evidence, checkedAt };
+  const expiresAt = input.expiresAt == null
+    ? new Date(Date.parse(checkedAt) + 24 * 60 * 60 * 1000).toISOString()
+    : String(input.expiresAt).trim();
+  if (!Number.isFinite(Date.parse(expiresAt)) || Date.parse(expiresAt) <= Date.parse(checkedAt)) throw new Error("expiresAt must be later than checkedAt");
+  return { productRepo, track, platform, communityName, communityUrl, membershipStatus, postStatus, accountId: String(input.accountId || "").trim() || null, notes, evidence, checkedAt, expiresAt };
 }
 
 function newest(items, timestampField, limit = 20) {
@@ -2046,7 +2050,40 @@ export class SeedingService {
     const suppliedSnapshot = input.snapshot?.schemaVersion === 1 ? input.snapshot : input;
     if (suppliedSnapshot.source === "LIVE_DOM") {
       const validator = this.browserIntentHooks.validateLiveSnapshot;
-      if (typeof validator !== "function" || (await validator({ snapshot: suppliedSnapshot, input })) !== true) {
+      const attachedRuntime = input.runtimeBinding && typeof input.runtimeBinding === "object" ? input.runtimeBinding : null;
+      let attachedValid = false;
+      if (attachedRuntime) {
+        const transport = attachedRuntime.transport;
+        const surface = attachedRuntime.browserSurface;
+        const pageId = String(attachedRuntime.pageId || "").trim();
+        const expectedProfile = String(attachedRuntime.profileId || "").trim();
+        const runtime = typeof transport?.runtimeIdentity === "function" ? transport.runtimeIdentity() : null;
+        const observedProvider = String(runtime?.provider || "").trim().toLowerCase();
+        const expectedProvider = String(suppliedSnapshot.runtimeEvidence?.provider || "").trim().toLowerCase();
+        const observedVersion = String(runtime?.providerVersion || "").trim();
+        const expectedVersion = String(suppliedSnapshot.runtimeEvidence?.providerVersion || "").trim();
+        if (surface && typeof surface.showTab === "function" && typeof surface.snapshot === "function" && pageId && expectedProfile &&
+            observedProvider === "camoufox" && expectedProvider === observedProvider && expectedVersion === observedVersion) {
+          const tab = await surface.showTab(pageId);
+          const tabProfile = String(tab?.profileId || tab?.profile?.id || tab?.profile?.profileId || tab?.profile || "").trim();
+          const tabUrl = String(tab?.url || "").trim();
+          const snapshotUrl = String(suppliedSnapshot.url || "").trim();
+          const sameDocument = (() => {
+            try {
+              const left = new URL(tabUrl); const right = new URL(snapshotUrl);
+              return left.origin === right.origin && left.pathname.replace(/\/$/, "") === right.pathname.replace(/\/$/, "");
+            } catch { return false; }
+          })();
+          const accessibility = String(await surface.snapshot(pageId) || "");
+          const refsPresent = (suppliedSnapshot.elements || []).every((element) => {
+            const ref = String(element?.runtimeRef || "").trim();
+            return ref && accessibility.includes(`[ref=${ref}]`);
+          });
+          attachedValid = tabProfile === expectedProfile && sameDocument && refsPresent;
+        }
+      }
+      if (typeof validator !== "function" && !attachedValid ||
+          typeof validator === "function" && (await validator({ snapshot: suppliedSnapshot, input })) !== true && !attachedValid) {
         throw Object.assign(new Error("LIVE_DOM snapshot requires an attached runtime validator"), { code: "LIVE_DOM_RUNTIME_UNVERIFIED" });
       }
     }
@@ -2054,8 +2091,50 @@ export class SeedingService {
     const result = await this.store.mutate(actor, "oi_browser_snapshot_recorded", (state) => {
       state.browserSnapshots ||= [];
       const existing = state.browserSnapshots.find((item) => item.fingerprint === snapshot.fingerprint && item.url === snapshot.url);
-      if (existing) return existing;
-      const persisted = { ...snapshot, html: undefined, campaignId: String(input.campaignId || "").trim() || null, communityId: String(input.communityId || "").trim() || null };
+      const executionId = String(input.executionId || snapshot.executionId || "").trim() || null;
+      const campaignId = String(input.campaignId || "").trim() || null;
+      const communityId = String(input.communityId || "").trim() || null;
+      const binding = executionId ? {
+        executionId,
+        campaignId,
+        communityId,
+        capturedAt: snapshot.capturedAt,
+        evidenceRef: snapshot.runtimeEvidence?.evidenceRef || null
+      } : null;
+      if (existing) {
+        // Fingerprint remains a DOM-content identity. Repeated captures of the
+        // same DOM must retain every bounded execution trace that observed it.
+        const executionIds = [...new Set([
+          ...(Array.isArray(existing.executionIds) ? existing.executionIds : []),
+          ...(existing.executionId ? [existing.executionId] : []),
+          ...(executionId ? [executionId] : [])
+        ].filter(Boolean))].slice(-32);
+        const priorBindings = Array.isArray(existing.executionBindings) ? existing.executionBindings : [];
+        const bindingKey = (item) => String(item.executionId || "");
+        const bindings = [...priorBindings, ...(binding ? [binding] : [])]
+          .filter((item) => item && item.executionId)
+          .reduce((rows, item) => {
+            const key = bindingKey(item);
+            const index = rows.findIndex((candidate) => bindingKey(candidate) === key);
+            if (index >= 0) rows[index] = { ...rows[index], ...item };
+            else rows.push(item);
+            return rows;
+          }, [])
+          .slice(-32);
+        existing.executionIds = executionIds;
+        existing.executionBindings = bindings;
+        if (!existing.executionId && executionId) existing.executionId = executionId;
+        return existing;
+      }
+      const persisted = {
+        ...snapshot,
+        html: undefined,
+        executionId,
+        executionIds: executionId ? [executionId] : [],
+        executionBindings: binding ? [binding] : [],
+        campaignId,
+        communityId
+      };
       state.browserSnapshots.push(persisted);
       state.browserSnapshots = state.browserSnapshots.slice(-200);
       return persisted;

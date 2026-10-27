@@ -163,6 +163,64 @@ export function createBrowserSnapshot({ url, html = "", capturedAt = new Date().
   });
 }
 
+/**
+ * Normalize an accessibility snapshot emitted by an attached browser runtime.
+ *
+ * Camoufox's protocol deliberately returns a bounded, human-readable
+ * accessibility surface instead of page HTML. Keep that boundary explicit:
+ * this parser never treats text fetched over HTTP as live DOM, and it does
+ * not use the provider's transient `cf-*` reference as the durable element
+ * identity. Duplicate role/name targets are omitted so callers must resolve
+ * an unambiguous semantic target against a fresh runtime snapshot.
+ */
+export function createLiveBrowserSnapshot({ url, accessibilitySnapshot = "", capturedAt = new Date().toISOString(), frame = "top", screenshotReference = null, runtimeEvidence = null, executionId = null } = {}) {
+  if (!runtimeEvidence || runtimeEvidence.verified !== true || !text(runtimeEvidence.provider, 80) || !text(runtimeEvidence.providerVersion, 80)) {
+    throw Object.assign(new Error("LIVE_DOM snapshot requires verified runtime evidence"), { code: "LIVE_DOM_EVIDENCE_REQUIRED" });
+  }
+  const normalizedUrl = normalizedSnapshotUrl(url);
+  const lines = String(accessibilitySnapshot || "").slice(0, 100_000).split(/\r?\n/);
+  const parsed = [];
+  for (const line of lines) {
+    const match = line.match(/^\s*-\s+([^\s]+)\s+"((?:[^"\\]|\\.)*)"\s+\[ref=([^\]]+)\]/);
+    if (!match) continue;
+    const role = text(match[1], 40).toLowerCase();
+    const label = redacted(match[2].replace(/\\"/g, '"'), 160);
+    const runtimeRef = text(match[3], 120);
+    if (!role || !label || !runtimeRef) continue;
+    parsed.push({ role, label, runtimeRef });
+  }
+  const semanticCounts = new Map();
+  for (const item of parsed) {
+    const key = `${item.role}\u0000${item.label.toLowerCase()}`;
+    semanticCounts.set(key, (semanticCounts.get(key) || 0) + 1);
+  }
+  const elements = parsed
+    .filter((item) => semanticCounts.get(`${item.role}\u0000${item.label.toLowerCase()}`) === 1)
+    .map((item) => {
+      const elementId = elementIdentity({ role: item.role, label: item.label, href: null, id: null, name: null, context: "" });
+      return {
+        elementId, role: item.role, tag: item.role === "button" ? "button" : item.role === "link" ? "a" : "input", label: item.label, href: null,
+        stableAttributes: { id: null, name: null, type: null }, frame: text(frame, 80) || "top",
+        visible: true, enabled: true, confidence: 0.9, context: "", runtimeRef: item.runtimeRef
+      };
+    });
+  const textContent = redacted(lines.filter((line) => !/^\s*-\s+[^\s]+\s+"/.test(line)).join(" "), 20_000);
+  const title = new URL(normalizedUrl).hostname;
+  const fingerprint = digest({ url: normalizedUrl, title, headings: [], elements: elements.map(({ elementId, role, label, href, frame }) => ({ elementId, role, label, href, frame })), text: textContent }, 64);
+  return Object.freeze({
+    schemaVersion: 1, integrationVersion: OI_BROWSER_INTEGRATION_VERSION, source: "LIVE_DOM", url: normalizedUrl, title,
+    headings: Object.freeze([]), text: textContent,
+    forms: Object.freeze(elements.filter((item) => ["textbox", "combobox"].includes(item.role))),
+    buttons: Object.freeze(elements.filter((item) => item.role === "button")),
+    links: Object.freeze(elements.filter((item) => item.role === "link")),
+    elements: Object.freeze(elements), frame: text(frame, 80) || "top", capturedAt: iso(capturedAt), fingerprint,
+    screenshotReference: text(screenshotReference, 240) || null,
+    executionId: text(executionId, 160) || null,
+    runtimeEvidence: { verified: true, provider: text(runtimeEvidence.provider, 80), providerVersion: text(runtimeEvidence.providerVersion, 80), evidenceRef: text(runtimeEvidence.evidenceRef, 180) || null },
+    evidenceStatus: "RUNTIME_VERIFIED"
+  });
+}
+
 export function resolveBrowserElement(snapshot, query = {}) {
   if (!snapshot || snapshot.schemaVersion !== 1 || !Array.isArray(snapshot.elements)) throw new Error("BrowserSnapshot is invalid");
   const requestedId = text(query.elementId || query.id, 120);
@@ -216,7 +274,8 @@ export function normalizeBrowserSnapshot(input = {}) {
     label: redacted(item?.label, 160), href: item?.href ? normalizeHref(item.href, normalizedSnapshotUrl(input.url)) : null,
     stableAttributes: { id: text(item?.stableAttributes?.id, 100) || null, name: text(item?.stableAttributes?.name, 100) || null, type: text(item?.stableAttributes?.type, 40) || null },
     frame: text(item?.frame, 80) || "top", visible: item?.visible !== false, enabled: item?.enabled !== false,
-    confidence: Math.min(1, Math.max(0, Number.isFinite(Number(item?.confidence)) ? Number(item.confidence) : 0)), context: redacted(item?.context, 120)
+    confidence: Math.min(1, Math.max(0, Number.isFinite(Number(item?.confidence)) ? Number(item.confidence) : 0)), context: redacted(item?.context, 120),
+    runtimeRef: /^[A-Za-z0-9._:-]{1,120}$/.test(String(item?.runtimeRef || "")) ? String(item.runtimeRef) : null
   })) : [];
   if (elements.some((item) => !item.elementId) || new Set(elements.map((item) => item.elementId)).size !== elements.length) throw Object.assign(new Error("BrowserSnapshot element identities must be unique"), { code: "DOM_SNAPSHOT_INVALID" });
   if (elements.some((item) => item.elementId !== elementIdentity({ role: item.role, label: item.label, href: item.href, id: item.stableAttributes.id, name: item.stableAttributes.name, context: item.context }))) {
@@ -235,6 +294,7 @@ export function normalizeBrowserSnapshot(input = {}) {
     buttons: Object.freeze(elements.filter((item) => item.role === "button")), links: Object.freeze(elements.filter((item) => item.role === "link")),
     elements: Object.freeze(elements), frame: text(input.frame, 80) || "top", capturedAt: iso(input.capturedAt), fingerprint,
     screenshotReference: redacted(input.screenshotReference, 240) || null,
+    executionId: text(input.executionId, 160) || null,
     runtimeEvidence: source === "LIVE_DOM" ? { verified: true, provider: text(input.runtimeEvidence.provider, 80), providerVersion: text(input.runtimeEvidence.providerVersion, 80), evidenceRef: redacted(input.runtimeEvidence.evidenceRef, 180) || null } : null,
     evidenceStatus: source === "LIVE_DOM" ? "RUNTIME_VERIFIED" : "FIXTURE_VERIFIED"
   });
@@ -313,7 +373,7 @@ export async function executeBrowserIntent(snapshot, intent, {
     ? await resolveTarget({ snapshot, intent, element, pageId })
     : typeof transport.resolveTarget === "function"
       ? await transport.resolveTarget({ snapshot, intent, element, pageId })
-      : { targetRef: element.elementId, targetIdentity: intent.targetIdentity };
+    : { targetRef: element.runtimeRef || element.elementId, targetIdentity: intent.targetIdentity };
   const targetRef = text(target?.targetRef || target?.elementId || element.elementId, 200);
   if (!targetRef) throw Object.assign(new Error("Browser intent target is incomplete"), { code: "TRANSPORT_TARGET_INVALID" });
   const targetIdentity = text(target?.targetIdentity || intent.targetIdentity, 100);
@@ -365,7 +425,7 @@ export async function executeBrowserIntent(snapshot, intent, {
     return {
       schemaVersion: 1, intentId: intent.intentId, action: intent.action, elementId: intent.elementId,
     targetIdentity, transport: transportIdentity(transport), commandStatus,
-      executionStatus: commandStatus === "COMMAND_COMPLETED" ? "COMMAND_COMPLETED" : "OUTCOME_UNKNOWN", providerCallStarted: true, startedAt, completedAt: new Date().toISOString(),
+      executionStatus: commandStatus === "COMMAND_COMPLETED" ? "COMMAND_COMPLETED" : "OUTCOME_UNKNOWN", providerCallStarted, startedAt, completedAt: new Date().toISOString(),
       verification: verification && typeof verification === "object" ? { ...verification } : null,
       evidenceStatus: snapshot.source === "LIVE_DOM" ? "RUNTIME_VERIFIED" : "FIXTURE_VERIFIED", externalSideEffects: false
     };

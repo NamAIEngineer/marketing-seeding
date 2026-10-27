@@ -1,10 +1,23 @@
 import { CHANNELS, TRANSITIONS } from "./constants.mjs";
 import { createHash } from "node:crypto";
+import path from "node:path";
 import { evaluateCampaignAuthorization } from "./campaign-authorization.mjs";
 import { DEFAULT_READINESS_TTL_MS, isReadinessFresh, readinessBinding, readinessContextForTarget } from "./readiness.mjs";
 
 const ACTIVE_PUBLICATION_STATUSES = new Set(["queued", "publishing", "processing", "submit_result_unknown", "published"]);
 export const CAMPAIGN_READINESS_MAX_AGE_MS = DEFAULT_READINESS_TTL_MS;
+export const COMMUNITY_EVIDENCE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+function sameProductRepository(left, right) {
+  if (!left || !right) return false;
+  try {
+    const canonical = (value) => {
+      const resolved = path.resolve(String(value));
+      return resolved.startsWith("/private/") ? resolved.slice("/private".length) : resolved;
+    };
+    return canonical(left) === canonical(right);
+  } catch { return String(left) === String(right); }
+}
 
 export function normalizeContent(value = "") {
   return value.toLowerCase().replace(/https?:\/\/\S+/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
@@ -58,6 +71,34 @@ export function evaluateQueue(post, state, now = new Date(), { mode = "live", ex
 
   const reasons = [];
   reasons.push(...killSwitchReasons(post, state, { mode }));
+  const memberships = (state.communityMemberships || []).filter((membership) => {
+    if (!membership || !sameProductRepository(membership.productRepo, state.campaigns?.find((campaign) => campaign.id === post.campaignId)?.productRepo)) return false;
+    if (String(membership.platform || "").toLowerCase() !== String(target.channel || "").toLowerCase()) return false;
+    if (membership.accountId && String(membership.accountId) !== String(target.accountId)) return false;
+    const nameMatches = membership.communityName && target.name && String(membership.communityName).trim().toLowerCase() === String(target.name).trim().toLowerCase();
+    const urlMatches = membership.communityUrl && target.url && (() => {
+      try {
+        const left = new URL(membership.communityUrl); const right = new URL(target.url);
+        return left.origin === right.origin && left.pathname.replace(/\/$/, "") === right.pathname.replace(/\/$/, "");
+      } catch { return false; }
+    })();
+    return Boolean(nameMatches || urlMatches);
+  });
+  if (memberships.length) {
+    const membership = memberships.sort((left, right) => String(right.checkedAt || "").localeCompare(String(left.checkedAt || "")))[0];
+    const checkedAt = Date.parse(membership.checkedAt || "");
+    const expiresAt = Date.parse(membership.expiresAt || "");
+    const fresh = Number.isFinite(checkedAt) && checkedAt <= now.getTime() + 30_000 &&
+      (Number.isFinite(expiresAt) ? expiresAt > now.getTime() : now.getTime() - checkedAt <= COMMUNITY_EVIDENCE_MAX_AGE_MS);
+    if (!fresh) {
+      reasons.push("community_membership_evidence_stale");
+      reasons.push("community_post_evidence_stale");
+    }
+    const membershipStatus = String(membership.membershipStatus || "unknown").toLowerCase();
+    const postStatus = String(membership.postStatus || "unknown").toLowerCase();
+    if (!["joined", "not_applicable"].includes(membershipStatus)) reasons.push(`community_membership_${membershipStatus}`);
+    if (postStatus !== "allowed" && postStatus !== "not_applicable") reasons.push(`community_post_${postStatus}`);
+  }
   if (post.assetPath) {
     const artifact = (state.artifacts || []).find((item) => item.id === post.artifactId);
     if (!artifact || !post.assetSha256 || artifact.sha256 !== post.assetSha256) reasons.push("asset_evidence_missing_or_stale");

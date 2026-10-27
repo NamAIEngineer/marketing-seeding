@@ -188,6 +188,28 @@ test("service persists memory and snapshots in canonical JsonStore and survives 
   assert.ok(observed.item.id);
 });
 
+test("identical DOM captures retain bounded execution trace bindings after deduplication", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "oi-browser-snapshot-traces-"));
+  const file = path.join(root, "state.json");
+  const service = new SeedingService(new JsonStore(file));
+  await service.init();
+  const input = { url: "https://fixture.test/repeated", html: '<title>Repeated</title><button aria-label="Inspect">Inspect</button>' };
+  const first = await service.recordBrowserSnapshot({ ...input, executionId: "execution-1", campaignId: "campaign-a", communityId: "community-a" });
+  await service.recordBrowserSnapshot({ ...input, executionId: "execution-1", campaignId: "campaign-a", communityId: "community-a" });
+  const second = await service.recordBrowserSnapshot({ ...input, executionId: "execution-2", campaignId: "campaign-b", communityId: "community-b" });
+  assert.equal(first.snapshot.fingerprint, second.snapshot.fingerprint);
+  assert.equal((await service.snapshot()).browserSnapshots.length, 1);
+  const persisted = (await service.snapshot()).browserSnapshots[0];
+  assert.deepEqual(persisted.executionIds, ["execution-1", "execution-2"]);
+  assert.deepEqual(persisted.executionBindings.map((item) => item.executionId), ["execution-1", "execution-2"]);
+  assert.equal(persisted.executionBindings[1].campaignId, "campaign-b");
+  const restarted = new SeedingService(new JsonStore(file));
+  await restarted.init();
+  const afterRestart = (await restarted.dashboard()).oiBrowser.browser.recent[0];
+  assert.deepEqual(afterRestart.executionIds, ["execution-1", "execution-2"]);
+  assert.equal(afterRestart.executionBindings.length, 2);
+});
+
 test("service rejects caller-claimed live DOM evidence without runtime hooks", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "oi-browser-live-boundary-"));
   const service = new SeedingService(new JsonStore(path.join(root, "state.json")));
