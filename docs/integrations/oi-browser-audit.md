@@ -16,9 +16,9 @@ Required Notice: Copyright (c) 2026 Jang Trinh (https://github.com/jangtrinh). T
 
 ## Session ownership evidence
 
-- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, HEAD `52072ce`, dirty files in Camoufox/session/server/service/strategy/UI lanes. A Camoufox process (PID 37958) and marketing server (PID 8201, `127.0.0.1:4318`) were observed; no live Orca agent terminal was registered.
-- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, HEAD `6899679`, dirty files in campaign authorization/service/standing delegation/test/report lanes. No live Orca agent terminal was registered.
-- SESSION C: isolated `/Users/nam/Documents/marketing-seeding-session-c`, branch `integration/session-c-oi-browser`, base above. A/B dirty worktrees were not edited.
+- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, HEAD `52072ce`, dirty files in Camoufox/session/server/service/strategy/UI lanes. Current observed server PID `30842` listens on `127.0.0.1:4318`; Camoufox owner processes are PIDs `72038` and `98842`. No live Orca agent terminal or receiver was registered.
+- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, HEAD `6899679`, dirty files in campaign authorization/service/standing delegation/test/report lanes. No live Orca agent terminal or receiver was registered.
+- SESSION C: candidate `/Users/nam/Documents/marketing-seeding-session-c-candidate`, branch `integration/session-c-candidate`, code checkpoint `6600387`, evidence/documentation checkpoint `16a86d5`. A/B dirty worktrees were not edited.
 
 ## Subsystem decisions
 
