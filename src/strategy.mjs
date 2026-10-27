@@ -205,7 +205,7 @@ function memoryTargetPreference(memoryItems = []) {
 }
 
 /** Deterministic advisory strategy. It reads state and never creates execution authority. */
-export function deriveStrategyDecision(state, campaignId, { now = new Date() } = {}) {
+export function deriveStrategyDecision(state, campaignId, { now = new Date(), providerDecision = null } = {}) {
   const campaign = (state.campaigns || []).find((item) => item.id === campaignId);
   if (!campaign) throw new Error(`Campaign not found: ${campaignId}`);
   const posts = (state.posts || []).filter((post) => post.campaignId === campaignId).sort((a, b) => String(a.id).localeCompare(String(b.id)));
@@ -219,12 +219,21 @@ export function deriveStrategyDecision(state, campaignId, { now = new Date() } =
   let refs = [];
   let learning = null;
   let memoryContext = null;
+  let providerContext = null;
   let engagementContext = null;
   if (!productReady(campaign)) {
     reasonList = ["product_intelligence_incomplete"];
   } else if (unknownForCampaign(state, campaignId, posts)) {
     reasonList = ["submission_unknown_quarantined"];
   } else {
+    if (providerDecision && typeof providerDecision === "object") {
+      providerContext = {
+        decisionId: providerDecision.decisionId || null,
+        providerId: providerDecision.providerId || null,
+        status: providerDecision.status || "FAILED",
+        failure: providerDecision.failure || null
+      };
+    }
     const remembered = retrieveBoundedMemory(state, { scope: { campaignId }, limit: 8, now });
     if (remembered.length) {
       memoryContext = remembered.map((item) => ({ id: item.id, kind: item.kind, confidence: item.confidence, supportCount: item.supportCount, evidenceRefs: item.evidenceRefs, decisionHint: item.decisionHint }));
@@ -280,10 +289,15 @@ export function deriveStrategyDecision(state, campaignId, { now = new Date() } =
       reasonList.push("oi_memory_observed");
       refs.push(...memoryContext.slice(0, 4).map((item) => `memory:${item.id}`));
     }
+    if (providerContext) {
+      reasonList.push(providerContext.status === "SUCCEEDED" ? "provider_route_observed" : "provider_route_failed");
+      if (providerContext.decisionId) refs.push(`provider:${providerContext.decisionId}`);
+    }
   }
   const core = { ...base, action, score, eligible, candidateId, reasons: reasons(reasonList), evidence: evidence(refs) };
   if (learning) core.learningContext = learning;
   if (memoryContext) core.memoryContext = memoryContext;
+  if (providerContext) core.providerContext = providerContext;
   if (engagementContext) core.engagementContext = engagementContext;
   return { ...core, decisionId: `strategy-${digest(core).slice(0, 24)}`, createdAt: now.toISOString(), advisory: true, authoritySideEffects: false };
 }

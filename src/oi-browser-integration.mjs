@@ -581,13 +581,15 @@ export async function routeAgentTask(task = {}, { providers = [], now = new Date
 export function projectOiBrowserIntegration(state, { now = new Date() } = {}) {
   const items = retrieveBoundedMemory(state, { limit: 12, now });
   const snapshots = (state?.browserSnapshots || []).slice(-12).map((item) => ({ ...item, html: undefined }));
+  const decisions = (state?.providerDecisions || []).slice(-12);
+  const healthyProviders = new Set(decisions.flatMap((item) => (item.availability || []).filter((provider) => provider.available === true).map((provider) => provider.id)));
   return {
     integrationVersion: OI_BROWSER_INTEGRATION_VERSION,
     sourceRevision: OI_BROWSER_SOURCE_REVISION,
     memory: { total: (state?.memoryItems || []).length, fresh: items.length, learnings: (state?.memoryItems || []).filter((item) => item.kind === "LEARNING" && memoryItemIsFresh(item, now)).length, recent: items },
     browser: { totalSnapshots: (state?.browserSnapshots || []).length, recent: snapshots, liveVerified: snapshots.filter((item) => item.source === "LIVE_DOM").length, staticOnly: snapshots.filter((item) => item.source !== "LIVE_DOM").length },
     executions: { total: (state?.browserExecutions || []).length, recent: (state?.browserExecutions || []).slice(-12) },
-    providers: { recentDecisions: (state?.providerDecisions || []).slice(-12), healthy: (state?.providerDecisions || []).filter((item) => item.status === "SUCCEEDED").length },
+    providers: { recentDecisions: decisions, healthy: healthyProviders.size, successfulRoutes: decisions.filter((item) => item.status === "SUCCEEDED").length },
     autoGtm: { sourceRevision: AUTO_GTM_SOURCE_REVISION, capability: "lead-feed", generation: "not_claimed" },
     evidenceStatus: "IMPLEMENTED"
   };

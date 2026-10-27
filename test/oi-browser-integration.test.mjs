@@ -268,3 +268,30 @@ test("verified learning changes the next production strategy candidate", async (
   assert.equal(afterRestart.candidateId, after.candidateId);
   assert.equal(afterRestart.evidence.some((ref) => ref.startsWith("memory:learning-")), true);
 });
+
+test("strategy entrypoint records provider routing context without changing authority", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "oi-browser-provider-strategy-"));
+  const productRepo = path.join(root, "repo");
+  await (await import("node:fs/promises")).mkdir(productRepo);
+  await (await import("node:fs/promises")).writeFile(path.join(productRepo, "README.md"), "grounded product", "utf8");
+  const service = new SeedingService(new JsonStore(path.join(root, "state.json")), {
+    oiBrowserProviders: [{ id: "strategy-local", capabilities: ["strategy-context"], installed: true, authReady: true, healthy: true, privacyClasses: ["local"], adapter: { infer: async () => ({ ok: true, output: "bounded context" }) } }]
+  });
+  await service.init();
+  const campaign = await service.createCampaign({ name: "Provider strategy", objective: "Awareness", productRepo });
+  const target = await service.createTarget({ channel: "threads", name: "Fixture audience", url: "https://www.threads.net/@fixture", accountId: "account", status: "active" });
+  const post = await service.createPost({ campaignId: campaign.id, targetId: target.id, content: "Grounded post", contentId: "provider-content" });
+  await service.store.mutate("fixture", "provider_strategy_ready", (state) => {
+    state.campaigns.find((item) => item.id === campaign.id).productIntelligence = { handoff: { readinessStatus: "READY" }, document: Object.fromEntries(["WHAT_IS_IT", "WHAT_PROBLEM_DOES_IT_SOLVE", "WHY_IS_IT_BETTER", "WHO_NEEDS_IT"].map((field) => [field, { text: field, evidenceRefs: ["fixture:product"] }])) };
+    const saved = state.posts.find((item) => item.id === post.id);
+    saved.approvedAt = new Date().toISOString();
+    saved.approvalBinding = approvalFingerprint(saved, state.targets.find((item) => item.id === saved.targetId));
+  });
+  const decision = await service.deriveStrategy(campaign.id, { now: "2026-10-27T03:00:00Z", providerTask: { capability: "strategy-context", privacyClass: "local" } });
+  assert.equal(decision.providerContext.status, "SUCCEEDED");
+  assert.equal(decision.providerContext.providerId, "strategy-local");
+  assert.equal(decision.reasons.includes("provider_route_observed"), true);
+  const state = await service.snapshot();
+  assert.equal(state.liveExecutionGrants.length, 0);
+  assert.equal(state.executionRequests.length, 0);
+});

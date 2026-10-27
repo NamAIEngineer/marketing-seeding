@@ -1847,6 +1847,7 @@ export class SeedingService {
     this.readinessInFlight = new Set();
     this.browserIntentTransport = options.browserIntentTransport || null;
     this.browserIntentHooks = options.browserIntentHooks && typeof options.browserIntentHooks === "object" ? options.browserIntentHooks : {};
+    this.oiBrowserProviders = Array.isArray(options.oiBrowserProviders) ? options.oiBrowserProviders : [];
     this.productFactorySandboxProbe = typeof options.productFactorySandboxProbe === "function"
       ? options.productFactorySandboxProbe
       : (typeof options.systemAgenticSandboxProbe === "function"
@@ -1950,7 +1951,8 @@ export class SeedingService {
   }
 
   async routeOiAgentTask(input = {}, actor = "oi-browser-router") {
-    const result = await routeAgentTask(input, { providers: input.providers || [], timeoutMs: input.timeoutMs });
+    const providers = input.providers === undefined ? this.oiBrowserProviders : input.providers;
+    const result = await routeAgentTask(input, { providers, timeoutMs: input.timeoutMs });
     const persisted = await this.store.mutate(actor, "oi_browser_provider_decision_recorded", (state) => {
       state.providerDecisions ||= [];
       const safe = { ...result, output: undefined };
@@ -2200,11 +2202,16 @@ export class SeedingService {
 
   /** Persist one bounded, deterministic advisory strategy decision. No execution authority is changed. */
   async deriveStrategy(campaignId, input = {}, actor = "strategy-planner") {
-    const state = await this.store.read();
-    requireItem(state.campaigns, campaignId, "Campaign");
     const now = input.now ? new Date(input.now) : new Date();
     if (!Number.isFinite(now.getTime())) throw new Error("Strategy decision time must be valid");
-    const decision = deriveStrategyDecision(state, campaignId, { now });
+    const initialState = await this.store.read();
+    requireItem(initialState.campaigns, campaignId, "Campaign");
+    const providerDecision = input.providerTask
+      ? await this.routeOiAgentTask({ ...input.providerTask, providers: input.providers === undefined ? this.oiBrowserProviders : input.providers }, `${actor}:provider`)
+      : null;
+    const state = await this.store.read();
+    requireItem(state.campaigns, campaignId, "Campaign");
+    const decision = deriveStrategyDecision(state, campaignId, { now, providerDecision });
     const result = await this.store.mutate(actor, "strategy_decision_recorded", (nextState) => {
       const campaign = requireItem(nextState.campaigns, campaignId, "Campaign");
       appendStrategyDecision(campaign, decision);
@@ -2237,7 +2244,7 @@ export class SeedingService {
         advisory: true, authoritySideEffects: false, externalSideEffects: false
       };
     }
-    const cycleInput = { now: cycleAt };
+    const cycleInput = { now: cycleAt, ...(input.providerTask ? { providerTask: input.providerTask, providers: input.providers } : {}) };
     const outcome = await this.deriveOutcomeSummary(campaignId, cycleInput, `${actor}:control-cycle`);
     const learning = await this.deriveLearningFeedback(campaignId, cycleInput, `${actor}:control-cycle`);
     const strategy = await this.deriveStrategy(campaignId, cycleInput, `${actor}:control-cycle`);
