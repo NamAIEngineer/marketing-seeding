@@ -62,6 +62,38 @@ test("accepted but unverified, missing identity, and orphan evidence fail closed
  assert.equal(attribution.find((item) => item.postId === "orphan").status, "PARTIAL");
 });
 
+test("provider-aware publication verification requires the exact GPM binding", () => {
+ const gpmTarget = {
+   id: "gpm-target", channel: "linkedin", accountId: "linkedin_primary", profileId: "gpm-profile",
+   provider: "gpm", providerProfileId: "gpm-profile", identityReference: "https://www.linkedin.com/in/owner/",
+   url: "https://www.linkedin.com/feed/"
+ };
+ const gpmContent = "GPM verified publication";
+ const gpmHash = createHash("sha256").update(gpmContent).digest("hex");
+ const evidence = {
+   state: "VERIFIED", verifiedAt: at, accountMatched: true, targetMatched: true, contentHashMatched: true,
+   accountId: "linkedin_primary", profileId: "gpm-profile", targetId: "gpm-target", contentHash: gpmHash,
+   provider: "gpm", providerProfileId: "gpm-profile", identityReference: "https://www.linkedin.com/in/owner",
+   targetUrl: "https://www.linkedin.com/feed/", publicationUrl: "https://www.linkedin.com/feed/update/urn:li:activity:1"
+ };
+ const base = {
+   campaigns: [{ id: "gpm-campaign" }], targets: [gpmTarget], executionAccounts: [{
+     id: "linkedin:linkedin_primary", platform: "linkedin", accountId: "linkedin_primary", profileId: "gpm-profile",
+     provider: "gpm", providerProfileId: "gpm-profile", identityReference: "https://www.linkedin.com/in/owner"
+   }],
+   posts: [{ id: "gpm-post", campaignId: "gpm-campaign", targetId: "gpm-target", content: gpmContent,
+     status: "published", publicationUrl: evidence.publicationUrl }], executionReceipts: [{ id: "gpm-receipt", postId: "gpm-post",
+     receipt: { submitState: "CONFIRMED", publicationUrl: evidence.publicationUrl, provider: "gpm", providerProfileId: "gpm-profile",
+       identityReference: evidence.identityReference, targetUrl: evidence.targetUrl, publicationEvidence: evidence } }],
+   submissionUncertainties: [], executionRequests: [], publicationAttempts: [], metricSnapshots: [], interactions: [], replies: [], conversions: [], keywordSnapshots: []
+ };
+ assert.equal(deriveOutcomeSummary(base, "gpm-campaign").postAttributions[0].status, "VERIFIED");
+ const wrongProvider = structuredClone(base);
+ wrongProvider.executionReceipts[0].receipt.provider = "orca";
+ wrongProvider.executionReceipts[0].receipt.publicationEvidence.provider = "orca";
+ assert.equal(deriveOutcomeSummary(wrongProvider, "gpm-campaign").postAttributions[0].status, "PARTIAL");
+});
+
 test("attribution output is bounded, deterministic, and append is idempotent", () => {
  const state = { campaigns: [{ id: "c" }], targets: [], posts: Array.from({ length: 120 }, (_, index) => ({ id: `p-${String(index).padStart(3, "0")}`, campaignId: "c", status: "queued" })), executionReceipts: [], submissionUncertainties: [], executionRequests: [], publicationAttempts: [], metricSnapshots: [], interactions: [], replies: [], conversions: [], keywordSnapshots: [] };
  const first = deriveOutcomeSummary(state, "c", { now: new Date("2026-01-01T00:00:00.000Z") });

@@ -7,7 +7,7 @@ import { approvalFingerprint, assertReplyCanSend, assertTransition, evaluateQueu
 import { collectOfficialMetrics, integrationReadiness } from "./integrations.mjs";
 import { buildMarketingFlowGraph } from "./flow-graph.mjs";
 import { campaignAuthorizationFingerprint, campaignContentHash, campaignScopeFingerprint, evaluateCampaignAuthorization, normalizeCampaignAuthorization, publicationIdentityKey, publicationIdentityKeysForPost } from "./campaign-authorization.mjs";
-import { classifyReadinessError, configuredReadinessTtlMs, executionAccountIdentityReference, executionAccountKey, isCanonicalOrcaProfileId, isReadinessFresh, normalizeExecutionAccount, normalizeReadinessResult, readinessBinding, MAX_READINESS_ATTEMPTS } from "./readiness.mjs";
+import { classifyReadinessError, configuredReadinessTtlMs, executionAccountIdentityReference, executionAccountKey, isCanonicalOrcaProfileId, isReadinessFresh, normalizeExecutionAccount, normalizeReadinessResult, readinessBinding, readinessContextForTarget, MAX_READINESS_ATTEMPTS } from "./readiness.mjs";
 import { contentSha256, createExecutionRequestV1, isPreSubmitMediaIntegrityProven, PUBLICATION_CANDIDATE_MAX_AGE_MS, validateExecutionReceiptV1, validateSubmitAcceptanceEvidence } from "./execution-contracts.mjs";
 import { assertWindowExecutionBinding, normalizeOneTimeExecutionWindow, oneTimeExecutionWindowFingerprint, oneTimeExecutionWindowInBounds, oneTimeExecutionWindowStatus } from "./one-time-execution-window.mjs";
 import { assertLiveGrantMatchesExecution, createLiveExecutionGrantV1, liveGrantEffectiveStatus } from "./live-execution-grant.mjs";
@@ -33,6 +33,11 @@ import { projectChannelCapabilities } from "./channel-capability-projection.mjs"
 import { projectProductIntelligence } from "./product-intelligence-projection.mjs";
 import { appRoot } from "./paths.mjs";
 import { canonicalAudienceSerialization, deriveBootstrapAuthorizationId, deriveBootstrapIdentity, deriveBootstrapSchedule, normalizeBootstrapAudience, normalizeBootstrapProductKeys } from "./campaign-bootstrap.mjs";
+import { projectBrowserRuntime } from "./runtime-projection.mjs";
+import { projectGpmAccountCatalog } from "./gpm-account-catalog-projection.mjs";
+import { projectSessionReadiness } from "./session-readiness-projection.mjs";
+import { projectGpmSessionCapability } from "./gpm-session-capability-projection.mjs";
+import { accountExecutionBinding, accountTargetBindingMatches, bindingMatches, canonicalIdentityUrl, canonicalProvider, canonicalTargetUrl, destinationBindingMatches, executionProfileKey, targetExecutionBinding } from "./execution-binding.mjs";
 import { applyMemoryConsolidation, createBrowserExecutionIntent, createBrowserSnapshot, executeBrowserIntent, normalizeBrowserSnapshot, projectOiBrowserIntegration, recordMemoryObservation, retrieveBoundedMemory, retractMemoryEvidence, routeAgentTask, sanitizeBrowserExecutionResult } from "./oi-browser-integration.mjs";
 
 export async function pollConfiguredDiscoveries(service, { actor = "scheduled-discovery-observer", shuttingDown = false } = {}) {
@@ -1239,13 +1244,20 @@ export function normalizeTargetReadiness(value, fallbackStatus = "needs_review",
   const expiresAt = input.expiresAt && Number.isFinite(Date.parse(input.expiresAt))
     ? new Date(input.expiresAt).toISOString()
     : checkedAt ? new Date(Date.parse(checkedAt) + ttlMs).toISOString() : null;
-  const binding = input.binding || (bindingContext?.profileId && checkedAt ? readinessBinding(bindingContext) : null);
+  const providerAware = Boolean(bindingContext?.provider || bindingContext?.providerProfileId);
+  const binding = providerAware
+    ? (bindingContext?.profileId && checkedAt ? readinessBinding(bindingContext) : null)
+    : (input.binding || (bindingContext?.profileId && checkedAt ? readinessBinding(bindingContext) : null));
   return {
     state, reasonCode, summary, nextSteps, evidence, checkedAt, expiresAt, checks, capabilities,
     binding,
     platform: bindingContext?.platform || input.platform || null,
     accountId: bindingContext?.accountId || input.accountId || null,
     profileId: bindingContext?.profileId || input.profileId || null,
+    provider: bindingContext?.provider || input.provider || null,
+    providerProfileId: bindingContext?.providerProfileId || input.providerProfileId || null,
+    identityReference: bindingContext?.identityReference || input.identityReference || input.expectedIdentityUrl || null,
+    targetUrl: bindingContext?.targetUrl || input.targetUrl || input.url || null,
     targetId: bindingContext?.targetId || input.targetId || null,
     outcome: String(input.outcome || (state === "ready" ? "READY" : state === "blocked" ? "BLOCKED" : "UNKNOWN")).toUpperCase(),
     retryable: input.retryable === true,
@@ -1336,6 +1348,59 @@ function accountProfileFingerprint(profileId) {
   return createHash("sha256").update(String(profileId || "")).digest("hex");
 }
 
+function providerAwareBinding(target, account = null) {
+  const source = account || target || {};
+  return {
+    platform: target?.channel || target?.platform || source.platform,
+    accountId: target?.accountId || source.accountId,
+    provider: target?.provider || source.provider,
+    providerProfileId: target?.providerProfileId || source.providerProfileId || target?.profileId || source.profileId,
+    profileId: target?.profileId || source.profileId,
+    identityReference: target?.identityReference || target?.expectedIdentityUrl || source.identityReference || source.expectedIdentityUrl,
+    expectedIdentityUrl: target?.identityReference || target?.expectedIdentityUrl || source.identityReference || source.expectedIdentityUrl,
+    targetId: target?.id || target?.targetId,
+    targetUrl: target?.url || target?.targetUrl
+  };
+}
+
+function exactProviderBinding(target, account, { requireTarget = true } = {}) {
+  return accountTargetBindingMatches(target, account, { requireTarget });
+}
+
+function exactWindowExecutionBinding(window, target, account) {
+  if (!window || !target || !account) return false;
+  const providerAware = Boolean(account.provider || account.providerProfileId);
+  if (!providerAware) return true;
+  return bindingMatches({
+    platform: window.platform || target.channel,
+    accountId: window.accountId,
+    provider: window.provider,
+    providerProfileId: window.providerProfileId,
+    identityReference: window.identityReference,
+    targetId: window.targetId,
+    targetUrl: window.targetUrl
+  }, targetExecutionBinding(target, account), { requireIdentity: true, requireTarget: true });
+}
+
+function exactRequestExecutionBinding(request, target, account) {
+  if (!request || !target || !account) return false;
+  const providerAware = Boolean(request.provider || request.providerProfileId || account.provider || account.providerProfileId);
+  if (providerAware && (!String(request.provider || "").trim() || !String(request.providerProfileId || "").trim())) return false;
+  const requestBinding = {
+    platform: request.platform,
+    accountId: request.accountId,
+    profileId: request.profileId,
+    identityReference: request.identityReference || request.target?.identityReference,
+    targetId: request.target?.targetId,
+    targetUrl: request.target?.url
+  };
+  if (providerAware) {
+    requestBinding.provider = request.provider;
+    requestBinding.providerProfileId = request.providerProfileId;
+  }
+  return bindingMatches(requestBinding, targetExecutionBinding(target, account), { requireIdentity: true, requireTarget: true });
+}
+
 const ACCOUNT_RUNTIME_READINESS_STATES = new Set(["READY", "BLOCKED", "HUMAN_REQUIRED", "UNKNOWN"]);
 const ACCOUNT_RUNTIME_RECOVERY_STATES = new Set(["RECOVERABLE", "HUMAN_REQUIRED", "UNKNOWN", "NONE"]);
 const PRODUCT_FACTORY_SANDBOX_CHECKS = Object.freeze([
@@ -1390,8 +1455,11 @@ function projectExecutionAccountRuntime(state, { now = new Date() } = {}) {
   const targets = Array.isArray(state.targets) ? state.targets : [];
   const accounts = Array.isArray(state.executionAccounts) ? state.executionAccounts : [];
   return accounts.map((account) => {
+    const boundTargets = targets.filter((target) => exactProviderBinding(target, account, {
+      requireTarget: Boolean(target?.provider || target?.providerProfileId || account?.provider || account?.providerProfileId)
+    }));
     const boundReadiness = targets
-      .filter((target) => target && target.channel === account.platform && target.accountId === account.accountId && target.profileId === account.profileId)
+      .filter((target) => boundTargets.includes(target))
       .map((target) => target.readiness)
       .filter((readiness) => readiness && typeof readiness === "object")
       .sort((left, right) => String(right.checkedAt || "").localeCompare(String(left.checkedAt || "")));
@@ -1402,9 +1470,8 @@ function projectExecutionAccountRuntime(state, { now = new Date() } = {}) {
     const readinessExpiresAt = Date.parse(latest?.expiresAt || "");
     const readinessExpiryInvalid = Boolean(latest) && !Number.isFinite(readinessExpiresAt);
     const readinessExpired = Number.isFinite(readinessExpiresAt) && readinessExpiresAt <= observedAt.getTime();
-    const boundTargetCount = targets.filter((target) => target && target.channel === account.platform && target.accountId === account.accountId && target.profileId === account.profileId).length;
-    const eligibleTargetIds = targets
-      .filter((target) => target && target.channel === account.platform && target.accountId === account.accountId && target.profileId === account.profileId)
+    const boundTargetCount = boundTargets.length;
+    const eligibleTargetIds = boundTargets
       .filter((target) => String(target.readiness?.state || "").toUpperCase() === "READY" && Number.isFinite(Date.parse(target.readiness?.expiresAt || "")) && Date.parse(target.readiness.expiresAt) > observedAt.getTime())
       .map((target) => String(target.id))
       .sort();
@@ -1426,6 +1493,7 @@ function projectExecutionAccountRuntime(state, { now = new Date() } = {}) {
       id: String(account.id || `${account.platform}:${account.accountId}`),
       platform: String(account.platform || ""),
       accountId: String(account.accountId || ""),
+      provider: canonicalProvider(account.provider, { allowLegacy: true }),
       profileFingerprint: accountProfileFingerprint(account.profileId),
       sessionMode: "SESSION_REUSE",
       authMode: "MANUAL_AUTH",
@@ -1450,12 +1518,14 @@ function projectExecutionAccountRuntime(state, { now = new Date() } = {}) {
 
 const AUTHORIZED_ACCOUNT_CANDIDATE_MAX = 128;
 
-function authorizedAccountCandidateKey({ campaignId, authorizationId, platform, accountId, profileId, targetId }) {
+function authorizedAccountCandidateKey({ campaignId, authorizationId, platform, accountId, provider, providerProfileId, profileId, targetId }) {
   return createHash("sha256").update(JSON.stringify({
     campaignId: String(campaignId || ""),
     authorizationId: String(authorizationId || ""),
     platform: String(platform || ""),
     accountId: String(accountId || ""),
+    provider: String(provider || ""),
+    providerProfileId: String(providerProfileId || ""),
     profileId: String(profileId || ""),
     targetId: String(targetId || "")
   })).digest("hex").slice(0, 24);
@@ -1470,7 +1540,11 @@ function candidateReadinessReasons(target, now, readinessTtlMs) {
     platform: target.channel,
     accountId: target.accountId,
     profileId: target.profileId,
-    targetId: target.id
+    targetId: target.id,
+    provider: target.provider,
+    providerProfileId: target.providerProfileId,
+    identityReference: target.identityReference || target.expectedIdentityUrl,
+    targetUrl: target.url
   };
   if (!expected.platform || !expected.accountId || !expected.profileId || !expected.targetId) return ["readiness:binding_incomplete"];
   if (readiness.binding !== readinessBinding(expected)) return ["readiness:binding_mismatch"];
@@ -1529,8 +1603,7 @@ export function projectAuthorizedAccountCandidates(state = {}, { campaignId = nu
       else {
         if (target.channel !== destination.platform) reasons.push("target:platform_mismatch");
         if (target.accountId !== destination.accountId) reasons.push("target:account_mismatch");
-        if (target.profileId !== destination.profileId) reasons.push("target:profile_mismatch");
-        if (target.url !== destination.targetUrl) reasons.push("target:url_mismatch");
+        if (!destinationBindingMatches(destination, target, account, { requireTarget: true })) reasons.push("target:binding_mismatch");
         if (target.status !== "active") reasons.push(`target:${String(target.status || "unknown").toLowerCase()}`);
         reasons.push(...candidateReadinessReasons(target, observedAt, readinessTtlMs));
       }
@@ -1538,21 +1611,25 @@ export function projectAuthorizedAccountCandidates(state = {}, { campaignId = nu
       else {
         if (account.status !== "enabled") reasons.push(`account:status_${String(account.status || "unknown").toLowerCase()}`);
         if (account.health !== "healthy") reasons.push(`account:health_${String(account.health || "unknown").toLowerCase()}`);
-        if (target && account.profileId !== target.profileId) reasons.push("account:profile_mismatch");
+        if (target && !exactProviderBinding(target, account, { requireTarget: true })) reasons.push("account:binding_mismatch");
       }
       const profileId = target?.profileId || destination?.profileId || account?.profileId || null;
+      const provider = target?.provider || destination?.provider || account?.provider || null;
+      const providerProfileId = target?.providerProfileId || destination?.providerProfileId || account?.providerProfileId || profileId;
       const platform = String(destination?.platform || target?.channel || "");
       const accountId = String(destination?.accountId || target?.accountId || account?.accountId || "");
       const targetId = String(destination?.targetId || target?.id || "");
       const candidate = {
-        candidateKey: authorizedAccountCandidateKey({ campaignId: authorization.campaignId, authorizationId: authorization.id, platform, accountId, profileId, targetId }),
+        candidateKey: authorizedAccountCandidateKey({ campaignId: authorization.campaignId, authorizationId: authorization.id, platform, accountId, provider, providerProfileId, profileId, targetId }),
         campaignId: String(authorization.campaignId || ""),
         authorizationId: String(authorization.id || ""),
         authorizationStatus: String(authorization.status || "unknown"),
         executionMode: String(authorization.executionMode || "unknown"),
         platform,
         accountId,
+        provider: provider ? canonicalProvider(provider, { allowLegacy: true }) : canonicalProvider(null, { allowLegacy: true }),
         profileFingerprint: profileId ? accountProfileFingerprint(profileId) : null,
+        providerProfileFingerprint: providerProfileId ? accountProfileFingerprint(providerProfileId) : null,
         targetId,
         targetUrl: target?.url || destination?.targetUrl || null,
         sessionMode: account ? "SESSION_REUSE" : null,
@@ -1605,7 +1682,7 @@ export function projectAuthorizedAccountPool(state = {}, options = {}) {
       const ambiguousAuthorization = eligibleAuthorizationIds.length > 1;
       const policy = !ambiguousAuthorization ? eligible.map((candidate) => candidate.accountSelectionPolicy).find(Boolean) || null : null;
       const ordered = policy?.mode === "ordered" ? policy.order : [];
-      const selected = ambiguousAuthorization ? null : ordered.length ? ordered.map((entry) => eligible.find((candidate) => candidate.platform === entry.platform && candidate.accountId === entry.accountId && candidate.targetId === entry.targetId && candidate.profileFingerprint === accountProfileFingerprint(entry.profileId))).find(Boolean) || null : eligible.length === 1 ? eligible[0] : null;
+      const selected = ambiguousAuthorization ? null : ordered.length ? ordered.map((entry) => eligible.find((candidate) => candidate.platform === entry.platform && candidate.accountId === entry.accountId && candidate.targetId === entry.targetId && candidate.provider === canonicalProvider(entry.provider, { allowLegacy: true }) && candidate.providerProfileFingerprint === accountProfileFingerprint(entry.providerProfileId || entry.profileId))).find(Boolean) || null : eligible.length === 1 ? eligible[0] : null;
       const selectionStatus = ambiguousAuthorization
         ? "AMBIGUOUS_AUTHORIZATION"
         : selected && ordered.length ? "POLICY_SELECTED"
@@ -1628,7 +1705,9 @@ export function projectAuthorizedAccountPool(state = {}, options = {}) {
         candidateKeys: rows.map((candidate) => candidate.candidateKey).sort(),
         eligibleAccounts: eligible.map((candidate) => ({
           accountId: candidate.accountId,
+          provider: candidate.provider,
           profileFingerprint: candidate.profileFingerprint,
+          providerProfileFingerprint: candidate.providerProfileFingerprint,
           sessionMode: candidate.sessionMode,
           authMode: candidate.authMode
         })).sort((left, right) => `${left.accountId}\u0000${left.profileFingerprint || ""}`.localeCompare(`${right.accountId}\u0000${right.profileFingerprint || ""}`))
@@ -1856,6 +1935,13 @@ export class SeedingService {
     this.productFactorySandboxProbeTtlMs = Math.min(60_000, Math.max(1_000, Number(options.productFactorySandboxProbeTtlMs) || 15_000));
     this.productFactorySandboxProbeCache = null;
     this.productFactoryUseSeatbelt = options.productFactoryUseSeatbelt === true;
+    this.browserRuntimeRouter = options.browserRuntimeRouter || null;
+    // Optional read-only observation supplied by an adapter; never queried or persisted here.
+    this.gpmAccountCatalogObservation = options.gpmAccountCatalogObservation ?? null;
+    this.sessionReadinessObservation = options.sessionReadinessObservation ?? null;
+    // Optional read-only composed-session capability observation. This is
+    // resolved on dashboard reads only; it never acquires or starts a session.
+    this.gpmSessionCapabilityObservation = options.gpmSessionCapabilityObservation ?? null;
     const explicitProductRoots = options.productRepoRoots !== undefined || Boolean(String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").trim());
     this.productRepoRoots = (options.productRepoRoots || String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").split(path.delimiter))
       .map((value) => String(value || "").trim())
@@ -2348,16 +2434,17 @@ export class SeedingService {
       request?.target?.targetId === post.targetId && request?.target?.targetId === target.id &&
       targetUrlMatches && target.status === 'active' &&
       request?.accountId === target.accountId && request?.profileId === target.profileId &&
+      exactRequestExecutionBinding(request, target, account) &&
       request?.authorization?.authorizationId === authorization?.id &&
       request?.authorization?.binding === authorization?.binding &&
       authorization?.status === 'active' && authorization?.allowLiveExecution === true;
-    if (!exactBinding || !account || account.status !== 'enabled' || account.health !== 'healthy' || account.accountId !== request.accountId || account.profileId !== request.profileId || target.profileId !== request.profileId) {
+    if (!exactBinding || !account || account.status !== 'enabled' || account.health !== 'healthy' || account.accountId !== request.accountId || !exactProviderBinding(target, account, { requireTarget: true }) || target.profileId !== request.profileId) {
       throw Object.assign(new Error('Execution account/profile health changed before browser input'), { code: 'IDENTITY_MISMATCH' });
     }
-    if (!isReadinessFresh(target.readiness, { platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id }, new Date(), this.readinessTtlMs)) {
+    if (!isReadinessFresh(target.readiness, readinessContextForTarget(target, account), new Date(), this.readinessTtlMs)) {
       throw Object.assign(new Error('Execution readiness expired before browser input'), { code: 'READINESS_NOT_READY' });
     }
-    return { executionId, controlEpoch: snapshot.state.control?.killSwitch?.epoch ?? 0, accountId: account.accountId, profileId: account.profileId };
+    return { executionId, controlEpoch: snapshot.state.control?.killSwitch?.epoch ?? 0, accountId: account.accountId, profileId: account.profileId, provider: canonicalProvider(account.provider, { allowLegacy: true }), providerProfileId: account.providerProfileId || account.profileId };
   }
 
   #standingAutonomousAuthorization(authorization) {
@@ -2379,7 +2466,7 @@ export class SeedingService {
       post.campaignAuthorizationBinding === authorization.binding &&
       target.status === "active" &&
       account?.status === "enabled" &&
-      account.profileId === target.profileId &&
+      exactProviderBinding(target, account, { requireTarget: true }) &&
       (expected.campaignId === undefined || post.campaignId === expected.campaignId) &&
       (expected.authorizationId === undefined || authorization.id === expected.authorizationId) &&
       (expected.authorizationBinding === undefined || authorization.binding === expected.authorizationBinding) &&
@@ -2420,7 +2507,7 @@ export class SeedingService {
     if (["publishing", "processing", UNKNOWN_POST_STATUS, "published", "removed", "rejected"].includes(post.status)) return null;
     const target = requireItem(snapshot.targets, post.targetId, "Target");
     const account = (snapshot.executionAccounts || []).find((item) => item.id === executionAccountKey(target.channel, target.accountId));
-    if (!account || account.status !== "enabled" || account.profileId !== target.profileId) throw new Error("Standing delegation requires an exact enabled account/profile binding");
+    if (!account || account.status !== "enabled" || !exactProviderBinding(target, account, { requireTarget: true })) throw new Error("Standing delegation requires an exact enabled account/profile binding");
     const now = new Date();
     const existing = (snapshot.oneTimeExecutionWindows || []).filter((item) => item.jobId === post.id && item.campaignAuthorizationId === authorization.id && ["ACTIVE", "RESERVED"].includes(oneTimeExecutionWindowStatus(item, now)));
     if (existing.length > 1) throw new Error("Multiple active standing execution windows match this job");
@@ -2429,6 +2516,7 @@ export class SeedingService {
       if (current.campaignId !== post.campaignId || current.campaignAuthorizationId !== authorization.id ||
           current.jobId !== post.id || current.authorizationFingerprint !== authorization.binding ||
           current.binding !== oneTimeExecutionWindowFingerprint(current) || current.maxExecutions !== 1 ||
+          !exactWindowExecutionBinding(current, target, account) ||
           !oneTimeExecutionWindowInBounds(current, now)) {
         throw new Error("Standing execution window binding is stale");
       }
@@ -2446,7 +2534,10 @@ export class SeedingService {
       validUntil: new Date(untilMs).toISOString(),
       timezone: authorization.schedule.timezone,
       reason: `standing campaign authorization ${authorization.id}`
-    }, { post, authorization, authorizationFingerprint: authorization.binding, now, createdBy: actor });
+    }, { post, authorization, authorizationFingerprint: authorization.binding,
+      binding: (account.provider || account.providerProfileId || target.provider || target.providerProfileId)
+        ? targetExecutionBinding(target, account) : null,
+      now, createdBy: actor });
     const result = await this.store.mutate(actor, "standing_execution_window_derived", (state) => {
       const currentBinding = this.#assertStandingBinding(state, postId, {
         campaignId: post.campaignId,
@@ -2474,6 +2565,7 @@ export class SeedingService {
       if (active) {
         if (active.campaignId !== current.campaignId || active.campaignAuthorizationId !== currentBinding.authorization.id ||
             active.authorizationFingerprint !== currentBinding.authorization.binding || active.binding !== oneTimeExecutionWindowFingerprint(active) ||
+            !exactWindowExecutionBinding(active, currentBinding.target, currentBinding.account) ||
             active.maxExecutions !== 1) {
           throw new Error("Standing execution window binding is stale");
         }
@@ -2481,7 +2573,8 @@ export class SeedingService {
       }
       if (window.campaignId !== current.campaignId || window.campaignAuthorizationId !== currentBinding.authorization.id ||
           window.jobId !== current.id || window.authorizationFingerprint !== currentBinding.authorization.binding ||
-          window.binding !== oneTimeExecutionWindowFingerprint(window) || window.maxExecutions !== 1) {
+          window.binding !== oneTimeExecutionWindowFingerprint(window) || window.maxExecutions !== 1 ||
+          !exactWindowExecutionBinding(window, currentBinding.target, currentBinding.account)) {
         throw new Error("Standing execution window binding is stale");
       }
       state.oneTimeExecutionWindows ||= [];
@@ -2512,6 +2605,7 @@ export class SeedingService {
     if (window.campaignId !== post.campaignId || window.campaignAuthorizationId !== authorization.id ||
         window.jobId !== post.id || window.authorizationFingerprint !== authorization.binding ||
         window.binding !== oneTimeExecutionWindowFingerprint(window) || window.maxExecutions !== 1 ||
+        !exactWindowExecutionBinding(window, target, account) ||
         !oneTimeExecutionWindowInBounds(window, new Date())) {
       throw new Error("Standing execution grant window binding is stale");
     }
@@ -2524,15 +2618,16 @@ export class SeedingService {
       const requestWindowId = request.oneTimeWindow?.windowId;
       const requestWindow = requestWindowId ? snapshot.oneTimeExecutionWindows?.find((candidate) => candidate.windowId === requestWindowId) : null;
       if (request.executionId !== item.executionId || requestWindowId !== window.windowId ||
-          !isExecutionRequestReadinessFresh(requestReadiness, { platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id }, now, this.readinessTtlMs) ||
+          !exactRequestExecutionBinding(request, target, account) ||
+          !isExecutionRequestReadinessFresh(requestReadiness, readinessContextForTarget(target, account), now, this.readinessTtlMs) ||
           !requestWindow || requestWindow.status !== "RESERVED" || requestWindow.reservedExecutionId !== item.executionId ||
           requestWindow.binding !== oneTimeExecutionWindowFingerprint(requestWindow)) return false;
       return true;
     });
     if (pending.length > 1) throw new Error("Multiple live executions are pending for standing delegation");
-    if (!account || account.status !== "enabled" || account.profileId !== target.profileId) throw new Error("Standing execution grant requires an exact enabled account/profile binding");
+    if (!account || account.status !== "enabled" || !exactProviderBinding(target, account, { requireTarget: true })) throw new Error("Standing execution grant requires an exact enabled account/profile binding");
     if (account.health !== "healthy") throw new Error("Standing execution grant requires a healthy account");
-    if (!isReadinessFresh(target.readiness, { platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id }, now, this.readinessTtlMs)) throw new Error("Standing execution grant requires fresh readiness");
+    if (!isReadinessFresh(target.readiness, readinessContextForTarget(target, account), now, this.readinessTtlMs)) throw new Error("Standing execution grant requires fresh readiness");
     const validFrom = new Date(Math.max(now.getTime() - 5_000, Date.parse(window.validFrom))).toISOString();
     const validUntil = new Date(Math.min(Date.parse(window.validUntil), Date.parse(authorization.validUntil))).toISOString();
     const grant = createLiveExecutionGrantV1({
@@ -2564,12 +2659,7 @@ export class SeedingService {
       });
       const currentPost = currentBinding.post;
       const currentAuthorization = currentBinding.authorization;
-      if (currentBinding.account.health !== "healthy" || !isReadinessFresh(currentBinding.target.readiness, {
-        platform: currentBinding.target.channel,
-        accountId: currentBinding.target.accountId,
-        profileId: currentBinding.target.profileId,
-        targetId: currentBinding.target.id
-      }, new Date(), this.readinessTtlMs)) {
+      if (currentBinding.account.health !== "healthy" || !isReadinessFresh(currentBinding.target.readiness, readinessContextForTarget(currentBinding.target, currentBinding.account), new Date(), this.readinessTtlMs)) {
         throw new Error("Standing execution grant requires a fresh healthy account/profile binding");
       }
       if (unresolvedSubmission(state, currentPost)) throw new Error("SUBMISSION_UNCERTAIN: standing delegation cannot cross an unresolved submission");
@@ -2580,6 +2670,7 @@ export class SeedingService {
         currentRequest.request?.executionId === currentRequest.executionId && currentRequest.request?.jobId === currentPost.id &&
         currentRequest.request?.campaignId === currentPost.campaignId && currentRequest.request?.platform === currentBinding.target.channel &&
         currentRequest.request?.accountId === currentBinding.target.accountId && currentRequest.request?.profileId === currentBinding.target.profileId &&
+        exactRequestExecutionBinding(currentRequest.request, currentBinding.target, currentBinding.account) &&
         currentRequest.request?.target?.targetId === currentBinding.target.id && currentRequest.request?.target?.url === currentBinding.target.url &&
         currentRequest.request?.authorization?.authorizationId === currentAuthorization.id && currentRequest.request?.authorization?.binding === currentAuthorization.binding &&
         currentRequest.request?.content?.contentId === currentPost.contentId && currentRequest.request?.content?.sha256 === contentSha256(currentPost.content) &&
@@ -2714,8 +2805,13 @@ export class SeedingService {
       if ((state.oneTimeExecutionWindows || []).some((item) => item.jobId === post.id && ["ACTIVE", "RESERVED"].includes(oneTimeExecutionWindowStatus(item, now)))) {
         throw new Error("An active one-time execution window already exists for this job");
       }
+      const target = requireItem(state.targets, post.targetId, "Target");
+      const account = (state.executionAccounts || []).find((item) => item.id === executionAccountKey(target.channel, target.accountId));
       const window = normalizeOneTimeExecutionWindow(input, {
-        post, authorization, authorizationFingerprint: campaignAuthorizationFingerprint(authorization), now, createdBy: actor
+        post, authorization, authorizationFingerprint: campaignAuthorizationFingerprint(authorization),
+        binding: (account?.provider || account?.providerProfileId || target.provider || target.providerProfileId)
+          ? targetExecutionBinding(target, account) : null,
+        now, createdBy: actor
       });
       state.oneTimeExecutionWindows ||= [];
       if (state.oneTimeExecutionWindows.some((item) => item.windowId === window.windowId)) throw new Error(`One-time execution window already exists: ${window.windowId}`);
@@ -2996,16 +3092,22 @@ export class SeedingService {
       });
       schedule = structuredClone(renewed.result || schedule);
     }
+    const requestedProvider = String(input.provider || "").trim().toLowerCase() || null;
+    const requestedProviderProfileId = String(input.providerProfileId || "").trim() || null;
+    const requestedIdentityReference = canonicalIdentityUrl(input.identityReference || input.expectedIdentityUrl) || null;
     const configuredAccounts = (snapshot.executionAccounts || []).filter((account) => account?.platform === platform && account.status === "enabled")
       .filter((account) => !requestedAccountId || account.accountId === requestedAccountId)
-      .filter((account) => !requestedProfileId || account.profileId === requestedProfileId);
+      .filter((account) => !requestedProfileId || account.profileId === requestedProfileId)
+      .filter((account) => !requestedProvider || canonicalProvider(account.provider, { allowLegacy: true }) === requestedProvider)
+      .filter((account) => !requestedProviderProfileId || (account.providerProfileId || account.profileId) === requestedProviderProfileId)
+      .filter((account) => !requestedIdentityReference || canonicalIdentityUrl(account.identityReference || account.expectedIdentityUrl) === requestedIdentityReference);
     const accounts = configuredAccounts;
     const matchingTargets = (snapshot.targets || [])
       .filter((target) => target?.channel === platform && target.status === "active")
       .filter((target) => !requestedTargetId || target.id === requestedTargetId);
     const candidates = matchingTargets
       .map((target) => ({ target, account: accounts.find((item) => item.id === executionAccountKey(platform, target.accountId)) }))
-      .filter(({ target, account }) => Boolean(account && target.profileId && account.profileId === target.profileId))
+      .filter(({ target, account }) => Boolean(account && exactProviderBinding(target, account, { requireTarget: true })))
       .sort((left, right) => String(left.target.id).localeCompare(String(right.target.id)));
 
     if (candidates.length !== 1) {
@@ -3035,7 +3137,7 @@ export class SeedingService {
       };
     }
     const { target, account } = candidates[0];
-    const readinessContext = { platform, accountId: account.accountId, profileId: account.profileId, targetId: target.id };
+    const readinessContext = readinessContextForTarget(target, account);
     const readinessFresh = isReadinessFresh(target.readiness, readinessContext, new Date(), this.readinessTtlMs);
     if (account.health !== "healthy") {
       return {
@@ -3063,7 +3165,10 @@ export class SeedingService {
     if (existingCampaign?.autonomousBootstrap) {
       const bound = existingCampaign.autonomousBootstrap;
       if (bound.targetId !== target.id || bound.targetUrl !== target.url || bound.accountId !== account.accountId ||
-        bound.profileId !== account.profileId || bound.visibility !== visibility ||
+        bound.profileId !== account.profileId || bound.provider !== canonicalProvider(account.provider, { allowLegacy: true }) ||
+        bound.providerProfileId !== (account.providerProfileId || account.profileId) ||
+        canonicalIdentityUrl(bound.identityReference) !== canonicalIdentityUrl(account.identityReference || account.expectedIdentityUrl) ||
+        bound.visibility !== visibility ||
         bound.audienceSerialization !== audienceSerialization) {
         throw new Error("Bootstrap campaign authority binding changed; create a new high-level campaign scope");
       }
@@ -3097,6 +3202,9 @@ export class SeedingService {
             targetUrl: target.url,
             accountId: account.accountId,
             profileId: account.profileId,
+            provider: canonicalProvider(account.provider, { allowLegacy: true }),
+            providerProfileId: account.providerProfileId || account.profileId,
+            identityReference: canonicalIdentityUrl(account.identityReference || account.expectedIdentityUrl),
             visibility,
             schedule
           }
@@ -3120,7 +3228,24 @@ export class SeedingService {
     campaign = requireItem(state.campaigns, identity.campaignId, "Campaign");
     let story = (state.stories || []).filter((item) => item.campaignId === identity.campaignId)
       .sort((left, right) => String(right.updatedAt || right.createdAt || "").localeCompare(String(left.updatedAt || left.createdAt || "")))[0] || null;
-    if (!story) {
+    // Keep repeated high-level briefs idempotent, but do not silently reuse a
+    // prior story when the caller intentionally changes a bounded content
+    // policy field. A new CTA/disclosure/language is a new content identity;
+    // deriving it here lets the existing authorization and UNKNOWN fences
+    // create a separately authorized candidate without accepting low-level
+    // hashes or payload bytes from the caller.
+    const requestedStoryPolicy = {
+      callToAction: input.callToAction === undefined ? null : String(input.callToAction).replace(/\s+/g, " ").trim(),
+      disclosure: input.disclosure === undefined ? null : String(input.disclosure).replace(/\s+/g, " ").trim(),
+      language: input.language === undefined ? null : String(input.language).replace(/\s+/g, " ").trim(),
+      distributionAudience: audienceSerialization
+    };
+    const storyMatchesRequestedPolicy = story &&
+      (requestedStoryPolicy.callToAction === null || story.callToAction === requestedStoryPolicy.callToAction) &&
+      (requestedStoryPolicy.disclosure === null || story.disclosure === requestedStoryPolicy.disclosure) &&
+      (requestedStoryPolicy.language === null || story.language === requestedStoryPolicy.language) &&
+      story.audience === requestedStoryPolicy.distributionAudience;
+    if (!story || !storyMatchesRequestedPolicy) {
       story = await this.deriveProductIntelligenceStory(identity.campaignId, {
         callToAction: input.callToAction || `Explore ${identity.productId} and its repository evidence.`,
         disclosure: input.disclosure || "Evidence-grounded draft generated from the registered product repository.",
@@ -3215,7 +3340,7 @@ export class SeedingService {
           item.validFrom === schedule.validFrom && item.validUntil === schedule.validUntil &&
           item.contentBoundary?.contentHashes?.length === 1 && item.contentBoundary.contentHashes[0] === contentHash &&
           item.destinations?.length === 1 && item.destinations[0].targetId === target.id &&
-          item.destinations[0].accountId === account.accountId && item.destinations[0].profileId === account.profileId
+          destinationBindingMatches(item.destinations[0], target, account, { requireTarget: true })
         );
         if (activeReplacement) {
           authorizationId = activeReplacement.id;
@@ -3236,7 +3361,7 @@ export class SeedingService {
         authorization.campaignBinding !== campaignScopeFingerprint(campaign) ||
         authorization.contentBoundary?.contentHashes?.length !== 1 || authorization.contentBoundary.contentHashes[0] !== contentHash ||
         authorization.destinations?.length !== 1 || authorization.destinations[0].targetId !== target.id ||
-        authorization.destinations[0].accountId !== account.accountId || authorization.destinations[0].profileId !== account.profileId)) {
+        !destinationBindingMatches(authorization.destinations[0], target, account, { requireTarget: true }))) {
         throw new Error("Existing bootstrap authorization conflicts with the derived exact scope");
       }
     }
@@ -3245,7 +3370,13 @@ export class SeedingService {
         id: authorizationId,
         validFrom: schedule.validFrom,
         validUntil: schedule.validUntil,
-        destinations: [{ platform, accountId: account.accountId, profileId: account.profileId, targetId: target.id }],
+        destinations: [{
+          platform, accountId: account.accountId, profileId: account.profileId,
+          provider: canonicalProvider(account.provider, { allowLegacy: true }),
+          providerProfileId: account.providerProfileId || account.profileId,
+          identityReference: canonicalIdentityUrl(account.identityReference || account.expectedIdentityUrl),
+          targetId: target.id, targetUrl: target.url
+        }],
         approvedAssets: [],
         contentBoundary: { mode: "approved_copy_set", contentHashes: [contentHash] },
         audienceRules: { allowedAudiences: [audienceSerialization] },
@@ -3290,12 +3421,7 @@ export class SeedingService {
     state = await this.store.read();
     let currentPost = state.posts.find((item) => item.id === post.id) || post;
     const currentTarget = state.targets.find((item) => item.id === target.id) || target;
-    const currentBinding = {
-      platform,
-      accountId: account.accountId,
-      profileId: account.profileId,
-      targetId: currentTarget.id
-    };
+    const currentBinding = readinessContextForTarget(currentTarget, account);
     let currentReadinessFresh = isReadinessFresh(currentTarget.readiness, currentBinding, new Date(), this.readinessTtlMs);
     // An unresolved historical submission is an immutable safety fence. Keep
     // bootstrap read-only for this content identity and report the precise
@@ -3315,6 +3441,7 @@ export class SeedingService {
             request.campaignId !== currentPost.campaignId || request.platform !== platform ||
             request.accountId !== account.accountId || request.profileId !== account.profileId ||
             requestTarget.targetId !== currentTarget.id || requestTarget.url !== currentTarget.url ||
+            !exactRequestExecutionBinding(request, currentTarget, account) ||
             request.authorization?.binding !== authorization.binding ||
             requestContent.sha256 !== contentSha256(currentPost.content) ||
             request.audience !== currentPost.audience ||
@@ -3686,13 +3813,21 @@ export class SeedingService {
         if (target.channel !== destination.platform || target.accountId !== destination.accountId) {
           throw new Error(`Authorized destination identity does not match target ${destination.targetId}`);
         }
-        const account = (state.executionAccounts || []).find((item) => item.id === executionAccountKey(destination.platform, destination.accountId));
+      const account = (state.executionAccounts || []).find((item) => item.id === executionAccountKey(destination.platform, destination.accountId));
         if (!account || account.status !== "enabled") throw new Error(`Execution account must be registered and enabled: ${destination.accountId}`);
         const registeredProfile = String(target.profileId || "").trim() || null;
-        if (!registeredProfile || registeredProfile !== account.profileId || destination.profileId !== account.profileId) {
+        const destinationProvider = canonicalProvider(destination.provider, { allowLegacy: true });
+        const destinationProfile = String(destination.providerProfileId || destination.profileId || "").trim();
+        const identityMatches = !destination.identityReference || destination.identityReference === canonicalIdentityUrl(account.identityReference || account.expectedIdentityUrl);
+        if (!registeredProfile || registeredProfile !== account.profileId || destinationProfile !== (account.providerProfileId || account.profileId) || destinationProvider !== canonicalProvider(account.provider, { allowLegacy: true }) || !identityMatches || !exactProviderBinding(target, account, { requireTarget: true })) {
           throw new Error(`Authorized profile identity does not match target ${destination.targetId}`);
         }
         destination.targetUrl = target.url;
+        destination.provider = canonicalProvider(account.provider, { allowLegacy: true });
+        if (account.provider || account.providerProfileId) destination.providerProfileId = account.providerProfileId || account.profileId;
+        else delete destination.providerProfileId;
+        destination.profileId = account.profileId;
+        destination.identityReference = canonicalIdentityUrl(account.identityReference || account.expectedIdentityUrl);
       }
       for (const approvedAsset of authorization.approvedAssets) {
         const artifact = requireItem(state.artifacts || [], approvedAsset.artifactId, "Artifact");
@@ -3778,9 +3913,24 @@ export class SeedingService {
     return result.result;
   }
 
-  async updateCampaignAuthorizationProfileBinding(campaignId, authorizationId, targetId, profileId, actor = "operator") {
-    const nextProfileId = String(profileId || "").trim();
+  async updateCampaignAuthorizationProfileBinding(campaignId, authorizationId, targetId, profileIdOrBinding, actor = "operator") {
+    // Legacy callers pass only profileId. Provider-aware lanes must pass the
+    // complete binding so a profile correction cannot silently change the
+    // provider or verified social identity underneath an active authority.
+    const requestedBinding = profileIdOrBinding && typeof profileIdOrBinding === "object"
+      ? profileIdOrBinding
+      : { profileId: profileIdOrBinding };
+    const nextProfileId = String(requestedBinding.profileId || requestedBinding.providerProfileId || "").trim();
     if (!nextProfileId) throw new Error("Authorization profileId is required");
+    const requestedProvider = requestedBinding.provider === undefined
+      ? null
+      : canonicalProvider(requestedBinding.provider, { allowLegacy: false });
+    const requestedProviderProfileId = requestedBinding.providerProfileId === undefined
+      ? null
+      : String(requestedBinding.providerProfileId || "").trim() || null;
+    const requestedIdentityReference = requestedBinding.identityReference === undefined && requestedBinding.expectedIdentityUrl === undefined
+      ? null
+      : canonicalIdentityUrl(requestedBinding.identityReference || requestedBinding.expectedIdentityUrl);
     const result = await this.store.mutate(actor, "campaign_authorization_profile_binding_updated", (state) => {
       const authorization = requireItem(state.campaignAuthorizations || [], authorizationId, "Campaign authorization");
       if (authorization.campaignId !== campaignId || authorization.status !== "active") {
@@ -3791,12 +3941,34 @@ export class SeedingService {
       const destination = destinations[0];
       const target = requireItem(state.targets, targetId, "Target");
       const account = (state.executionAccounts || []).find((item) => item.id === executionAccountKey(destination.platform, destination.accountId));
+      const destinationProvider = canonicalProvider(destination.provider, { allowLegacy: true });
+      const accountProvider = canonicalProvider(account?.provider, { allowLegacy: true });
+      const accountProviderAware = Boolean(account?.provider || account?.providerProfileId);
+      const accountProviderProfileId = account?.providerProfileId || account?.profileId;
+      const accountIdentityReference = canonicalIdentityUrl(account?.identityReference || account?.expectedIdentityUrl);
+      if (accountProviderAware && (!requestedProvider || !requestedProviderProfileId || !requestedIdentityReference)) {
+        throw new Error("Provider-aware authorization rebinding requires provider, providerProfileId, and identityReference");
+      }
+      const providerProfileUpdateAllowed = !account?.provider && !account?.providerProfileId
+        ? destinationProvider === accountProvider
+        : destinationProvider === accountProvider;
       if (target.channel !== destination.platform || target.accountId !== destination.accountId ||
-          target.profileId !== nextProfileId || account?.status !== "enabled" || account.profileId !== nextProfileId) {
+          target.profileId !== nextProfileId || account?.status !== "enabled" || account.profileId !== nextProfileId ||
+          !exactProviderBinding(target, account, { requireTarget: true }) ||
+          destination.targetId !== target.id || destination.platform !== target.channel || destination.accountId !== target.accountId ||
+          (destination.targetUrl && destination.targetUrl !== target.url) || !providerProfileUpdateAllowed ||
+          (requestedProvider && requestedProvider !== accountProvider) ||
+          (requestedProviderProfileId && requestedProviderProfileId !== accountProviderProfileId) ||
+          (requestedIdentityReference && requestedIdentityReference !== accountIdentityReference)) {
         throw new Error("Authorization profile binding must match the enabled account and target");
       }
 
       destination.profileId = nextProfileId;
+      destination.provider = canonicalProvider(account.provider, { allowLegacy: true });
+      if (account.provider || account.providerProfileId) destination.providerProfileId = account.providerProfileId || nextProfileId;
+      else delete destination.providerProfileId;
+      destination.targetUrl = target.url;
+      destination.identityReference = canonicalIdentityUrl(account.identityReference || account.expectedIdentityUrl);
       authorization.binding = campaignAuthorizationFingerprint(authorization);
       authorization.updatedAt = nowIso();
       for (const post of state.posts.filter((item) => item.campaignAuthorizationId === authorization.id)) {
@@ -4140,7 +4312,10 @@ export class SeedingService {
     for (const destination of authorization.destinations || []) campaignTargetIds.add(destination.targetId);
     const requestedTargetIds = Array.isArray(input.targetIds) ? input.targetIds.map(String) : null;
     if (requestedTargetIds && requestedTargetIds.some((id) => !campaignTargetIds.has(id))) throw new Error("Template target is not bound to the campaign");
-    const targets = (initial.targets || []).filter((target) => campaignTargetIds.has(target.id) && (!requestedTargetIds || requestedTargetIds.includes(target.id)) && (authorization.destinations || []).some((destination) => destination.targetId === target.id && destination.platform === target.channel && destination.accountId === target.accountId && destination.profileId === target.profileId && destination.targetUrl === target.url));
+    const targets = (initial.targets || []).filter((target) => campaignTargetIds.has(target.id) && (!requestedTargetIds || requestedTargetIds.includes(target.id)) && (() => {
+      const account = (initial.executionAccounts || []).find((item) => item.id === executionAccountKey(target.channel, target.accountId));
+      return (authorization.destinations || []).some((destination) => destinationBindingMatches(destination, target, account, { requireTarget: true }));
+    })());
     if (!targets.length) throw new Error("Template derivation requires an authorized campaign target");
     const candidates = deriveTemplateContentCandidates({ story, targets, authorization, templateId: input.templateId });
     const productRepo = await requireProductRepo(campaign.productRepo);
@@ -4206,7 +4381,8 @@ export class SeedingService {
       if (activeAuthorizations.length > 1) throw new Error("Multiple active campaign authorizations prevent fail-closed materialization");
       const authorization = activeAuthorizations[0] || null;
       const now = new Date();
-      const destination = authorization?.destinations?.find((item) => item.targetId === target.id && item.platform === target.channel && item.accountId === target.accountId && item.profileId === target.profileId && item.targetUrl === target.url);
+      const account = (state.executionAccounts || []).find((item) => item.id === executionAccountKey(target.channel, target.accountId));
+      const destination = authorization?.destinations?.find((item) => destinationBindingMatches(item, target, account, { requireTarget: true }));
       const boundary = authorization?.contentBoundary || {};
       const hasTemplateBinding = candidate.templateContractVersion !== undefined || candidate.templateId || candidate.templateFingerprint || candidate.templateClaimIds || candidate.templateSourceRefs;
       let templateScopeValid = false;
@@ -4387,7 +4563,8 @@ export class SeedingService {
         const authorization = (snapshot.campaignAuthorizations || []).find((item) => item.id === authorizationId);
         if (!authorization || authorization.campaignId !== campaign.id || authorization.status !== "active") throw new Error("rehearsal authorization is missing or stale");
         if (authorization.binding !== campaignAuthorizationFingerprint(authorization) || authorization.campaignBinding !== campaignScopeFingerprint(campaign)) throw new Error("rehearsal authorization binding is stale");
-        const destination = (authorization.destinations || []).find((item) => item.targetId === target.id && item.platform === target.channel && item.accountId === target.accountId && item.profileId === target.profileId && item.targetUrl === target.url);
+        const account = (snapshot.executionAccounts || []).find((item) => item.id === executionAccountKey(target.channel, target.accountId));
+        const destination = (authorization.destinations || []).find((item) => destinationBindingMatches(item, target, account, { requireTarget: true }));
         if (!destination) throw new Error("rehearsal target is not authorized");
 
         const existingPost = (snapshot.posts || []).find((item) => item.campaignId === campaign.id && item.targetId === target.id && item.contentId === contentId && item.contentIdentity === contentIdentity);
@@ -4406,7 +4583,8 @@ export class SeedingService {
           const prior = (state.executionRequests || []).filter((item) => item.jobId === current.id);
           if (prior.some((item) => item.dryRun !== true || item.request?.dryRun !== true || ["SUBMIT_SENT_INTENT", "SUBMIT_SENT", "SUBMIT_RESULT_UNKNOWN", "CONFIRMED"].includes(item.state))) throw new Error("existing post has live or submitted execution history");
           const currentTarget = requireItem(state.targets, current.targetId, "Target");
-          const binding = { platform: currentTarget.channel, accountId: currentTarget.accountId, profileId: currentTarget.profileId, targetId: currentTarget.id };
+          const currentAccount = (state.executionAccounts || []).find((item) => item.id === executionAccountKey(currentTarget.channel, currentTarget.accountId));
+          const binding = readinessContextForTarget(currentTarget, currentAccount);
           if (!isReadinessFresh(currentTarget.readiness, binding, new Date(), this.readinessTtlMs)) throw new Error("rehearsal requires fresh bound READY readiness");
           current.campaignAuthorizationId = currentAuthorization.id;
           current.campaignAuthorizationBinding = currentAuthorization.binding;
@@ -4527,7 +4705,17 @@ export class SeedingService {
       campaign = requireItem(snapshot.campaigns, campaignId, "Campaign");
     }
     const results = [];
-    for (const candidate of (campaign.contentCandidates || []).filter((item) => item.status === "draft")) {
+    const draftCandidates = (campaign.contentCandidates || []).filter((item) => item.status === "draft");
+    // Approved-copy authorizations are an exact content boundary. A campaign
+    // can retain draft candidates from an earlier authorization (or from a
+    // previous strategy pass); attempting to materialize those candidates only
+    // creates noisy blocked posts and obscures the active queue. Keep stale
+    // candidates as draft/read-only records and evaluate only candidates whose
+    // canonical bytes are in the currently active approved copy set.
+    const candidates = authorization.contentBoundary.mode === "approved_copy_set"
+      ? draftCandidates.filter((candidate) => authorization.contentBoundary.contentHashes?.includes(campaignContentHash(candidate.content || "")))
+      : draftCandidates;
+    for (const candidate of candidates) {
       const existing = snapshot.posts.filter((post) => post.campaignId === campaignId && post.targetId === candidate.targetId && post.contentId === candidate.contentId);
       if (existing.length > 1) {
         results.push({ contentId: candidate.contentId, status: "blocked", reason: "duplicate_candidate_posts" });
@@ -4608,7 +4796,7 @@ export class SeedingService {
       if (latestExecution?.state === "FAILED" && latestExecution.recoveryClassification === "RECOVERABLE" && latestExecution.submitState === "FAILED" && latestExecution.attempt < 3) return true;
       if (post.executionState !== "REQUEST_READY") return false;
       const target = snapshot.targets.find((item) => item.id === post.targetId);
-      return !target || !isReadinessFresh(target.readiness, { platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id }, new Date(), this.readinessTtlMs);
+      return !target || !isReadinessFresh(target.readiness, readinessContextForTarget(target), new Date(), this.readinessTtlMs);
     });
     const decisions = [];
     for (const post of candidates) {
@@ -4625,12 +4813,191 @@ export class SeedingService {
     return decisions;
   }
 
+  /**
+   * Re-derive one bounded standing campaign authority from the high-level
+   * bootstrap policy that is already persisted on the campaign.  This is the
+   * scheduler bridge for zero-touch operation: it reuses the existing
+   * bootstrap path and never reconstructs payload bytes, hashes, grants or
+   * leases in a second code path.
+   *
+   * Only an expired standing authorization may be renewed.  Paused, revoked,
+   * superseded and otherwise operator-terminal authorities remain terminal.
+   * Any post that crossed the submit/publication boundary (including UNKNOWN)
+   * is a hard safety fence for the exact current story identity.
+   */
+  async #renewPersistedBootstrapCampaigns(actor = "campaign-queue-scheduler") {
+    const snapshot = await this.store.read();
+    const failures = new Map();
+    for (const campaign of snapshot.campaigns || []) {
+      const policy = campaign.autonomousBootstrap;
+      if (campaign.status !== "active" || !policy || policy.schemaVersion !== 1) continue;
+      if (snapshot.control?.killSwitch?.active === true) {
+        failures.set(campaign.id, "BOOTSTRAP_RENEWAL_KILL_SWITCH_ACTIVE");
+        continue;
+      }
+      const authorizations = (snapshot.campaignAuthorizations || [])
+        .filter((item) => item.campaignId === campaign.id &&
+          item.standingAuthorizationReference === policy.authorizationReference)
+        .sort((left, right) => String(right.updatedAt || right.approvedAt || right.createdAt || "")
+          .localeCompare(String(left.updatedAt || left.approvedAt || left.createdAt || "")));
+      if (!authorizations.length || authorizations.some((item) => item.status === "active")) continue;
+      // A standing campaign may renew only the normal expiry path.  An
+      // operator pause/revoke/supersede is an explicit stop signal and must
+      // never be silently converted back into live authority.
+      const previousAuthorization = authorizations[0];
+      if (previousAuthorization.status !== "expired") continue;
+      if (previousAuthorization.executionMode !== "standing_autonomous" ||
+          previousAuthorization.allowLiveExecution !== true ||
+          previousAuthorization.binding !== campaignAuthorizationFingerprint(previousAuthorization) ||
+          previousAuthorization.campaignBinding !== campaignScopeFingerprint(campaign)) {
+        failures.set(campaign.id, "BOOTSTRAP_RENEWAL_AUTHORIZATION_BINDING_BLOCKED");
+        continue;
+      }
+
+      const target = (snapshot.targets || []).find((item) => item.id === policy.targetId);
+      const account = target && (snapshot.executionAccounts || [])
+        .find((item) => item.id === executionAccountKey(target.channel, target.accountId));
+      const renewalProviderAware = Boolean(policy.provider || policy.providerProfileId || target?.provider || target?.providerProfileId || account?.provider || account?.providerProfileId);
+      const exactBinding = target && account &&
+        target.channel === policy.platform &&
+        canonicalTargetUrl(target.url) === canonicalTargetUrl(policy.targetUrl) &&
+        (!renewalProviderAware || canonicalIdentityUrl(target.identityReference || target.expectedIdentityUrl) === canonicalIdentityUrl(policy.identityReference)) &&
+        target.accountId === policy.accountId &&
+        target.profileId === policy.profileId &&
+        account.platform === policy.platform &&
+        account.accountId === policy.accountId &&
+        account.profileId === policy.profileId &&
+        (!renewalProviderAware || canonicalProvider(account.provider, { allowLegacy: true }) === canonicalProvider(policy.provider, { allowLegacy: true })) &&
+        (!renewalProviderAware || (account.providerProfileId || account.profileId) === (policy.providerProfileId || policy.profileId)) &&
+        (!renewalProviderAware || canonicalIdentityUrl(account.identityReference || account.expectedIdentityUrl) === canonicalIdentityUrl(policy.identityReference)) &&
+        exactProviderBinding(target, account, { requireTarget: true }) &&
+        target.status === "active" && account.status === "enabled" && account.health === "healthy";
+      if (!exactBinding) {
+        failures.set(campaign.id, "BOOTSTRAP_RENEWAL_BINDING_BLOCKED");
+        continue;
+      }
+      const previousDestination = (previousAuthorization.destinations || []).filter((destination) =>
+        destination.platform === policy.platform && destination.targetId === policy.targetId &&
+        destination.targetUrl === policy.targetUrl && destination.accountId === policy.accountId &&
+        destination.profileId === policy.profileId &&
+        destinationBindingMatches(destination, target, account, { requireTarget: true }));
+      if (previousDestination.length !== 1 || (previousAuthorization.destinations || []).length !== 1) {
+        failures.set(campaign.id, "BOOTSTRAP_RENEWAL_AUTHORIZATION_DESTINATION_BLOCKED");
+        continue;
+      }
+
+      const latestStory = (snapshot.stories || [])
+        .filter((item) => item.campaignId === campaign.id)
+        .sort((left, right) => String(right.updatedAt || right.createdAt || "")
+          .localeCompare(String(left.updatedAt || left.createdAt || "")))[0] || null;
+      const schedule = policy.schedule;
+      const from = Date.parse(schedule?.validFrom || "");
+      const until = Date.parse(schedule?.validUntil || "");
+      let canonicalSchedule;
+      try {
+        canonicalSchedule = deriveBootstrapSchedule({
+          now: new Date(),
+          validFrom: schedule?.validFrom,
+          validUntil: schedule?.validUntil,
+          timezone: schedule?.timezone,
+          quota: schedule?.quota,
+          concurrency: schedule?.concurrency
+        });
+      } catch {
+        canonicalSchedule = null;
+      }
+      const scheduleShapeValid = canonicalSchedule &&
+        schedule.cadence === "single" &&
+        JSON.stringify(schedule.weekdays || []) === JSON.stringify(canonicalSchedule.weekdays) &&
+        schedule.startLocal === canonicalSchedule.startLocal &&
+        schedule.endLocal === canonicalSchedule.endLocal &&
+        schedule.nextExecutionAt === canonicalSchedule.nextExecutionAt &&
+        schedule.identity === canonicalSchedule.identity;
+      const validityHours = (Number.isFinite(from) && Number.isFinite(until) && until > from)
+        ? (until - from) / (60 * 60 * 1000)
+        : null;
+      if (!scheduleShapeValid || !Number.isFinite(validityHours) || validityHours <= 0 || validityHours > 24 * 90) {
+        failures.set(campaign.id, "BOOTSTRAP_RENEWAL_POLICY_INCOMPLETE");
+        continue;
+      }
+
+      // Resolve the exact current content identity when the product handoff
+      // is available.  This lets a changed high-level story policy proceed
+      // while still fencing the exact content identity of an UNKNOWN attempt.
+      let currentContentIdentities = new Set();
+      try {
+        const candidates = deriveContentCandidates({
+          productIntelligence: campaign.productIntelligence,
+          story: latestStory,
+          targets: [target]
+        });
+        currentContentIdentities = new Set(candidates.map((item) => item.contentIdentity));
+      } catch {
+        currentContentIdentities = new Set((campaign.contentCandidates || [])
+          .filter((item) => (!latestStory || item.storyId === latestStory.id) && item.targetId === target.id)
+          .map((item) => item.contentIdentity));
+      }
+      const matchingPosts = (snapshot.posts || []).filter((post) =>
+        post.campaignId === campaign.id && post.targetId === target.id &&
+        (currentContentIdentities.size === 0 || currentContentIdentities.has(post.contentIdentity)));
+      const unsafePost = matchingPosts.find((post) => {
+        if (unresolvedSubmission(snapshot, post)) return true;
+        if (["publishing", "processing", UNKNOWN_POST_STATUS, "published"].includes(post.status)) return true;
+        if ((snapshot.executionRequests || []).some((item) => item.jobId === post.id && (
+          ["SUBMIT_SENT_INTENT", "SUBMIT_SENT", "SUBMIT_RESULT_UNKNOWN", "CONFIRMED"].includes(item.state) ||
+          ["SUBMIT_SENT", "UNKNOWN", "CONFIRMED"].includes(item.submitState)
+        ))) return true;
+        if ((snapshot.executionReceipts || []).some((item) => item.jobId === post.id &&
+          ["SUBMIT_SENT", "UNKNOWN", "CONFIRMED"].includes(item.receipt?.submitState))) return true;
+        return (snapshot.publicationAttempts || []).some((item) => item.postId === post.id);
+      });
+      if (unsafePost) {
+        failures.set(campaign.id, "BOOTSTRAP_RENEWAL_SUBMISSION_UNCERTAIN");
+        continue;
+      }
+
+      const brief = {
+        productRepo: campaign.productRepo,
+        name: campaign.name,
+        objective: campaign.objective,
+        audience: campaign.audience,
+        platform: policy.platform,
+        authorizationReference: policy.authorizationReference,
+        targetId: policy.targetId,
+        targetUrl: policy.targetUrl,
+        accountId: policy.accountId,
+        profileId: policy.profileId,
+        provider: policy.provider,
+        providerProfileId: policy.providerProfileId,
+        identityReference: policy.identityReference,
+        visibility: policy.visibility,
+        timezone: schedule.timezone,
+        validityHours,
+        quota: schedule.quota,
+        concurrency: schedule.concurrency,
+        ...(latestStory?.callToAction ? { callToAction: latestStory.callToAction } : {}),
+        ...(latestStory?.disclosure ? { disclosure: latestStory.disclosure } : {}),
+        ...(latestStory?.language ? { language: latestStory.language } : {})
+      };
+      try {
+        const result = await this.bootstrapAutonomousCampaign(brief, actor);
+        if (result.status !== "READY_FOR_AUTONOMOUS_EXECUTION") {
+          failures.set(campaign.id, String(result.blockers?.[0]?.code || result.code || "BOOTSTRAP_RENEWAL_BLOCKED"));
+        }
+      } catch (error) {
+        failures.set(campaign.id, boundedQueueFailureReason(error));
+      }
+    }
+    return failures;
+  }
+
   async queueDueCampaignJobs(actor = "scheduler") {
     await this.expireLiveExecutionGrants(actor);
     await this.expireOneTimeExecutionWindows(actor);
     await this.expireCampaignAuthorizations(actor);
+    const renewalFailures = await this.#renewPersistedBootstrapCampaigns(actor);
     const candidateSnapshot = await this.store.read();
-    const candidateFailures = new Map();
+    const candidateFailures = new Map(renewalFailures);
     for (const campaign of candidateSnapshot.campaigns || []) {
       const activeAuthorizations = (candidateSnapshot.campaignAuthorizations || [])
         .filter((authorization) => authorization.campaignId === campaign.id && authorization.status === "active");
@@ -4658,7 +5025,7 @@ export class SeedingService {
           if ((post.readinessAttempts || 0) === 0) return true;
           if (post.readinessRetryAt && Date.parse(post.readinessRetryAt) <= now && (post.readinessAttempts || 0) < this.maxReadinessAttempts) return true;
           const target = state.targets.find((item) => item.id === post.targetId);
-          const readinessContext = target && { platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id };
+          const readinessContext = target && readinessContextForTarget(target);
           if (post.readinessState === "READY" && target && !isReadinessFresh(target.readiness, readinessContext, new Date(now), this.readinessTtlMs)) return true;
           const previousReasons = post.authorizationDecision?.reasons || [];
           if (post.readinessState === "READY" && previousReasons.some((reason) => DYNAMIC_EXECUTION_REASONS.has(reason))) {
@@ -4675,7 +5042,7 @@ export class SeedingService {
         if (post.executionState !== "REQUEST_READY") return false;
         const target = state.targets.find((item) => item.id === post.targetId);
         return !target || !isReadinessFresh(target.readiness, {
-          platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id
+          ...readinessContextForTarget(target)
         }, new Date(now), this.readinessTtlMs);
       })
       .map((post) => post.campaignId))];
@@ -4697,7 +5064,7 @@ export class SeedingService {
     return results;
   }
 
-  async refreshCampaignJobReadiness(postId, actor = "scheduler", { force = false, executionId = null } = {}) {
+  async refreshCampaignJobReadiness(postId, actor = "scheduler", { force = false, executionId = null, browserSurface = null } = {}) {
     if (this.readinessInFlight.has(postId)) return { postId, status: "blocked", readinessState: "READINESS_CHECKING", reasons: ["readiness_check_in_progress"] };
     this.readinessInFlight.add(postId);
     try {
@@ -4721,7 +5088,7 @@ export class SeedingService {
       if (account?.health === "human_required" && !canRecheckHumanRequired) {
         return { postId, status: post.status, readinessState: "HUMAN_REQUIRED", reasons: ["account_requires_human_intervention"] };
       }
-      if (!account || account.status !== "enabled" || target.profileId !== account.profileId) {
+      if (!account || account.status !== "enabled" || !exactProviderBinding(target, account, { requireTarget: true })) {
         return this.#persistReadinessOutcome(postId, {
           state: "HUMAN_REQUIRED", checkedAt: nowIso(), reasonCode: "account_profile_binding_missing", retryable: false, recoveryClassification: "HUMAN_REQUIRED"
         }, actor, { attempt: post.readinessAttempts || 0, skipProvider: true, executionId });
@@ -4740,9 +5107,9 @@ export class SeedingService {
         return { postId, status: post.status, readinessState: post.readinessState, reasons: [post.readinessReasonCode || post.readinessState.toLowerCase()] };
       }
       const context = {
-        jobId: post.id, campaignId: post.campaignId, platform: target.channel,
-        accountId: target.accountId, profileId: target.profileId, targetId: target.id,
-        targetUrl: target.url, identityReference: executionAccountIdentityReference(account)
+        ...readinessContextForTarget(target, account),
+        jobId: post.id, campaignId: post.campaignId,
+        browserSurface: browserSurface && typeof browserSurface === "object" ? browserSurface : undefined
       };
       if (!force && isReadinessFresh(target.readiness, context, new Date(), this.readinessTtlMs)) {
         const readiness = normalizeReadinessResult({
@@ -4805,7 +5172,7 @@ export class SeedingService {
       const post = requireItem(state.posts, postId, "Post");
       const target = requireItem(state.targets, post.targetId, "Target");
       const account = (state.executionAccounts || []).find((item) => item.id === executionAccountKey(target.channel, target.accountId));
-      const context = { platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id };
+      const context = readinessContextForTarget(target, account);
       const stateName = String(readiness.state).toUpperCase();
       const readinessAt = readiness.checkedAt || nowIso();
       const capabilities = readiness.capabilities || {};
@@ -4892,6 +5259,8 @@ export class SeedingService {
       .filter((item) => item.jobId === postId && item.request?.dryRun !== true &&
         item.state === "REQUEST_READY" && item.submitState === "NOT_STARTED")
       .sort((a, b) => (Number(b.attempt) || 0) - (Number(a.attempt) || 0));
+    const target = requireItem(snapshot.targets, post.targetId, "Target");
+    const account = (snapshot.executionAccounts || []).find((item) => item.id === executionAccountKey(target.channel, target.accountId));
     // A scheduler tick may have left a newer pre-submit row behind while an
     // earlier row still owns the only valid standing window/grant. Prefer the
     // exact row with usable controls so a readiness refresh updates it in
@@ -4902,6 +5271,7 @@ export class SeedingService {
       const grantId = request.liveGrant?.grantId;
       const grant = grantId ? (snapshot.liveExecutionGrants || []).find((candidate) => candidate.grantId === grantId) : null;
       if (!grant || liveGrantEffectiveStatus(grant) !== "ACTIVE" || grant.boundExecutionId !== item.executionId) return false;
+      if (!exactRequestExecutionBinding(request, target, account)) return false;
       const windowId = request.oneTimeWindow?.windowId;
       if (windowId) {
         const window = (snapshot.oneTimeExecutionWindows || []).find((candidate) => candidate.windowId === windowId);
@@ -4921,11 +5291,9 @@ export class SeedingService {
     const priorSubmitted = (snapshot.executionRequests || []).filter((item) => item.jobId === postId && ["SUBMIT_SENT_INTENT", "SUBMIT_SENT", "SUBMIT_RESULT_UNKNOWN", "CONFIRMED"].includes(item.state)).sort((a, b) => b.attempt - a.attempt)[0];
     if (priorSubmitted) return priorSubmitted;
     if (previous && ["SUBMIT_SENT_INTENT", "SUBMIT_SENT", "SUBMIT_RESULT_UNKNOWN", "CONFIRMED"].includes(previous.state)) return previous;
-    const target = requireItem(snapshot.targets, post.targetId, "Target");
-    const account = (snapshot.executionAccounts || []).find((item) => item.id === executionAccountKey(target.channel, target.accountId));
     const authorization = (snapshot.campaignAuthorizations || []).find((item) => item.id === post.campaignAuthorizationId);
     post.idempotencyKey ||= publicationIdentityKey({ campaignId: post.campaignId, contentId: post.contentId, platform: target.channel, accountId: target.accountId, targetId: target.id });
-    const readinessContext = { platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id };
+    const readinessContext = readinessContextForTarget(target, account);
     if (dryRun) {
       if (["published", "publishing", "processing", UNKNOWN_POST_STATUS, "removed", "rejected"].includes(post.status)) throw new Error("Dry-run cannot use a published or actively executing job");
     } else if (post.status !== "queued") {
@@ -4934,7 +5302,7 @@ export class SeedingService {
     if (post.readinessState !== "READY" || !isReadinessFresh(target.readiness, readinessContext, new Date(), this.readinessTtlMs)) {
       throw new Error("Execution request requires fresh bound READY readiness");
     }
-    if (!account || account.status !== "enabled" || account.health !== "healthy" || account.profileId !== target.profileId) {
+      if (!account || account.status !== "enabled" || account.health !== "healthy" || !exactProviderBinding(target, account, { requireTarget: true }) || (previous && !exactRequestExecutionBinding(previous.request, target, account))) {
       throw new Error("Execution request requires the registered healthy account/profile binding");
     }
     const eligibility = evaluateQueue(post, snapshot, new Date(), { mode: dryRun ? "dry_run" : "live", executionId: previous?.executionId || null });
@@ -4953,7 +5321,7 @@ export class SeedingService {
       throw new Error("Execution request's reserved one-time window is no longer valid");
     }
     if (!authorization) throw new Error("Execution request requires a campaign authorization");
-    if (dryRun && (snapshot.executionLeases || []).some((item) => Date.parse(item.expiresAt) > Date.now() && item.profileKey === `${target.channel}:${target.profileId}` && !(item.executionId === previous?.executionId && actor === `jev-worker:${item.workerId}`))) {
+    if (dryRun && (snapshot.executionLeases || []).some((item) => Date.parse(item.expiresAt) > Date.now() && item.profileKey === executionProfileKey(target) && !(item.executionId === previous?.executionId && actor === `jev-worker:${item.workerId}`))) {
       throw new Error("Dry-run profile is already leased by another execution");
     }
     if (dryRun && previous && previous.request?.dryRun !== true && previous.state === "REQUEST_READY") {
@@ -4974,6 +5342,7 @@ export class SeedingService {
         const grantId = request.liveGrant?.grantId;
         const grant = grantId ? (state.liveExecutionGrants || []).find((candidate) => candidate.grantId === grantId) : null;
         if (!grant || liveGrantEffectiveStatus(grant) !== "ACTIVE" || grant.boundExecutionId !== item.executionId) return false;
+        if (!exactRequestExecutionBinding(request, target, account)) return false;
         const windowId = request.oneTimeWindow?.windowId;
         if (windowId) {
           const window = (state.oneTimeExecutionWindows || []).find((candidate) => candidate.windowId === windowId);
@@ -5144,7 +5513,7 @@ export class SeedingService {
       if (!post || post.status !== "queued" || !target) return false;
       if (unresolvedSubmission(state, post, item.request?.idempotencyKey)) return false;
       const account = (state.executionAccounts || []).find((candidate) => candidate.id === executionAccountKey(target.channel, target.accountId));
-      if (!account || account.status !== "enabled" || account.health !== "healthy" || account.profileId !== target.profileId) return false;
+      if (!account || account.status !== "enabled" || account.health !== "healthy" || !exactProviderBinding(target, account, { requireTarget: true })) return false;
       const grant = (state.liveExecutionGrants || []).find((candidate) => candidate.grantId === item.request?.liveGrant?.grantId);
       const authorization = (state.campaignAuthorizations || []).find((candidate) => candidate.id === post.campaignAuthorizationId);
       try { assertLiveGrantMatchesExecution(grant, item.request, authorization); } catch { return false; }
@@ -5159,7 +5528,7 @@ export class SeedingService {
             oneTimeExecutionWindowStatus(window) !== "RESERVED" || !oneTimeExecutionWindowInBounds(window) || window.authorizationFingerprint !== campaignAuthorizationFingerprint(authorization) ||
             window.binding !== oneTimeExecutionWindowFingerprint(window)) return false;
       }
-      const binding = { platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id };
+      const binding = readinessContextForTarget(target, account);
       return isReadinessFresh(target.readiness, binding, new Date(), this.readinessTtlMs) && evaluateQueue(post, state, new Date(), { executionId: item.executionId }).allowed;
     });
   }
@@ -5178,10 +5547,10 @@ export class SeedingService {
       if (!post || post.status !== "queued" || !target) return false;
       if (unresolvedSubmission(state, post, item.request?.idempotencyKey)) return false;
       const account = (state.executionAccounts || []).find((candidate) => candidate.id === executionAccountKey(target.channel, target.accountId));
-      if (!account || account.status !== "enabled" || account.health !== "healthy" || account.profileId !== target.profileId || account.accountId !== target.accountId) return false;
+      if (!account || account.status !== "enabled" || account.health !== "healthy" || !exactProviderBinding(target, account, { requireTarget: true }) || account.accountId !== target.accountId) return false;
       const decision = evaluateQueue(post, state, new Date(), { mode: "dry_run", executionId: item.executionId });
       if (!decision.allowed) return false;
-      const binding = { platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id };
+      const binding = readinessContextForTarget(target, account);
       return isReadinessFresh(target.readiness, binding, new Date(), this.readinessTtlMs);
     });
   }
@@ -5222,12 +5591,13 @@ export class SeedingService {
     if (!owner) throw new Error("workerId is required");
     if (!Number.isSafeInteger(leaseMs) || leaseMs < 5_000 || leaseMs > 10 * 60_000) throw new Error("leaseMs must be between 5000 and 600000");
     const context = await this.executionContext(executionId);
-    if (!context.account?.profileId || context.account.profileId !== context.target.profileId) throw new Error("Execution profile binding is invalid");
+    if (!context.account?.profileId || !exactProviderBinding(context.target, context.account, { requireTarget: true })) throw new Error("Execution profile binding is invalid");
     const at = Date.now();
     const lease = {
       id: randomUUID(), token: randomUUID(), executionId, jobId: context.post.id,
       platform: context.target.channel, accountId: context.target.accountId,
-      profileId: context.account.profileId, profileKey: `${context.target.channel}:${context.account.profileId}`,
+      profileId: context.account.profileId, provider: canonicalProvider(context.account.provider, { allowLegacy: true }), providerProfileId: context.account.providerProfileId || context.account.profileId,
+      profileKey: executionProfileKey(context.target),
       workerId: owner, acquiredAt: new Date(at).toISOString(), expiresAt: new Date(at + leaseMs).toISOString()
     };
     const result = await this.store.mutate(owner, "execution_lease_acquired", (state) => {
@@ -5283,8 +5653,8 @@ export class SeedingService {
       if (killReasons.length) throw new Error(`Execution blocked before worker start: ${killReasons.join(", ")}`);
       const target = requireItem(state.targets, post.targetId, "Target");
       const account = (state.executionAccounts || []).find((item) => item.id === executionAccountKey(target.channel, target.accountId));
-      if (!account || account.status !== "enabled" || account.health !== "healthy" || account.profileId !== target.profileId) throw new Error("Execution account/profile health is not ready before worker start");
-      if (!isReadinessFresh(target.readiness, { platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id }, new Date(), this.readinessTtlMs)) throw new Error("Execution readiness is not fresh before worker start");
+      if (!account || account.status !== "enabled" || account.health !== "healthy" || !exactProviderBinding(target, account, { requireTarget: true })) throw new Error("Execution account/profile health is not ready before worker start");
+      if (!isReadinessFresh(target.readiness, readinessContextForTarget(target, account), new Date(), this.readinessTtlMs)) throw new Error("Execution readiness is not fresh before worker start");
       if (request.request?.oneTimeWindow?.windowId) {
         const eligibility = evaluateQueue(post, state, new Date(), { executionId });
         if (!eligibility.allowed) throw new Error(`Execution blocked before worker start: ${eligibility.reasons.join(", ")}`);
@@ -5364,8 +5734,8 @@ export class SeedingService {
     if (!(authorization.publicationVisibilityRules?.allowedVisibilities || ["PUBLIC"]).includes(request.publicationVisibility)) reject("TARGET_MISMATCH", "targetMatch", "Publication visibility is outside authorization");
     if (artifact && (request.media.length !== 1 || request.media[0].artifactId !== artifact.id || request.media[0].reference !== artifact.path || request.media[0].sha256 !== artifact.sha256 || !authorization.approvedAssets.some((item) => item.artifactId === artifact.id && item.sha256 === artifact.sha256))) reject("ARTIFACT_INTEGRITY_FAILED", "mediaHashMatch", "Execution media identity is not the approved artifact");
     if (!artifact && request.media.length !== 0) reject("ARTIFACT_INTEGRITY_FAILED", "mediaHashMatch", "Execution request contains unregistered media");
-    if (!account || account.status !== "enabled" || account.health !== "healthy" || account.profileId !== target.profileId || request.accountId !== target.accountId || request.profileId !== target.profileId) reject("IDENTITY_MISMATCH", "accountMatch", "Execution account/profile binding changed");
-    if (!isReadinessFresh(target.readiness, { platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id }, new Date(), this.readinessTtlMs)) {
+    if (!account || account.status !== "enabled" || account.health !== "healthy" || !exactProviderBinding(target, account, { requireTarget: true }) || request.accountId !== target.accountId || request.profileId !== target.profileId || !bindingMatches({ ...request, targetId: request.target?.targetId, targetUrl: request.target?.url }, targetExecutionBinding(target, account), { requireIdentity: true, requireTarget: true })) reject("IDENTITY_MISMATCH", "accountMatch", "Execution account/profile binding changed");
+    if (!isReadinessFresh(target.readiness, readinessContextForTarget(target, account), new Date(), this.readinessTtlMs)) {
       const expired = Number.isFinite(Date.parse(target.readiness?.expiresAt || "")) && Date.parse(target.readiness.expiresAt) <= Date.now();
       reject(expired ? "READINESS_EXPIRED" : "READINESS_NOT_READY", "readinessFresh", "Readiness expired or was not READY before submit intent");
     }
@@ -5376,10 +5746,12 @@ export class SeedingService {
       const currentPost = requireItem(currentState.posts, post.id, "Post");
       if (unresolvedSubmission(currentState, currentPost, request.idempotencyKey)) reject("SUBMISSION_UNCERTAIN", "idempotencyClear", "SUBMISSION_UNCERTAIN: live grant cannot bypass an unresolved submission");
       if (!requestRow || requestRow.state !== "REQUEST_READY" || requestRow.submitState !== "NOT_STARTED") reject("NOT_DISPATCHABLE", "executionDispatchable", "Execution is no longer dispatchable");
-      if (!persistedLease || persistedLease.profileKey !== `${target.channel}:${target.profileId}`) reject("LEASE_INVALID", "executionLeaseValid", "A valid execution lease is required");
       const currentAuthorization = (currentState.campaignAuthorizations || []).find((item) => item.id === currentPost.campaignAuthorizationId);
       const currentTarget = requireItem(currentState.targets, currentPost.targetId, "Target");
       const currentAccount = (currentState.executionAccounts || []).find((item) => item.id === executionAccountKey(currentTarget.channel, currentTarget.accountId));
+      if (!persistedLease || persistedLease.profileKey !== executionProfileKey(target) ||
+          canonicalProvider(persistedLease.provider, { allowLegacy: true }) !== canonicalProvider(currentAccount?.provider, { allowLegacy: true }) ||
+          (persistedLease.providerProfileId || persistedLease.profileId) !== (currentAccount?.providerProfileId || currentAccount?.profileId)) reject("LEASE_INVALID", "executionLeaseValid", "A valid execution lease is required");
       const currentKillReasons = killSwitchReasons(currentPost, currentState);
       if (currentKillReasons.length) reject("KILL_SWITCH_BLOCKED", currentKillReasons[0], `Live submit blocked by global control: ${currentKillReasons.join(", ")}`);
       const currentGrant = (currentState.liveExecutionGrants || []).find((item) => item.grantId === requestRow.request?.liveGrant?.grantId);
@@ -5394,13 +5766,14 @@ export class SeedingService {
           requestRow.request.publicationVisibility !== (currentPost.publicationVisibility || "PUBLIC") || currentGrant.publicationVisibility !== requestRow.request.publicationVisibility ||
           requestRow.request.platform !== currentTarget.channel || requestRow.request.target.targetId !== currentPost.targetId ||
           requestRow.request.accountId !== currentTarget.accountId || requestRow.request.profileId !== currentTarget.profileId ||
-          currentAccount?.profileId !== currentTarget.profileId || currentAccount?.status !== "enabled" || currentAccount?.health !== "healthy" ||
+          !exactRequestExecutionBinding(requestRow.request, currentTarget, currentAccount) ||
+          !exactProviderBinding(currentTarget, currentAccount, { requireTarget: true }) || currentAccount?.status !== "enabled" || currentAccount?.health !== "healthy" ||
           requestRow.request.media.length !== (currentPost.artifactId ? 1 : 0)) reject("IDENTITY_MISMATCH", "executionBindingsMatch", "Job identity changed before live submit intent");
       if (currentPost.artifactId) {
         const currentArtifact = requireItem(currentState.artifacts || [], currentPost.artifactId, "Artifact");
         if (currentArtifact.sha256 !== requestRow.request.media[0].sha256 || currentArtifact.id !== requestRow.request.media[0].artifactId || currentArtifact.path !== requestRow.request.media[0].reference) reject("ARTIFACT_INTEGRITY_FAILED", "mediaHashMatch", "Media identity changed before live submit intent");
       }
-      if (!isReadinessFresh(currentTarget.readiness, { platform: currentTarget.channel, accountId: currentTarget.accountId, profileId: currentTarget.profileId, targetId: currentTarget.id }, new Date(), this.readinessTtlMs)) reject("READINESS_NOT_READY", "readinessFresh", "Readiness expired or was not READY before live submit intent");
+      if (!isReadinessFresh(currentTarget.readiness, readinessContextForTarget(currentTarget, currentAccount), new Date(), this.readinessTtlMs)) reject("READINESS_NOT_READY", "readinessFresh", "Readiness expired or was not READY before live submit intent");
       const decision = evaluateQueue(currentPost, currentState, new Date(), { executionId });
       if (!decision.allowed || currentAuthorization?.allowLiveExecution !== true) {
         const reason = decision.reasons[0] || "authorization_invalid";
@@ -5516,6 +5889,19 @@ export class SeedingService {
       const request = (state.executionRequests || []).find((item) => item.executionId === executionId);
       if (!request) throw new Error(`Execution request not found: ${executionId}`);
       if (request.jobId !== receipt.jobId || request.attempt !== receipt.attempt) throw new Error("Receipt job/attempt does not match execution request");
+      // Execution rows store the validated binding under `request.request`.
+      // Keep the row-level fallback for older state, but never compare a
+      // receipt against an empty top-level value when the nested request has
+      // the authoritative provider/profile binding.
+      const executionRequest = request.request || request;
+      const expectedProvider = canonicalProvider(executionRequest.provider, { allowLegacy: true });
+      const expectedProfile = executionRequest.providerProfileId || executionRequest.profileId;
+      const expectedIdentity = canonicalIdentityUrl(executionRequest.identityReference || executionRequest.target?.identityReference);
+      if (receipt.provider && receipt.provider !== expectedProvider) throw new Error("Receipt provider does not match execution request");
+      if (receipt.providerProfileId && receipt.providerProfileId !== expectedProfile) throw new Error("Receipt provider profile does not match execution request");
+      if (expectedProvider !== "orca" && (receipt.provider !== expectedProvider || receipt.providerProfileId !== expectedProfile || receipt.identityReference !== expectedIdentity || canonicalTargetUrl(receipt.targetUrl) !== canonicalTargetUrl(executionRequest.target?.url))) {
+        throw new Error("Provider-aware receipt binding does not match execution request");
+      }
       state.executionReceipts ||= [];
       const exactReceipt = state.executionReceipts.find((item) => item.executionId === executionId && item.attempt === receipt.attempt && JSON.stringify(item.receipt) === JSON.stringify(receipt));
       if (exactReceipt) return exactReceipt;
@@ -5711,7 +6097,7 @@ export class SeedingService {
   async registerExecutionAccount(input, actor = "operator") {
     const account = normalizeExecutionAccount(input, new Date(), this.platformPolicies);
     const result = await this.store.mutate(actor, "execution_account_registered", (state) => {
-      const collision = (state.executionAccounts || []).find((item) => item.platform === account.platform && item.profileId === account.profileId && item.id !== account.id && item.status === "enabled");
+      const collision = (state.executionAccounts || []).find((item) => item.platform === account.platform && canonicalProvider(item.provider, { allowLegacy: true }) === canonicalProvider(account.provider, { allowLegacy: true }) && (item.providerProfileId || item.profileId) === (account.providerProfileId || account.profileId) && item.id !== account.id && item.status === "enabled");
       if (collision) throw new Error(`Browser profile ${account.profileId} is already bound to another ${account.platform} account`);
       state.executionAccounts ||= [];
       const existing = state.executionAccounts.find((item) => item.id === account.id);
@@ -5968,6 +6354,7 @@ export class SeedingService {
   async createTarget(input, actor = "operator") {
     const result = await this.store.mutate(actor, "target_created", (state) => {
       if (!CHANNELS[input.channel]) throw new Error(`Unsupported channel: ${input.channel}`);
+      const requestedAccount = (state.executionAccounts || []).find((item) => item.id === executionAccountKey(input.channel, String(input.accountId || "").trim()));
       const target = {
         id: randomUUID(),
         channel: input.channel,
@@ -5975,6 +6362,9 @@ export class SeedingService {
         url: channelUrl(input.channel, input.url, "Target URL", this.platformPolicies),
         accountId: String(input.accountId || "").trim(),
         profileId: String(input.profileId || "").trim() || null,
+        provider: String(input.provider || requestedAccount?.provider || "").trim().toLowerCase() || null,
+        providerProfileId: String(input.providerProfileId || requestedAccount?.providerProfileId || (input.provider ? input.profileId : "") || "").trim() || null,
+        identityReference: canonicalIdentityUrl(input.identityReference || input.expectedIdentityUrl || requestedAccount?.identityReference || requestedAccount?.expectedIdentityUrl),
         status: input.status || "needs_review",
         rulesStatus: input.rulesStatus || (CHANNELS[input.channel].requiresRulesReview ? "pending" : "not_required"),
         locale: input.locale || "en",
@@ -5990,10 +6380,10 @@ export class SeedingService {
       }
       if (target.profileId) {
         const account = (state.executionAccounts || []).find((item) => item.id === executionAccountKey(target.channel, target.accountId));
-        if (!account || account.profileId !== target.profileId) throw new Error("Target profileId must match a registered execution account");
+        if (!account || !exactProviderBinding(target, account, { requireTarget: false })) throw new Error("Target provider/profile/identity must match a registered execution account");
       }
       target.readiness = normalizeTargetReadiness(input.readiness, input.status || "needs_review", {
-        platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id
+        platform: target.channel, accountId: target.accountId, profileId: target.profileId, provider: target.provider, providerProfileId: target.providerProfileId, identityReference: target.identityReference, targetId: target.id, targetUrl: target.url
       }, this.readinessTtlMs);
       if (CHANNELS[input.channel].requiresConsent && target.status === "active" &&
           (!target.consentBasis || !target.audienceSource || !target.unsubscribeMechanism)) {
@@ -6010,22 +6400,22 @@ export class SeedingService {
       const target = requireItem(state.targets, targetId, "Target");
       const priorAccountKey = executionAccountKey(target.channel, target.accountId);
       const priorProfileId = target.profileId || null;
-      for (const field of ["name", "url", "accountId", "profileId", "status", "rulesStatus", "locale", "notes", "consentBasis", "audienceSource", "unsubscribeMechanism"]) {
+      for (const field of ["name", "url", "accountId", "profileId", "provider", "providerProfileId", "identityReference", "expectedIdentityUrl", "status", "rulesStatus", "locale", "notes", "consentBasis", "audienceSource", "unsubscribeMechanism"]) {
         if (input[field] !== undefined) target[field] = input[field];
       }
       const accountChanged = priorAccountKey !== executionAccountKey(target.channel, target.accountId) || priorProfileId !== (target.profileId || null);
       if (target.profileId) {
         const account = (state.executionAccounts || []).find((item) => item.id === executionAccountKey(target.channel, target.accountId));
-        if (!account || account.profileId !== target.profileId) throw new Error("Target profileId must match a registered execution account");
+        if (!account || !exactProviderBinding(target, account, { requireTarget: false })) throw new Error("Target provider/profile/identity must match a registered execution account");
       }
       if (input.readiness !== undefined) target.readiness = normalizeTargetReadiness(input.readiness, target.status, {
-        platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id
+        platform: target.channel, accountId: target.accountId, profileId: target.profileId, provider: target.provider, providerProfileId: target.providerProfileId, identityReference: target.identityReference, targetId: target.id, targetUrl: target.url
       }, this.readinessTtlMs);
       else if (accountChanged) target.readiness = normalizeTargetReadiness(null, target.status, {
-        platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id
+        ...readinessContextForTarget(target), targetId: target.id
       }, this.readinessTtlMs);
       else target.readiness = normalizeTargetReadiness(target.readiness, target.status, {
-        platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id
+        ...readinessContextForTarget(target), targetId: target.id
       }, this.readinessTtlMs);
       if (target.readiness.state !== "ready") target.status = "needs_review";
       if (input.status === "active" && target.readiness.state !== "ready") {
@@ -6691,6 +7081,66 @@ export class SeedingService {
     const conversationContinuity = projectConversationContinuity(state, { now: new Date() });
     const executionRuntime = projectExecutionRuntime(state);
     const productFactorySandbox = await this.productFactorySandboxCapability();
+    const browserRuntime = await projectBrowserRuntime(this.browserRuntimeRouter);
+    let gpmCatalogObservation = this.gpmAccountCatalogObservation;
+    if (typeof gpmCatalogObservation === "function") {
+      try {
+        gpmCatalogObservation = await gpmCatalogObservation();
+      } catch (error) {
+        gpmCatalogObservation = { state: "UNKNOWN", code: String(error?.code || "GPM_CATALOG_OBSERVATION_FAILED").slice(0, 120), profiles: [] };
+      }
+    }
+    const gpmAccountCatalog = projectGpmAccountCatalog(
+      gpmCatalogObservation,
+      state.executionAccounts,
+      { now: new Date() }
+    );
+    let sessionReadinessObservation = this.sessionReadinessObservation;
+    if (typeof sessionReadinessObservation === "function") {
+      try {
+        sessionReadinessObservation = await sessionReadinessObservation();
+      } catch (error) {
+        sessionReadinessObservation = { state: "UNKNOWN", code: String(error?.code || "SESSION_READINESS_OBSERVATION_FAILED").slice(0, 120), sessions: [] };
+      }
+    }
+    let sessionReadiness;
+    try {
+      const observedSessions = Array.isArray(sessionReadinessObservation?.sessions) ? sessionReadinessObservation.sessions : [];
+      sessionReadiness = projectSessionReadiness(
+        Array.isArray(state.executionAccounts) ? state.executionAccounts.map((account) => ({
+          platform: account.platform,
+          accountId: account.accountId,
+          profileRef: account.profileId,
+          provider: account.provider,
+          providerProfileId: account.providerProfileId || account.profileId,
+          identityReference: account.identityReference || account.expectedIdentityUrl,
+          sessionHealth: account.health,
+          risk: account.status === "enabled" ? "normal" : "disabled",
+          authorized: account.status === "enabled"
+        })) : [],
+        observedSessions,
+        { now: new Date() }
+      );
+      if (sessionReadinessObservation?.state && String(sessionReadinessObservation.state).toUpperCase() !== "OBSERVED") {
+        sessionReadiness = { ...sessionReadiness, rows: sessionReadiness.rows.map((row) => ({ ...row, status: "UNKNOWN", executionEligible: false, reasons: ["session_observation_unavailable"] })), summary: { ...sessionReadiness.summary, ready: 0, executionEligible: 0, unknown: sessionReadiness.rows.length } };
+      }
+    } catch {
+      sessionReadiness = projectSessionReadiness([], [], { now: new Date() });
+    }
+    let gpmSessionCapabilityObservation = this.gpmSessionCapabilityObservation;
+    if (typeof gpmSessionCapabilityObservation === "function") {
+      try {
+        gpmSessionCapabilityObservation = await gpmSessionCapabilityObservation();
+      } catch (error) {
+        gpmSessionCapabilityObservation = { configured: false, provider: "gpm", health: { state: "UNKNOWN", reason: String(error?.code || "GPM_SESSION_CAPABILITY_OBSERVATION_FAILED").slice(0, 120) } };
+      }
+    }
+    let gpmSessionCapability;
+    try {
+      gpmSessionCapability = projectGpmSessionCapability(gpmSessionCapabilityObservation, { expectedProvider: "gpm" });
+    } catch {
+      gpmSessionCapability = projectGpmSessionCapability({ configured: false, provider: "gpm" });
+    }
     const latestMetrics = new Map();
     for (const metric of state.metricSnapshots) {
       const current = latestMetrics.get(metric.postId);
@@ -6777,6 +7227,10 @@ export class SeedingService {
       conversationContinuity,
       executionRuntime,
       productFactorySandbox,
+      browserRuntime,
+      gpmAccountCatalog,
+      sessionReadiness,
+      gpmSessionCapability,
       communityMemberships: state.communityMemberships,
       oiBrowser: projectOiBrowserIntegration(state),
       statuses,

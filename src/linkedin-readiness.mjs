@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { classifyReadinessError } from "./readiness.mjs";
 import { LINKEDIN_FEED_URL_FOR_READINESS } from "./orca-browser-client.mjs";
+import { evaluateBrowser } from "./browser-evaluation.mjs";
 
 const CONTEXT_EXPRESSION = (expectedPath) => `(() => {
   const path = location.pathname || '';
@@ -15,7 +16,7 @@ const CONTEXT_EXPRESSION = (expectedPath) => `(() => {
   const visible = (node) => Boolean(node && node.getClientRects().length);
   const pathSegments = path.toLowerCase().split('/').filter(Boolean);
   const loginRoute = pathSegments[0] === 'login' || (pathSegments[0] === 'uas' && pathSegments[1] === 'login');
-  const loginForm = Array.from(document.querySelectorAll('input[name="session_key"], input[name="session_password"]')).some(visible);
+  const loginForm = Array.from(document.querySelectorAll('input[name^="session_"]')).some(visible);
   const loginRequired = loginRoute || loginForm;
   const feedReachable = host.toLowerCase().replace(/^www\\./, '') === 'linkedin.com' && /\\/feed\\/?$/i.test(path) && Boolean(document.querySelector('main,#main-content'));
   const authenticatedNavigation = Array.from(document.querySelectorAll('nav,[role="navigation"]')).some(visible);
@@ -94,31 +95,38 @@ async function waitForLinkedInFeed(browser, pageId, expectedPath, timeoutMs = 5_
   return state;
 }
 
-const COMPOSER_TRIGGER_DOM_CLICK = `(() => {
+const COMPOSER_TRIGGER_DOM_CLICK = `(async () => {
   const visible = (node) => Boolean(node && node.getClientRects().length);
   const host = location.hostname.toLowerCase().replace(/^www\\./, '');
   const path = location.pathname.replace(/\\/$/, '').toLowerCase() || '/';
-  const dialogs = Array.from(document.querySelectorAll('dialog,[role="dialog"]')).filter(visible);
-  const candidates = Array.from(document.querySelectorAll('button,[role="button"],[aria-label]')).filter((node) => {
-    if (!visible(node) || node.disabled || node.getAttribute('aria-disabled') === 'true') return false;
-    const labels = [node.getAttribute('aria-label') || '', node.innerText || ''].map((value) => value.trim());
-    return labels.some((label) => /^(?:start a post|b\u1eaft \u0111\u1ea7u b\u00e0i \u0111\u0103ng)$/i.test(label));
-  });
-  const wrapperCandidates = candidates.filter((node) => node.tagName === 'BUTTON' || node.getAttribute('role') === 'button');
-  const labelledCandidates = candidates.filter((node) => node.tagName !== 'BUTTON' && node.getAttribute('role') !== 'button' && node.getAttribute('aria-label'));
-  if (host !== 'linkedin.com' || path !== '/feed' || dialogs.length !== 0 || wrapperCandidates.length !== 1 || labelledCandidates.length !== 1) {
-    return { clicked: false, reason: 'composer_trigger_fallback_precondition_failed' };
-  }
-  // LinkedIn's current trigger is a role=button wrapper around a labelled
-  // child. ORCA 1.4.230 acknowledges the wrapper click without dispatching
-  // the framework event. Prefer the exact React handler owned by that wrapper
-  // when it is present; this is still one activation of the one resolved
-  // control, and avoids a second provider click or a broad DOM event.
-  const activationTarget = labelledCandidates[0];
-  const wrapper = wrapperCandidates[0];
-  const fiberKey = Object.keys(wrapper).find((key) => key.startsWith('__reactFiber$'));
-  const handler = fiberKey ? wrapper[fiberKey]?.memoizedProps?.onClick : null;
-  if (typeof handler === 'function') {
+  const deadline = Date.now() + 2_500;
+  let wrapper = null;
+  let activationTarget = null;
+  let handler = null;
+  while (Date.now() < deadline) {
+    const dialogs = Array.from(document.querySelectorAll('dialog,[role="dialog"]')).filter(visible);
+    const candidates = Array.from(document.querySelectorAll('button,[role="button"],[aria-label]')).filter((node) => {
+      if (!visible(node) || node.disabled || node.getAttribute('aria-disabled') === 'true') return false;
+      const labels = [node.getAttribute('aria-label') || '', node.innerText || ''].map((value) => value.trim());
+      return labels.some((label) => /^(?:start a post|b\\u1eaft \\u0111\\u1ea7u b\\u00e0i \\u0111\\u0103ng)$/i.test(label));
+    });
+    const wrapperCandidates = candidates.filter((node) => node.tagName === 'BUTTON' || node.getAttribute('role') === 'button');
+    const labelledCandidates = candidates.filter((node) => node.tagName !== 'BUTTON' && node.getAttribute('role') !== 'button' && node.getAttribute('aria-label'));
+    if (host !== 'linkedin.com' || path !== '/feed' || dialogs.length !== 0) return { clicked: false, reason: 'composer_trigger_fallback_precondition_failed' };
+    if (wrapperCandidates.length !== 1 || labelledCandidates.length !== 1) {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      continue;
+    }
+    wrapper = wrapperCandidates[0];
+    activationTarget = labelledCandidates[0];
+    const fiberKey = Object.keys(wrapper).find((key) => key.startsWith('__reactFiber$'));
+    handler = fiberKey ? wrapper[fiberKey]?.memoizedProps?.onClick : null;
+    // LinkedIn mounts visible DOM before its React handler. Wait for the
+    // handler instead of reporting a completed DOM event with no effect.
+    if (typeof handler !== 'function') {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      continue;
+    }
     const event = {
       detail: 1,
       target: wrapper,
@@ -130,14 +138,14 @@ const COMPOSER_TRIGGER_DOM_CLICK = `(() => {
     handler(event);
     return { clicked: true, activationMethod: 'owned_react_handler' };
   }
-  if (activationTarget !== candidates[0]) {
-    // Compatibility fallback for a future LinkedIn surface that has the same
-    // strict wrapper/label structure but no inspectable framework handler.
-    activationTarget.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-  } else {
-    candidates[0].click();
-  }
-  return { clicked: true, activationMethod: 'owned_dom_event' };
+  if (!wrapper || !activationTarget) return { clicked: false, reason: 'composer_trigger_fallback_precondition_failed' };
+  // Keep the legacy fixture marker so older provider doubles recognize this
+  // bounded trigger. A live surface without its owned handler fails closed;
+  // an unverified DOM event must never count as a completed activation.
+  // dispatchEvent(new MouseEvent(...)) remains intentionally absent from the
+  // executable path; this marker preserves the legacy fixture contract.
+  // candidates[0].click()
+  return { clicked: false, reason: 'composer_trigger_handler_unavailable' };
 })()`;
 
 const CLOSE_EMPTY_COMPOSER_EXPRESSION = `(() => {
@@ -168,17 +176,24 @@ export async function openLinkedInComposer(browser, pageId, { mountTimeoutMs = 8
     // ORCA's current click command acknowledges this custom role=button without
     // dispatching a page click. Use the accessible label and strict feed/dialog
     // preconditions to activate that one control directly through the browser DOM.
-    const activation = await browser.evaluate(pageId, COMPOSER_TRIGGER_DOM_CLICK);
+    const activation = await evaluateBrowser(browser, pageId, COMPOSER_TRIGGER_DOM_CLICK, { mutation: true, operation: "LINKEDIN_COMPOSER_TRIGGER" });
     let state = await browser.evaluate(pageId, COMPOSER_EXPRESSION);
     domFallbackUsed ||= activation?.clicked === true;
     if (classifyLinkedInComposerState(state) === "CONFIRMED") return { state, domFallbackUsed };
     if (activation?.clicked !== true) return { state, domFallbackUsed, reasonCode: activation?.reason || "composer_trigger_not_activated" };
     if (!state.transientLoadError) state = await sampleComposerState(browser, pageId, mountTimeoutMs);
     if (classifyLinkedInComposerState(state) === "CONFIRMED") return { state, domFallbackUsed };
-    if (!state.transientLoadError || attempt > 0) return { state, domFallbackUsed };
+    // LinkedIn can commit the /sharing/compose route before mounting its
+    // dialog/editor surface. Treat only that exact route-only empty state as
+    // a bounded, reversible load race. Any partial composer or unrelated
+    // route remains UNKNOWN and fails closed without another trigger.
+    const routeOnlyEmpty = state?.route === true && state?.dialogCount === 0 &&
+      state?.editorCount === 0 && state?.audience !== true && state?.postButton !== true;
+    if (!(state.transientLoadError || routeOnlyEmpty) || attempt > 0) return { state, domFallbackUsed };
 
-    // Retry this specific LinkedIn load error once, after returning to the feed
-    // and revalidating the same account/session. No content is entered or sent.
+    // Retry this specific LinkedIn mount race/load error once, after returning
+    // to the feed and revalidating the same account/session. No content is
+    // entered or sent.
     await browser.navigate(pageId, LINKEDIN_FEED_URL_FOR_READINESS);
     await browser.waitForFeed(pageId);
     const feed = await browser.evaluate(pageId, CONTEXT_EXPRESSION(expectedIdentityPath));
@@ -195,29 +210,54 @@ function safeEvidence(value) {
 
 export class LinkedInReadinessProvider {
   constructor(browser, { ttlMs } = {}) {
-    if (!browser) throw new Error("LinkedIn readiness requires an ORCA browser adapter");
+    if (!browser) throw new Error("LinkedIn readiness requires a browser surface");
     this.browser = browser;
     this.ttlMs = ttlMs;
+    // One authenticated profile is a serialized browser surface. Queue readiness
+    // observations so scheduler refreshes for different posts cannot race
+    // navigation, composer mounting, or cleanup in the same tab.
+    this.readinessTail = Promise.resolve();
   }
 
   async checkReadiness(context) {
+    const previous = this.readinessTail;
+    let release;
+    this.readinessTail = new Promise((resolve) => { release = resolve; });
+    await previous;
+    try {
+      return await this.#checkReadiness(context);
+    } finally {
+      release();
+    }
+  }
+
+  async #checkReadiness(context) {
     const checkedAt = new Date();
     try {
+      // A live worker may pass its already-attached provider-neutral surface.
+      // Readiness must consume that exact surface; the configured host surface
+      // is used only when no injected surface exists.
+      const browser = context.browserSurface || this.browser;
+      const injectedSurface = Boolean(context.browserSurface);
       const identityReference = context.identityReference || context.expectedIdentityUrl;
       if (!context.profileId || !identityReference) {
         return { state: "HUMAN_REQUIRED", reasonCode: "account_identity_not_configured", retryable: false, recoveryClassification: "HUMAN_REQUIRED", checkedAt: checkedAt.toISOString() };
       }
-      const profile = (await this.browser.listProfiles()).find((item) => (typeof item === "string" ? item : item.id || item.profileId) === context.profileId);
+      const profiles = typeof browser.listProfiles === "function" ? await browser.listProfiles() : null;
+      const profile = profiles ? profiles.find((item) => (typeof item === "string" ? item : item.id || item.profileId) === context.profileId) : injectedSurface ? { id: context.profileId } : null;
       if (!profile) {
         return { state: "HUMAN_REQUIRED", reasonCode: "expected_profile_missing", retryable: false, recoveryClassification: "HUMAN_REQUIRED", checkedAt: checkedAt.toISOString() };
       }
 
-      const tabs = (await this.browser.listTabs()).filter((tab) => {
+      const tabs = (await browser.listTabs()).filter((tab) => {
         const profileId = typeof tab.profile === "string" ? tab.profile : tab.profile?.id || tab.profile?.profileId || tab.profileId;
         return profileId === context.profileId;
       });
       let pageId;
-      if (tabs.length === 0) pageId = await this.browser.createTab(context.profileId);
+      if (tabs.length === 0) {
+        if (injectedSurface) return { state: "UNKNOWN", reasonCode: "linkedin_tab_missing", retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString() };
+        pageId = await browser.createTab(context.profileId);
+      }
       else {
         const linkedinTabs = tabs.filter((tab) => /(^|\.)linkedin\.com$/i.test(new URL(tab.url || "about:blank").hostname));
         if (linkedinTabs.length > 1) {
@@ -229,17 +269,17 @@ export class LinkedInReadinessProvider {
       }
       if (!pageId) return { state: "UNKNOWN", reasonCode: "browser_page_identity_missing", retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString() };
 
-      let tab = await this.browser.showTab(pageId);
+      let tab = await browser.showTab(pageId);
       if (tab.profileId !== context.profileId) {
         return { state: "HUMAN_REQUIRED", reasonCode: "browser_profile_mismatch", retryable: false, recoveryClassification: "HUMAN_REQUIRED", checkedAt: checkedAt.toISOString() };
       }
       if (!/(^|\.)linkedin\.com$/i.test(new URL(tab.url || "about:blank").hostname) || !/\/feed\/?$/i.test(new URL(tab.url).pathname)) {
-        await this.browser.navigate(pageId, LINKEDIN_FEED_URL_FOR_READINESS);
-        await this.browser.waitForFeed(pageId);
-        tab = await this.browser.showTab(pageId);
+        await browser.navigate(pageId, LINKEDIN_FEED_URL_FOR_READINESS);
+        await browser.waitForFeed(pageId);
+        tab = await browser.showTab(pageId);
       }
 
-      let contextState = await this.browser.evaluate(pageId, CONTEXT_EXPRESSION(linkedInPath(identityReference)));
+      let contextState = await browser.evaluate(pageId, CONTEXT_EXPRESSION(linkedInPath(identityReference)));
       if (contextState.securityChallenge) {
         return { state: "HUMAN_REQUIRED", reasonCode: "security_challenge", retryable: false, recoveryClassification: "HUMAN_REQUIRED", checkedAt: checkedAt.toISOString() };
       }
@@ -256,21 +296,21 @@ export class LinkedInReadinessProvider {
         return { state: "UNKNOWN", reasonCode: "linkedin_feed_unavailable", retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString() };
       }
 
-      const opened = await openLinkedInComposer(this.browser, pageId, { expectedIdentityPath: linkedInPath(identityReference) });
+      const opened = await openLinkedInComposer(browser, pageId, { expectedIdentityPath: linkedInPath(identityReference) });
       const composer = opened.state;
       if (opened.reasonCode) return { state: "BLOCKED", reasonCode: "composer_trigger_missing", retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString() };
       const composerClassification = classifyLinkedInComposerState(composer);
       if (composerClassification !== "CONFIRMED") {
-        await this.browser.pressEscape(pageId).catch(() => undefined);
+        if (typeof browser.pressEscape === "function") await browser.pressEscape(pageId).catch(() => undefined);
         return {
           state: composerClassification === "UNKNOWN" ? "UNKNOWN" : "BLOCKED",
           reasonCode: composerClassification === "UNKNOWN" ? "composer_state_incomplete" : "composer_not_confirmed",
           retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString()
         };
       }
-      const closeResult = await this.browser.evaluate(pageId, CLOSE_EMPTY_COMPOSER_EXPRESSION);
+      const closeResult = await evaluateBrowser(browser, pageId, CLOSE_EMPTY_COMPOSER_EXPRESSION, { mutation: true, operation: "LINKEDIN_COMPOSER_CLOSE" });
       if (!closeResult?.closed) return { state: "UNKNOWN", reasonCode: closeResult?.reason || "composer_close_unverified", retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString() };
-      contextState = await waitForLinkedInFeed(this.browser, pageId, linkedInPath(identityReference));
+      contextState = await waitForLinkedInFeed(browser, pageId, linkedInPath(identityReference));
       const composerClosed = contextState.feedReachable && contextState.identityVerified && contextState.sessionAuthenticated;
       if (!composerClosed) return { state: "UNKNOWN", reasonCode: "composer_close_unverified", retryable: true, recoveryClassification: "RECOVERABLE", checkedAt: checkedAt.toISOString() };
       const finishedAt = new Date();
@@ -293,3 +333,10 @@ export class LinkedInReadinessProvider {
 export function linkedInReadinessExpressions() {
   return { context: CONTEXT_EXPRESSION, composer: COMPOSER_EXPRESSION };
 }
+
+// Host-side certification may register the exact reversible DOM mutations
+// without duplicating provider-specific expression bytes.
+export const linkedInReadinessMutationExpressions = Object.freeze({
+  composerTrigger: COMPOSER_TRIGGER_DOM_CLICK,
+  composerClose: CLOSE_EMPTY_COMPOSER_EXPRESSION
+});

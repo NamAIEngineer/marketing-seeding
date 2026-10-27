@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { campaignContentHash, campaignAuthorizationFingerprint } from "./campaign-authorization.mjs";
 import { contentSha256 } from "./execution-contracts.mjs";
+import { canonicalIdentityUrl, canonicalProvider } from "./execution-binding.mjs";
 
 export const LIVE_EXECUTION_GRANT_SCHEMA_VERSION = 1;
 export const LIVE_GRANT_STATUSES = Object.freeze(["ACTIVE", "CONSUMED", "EXPIRED", "REVOKED"]);
@@ -25,10 +26,13 @@ export function createLiveExecutionGrantV1({ post, target, account, authorizatio
       Date.parse(authorization.validFrom) > from || Date.parse(authorization.validUntil) < until) {
     throw new Error("Live grant requires an active, unchanged campaign authorization covering its validity window");
   }
-  if (account.status !== "enabled" || account.accountId !== target.accountId || account.platform !== target.channel || account.profileId !== target.profileId) {
+  const provider = canonicalProvider(target.provider || account.provider, { allowLegacy: true });
+  const providerProfileId = target.providerProfileId || account.providerProfileId || target.profileId;
+  const identityReference = canonicalIdentityUrl(target.identityReference || target.expectedIdentityUrl || account.identityReference || account.expectedIdentityUrl);
+  if (account.status !== "enabled" || account.accountId !== target.accountId || account.platform !== target.channel || account.profileId !== target.profileId || canonicalProvider(account.provider, { allowLegacy: true }) !== provider || (account.providerProfileId || account.profileId) !== providerProfileId || (provider !== "orca" && !identityReference)) {
     throw new Error("Live grant account/profile does not match the target");
   }
-  if (!authorization.destinations?.some((item) => item.platform === target.channel && item.accountId === target.accountId && item.profileId === target.profileId && item.targetId === target.id && item.targetUrl === target.url) ||
+  if (!authorization.destinations?.some((item) => item.platform === target.channel && item.accountId === target.accountId && item.profileId === target.profileId && (item.provider || "orca") === provider && (item.providerProfileId || item.profileId) === providerProfileId && item.targetId === target.id && item.targetUrl === target.url && (!item.identityReference || item.identityReference === identityReference)) ||
       !authorization.audienceRules?.allowedAudiences?.includes(post.audience) ||
       !(authorization.publicationVisibilityRules?.allowedVisibilities || ["PUBLIC"]).includes(String(post.publicationVisibility || "PUBLIC").toUpperCase())) {
     throw new Error("Live grant destination or audience is outside campaign authorization");
@@ -50,7 +54,8 @@ export function createLiveExecutionGrantV1({ post, target, account, authorizatio
     schemaVersion: LIVE_EXECUTION_GRANT_SCHEMA_VERSION,
     grantId: randomUUID(), campaignAuthorizationId: authorization.id, campaignAuthorizationBinding: authorization.binding,
     campaignId: post.campaignId, jobId: post.id, boundExecutionId: null,
-    platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id,
+    platform: target.channel, provider, providerProfileId, identityReference,
+    accountId: target.accountId, profileId: target.profileId, targetId: target.id, targetUrl: target.url,
     content: { contentId: required(post.contentId, "contentId"), canonicalSha256: canonicalHash, rawSha256: contentSha256(post.content) },
     media: artifact ? [{ artifactId: artifact.id, sha256: artifact.sha256 }] : [],
     audience: required(post.audience, "audience"), idempotencyKey: required(post.idempotencyKey, "idempotencyKey"),
@@ -66,6 +71,12 @@ export function createLiveExecutionGrantV1({ post, target, account, authorizatio
 export function validateLiveExecutionGrantV1(grant) {
   if (!grant || grant.schemaVersion !== 1 || !LIVE_GRANT_STATUSES.includes(grant.status) || grant.maxExecutions !== 1) throw new Error("Invalid LiveExecutionGrantV1 status, schema or execution limit");
   for (const key of ["grantId", "campaignAuthorizationId", "campaignAuthorizationBinding", "campaignId", "jobId", "platform", "accountId", "profileId", "targetId", "audience", "idempotencyKey", "createdBy", "operatorAuthorizationReference"]) required(grant[key], key);
+  const provider = canonicalProvider(grant.provider, { allowLegacy: true });
+  const providerProfileId = required(grant.providerProfileId || grant.profileId, "providerProfileId");
+  if (provider !== "orca") {
+    required(grant.targetUrl, "targetUrl");
+    if (!canonicalIdentityUrl(grant.identityReference)) throw new Error("Provider-aware live grant requires verified identityReference");
+  }
   if (grant.publicationVisibility !== undefined) required(grant.publicationVisibility, "publicationVisibility");
   for (const key of ["canonicalSha256", "rawSha256"]) if (!SHA256.test(grant.content?.[key] || "")) throw new Error(`Invalid live grant content ${key}`);
   required(grant.content?.contentId, "content.contentId");
@@ -81,13 +92,16 @@ export function liveGrantEffectiveStatus(grant, now = new Date()) {
 
 export function assertLiveGrantMatchesExecution(grant, request, authorization, now = new Date(), { checkWindow = true } = {}) {
   validateLiveExecutionGrantV1(grant);
+  const provider = canonicalProvider(grant.provider, { allowLegacy: true });
+  const providerProfileId = grant.providerProfileId || grant.profileId;
+  const requestIdentity = canonicalIdentityUrl(request?.identityReference || request?.expectedIdentityUrl || request?.target?.identityReference || request?.target?.expectedIdentityUrl);
   if (grant.status !== "ACTIVE" || grant.consumedAt || grant.consumedExecutionId ||
       (checkWindow && (now.getTime() < Date.parse(grant.validFrom) || now.getTime() > Date.parse(grant.validUntil)))) {
     throw new Error("Live execution grant is inactive, consumed or expired");
   }
   if (!request || request.dryRun === true || grant.boundExecutionId !== request.executionId || request.liveGrant?.grantId !== grant.grantId ||
       grant.campaignId !== request.campaignId || grant.jobId !== request.jobId || grant.platform !== request.platform ||
-      grant.accountId !== request.accountId || grant.profileId !== request.profileId || grant.targetId !== request.target?.targetId ||
+      grant.accountId !== request.accountId || grant.profileId !== request.profileId || provider !== canonicalProvider(request.provider, { allowLegacy: true }) || providerProfileId !== (request.providerProfileId || request.profileId) || (grant.identityReference && grant.identityReference !== requestIdentity) || (grant.targetUrl && grant.targetUrl !== request.target?.url) || grant.targetId !== request.target?.targetId ||
       grant.audience !== request.audience || (grant.publicationVisibility || "PUBLIC") !== (request.publicationVisibility || "PUBLIC") || grant.idempotencyKey !== request.idempotencyKey ||
       grant.campaignAuthorizationId !== request.authorization?.authorizationId || grant.campaignAuthorizationBinding !== request.authorization?.binding ||
       grant.content.contentId !== request.content?.contentId || grant.content.rawSha256 !== request.content?.sha256 ||

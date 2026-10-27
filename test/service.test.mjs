@@ -654,6 +654,23 @@ test("queue scheduler materializes exact standing approved-copy candidates idemp
     standingAuthorizationReference: "fixture-standing-content-candidate-scheduler"
   }, "operator");
 
+  // A prior authorization may leave an unrelated draft candidate behind. The
+  // autonomous queue must preserve it as draft/read-only and avoid creating a
+  // blocked post or any execution controls for content outside the active
+  // approved copy set.
+  await service.store.mutate("fixture", "add-stale-approved-copy-candidate", (state) => {
+    const currentCampaign = state.campaigns.find((item) => item.id === campaign.id);
+    currentCampaign.contentCandidates.push({
+      ...candidate,
+      contentId: "content-stale-approved-copy",
+      contentIdentity: "stale-approved-copy-identity",
+      content: "Stale copy from a prior authorization",
+      contentHash: campaignContentHash("Stale copy from a prior authorization"),
+      status: "draft"
+    });
+    return currentCampaign;
+  });
+
   await service.queueDueCampaignJobs("fixture-scheduler");
   const first = await service.snapshot();
   const firstPost = first.posts.find((item) => item.contentId === candidate.contentId);
@@ -662,6 +679,9 @@ test("queue scheduler materializes exact standing approved-copy candidates idemp
   assert.equal(first.executionRequests.filter((item) => item.jobId === firstPost.id).length, 1);
   assert.equal(first.oneTimeExecutionWindows.filter((item) => item.jobId === firstPost.id).length, 1);
   assert.equal(first.liveExecutionGrants.filter((item) => item.jobId === firstPost.id).length, 1);
+  const staleCandidate = first.campaigns.find((item) => item.id === campaign.id).contentCandidates.find((item) => item.contentId === "content-stale-approved-copy");
+  assert.equal(staleCandidate.status, "draft");
+  assert.equal(first.posts.filter((item) => item.campaignId === campaign.id && item.contentId === staleCandidate.contentId).length, 0);
 
   await service.queueDueCampaignJobs("fixture-scheduler");
   const restarted = new SeedingService(new JsonStore(path.join(directory, "state.json")));
@@ -1581,6 +1601,48 @@ test("provider-send fence rejects changed execution identity and target binding"
   service.executionContext = async () => structuredClone(base);
   const allowed = await service.assertExecutionSendable("execution-1", { id: "lease-1", token: "lease-token" });
   assert.equal(allowed.executionId, "execution-1");
+
+  const gpm = structuredClone(base);
+  const identityReference = "https://www.linkedin.com/in/nam-ph%E1%BA%A1m-ph%C6%B0%C6%A1ng-b48897278";
+  for (const row of [gpm.request, gpm.target, gpm.account]) {
+    row.provider = "gpm";
+    row.providerProfileId = "82614dc6-2b75-4515-896c-32f73cb5ec51";
+    row.profileId = "82614dc6-2b75-4515-896c-32f73cb5ec51";
+  }
+  gpm.account.platform = "linkedin";
+  gpm.account.identityReference = identityReference;
+  gpm.target.identityReference = identityReference;
+  gpm.request.identityReference = identityReference;
+  gpm.request.target.identityReference = identityReference;
+  gpm.target.readiness = {
+    ...gpm.target.readiness,
+    profileId: gpm.account.profileId,
+    provider: "gpm",
+    providerProfileId: gpm.account.providerProfileId,
+    identityReference,
+    targetUrl: gpm.target.url,
+    binding: readinessBinding({
+      platform: "linkedin", accountId: "account-1", profileId: gpm.account.profileId,
+      provider: "gpm", providerProfileId: gpm.account.providerProfileId,
+      identityReference, targetId: "target-1", targetUrl: gpm.target.url
+    })
+  };
+  gpm.request.provider = "gpm";
+  gpm.request.providerProfileId = gpm.account.providerProfileId;
+  service.executionContext = async () => structuredClone(gpm);
+  const gpmAllowed = await service.assertExecutionSendable("execution-1", { id: "lease-1", token: "lease-token" });
+  assert.equal(gpmAllowed.provider, "gpm");
+  assert.equal(gpmAllowed.providerProfileId, gpm.account.providerProfileId);
+  const wrongProvider = structuredClone(gpm);
+  wrongProvider.request.provider = "orca";
+  service.executionContext = async () => wrongProvider;
+  await assert.rejects(service.assertExecutionSendable("execution-1", { id: "lease-1", token: "lease-token" }), { code: "IDENTITY_MISMATCH" });
+  for (const field of ["provider", "providerProfileId"]) {
+    const incompleteBinding = structuredClone(gpm);
+    delete incompleteBinding.request[field];
+    service.executionContext = async () => incompleteBinding;
+    await assert.rejects(service.assertExecutionSendable("execution-1", { id: "lease-1", token: "lease-token" }), { code: "IDENTITY_MISMATCH" });
+  }
 });
 
 test("R19 bootstrap is idempotent and does not fabricate publication evidence", async () => {

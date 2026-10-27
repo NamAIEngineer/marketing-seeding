@@ -9,7 +9,7 @@ import { SeedingService } from "../src/service.mjs";
 import { campaignAuthorizationFingerprint, campaignContentHash, campaignScopeFingerprint, evaluateCampaignAuthorization } from "../src/campaign-authorization.mjs";
 import { approvalFingerprint, evaluateQueue } from "../src/guards.mjs";
 
-async function campaignFixture({ channels = ["threads"], rateLimits = {}, allowRepeatSameContent = false } = {}) {
+async function campaignFixture({ channels = ["threads"], rateLimits = {}, allowRepeatSameContent = false, providerByChannel = {} } = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), "campaign-auth-test-"));
   const productRepo = path.join(directory, "product-repo");
   await mkdir(productRepo);
@@ -27,6 +27,7 @@ async function campaignFixture({ channels = ["threads"], rateLimits = {}, allowR
       platform: channel,
       accountId,
       profileId,
+      ...(providerByChannel[channel] ? { provider: providerByChannel[channel], providerProfileId: profileId } : {}),
       expectedIdentityUrl: channel === "linkedin" ? "https://www.linkedin.com/in/fixture-owner" : undefined
     }, "operator");
     targets.push(await service.createTarget({
@@ -47,7 +48,8 @@ async function campaignFixture({ channels = ["threads"], rateLimits = {}, allowR
     id: `auth-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     validFrom: new Date(Date.now() - 60_000).toISOString(),
     validUntil: new Date(Date.now() + 24 * 60 * 60_000).toISOString(),
-    destinations: targets.map((target) => ({ platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id })),
+    destinations: targets.map((target) => ({ platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id,
+      ...(target.provider ? { provider: target.provider, providerProfileId: target.providerProfileId, identityReference: target.identityReference } : {}) })),
     approvedAssets: [],
     contentBoundary: {
       mode: "approved_copy_set",
@@ -388,6 +390,32 @@ test("campaign authorization profile binding can be corrected without changing i
   assert.equal(updated.destinations[0].profileId, nextProfileId);
   assert.equal(after.posts.find((item) => item.id === post.id).campaignAuthorizationBinding, stored.binding);
   assert.equal(evaluateCampaignAuthorization(after.posts.find((item) => item.id === post.id), after).reasons.includes("destination_not_authorized"), false);
+});
+
+test("provider-aware authorization rebinding requires and preserves the complete GPM binding", async () => {
+  const { service, campaign, targets, authorization } = await campaignFixture({ channels: ["linkedin"], providerByChannel: { linkedin: "gpm" } });
+  const target = targets[0];
+  const content = "GPM binding correction copy";
+  await service.createPost({ campaignId: campaign.id, targetId: target.id, content, audience: "public" }, "producer");
+  const auth = await authorization([content]);
+  const before = await service.snapshot();
+  const account = before.executionAccounts[0];
+  const nextProfileId = "gpm-profile-rotated";
+  await service.registerExecutionAccount({ ...account, profileId: nextProfileId, provider: "gpm", providerProfileId: nextProfileId }, "operator");
+  await service.updateTarget(target.id, {
+    profileId: nextProfileId, provider: "gpm", providerProfileId: nextProfileId,
+    identityReference: account.identityReference
+  }, "operator");
+  await assert.rejects(
+    service.updateCampaignAuthorizationProfileBinding(campaign.id, auth.id, target.id, nextProfileId, "operator"),
+    /Provider-aware authorization rebinding requires/
+  );
+  const updated = await service.updateCampaignAuthorizationProfileBinding(campaign.id, auth.id, target.id, {
+    profileId: nextProfileId, provider: "gpm", providerProfileId: nextProfileId, identityReference: account.identityReference
+  }, "operator");
+  assert.equal(updated.destinations[0].provider, "gpm");
+  assert.equal(updated.destinations[0].providerProfileId, nextProfileId);
+  assert.equal(updated.destinations[0].identityReference, account.identityReference);
 });
 
 test("concurrency limit carries across campaign authorization renewal", async () => {

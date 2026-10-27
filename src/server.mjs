@@ -1,5 +1,6 @@
 import http from "node:http";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { JsonStore } from "./store.mjs";
@@ -16,6 +17,8 @@ import { JevExecutionWorker } from "./jev-execution-worker.mjs";
 import { PlatformAdapterRegistry, ReadinessProviderRegistry } from "./platform-registries.mjs";
 import { isAuthorizedLocalShutdown, runtimeMetadata } from "./service-lifecycle.mjs";
 import { consumeSystemAgenticHandoff } from "./system-agentic-handoff-bridge.mjs";
+import { createDefaultBrowserRuntimeRouter } from "./browser-runtime-router.mjs";
+import { discoverGpmProcessEndpoints, probeGpmRuntime } from "./gpm-runtime-probe.mjs";
 
 async function loadLocalEnv() {
   try {
@@ -28,6 +31,42 @@ async function loadLocalEnv() {
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
   }
+}
+
+async function loadConfiguredExecutionSessionResolver(env = process.env) {
+  // Session authority is an explicit host integration. Never infer a provider
+  // from discovery, ORCA, GPM, or browser runtime defaults; absent/incomplete
+  // config leaves JEV without a resolver (safe dry-run/pre-submit behavior).
+  // GPM is retired from the active lane. Historical GPM modules may remain
+  // installed, but stale GPM configuration is deliberately ignored.
+  const moduleSpecifier = String(env.SEEDING_EXECUTION_SESSION_RESOLVER_MODULE || "").trim();
+  const provider = String(env.SEEDING_EXECUTION_SESSION_PROVIDER || "").trim().toLowerCase();
+  const profileReference = String(env.SEEDING_EXECUTION_SESSION_PROFILE_REFERENCE || "").trim();
+  const sessionAuthority = String(env.SEEDING_EXECUTION_SESSION_AUTHORITY || "").trim();
+  const attestationRaw = String(env.SEEDING_EXECUTION_SESSION_HOST_ATTESTATION || "").trim();
+  if (!moduleSpecifier || !provider || !profileReference || !sessionAuthority || !attestationRaw) return null;
+  if (provider !== "camoufox") return null;
+  let hostAttestation;
+  try { hostAttestation = JSON.parse(attestationRaw); } catch { return null; }
+  if (!hostAttestation || typeof hostAttestation !== "object" || Array.isArray(hostAttestation) ||
+      !String(hostAttestation.host || "").trim() || !String(hostAttestation.runtime || "").trim() ||
+      !String(hostAttestation.version || "").trim() || !String(hostAttestation.evidence || "").trim()) return null;
+  let module;
+  try {
+    const specifier = moduleSpecifier.startsWith(".") || moduleSpecifier.startsWith("/")
+      ? pathToFileURL(path.resolve(appRoot, moduleSpecifier)).href : moduleSpecifier;
+    module = await import(specifier);
+  } catch { return null; }
+  const factory = module?.createExecutionSessionResolver || module?.default;
+  if (typeof factory !== "function") return null;
+  let resolver;
+  try {
+    resolver = await factory({ provider, profileReference, sessionAuthority, hostAttestation });
+  } catch { return null; }
+  if (!resolver || typeof resolver !== "object" || (typeof resolver.resolve !== "function" && typeof resolver.acquire !== "function")) return null;
+  const declaredProvider = String(resolver.provider || resolver.runtimeProvider || provider).trim().toLowerCase();
+  if (declaredProvider !== provider) return null;
+  return resolver;
 }
 
 async function loadTransportCertifications() {
@@ -45,6 +84,7 @@ async function loadTransportCertifications() {
 
 await loadLocalEnv();
 const configuredTransportCertifications = await loadTransportCertifications();
+const configuredExecutionSessionResolver = await loadConfiguredExecutionSessionResolver();
 
 // Keep loopback as the safe local default; VPS deployments can set SEEDING_HOST
 // explicitly (usually 127.0.0.1 behind nginx, or 0.0.0.0 with a firewall).
@@ -79,11 +119,54 @@ const store = new JsonStore(stateFile, { requireLease: true });
 await store.acquireWriterLease();
 const readinessTtlMs = configuredReadinessTtlMs();
 const orcaBrowser = new OrcaCliClient();
+// Metadata-only discovery of an already-running GPM listener. It never starts
+// a profile and does not make authenticated work eligible without a binding.
+const gpmProcessDiscovery = await discoverGpmProcessEndpoints();
 const readinessProviderRegistry = new ReadinessProviderRegistry();
 readinessProviderRegistry.register("linkedin", new LinkedInReadinessProvider(orcaBrowser, { ttlMs: readinessTtlMs }));
 const service = new SeedingService(store, {
   readinessTtlMs,
-  readinessProviderRegistry
+  readinessProviderRegistry,
+  browserRuntimeRouter: createDefaultBrowserRuntimeRouter({
+    orcaBrowser,
+    gpm: {
+      endpointCandidates: gpmProcessDiscovery.endpoints,
+      probe: ({ runtime }) => probeGpmRuntime({ endpointCandidates: runtime.endpointCandidates, profileCatalogPath: "/api/v1/profiles" })
+    }
+  }),
+  // Dashboard catalog observation is a bounded, read-only GET. It never
+  // starts/stops a profile and returns UNKNOWN when no listener is available.
+  gpmAccountCatalogObservation: async () => {
+    const observation = await probeGpmRuntime({
+      endpointCandidates: gpmProcessDiscovery.endpoints,
+      profileCatalogPath: "/api/v1/profiles"
+    });
+    return observation?.profileCatalog || { state: observation?.state === "UNAVAILABLE" ? "UNAVAILABLE" : "UNKNOWN", code: observation?.code || "GPM_CATALOG_UNKNOWN", profiles: [] };
+  },
+  // Read-only composed-session capability observation. Dynamic listener
+  // candidates are discovered once at startup, then probed with GET only;
+  // profile lifecycle, browser attach, login, and execution remain untouched.
+  gpmSessionCapabilityObservation: async () => {
+    const observation = await probeGpmRuntime({
+      endpointCandidates: gpmProcessDiscovery.endpoints,
+      profileCatalogPath: null
+    });
+    const runtimeIdentity = observation?.runtimeIdentity && typeof observation.runtimeIdentity === "object"
+      ? {
+          ...observation.runtimeIdentity,
+          provider: "gpm",
+          profileReference: null,
+          sessionReference: null
+        }
+      : { provider: "gpm", transport: "gpm-chrome" };
+    return {
+      provider: "gpm",
+      configured: gpmProcessDiscovery.endpoints.length > 0,
+      runtimeIdentity,
+      health: { state: observation?.state || "UNKNOWN", reason: observation?.code || "GPM_CAPABILITY_UNKNOWN", observedProviderVersion: observation?.observedProviderVersion || observation?.providerVersion || null },
+      sessions: []
+    };
+  }
 });
 const platformAdapterRegistry = new PlatformAdapterRegistry();
 // The production lane is fail-closed until an explicit, platform/runtime
@@ -98,7 +181,11 @@ platformAdapterRegistry.register("linkedin", new LinkedInAdapter(orcaBrowser, {
   transportRuntime: { provider: "orca", providerVersion: orcaBrowser.runtimeVersion },
   requireCertifiedTransport: true
 }));
-const jevWorker = new JevExecutionWorker({ service, adapterRegistry: platformAdapterRegistry, workerId: `jev-server-${process.pid}` });
+const jevWorker = new JevExecutionWorker({
+  service, adapterRegistry: platformAdapterRegistry,
+  executionSessionResolver: configuredExecutionSessionResolver || null,
+  workerId: `jev-server-${process.pid}`
+});
 let initializedState;
 try {
   initializedState = await service.init();
@@ -722,7 +809,7 @@ const server = http.createServer(async (request, response) => {
     if (request.method === "PATCH" && match) {
       const input = await readJson(request);
       return sendJson(response, 200, await service.updateCampaignAuthorizationProfileBinding(
-        match[1], match[2], match[3], input.profileId, actor
+        match[1], match[2], match[3], input, actor
       ));
     }
     match = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/authorization\/(pause|resume)$/);

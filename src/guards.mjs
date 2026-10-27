@@ -1,7 +1,7 @@
 import { CHANNELS, TRANSITIONS } from "./constants.mjs";
 import { createHash } from "node:crypto";
 import { evaluateCampaignAuthorization } from "./campaign-authorization.mjs";
-import { DEFAULT_READINESS_TTL_MS, isReadinessFresh, readinessBinding } from "./readiness.mjs";
+import { DEFAULT_READINESS_TTL_MS, isReadinessFresh, readinessBinding, readinessContextForTarget } from "./readiness.mjs";
 
 const ACTIVE_PUBLICATION_STATUSES = new Set(["queued", "publishing", "processing", "submit_result_unknown", "published"]);
 export const CAMPAIGN_READINESS_MAX_AGE_MS = DEFAULT_READINESS_TTL_MS;
@@ -69,7 +69,8 @@ export function evaluateQueue(post, state, now = new Date(), { mode = "live", ex
   if (campaignAuthorization) reasons.push(...campaignAuthorization.reasons);
   if (!dryRun && campaignAuthorization && campaignAuthorization.authorization?.allowLiveExecution !== true) reasons.push("live_execution_not_authorized");
   if (campaignAuthorization) {
-    const expectedReadiness = { platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id };
+    const account = (state.executionAccounts || []).find((item) => item.id === `${target.channel}:${target.accountId}`);
+    const expectedReadiness = readinessContextForTarget(target, account);
     if (!target.profileId) reasons.push("execution_profile_missing");
     if (target.readiness?.capabilities?.sessionAuthenticated !== true && target.readiness?.checks?.sessionValid !== true) reasons.push("session_not_verified");
     if (target.readiness?.capabilities?.composerAvailable !== true && target.readiness?.checks?.composerCapable !== true) reasons.push("composer_capability_not_verified");

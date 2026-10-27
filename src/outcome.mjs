@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { canonicalIdentityUrl, canonicalProvider, canonicalTargetUrl } from "./execution-binding.mjs";
 
 const METRIC_FIELDS = Object.freeze(["impressions", "reactions", "comments", "shares", "clicks", "leads"]);
 const MAX_HISTORY = 24;
@@ -69,19 +70,31 @@ function publicationEvidenceFor(row) {
   return receipt.publicationEvidence || receipt.publicationVerification || null;
 }
 
-function isStrongPublicationEvidence({ post, target, row }) {
+function isStrongPublicationEvidence({ post, target, account, row }) {
   const receipt = row?.receipt || row || {};
   const evidence = publicationEvidenceFor(row);
   if (!evidence || receipt.submitState !== "CONFIRMED" || post.status !== "published" || !post.publicationUrl) return false;
   if (evidence.accountMatched !== true || evidence.targetMatched !== true || evidence.contentHashMatched !== true) return false;
   if (!target?.id || !target.channel || !target.accountId || !target.profileId) return false;
   if (evidence.targetId !== target.id || evidence.accountId !== target.accountId || evidence.profileId !== target.profileId) return false;
+  const provider = canonicalProvider(target.provider || account?.provider, { allowLegacy: true });
+  const providerProfileId = target.providerProfileId || account?.providerProfileId || target.profileId;
+  const identityReference = canonicalIdentityUrl(target.identityReference || target.expectedIdentityUrl || account?.identityReference || account?.expectedIdentityUrl);
+  const observedProvider = receipt.provider || evidence.provider;
+  const observedProfile = receipt.providerProfileId || evidence.providerProfileId;
+  const observedIdentity = receipt.identityReference || evidence.identityReference;
+  const observedTargetUrl = receipt.targetUrl || evidence.targetUrl;
+  if (observedProvider && canonicalProvider(observedProvider, { allowLegacy: true }) !== provider) return false;
+  if (provider !== "orca" && (canonicalProvider(observedProvider, { allowLegacy: true }) !== provider || observedProfile !== providerProfileId || canonicalIdentityUrl(observedIdentity) !== identityReference || canonicalTargetUrl(observedTargetUrl) !== canonicalTargetUrl(target.url))) return false;
+  if (observedProfile && observedProfile !== providerProfileId) return false;
+  if (observedIdentity && canonicalIdentityUrl(observedIdentity) !== identityReference) return false;
+  if (observedTargetUrl && canonicalTargetUrl(observedTargetUrl) !== canonicalTargetUrl(target.url)) return false;
   const contentHash = createHash("sha256").update(String(post.content || "")).digest("hex");
   if (evidence.contentHash !== contentHash || receipt.publicationUrl !== post.publicationUrl) return false;
   return Number.isFinite(Date.parse(String(evidence.verifiedAt || "")));
 }
 
-function isStrongPostVerification({ post, target }) {
+function isStrongPostVerification({ post, target, account }) {
   const evidence = post.publicationVerification || post.verificationEvidence || null;
   if (!evidence || !post.publicationUrl || post.status !== "published") return false;
   const state = String(evidence.state || evidence.verificationState || "").toUpperCase();
@@ -89,6 +102,18 @@ function isStrongPostVerification({ post, target }) {
   if (evidence.accountMatched !== true || evidence.targetMatched !== true || evidence.contentHashMatched !== true) return false;
   if (!target?.id || !target.channel || !target.accountId || !target.profileId) return false;
   if (evidence.targetId !== target.id || evidence.accountId !== target.accountId || evidence.profileId !== target.profileId) return false;
+  const provider = canonicalProvider(target.provider || account?.provider, { allowLegacy: true });
+  const providerProfileId = target.providerProfileId || account?.providerProfileId || target.profileId;
+  const identityReference = canonicalIdentityUrl(target.identityReference || target.expectedIdentityUrl || account?.identityReference || account?.expectedIdentityUrl);
+  const observedProvider = evidence.provider;
+  const observedProfile = evidence.providerProfileId;
+  const observedIdentity = evidence.identityReference;
+  const observedTargetUrl = evidence.targetUrl;
+  if (observedProvider && canonicalProvider(observedProvider, { allowLegacy: true }) !== provider) return false;
+  if (provider !== "orca" && (canonicalProvider(observedProvider, { allowLegacy: true }) !== provider || observedProfile !== providerProfileId || canonicalIdentityUrl(observedIdentity) !== identityReference || canonicalTargetUrl(observedTargetUrl) !== canonicalTargetUrl(target.url))) return false;
+  if (observedProfile && observedProfile !== providerProfileId) return false;
+  if (observedIdentity && canonicalIdentityUrl(observedIdentity) !== identityReference) return false;
+  if (observedTargetUrl && canonicalTargetUrl(observedTargetUrl) !== canonicalTargetUrl(target.url)) return false;
   const contentHash = createHash("sha256").update(String(post.content || "")).digest("hex");
   if (evidence.contentHash !== contentHash) return false;
   if (evidence.publicationUrl && evidence.publicationUrl !== post.publicationUrl) return false;
@@ -117,6 +142,7 @@ export function derivePostOutcomeAttributions(state, campaignId, { posts, target
     .slice(0, MAX_ITEMS);
   const requestByExecution = new Map((requests || state?.executionRequests || []).map((request) => [String(request.executionId || ""), request]).filter(([id]) => id));
   const targetRows = targets || state?.targets || [];
+  const accountRows = state?.executionAccounts || [];
   const receiptRows = receipts || state?.executionReceipts || [];
   const uncertaintyRows = uncertainties || state?.submissionUncertainties || [];
   const attemptRows = attempts || state?.publicationAttempts || [];
@@ -127,6 +153,7 @@ export function derivePostOutcomeAttributions(state, campaignId, { posts, target
 
   return campaignPosts.map((post) => {
     const target = targetRows.find((item) => item?.id === post.targetId) || null;
+    const account = target && accountRows.find((item) => item?.id === `${target.channel}:${target.accountId}`) || null;
     const targetIdentity = {
       targetId: safeIdentifier(post.targetId),
       channel: safeIdentifier(target?.channel, 80),
@@ -152,8 +179,8 @@ export function derivePostOutcomeAttributions(state, campaignId, { posts, target
       return linkedUncertainties.length === 0 || linkedUncertainties.some((item) => String(item?.status || "").toUpperCase() === "UNKNOWN");
     });
     const unknown = post.status === "submit_result_unknown" || activeUnknown || orphanUnknownReceipt;
-    const verifiedRow = identityComplete && postReceipts.find((row) => isStrongPublicationEvidence({ post, target, row }));
-    const verifiedPost = identityComplete && isStrongPostVerification({ post, target });
+    const verifiedRow = identityComplete && postReceipts.find((row) => isStrongPublicationEvidence({ post, target, account, row }));
+    const verifiedPost = identityComplete && isStrongPostVerification({ post, target, account });
     const accepted = postReceipts.some((row) => {
       const receipt = row?.receipt || row || {};
       return Boolean(receipt.acceptanceEvidence || receipt.submitAcceptanceEvidence || receipt.submissionAccepted === true);

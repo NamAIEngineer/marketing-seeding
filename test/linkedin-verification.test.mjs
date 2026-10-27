@@ -844,3 +844,39 @@ test("reconciliation delegates to the same verifier with the original submit tim
   assert.equal(calls[0][2].executionId, "execution-1");
   assert.deepEqual(calls[0][2].preSubmitMediaIntegrity, preSubmitMediaIntegrity);
 });
+
+test("injected session transport is authoritative and does not construct ORCA fallback", () => {
+  const calls = [];
+  const injected = {
+    transportContractVersion: 1,
+    requiresPreClickValidation: true,
+    runtimeIdentity: () => ({ transport: "gpm-chrome", provider: "gpm", providerVersion: "5.1.2" }),
+    assertPreClickValidation() { return true; },
+    async click() { calls.push("click"); return { status: "COMMAND_COMPLETED" }; }
+  };
+  const surface = { runtimeIdentity: injected.runtimeIdentity };
+  const adapter = new LinkedInAdapter({ runtimeIdentity: () => ({ transport: "orca-accessibility", provider: "orca", providerVersion: "1" }) }, {
+    session: { transport: injected, browserSurface: surface }
+  });
+  assert.equal(adapter.transport, injected);
+  assert.deepEqual(adapter.transportCandidates, [injected]);
+  assert.deepEqual(adapter.selectedTransportIdentity, { transport: "gpm-chrome", provider: "gpm", providerVersion: "5.1.2" });
+  assert.equal(adapter.browser, surface);
+  assert.deepEqual(calls, []);
+});
+
+test("per-execution injected session fails closed before input when generic browser surface is incomplete", async () => {
+  let clicked = 0;
+  const transport = {
+    transportContractVersion: 1, requiresPreClickValidation: true,
+    runtimeIdentity: () => ({ transport: "gpm-chrome", provider: "gpm", providerVersion: "5.1.2" }),
+    assertPreClickValidation() {}, async click() { clicked += 1; }
+  };
+  const adapter = new LinkedInAdapter({});
+  const result = await adapter.execute(request({ withMedia: false }), {
+    executionSession: { transport, browserSurface: { navigate() {} } }, dryRun: false, liveEnabled: true
+  });
+  assert.equal(result.submitState, "FAILED");
+  assert.equal(result.reasonCode, "EXECUTION_SESSION_SURFACE_UNSUPPORTED");
+  assert.equal(clicked, 0);
+});

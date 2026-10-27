@@ -1156,6 +1156,15 @@ function MissionControlPanel({ data }: { data: R }) {
   const factorySandbox = data?.productFactorySandbox && typeof data.productFactorySandbox === "object"
     ? data.productFactorySandbox
     : null
+  const browserRuntime = data?.browserRuntime && typeof data.browserRuntime === "object"
+    ? data.browserRuntime
+    : null
+  const browserRuntimeRows = Array.isArray(browserRuntime?.routes) ? browserRuntime.routes.slice(0, 12) : []
+  const gpmCatalog = data?.gpmAccountCatalog && typeof data.gpmAccountCatalog === "object" ? data.gpmAccountCatalog : null
+  const gpmProfiles = Array.isArray(gpmCatalog?.catalog?.profiles) ? gpmCatalog.catalog.profiles.slice(0, 12) : []
+  const gpmAccounts = Array.isArray(gpmCatalog?.accounts) ? gpmCatalog.accounts.slice(0, 12) : []
+  const sessionReadiness = data?.sessionReadiness && typeof data.sessionReadiness === "object" ? data.sessionReadiness : null
+  const sessionRows = Array.isArray(sessionReadiness?.rows) ? sessionReadiness.rows.slice(0, 12) : []
   const unsupportedClaimCount = productIntelligence.reduce((total: number, item: R) => {
     const document = item?.document && typeof item.document === "object" ? item.document : {}
     return total + (Array.isArray(document.CLAIMS_WE_CANNOT_MAKE) ? document.CLAIMS_WE_CANNOT_MAKE.length : 0)
@@ -1315,6 +1324,58 @@ function MissionControlPanel({ data }: { data: R }) {
         ) : (
           <div className="empty-state">Chưa có account runtime projection.</div>
         )}
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head">
+          <div>
+            <span className="mission-eyebrow">Browser runtime routing</span>
+            <small>Read-only route/health projection · hệ thống tự chọn transport theo workload</small>
+          </div>
+          <span className="status">{browserRuntimeRows.length ? `${browserRuntimeRows.length} workload` : "UNKNOWN"}</span>
+        </div>
+        {browserRuntimeRows.length ? (
+          <div className="mission-account-list">
+            {browserRuntimeRows.map((row: R) => (
+              <article key={String(row.workload)}>
+                <div className="mission-account-title">
+                  <strong>{compactText(row.workload, "UNKNOWN", 80)}</strong>
+                  <span className={row.health?.state === "READY" ? "status completed" : "status draft"}>
+                    {compactText(row.health?.state, "UNKNOWN", 24)}
+                  </span>
+                </div>
+                <small>Route: {compactText(row.route, "UNKNOWN", 40)} · transport: {compactText(row.transportId, "UNKNOWN", 80)}</small>
+                <small>Runtime: {compactText(row.runtimeIdentity?.provider, "UNKNOWN", 60)} {compactText(row.runtimeIdentity?.providerVersion, "", 40)}</small>
+                <small>Reason: {compactText(row.health?.reason || row.reason, "UNKNOWN", 120)}</small>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">Chưa có browser runtime projection.</div>
+        )}
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head">
+          <div><span className="mission-eyebrow">GPM account catalog</span><small>Read-only probe · fingerprints only · không điều khiển profile</small></div>
+          <span className="status">{gpmCatalog?.catalog?.state || "UNKNOWN"}</span>
+        </div>
+        {gpmCatalog && (gpmProfiles.length || gpmAccounts.length) ? (
+          <div className="mission-account-list">
+            <article><div className="mission-account-title"><strong>Catalog state counts</strong><span className="status">{gpmCatalog.summary?.catalogProfiles ?? 0} profiles</span></div><small>Bound {gpmCatalog.summary?.boundProfiles ?? 0} · Unbound {gpmCatalog.summary?.unboundProfiles ?? 0} · Ambiguous {gpmCatalog.summary?.ambiguousProfiles ?? 0} · Missing {gpmCatalog.summary?.missingProfiles ?? 0}</small></article>
+            {gpmProfiles.map((row: R) => <article key={String(row.profileFingerprint)}><div className="mission-account-title"><strong>{compactText(row.name, "UNKNOWN", 60)}</strong><span className="status">{row.linkage?.status || "UNKNOWN"}</span></div><small>Profile fingerprint: {compactText(row.profileFingerprint, "UNKNOWN", 20)} · accounts {row.linkage?.accountCount ?? 0}</small></article>)}
+            {gpmAccounts.map((row: R) => <article key={`account-${String(row.profileFingerprint)}-${String(row.accountId)}`}><div className="mission-account-title"><strong>{compactText(row.platform, "UNKNOWN", 40)} account</strong><span className="status">{row.catalogLinkage || "UNKNOWN"}</span></div><small>Profile fingerprint: {compactText(row.profileFingerprint, "UNKNOWN", 20)}</small></article>)}
+          </div>
+        ) : <div className="empty-state">Catalog UNKNOWN hoặc chưa có GPM endpoint.</div>}
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head">
+          <div><span className="mission-eyebrow">Session readiness</span><small>Read-only exact binding · không tạo lease hoặc authority</small></div>
+          <span className="status">{sessionReadiness?.summary?.ready ?? 0}/{sessionReadiness?.summary?.accounts ?? 0} READY</span>
+        </div>
+        {sessionRows.length ? (
+          <div className="mission-account-list">
+            {sessionRows.map((row: R) => <article key={`${String(row.platform)}-${String(row.accountId)}-${String(row.profileFingerprint)}`}><div className="mission-account-title"><strong>{compactText(row.platform, "UNKNOWN", 40)} account</strong><span className={row.executionEligible === true ? "status completed" : "status draft"}>{compactText(row.status, "UNKNOWN", 24)}</span></div><small>Profile fingerprint: {compactText(row.profileFingerprint, "UNKNOWN", 20)} · observed: {compactText(row.observedProfileFingerprint, "UNKNOWN", 20)}</small><small>Reason: {Array.isArray(row.reasons) && row.reasons.length ? row.reasons.map((reason: unknown) => compactText(reason, "UNKNOWN", 80)).join(" · ") : "UNKNOWN"}</small></article>)}
+          </div>
+        ) : <div className="empty-state">Session readiness UNKNOWN hoặc chưa có account.</div>}
       </div>
       <div className="mission-advisory-runtime">
         <div className="mission-account-head">

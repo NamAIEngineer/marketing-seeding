@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { canonicalIdentityUrl, canonicalProvider, canonicalTargetUrl } from "./execution-binding.mjs";
 
 const STATUSES = new Set(["ACTIVE", "RESERVED", "CONSUMED", "EXPIRED", "REVOKED"]);
 
@@ -13,7 +14,7 @@ function digest(value) {
 }
 
 function immutableScope(window) {
-  return {
+  const scope = {
     schemaVersion: window.schemaVersion,
     windowId: window.windowId,
     campaignId: window.campaignId,
@@ -25,13 +26,23 @@ function immutableScope(window) {
     timezone: window.timezone,
     maxExecutions: window.maxExecutions
   };
+  if (window.provider || window.providerProfileId) Object.assign(scope, {
+    platform: window.platform,
+    provider: canonicalProvider(window.provider, { allowLegacy: true }),
+    providerProfileId: window.providerProfileId,
+    identityReference: canonicalIdentityUrl(window.identityReference),
+    accountId: window.accountId,
+    targetId: window.targetId,
+    targetUrl: canonicalTargetUrl(window.targetUrl)
+  });
+  return scope;
 }
 
 export function oneTimeExecutionWindowFingerprint(window) {
   return digest(immutableScope(window));
 }
 
-export function normalizeOneTimeExecutionWindow(input, { post, authorization, authorizationFingerprint, now = new Date(), createdBy }) {
+export function normalizeOneTimeExecutionWindow(input, { post, authorization, authorizationFingerprint, binding = null, now = new Date(), createdBy }) {
   if (!post || !authorization || post.campaignId !== authorization.campaignId || post.campaignAuthorizationId !== authorization.id) {
     throw new Error("One-time window job must belong to the referenced campaign authorization");
   }
@@ -65,8 +76,20 @@ export function normalizeOneTimeExecutionWindow(input, { post, authorization, au
     maxExecutions: 1,
     createdAt: now.toISOString(),
     createdBy: required(createdBy, "createdBy"),
-    reason: required(input.reason, "reason")
+    reason: required(input.reason, "reason"),
+    ...(binding && (binding.provider || binding.providerProfileId) ? {
+      platform: required(binding.platform, "platform"),
+      provider: canonicalProvider(binding.provider, { allowLegacy: true }),
+      providerProfileId: required(binding.providerProfileId || binding.profileId, "providerProfileId"),
+      identityReference: canonicalIdentityUrl(binding.identityReference || binding.expectedIdentityUrl),
+      accountId: required(binding.accountId, "accountId"),
+      targetId: required(binding.targetId, "targetId"),
+      targetUrl: canonicalTargetUrl(binding.targetUrl || binding.url)
+    } : {})
   };
+  // Legacy rows have no provider fields and retain their historical digest.
+  // Only an explicitly provider-aware row requires a verified identity.
+  if (window.provider && window.provider !== "orca" && !window.identityReference) throw new Error("Provider-aware one-time window requires verified identityReference");
   window.binding = oneTimeExecutionWindowFingerprint(window);
   return window;
 }

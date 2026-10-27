@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "packageType": "LINKEDIN_HARMLESS_CERTIFICATION_LANE",
+  "packageStatus": "VALID_FOR_NON_PUBLISHING_PREFLIGHT",
+  "createdAt": "2026-10-26T01:30:01.808Z",
+  "source": {
+    "repository": "marketing-seeding",
+    "candidateHead": "be0f6cf783aea340306e4a3446ce0467c5f3e6e2",
+    "softwareResult": "CONTROLLED_RUNTIME_READY_FOR_EXTERNAL_CERTIFICATION",
+    "candidateTreeState": "CLEAN_WITH_FRESH_LIVE_GPM_EVIDENCE",
+    "latestVerification": {
+      "npmTest": {
+        "total": 700,
+        "pass": 698,
+        "fail": 0,
+        "skip": 2
+      },
+      "liveGpmAttach": "PASS",
+      "linkedInIdentity": "PASS",
+      "reversibleCalibration": {
+        "attempts": 20,
+        "positiveActivations": 20,
+        "wrongTargetActivations": 0,
+        "activationSuccessRate": 1,
+        "certified": true
+      },
+      "finalPostClicks": 0,
+      "publicationAttempts": 0
+    }
+  },
+  "product": {
+    "repository": null,
+    "sourceCommit": null,
+    "evidenceReference": null,
+    "artifactIds": [],
+    "artifactHashes": []
+  },
+  "campaign": {
+    "objective": "ONE_HARMLESS_LINKEDIN_CERTIFICATION_ATTEMPT",
+    "scope": "ONE_HARMLESS_LINKEDIN_CERTIFICATION_ATTEMPT",
+    "platform": "linkedin",
+    "target": {
+      "targetId": "linkedin-member-feed-linkedin_primary",
+      "url": "https://www.linkedin.com/feed/",
+      "permission": "human-task-scope:linkedin_primary-member-feed"
+    }
+  },
+  "account": {
+    "accountId": "linkedin_primary",
+    "profileReference": "82614dc6-2b75-4515-896c-32f73cb5ec51",
+    "expectedIdentityUrl": "https://www.linkedin.com/in/nam-ph%E1%BA%A1m-ph%C6%B0%C6%A1ng-b48897278/",
+    "permissionReference": "human-task-scope:linkedin_primary",
+    "sessionAuthorityReference": "human-confirmed-gpm-profile-5671-session",
+    "credentials": "NOT_ACCEPTED",
+    "cookies": "NOT_ACCEPTED",
+    "rawTokens": "NOT_ACCEPTED"
+  },
+  "session": {
+    "provider": "gpm",
+    "transport": "gpm-execution",
+    "providerProfileRef": "82614dc6-2b75-4515-896c-32f73cb5ec51",
+    "sessionAuthority": "human-confirmed-gpm-profile-5671-session",
+    "hostAttestationReference": "sha256:b779a58ef094e9a856021c6dd4e06fb1",
+    "freshness": {
+      "validFrom": "2026-10-26T01:30:01.808Z",
+      "validUntil": "2026-10-26T01:35:01.808Z",
+      "maxAgeMs": 300000
+    },
+    "challengePolicy": "FAIL_CLOSED_AND_REQUIRE_HUMAN_ACTION",
+    "sessionSecrets": "NEVER_SERIALIZE"
+  },
+  "contentPolicy": {
+    "approvedPayloadBytes": "Running a fresh, bounded LinkedIn transport certification with reversible controls.",
+    "contentId": "sha256:5d9b5299dcbd5d47f41f369fa92d2e385b18ba584acf291e351c20da303c2c24",
+    "contentSha256": "5d9b5299dcbd5d47f41f369fa92d2e385b18ba584acf291e351c20da303c2c24",
+    "audience": "PUBLIC",
+    "media": [],
+    "mediaPolicy": "NO_MEDIA_UNLESS_EXPLICITLY_APPROVED",
+    "claimEvidenceReferences": [],
+    "disclosure": null,
+    "publicationIdentity": "linkedin-certification:5d9b5299dcbd5d47f41f369fa92d2e385b18ba584acf291e351c20da303c2c24"
+  },
+  "authorization": {
+    "standingAuthorizationReference": "human-task-scope:wave-13-linkedin-gpm-certification",
+    "authorizationBinding": {
+      "platform": "linkedin",
+      "accountId": "linkedin_primary",
+      "profileReference": "82614dc6-2b75-4515-896c-32f73cb5ec51",
+      "targetId": "linkedin-member-feed-linkedin_primary",
+      "contentSha256": "5d9b5299dcbd5d47f41f369fa92d2e385b18ba584acf291e351c20da303c2c24",
+      "publicationVisibility": "PUBLIC"
+    },
+    "allowLiveExecution": true,
+    "validFrom": "2026-10-26T01:30:01.808Z",
+    "validUntil": "2026-10-26T01:35:01.808Z",
+    "maxExecutions": 1,
+    "cadence": {
+      "minimumIntervalSeconds": null,
+      "dailyQuota": 1,
+      "concurrency": 1
+    },
+    "window": "DERIVE_EXACTLY_FROM_VALIDITY_AND_SCHEDULE",
+    "grant": "DERIVE_EXACTLY_FROM_FRESH_EXECUTION",
+    "lease": "DERIVE_AT_DISPATCH",
+    "historicalUnknownReuse": false
+  },
+  "readiness": {
+    "required": [
+      "session_attached",
+      "host_attestation_fresh",
+      "expected_linkedin_identity_observed",
+      "account_profile_binding_matches",
+      "no_security_challenge",
+      "target_reachable",
+      "composer_reachable",
+      "reversible_transport_certified",
+      "fresh_exact_authorization",
+      "quota_cadence_concurrency_available"
+    ],
+    "finalSubmit": "DISABLED_IN_THIS_TASK",
+    "verification": "INDEPENDENT_PUBLIC_OBSERVER_WHERE_PERMITTED"
+  },
+  "externalInputRequired": {
+    "authorizedAccountProfileSession": true,
+    "targetPermission": true,
+    "approvedHarmlessContentMediaPolicy": true,
+    "utcValidityWindow": true,
+    "standingAuthorizationReference": true,
+    "mfaOrSecurityChallengeResolution": "ONLY_IF_TRIGGERED"
+  },
+  "safety": {
+    "maxFinalPostClicks": 1,
+    "retryUnknown": false,
+    "reuseHistoricalUnknown": false,
+    "transportSwitchAfterIntent": false,
+    "credentialExtraction": false,
+    "profileImpersonation": false
+  }
+}

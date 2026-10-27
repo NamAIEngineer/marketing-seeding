@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
+import { evaluateBrowser } from "./browser-evaluation.mjs";
 
 const surfaceState = `(() => {
   /* LINKEDIN_MEDIA_SURFACE_STATE */
@@ -141,7 +142,7 @@ export async function attachLinkedInMedia(browser, pageId, media, { timeoutMs = 
   evidence.dialogCount = before.dialogCount || 0;
   evidence.fileInputCount = before.fileInputCount || 0;
   if (before.composerCount !== 1 || before.mediaDialogCount > 0) fail("MEDIA_DIALOG_AMBIGUOUS");
-  const activated = await browser.evaluate(pageId, openMedia);
+  const activated = await evaluateBrowser(browser, pageId, openMedia, { mutation: true, operation: "LINKEDIN_MEDIA_OPEN" });
   if (!activated?.clicked) fail("MEDIA_DIALOG_NOT_FOUND");
   const mount = await poll(browser, pageId, surfaceState, state => state?.mediaDialogCount > 0, Math.min(timeoutMs, 8_000));
   evidence.dialogCount = mount.state?.dialogCount || 0;
@@ -150,17 +151,17 @@ export async function attachLinkedInMedia(browser, pageId, media, { timeoutMs = 
   if (mount.state.composerCount !== 1 || mount.state.mediaDialogCount !== 1) fail("MEDIA_DIALOG_AMBIGUOUS");
   evidence.selectedSurface = "media_editor_dialog";
   const mediaControlOpenMs = Date.now() - started;
-  const baseline = await browser.evaluate(pageId, baselineInputs(marker));
+  const baseline = await evaluateBrowser(browser, pageId, baselineInputs(marker), { mutation: true, operation: "LINKEDIN_MEDIA_BASELINE" });
   evidence.fileInputCount = baseline.fileInputCount || 0;
   if (baseline.selectedCount) fail("FILE_INPUT_AMBIGUOUS");
-  const uploadActivated = await browser.evaluate(pageId, uploadButton);
+  const uploadActivated = await evaluateBrowser(browser, pageId, uploadButton, { mutation: true, operation: "LINKEDIN_MEDIA_UPLOAD_BUTTON" });
   if (!uploadActivated?.clicked) fail("FILE_INPUT_NOT_FOUND");
   const input = await poll(browser, pageId, inputState(marker, media.type, extension), state => state?.newInputCount > 0, Math.min(timeoutMs, 8_000));
   evidence.waitDurationMs = input.durationMs;
   evidence.fileInputCount = input.state?.fileInputCount || evidence.fileInputCount;
   const inputError = selectLinkedInUploadInput(input.state);
   if (inputError) fail(inputError);
-  const selected = await browser.evaluate(pageId, inputState(marker, media.type, extension, true));
+  const selected = await evaluateBrowser(browser, pageId, inputState(marker, media.type, extension, true), { mutation: true, operation: "LINKEDIN_MEDIA_INPUT_SELECT" });
   if (selected?.eligibleCount !== 1 || selected.selectorCount !== 1) fail("FILE_INPUT_AMBIGUOUS");
   const uploadTargetDiscoveryMs = Date.now() - started - mediaControlOpenMs;
   const attachStarted = Date.now();
@@ -196,7 +197,7 @@ export async function attachLinkedInMedia(browser, pageId, media, { timeoutMs = 
     if (!phase.reached || phase.state.composerCount !== 1 || phase.state.mediaDialogCount > 1) fail("MEDIA_PREVIEW_INVALID");
     if (phase.state.mediaDialogCount === 0) break;
     const action = phase.state.doneEnabled ? "done" : "next";
-    const clicked = await browser.evaluate(pageId, finishClick(action));
+    const clicked = await evaluateBrowser(browser, pageId, finishClick(action), { mutation: true, operation: "LINKEDIN_MEDIA_FINISH_CLICK" });
     if (!clicked?.clicked) fail("MEDIA_PREVIEW_INVALID");
     if (action === "done") {
       const closed = await poll(browser, pageId, finishState, state => state?.mediaDialogCount === 0, Math.min(timeoutMs, 12_000));
@@ -294,20 +295,20 @@ export async function cleanupLinkedInComposer(browser, pageId, contentHash) {
   if (state.path === '/feed/' && state.composerCount === 0) return true;
   if (state.path !== '/sharing/compose' || state.composerCount !== 1 || state.mediaDialogCount > 1) throw new Error("LinkedIn draft cleanup state is ambiguous");
   if (state.mediaDialogCount === 1) {
-    const cancelled = await browser.evaluate(pageId, cancelMediaEditor);
+    const cancelled = await evaluateBrowser(browser, pageId, cancelMediaEditor, { mutation: true, operation: "LINKEDIN_MEDIA_CANCEL_EDITOR" });
     if (!cancelled?.clicked) throw new Error("LinkedIn media editor could not be safely cancelled");
     const closed = await poll(browser, pageId, cleanupState, value => value?.mediaDialogCount === 0, 8_000);
     if (!closed.reached || closed.state.composerCount !== 1) throw new Error("LinkedIn media editor cleanup was not verified");
   }
   if (state.composerVideoCount > 0) {
-    const removed = await browser.evaluate(pageId, removeComposerVideo);
+    const removed = await evaluateBrowser(browser, pageId, removeComposerVideo, { mutation: true, operation: "LINKEDIN_MEDIA_REMOVE_VIDEO" });
     if (!removed?.clicked) throw new Error("LinkedIn video preview could not be safely removed");
     const absent = await poll(browser, pageId, cleanupState, value => value?.composerVideoCount === 0, 8_000);
     if (!absent.reached) throw new Error("LinkedIn video removal was not verified");
   }
-  const cleared = await browser.evaluate(pageId, clearComposer(contentHash));
+  const cleared = await evaluateBrowser(browser, pageId, clearComposer(contentHash), { mutation: true, operation: "LINKEDIN_MEDIA_CLEAR_COMPOSER" });
   if (!cleared?.cleared) throw new Error("LinkedIn approved content could not be safely cleared");
-  const cancelled = await browser.evaluate(pageId, cancelComposer);
+  const cancelled = await evaluateBrowser(browser, pageId, cancelComposer, { mutation: true, operation: "LINKEDIN_MEDIA_CANCEL_COMPOSER" });
   if (!cancelled?.clicked) throw new Error("LinkedIn composer could not be safely cancelled");
   await browser.waitForFeed(pageId);
   // The SPA may retain the hidden selected file input after dismissing the composer.
