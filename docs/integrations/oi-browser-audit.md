@@ -12,6 +12,8 @@ Audit date: 2026-10-27 (UTC)
 
 Attribution: implementation decisions below adapt source from oi-browser, owned by `jangtrinh`, into the existing marketing-seeding control plane. No oi-browser application shell, fruit companion catalog, seeded demo state, or second SQLite database is copied.
 
+Required Notice: Copyright (c) 2026 Jang Trinh (https://github.com/jangtrinh). The adapted oi-browser source is governed by the source repository's PolyForm Shield License 1.0.0 (`/Users/nam/Documents/oi-browser-source/LICENSE`, revision `1e471c44b5d63aa5aadb708623b21090b6f325b2`); retain this notice and license URL with redistributed adapted portions.
+
 ## Session ownership evidence
 
 - SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, HEAD `52072ce`, dirty files in Camoufox/session/server/service/strategy/UI lanes. A Camoufox process (PID 37958) and marketing server (PID 8201, `127.0.0.1:4318`) were observed; no live Orca agent terminal was registered.
