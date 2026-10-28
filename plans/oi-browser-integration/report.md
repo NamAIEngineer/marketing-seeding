@@ -2,7 +2,7 @@
 
 ## Status
 
-`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; final source/evidence revision: `d20c43715fda360321034450eef68f933b161ab`; current C code/test revision: `9875db34c3f068c1510b3e92e8c72e4134e641a9`; prior integration evidence checkpoint: `7f2b74a`; continuation implementation began at `3d1c380`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; final source/evidence revision: `fa376f9bd2eddc11e41bcc21099eb229d214954d`; current C code/test revision: `9875db34c3f068c1510b3e92e8c72e4134e641a9`; prior integration evidence checkpoint: `7f2b74a`; continuation implementation began at `3d1c380`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
 ## Baseline, ownership, integration
 
@@ -41,7 +41,7 @@ Standing authorization guards remain canonical. Candidate tests cover scope coll
 
 Artifact: [fixture-run-7378f8c.json](fixture-run-7378f8c.json). Controlled Product X developer-awareness campaign: Community A has technical/educational evidence; Community B prohibits direct promotion while allowing educational context. `SeedingService.runCampaignControlCycle` chose a candidate before consolidation. Two distinct verified fixture observations consolidated into one `LEARNING` with `sampleSupport=2`, `verifiedCount=2`, and evidence `fixture:fixture-publication-a` / `fixture:fixture-publication-b`. The next production strategy entrypoint selected a different candidate and included `memory:learning-1adbd95424b288d5e6db412b`. Browser semantic CLICK crossed `BrowserInteractionFixture`, verified `CONTROL_ACTIVATED`, replay clicked once, and restart retained memory, learning, snapshot, execution, and provider decisions. Evidence: `FIXTURE_VERIFIED`; no external side effect.
 
-Final C candidate source/evidence revision: `0cce4c374308698c64cc20494d0e878f6501ceb0`; C code/test revision: `9875db34c3f068c1510b3e92e8c72e4134e641a9`.
+Final C candidate source/evidence revision: `fa376f9bd2eddc11e41bcc21099eb229d214954d`; C code/test revision: `9875db34c3f068c1510b3e92e8c72e4134e641a9`.
 
 ## Runtime proof — isolated candidate
 

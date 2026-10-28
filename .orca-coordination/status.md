@@ -4,11 +4,11 @@
 
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
-- Final candidate source/evidence revision: `0cce4c374308698c64cc20494d0e878f6501ceb0`; code/test revision remains `9875db34c3f068c1510b3e92e8c72e4134e641a9`.
+- Final candidate source/evidence revision: `fa376f9bd2eddc11e41bcc21099eb229d214954d`; code/test revision remains `9875db34c3f068c1510b3e92e8c72e4134e641a9`.
 - Code/test checkpoint: `9875db34c3f068c1510b3e92e8c72e4134e641a9`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
-- C-owned coordinator source/tests are committed through `9875db3`; docs/evidence are committed through `0cce4c3`; `7f2b74a` remains the prior integration evidence checkpoint.
+- C-owned coordinator source/tests are committed through `9875db3`; docs/evidence are committed through `fa376f9`; `7f2b74a` remains the prior integration evidence checkpoint.
 
 ## A/B/C connectivity and ownership
 
