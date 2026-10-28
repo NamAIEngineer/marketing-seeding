@@ -4,11 +4,11 @@
 
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
-- Candidate source/test revision: `35cc224febb5eb9c8368cf88f5f28b6a119b6be3`; metadata/evidence HEAD follows this checkpoint; prior code/test revisions remain recorded in historical evidence.
-- Code/test checkpoint: `35cc224febb5eb9c8368cf88f5f28b6a119b6be3`
+- Candidate source/test revision: `fa3ebda996041498e44800e181507bd494ee4b72`; metadata/evidence HEAD follows this checkpoint; prior code/test revisions remain recorded in historical evidence.
+- Code/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
-- C-owned source/tests are committed through `35cc224`; final docs/evidence follow on the candidate branch; `7f2b74a` remains the prior integration evidence checkpoint.
+- C-owned source/tests are committed through `fa3ebda`; final docs/evidence follow on the candidate branch; `7f2b74a` remains the prior integration evidence checkpoint.
 
 ## A/B/C connectivity and ownership
 
@@ -26,13 +26,13 @@
 - Focused current slices: authority/bootstrap/delegation `47/47`; oi-browser/browser/provider/transport `59/59`; combined `106/106`.
 - Current coordinator/native focused: `node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs` → 17 total, 17 pass, 0 fail; prior native/coordinator/LinkedIn verifier suite is 69/69.
 - Historical candidate `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped. Pre-regression candidate `10ce868`: `node --test test/*.test.mjs` → 802 total, 800 pass, 0 fail, 2 skipped. Historical recovery checkpoint `1589518`: `node --test test/*.test.mjs` → 807 total, 805 pass, 0 fail, 2 skipped.
-- Durable memory/provider regression artifact is `plans/oi-browser-integration/regression-final-9875db3.json` at source `9875db3`; current candidate regression evidence is `plans/oi-browser-integration/regression-final-35cc224.json` at source/test revision `35cc224`. Prior evidence artifacts remain retained.
+- Durable memory/provider regression artifact is `plans/oi-browser-integration/regression-final-9875db3.json` at source `9875db3`; current candidate regression evidence is `plans/oi-browser-integration/regression-final-service-signal.json` at source/test revision `fa3ebda`. Prior evidence artifacts remain retained.
 - Auxiliary queue verifier task `0e9f9242-0019-4f11-9453-9d155a419221` failed closed at provider authorization validation; no retry or artifact. Direct independent verifier PASS remains authoritative.
 - Auto-GTM owner checkout: `/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests` → 160 total, 160 pass, 0 fail; `pip check` clean. The owner worktree remains dirty; C did not modify it.
 - Controlled fixture: `plans/oi-browser-integration/fixture-run-7378f8c.json`, `FIXTURE_VERIFIED`; learning support 2, verified 2; before/after candidate changed; restart and browser replay passed; external side effects false.
 - Isolated runtime: `plans/oi-browser-integration/server-smoke-7378f8c.json`, `RUNTIME_VERIFIED`; port `4337`, exact SHA, auth boundary, memory/static snapshot persistence, restart persistence, explicit local-Qwen route success; Auto-GTM remains unavailable (`feed_not_generated`).
 - Current syntax checks and `git diff --check` passed. Fresh independent verifier reviewed historical `7f2b74a` at `2026-10-28T07:49:24Z`; current native/coordinator/verifier focused checks are 69/69. Secret scan found no credential-like values in coordinator files; matches elsewhere are test redaction fixtures/generated UI text.
-- Regression fix at `9875db3`: canonical evidence refs define independent memory samples; caller publication/sample ID changes cannot inflate support; stalled provider response bodies and JSON parsing remain under the same deadline; already-aborted caller signals fail fast. Recovery hardening at `1589518` adds bounded exact-request reconciliation and crash-safe restart accounting. Cancellation hardening at `35cc224` aborts the active provider and suppresses fallback, including the invalid-result race. Current focused oi-browser/provider/live bridge tests `34/34`; coordinator/native tests `17/17`; full candidate suite `813 total, 811 pass, 0 fail, 2 skipped`; evidence: `plans/oi-browser-integration/regression-final-35cc224.json`; no A/B/runtime mutation.
+- Regression fix at `9875db3`: canonical evidence refs define independent memory samples; caller publication/sample ID changes cannot inflate support; stalled provider response bodies and JSON parsing remain under the same deadline; already-aborted caller signals fail fast. Recovery hardening at `1589518` adds bounded exact-request reconciliation and crash-safe restart accounting. Cancellation hardening at `35cc224` aborts the active provider and suppresses fallback, including the invalid-result race. Service wiring at `fa3ebda` forwards cancellation through the production service entrypoint. Current focused oi-browser/provider/live bridge tests `35/35`; coordinator/native tests `17/17`; full candidate suite `814 total, 812 pass, 0 fail, 2 skipped`; evidence: `plans/oi-browser-integration/regression-final-service-signal.json`; no A/B/runtime mutation.
 
 ## State
 
@@ -69,9 +69,9 @@
 
 ## C follow-up 2026-10-29
 
-- Final C source revision: `35cc224febb5eb9c8368cf88f5f28b6a119b6be3`; remote now matches after the docs follow-up push.
-- C patch binds browser intents to immutable action/element/snapshot identity, semantic target identity, frame, and role, and adds caller cancellation with fallback suppression. Focused oi-browser/provider/live bridge tests: 34/34. Coordinator/native tests: 17/17. Full suite: 813 total, 811 pass, 0 fail, 2 skipped; output SHA-256 `4a844338e208e17655a7eba97cf4071b8841a54809ad29f5d0a526d974433d81`.
-- Evidence: `plans/oi-browser-integration/regression-final-35cc224.json`; source changes are `IMPLEMENTED`, test results `FIXTURE_VERIFIED`, existing C launchd follow-up/restart remains `NATIVE_RESUME_VERIFIED`.
+- Final C source revision: `fa3ebda996041498e44800e181507bd494ee4b72`; remote now matches after the service wiring push.
+- C patch binds browser intents to immutable action/element/snapshot identity, adds provider cancellation/fallback suppression, and wires cancellation through `SeedingService`. Focused oi-browser/provider/live bridge tests: 35/35. Coordinator/native tests: 17/17. Full suite: 814 total, 812 pass, 0 fail, 2 skipped; output SHA-256 `daf9f9205342293c5b38d242c85d8dd73f1b88a585838b2a279f56111c51bb38`.
+- Evidence: `plans/oi-browser-integration/regression-final-service-signal.json`; source changes are `IMPLEMENTED`, test results `FIXTURE_VERIFIED`, existing C launchd follow-up/restart remains `NATIVE_RESUME_VERIFIED`.
 - Queue task `ad044fdf-fbbf-4a99-a4eb-9165dc35987e` reconciled once as `UNKNOWN / QUEUE_RECEIPT_AMBIGUOUS`; no retry. Direct C implementation is the code evidence.
 - A read-only checkpoint remains dirty and not integration-ready; B terminal remains orphaned with continuous follow-up unproven. Live Camoufox, publication/metrics/conversion, and Auto-GTM generation/media blockers remain open.
 

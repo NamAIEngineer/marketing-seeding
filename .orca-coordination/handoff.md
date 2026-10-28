@@ -3,7 +3,7 @@
 ## Candidate handoff
 
 - Candidate: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`.
-- Source/test checkpoint: `35cc224febb5eb9c8368cf88f5f28b6a119b6be3`; metadata/evidence HEAD follows this checkpoint; prior integration checkpoint `7f2b74a` retained.
+- Source/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`; metadata/evidence HEAD follows this checkpoint; prior integration checkpoint `7f2b74a` retained.
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - A checkpoint represented: `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; current A overlay read-only recheck is 13 tracked dirty + 90 untracked, preserved outside candidate.
 - B owner checkpoint: `b675a98e6dd2da3c12133dff715eddea616c91f5`; current B read-only recheck is tracked-clean with 16 untracked paths; not cherry-picked because candidate already contains/adapts substantive behavior.
@@ -14,7 +14,7 @@
 - `plans/oi-browser-integration/fixture-run-7378f8c.json`: `FIXTURE_VERIFIED`, controlled Product X / Community A+B, learning-driven before/after candidate change, static browser intent activation, idempotent replay, restart persistence.
 - `plans/oi-browser-integration/server-smoke-7378f8c.json`: `RUNTIME_VERIFIED`, exact source SHA, isolated port `4337`, auth/memory/static snapshot/restart persistence, explicit local-Qwen route success, `feed_not_generated`.
 - Current tests: focused oi-browser/provider/live bridge `34/34`; coordinator/native `17/17`; historical integration/authority slices `106/106`; current full `813 total, 811 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `160/160`, `pip check` clean. Earlier evidence remains tied to its exact revision.
-- Durable regression artifact: `plans/oi-browser-integration/regression-final-9875db3.json`, source `9875db3`, remains historical. Current candidate evidence is `plans/oi-browser-integration/regression-final-35cc224.json` at `35cc224`; prior artifacts remain unchanged.
+- Durable regression artifact: `plans/oi-browser-integration/regression-final-9875db3.json`, source `9875db3`, remains historical. Current candidate evidence is `plans/oi-browser-integration/regression-final-service-signal.json` at `fa3ebda`; prior artifacts remain unchanged.
 
 ## Native session evidence
 
@@ -47,7 +47,7 @@
 
 ## Continuation supervisor evidence
 
-- C-owned continuation changes are committed on branch `integration/session-c-reconciled` through `35cc224`; A/B worktrees remain untouched.
+- C-owned continuation changes are committed on branch `integration/session-c-reconciled` through `fa3ebda`; A/B worktrees remain untouched.
 - LaunchAgent `ai.marketing-seeding.project-coordinator` runs `/Users/nam/Documents/marketing-seeding-session-c-reconciled/scripts/project-coordinator-supervisor.mjs`; rollback: `launchctl bootout gui/$(id -u) "$HOME/Library/LaunchAgents/ai.marketing-seeding.project-coordinator.plist"`.
 - C follow-ups #1/#2 native requests, markers, artifacts, and hashes are recorded in `plans/oi-browser-integration/native-resume-evidence-20261028.json`.
 - Durable coordinator state contains structured receipts/hashes/markers/request IDs; raw `outputExcerpt` is removed on read and not persisted again.

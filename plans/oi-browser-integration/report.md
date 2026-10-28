@@ -55,7 +55,7 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 - Durable memory/provider regression evidence: [regression-final-9875db3.json](regression-final-9875db3.json), exact source SHA, command, timestamp and output hash. Historical recovery evidence remains in [regression-final-1589518.json](regression-final-1589518.json); current candidate evidence is [regression-final-35cc224.json](regression-final-35cc224.json) at source/test revision `35cc224`. Prior artifacts remain available.
 - Auxiliary System Agentic READ_ONLY verifier task `0e9f9242-0019-4f11-9453-9d155a419221` was rejected by the selected REA provider because `context.target_authorized=true` was absent; no retry, artifact, file edit or external side effect. Direct independent verifier PASS remains the final review evidence.
 - Auto-GTM: `/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests` → 160 total, 160 pass, 0 fail; `pip check` clean. The Auto-GTM owner worktree is dirty; C did not modify it.
-- Current C regression at `35cc224`: focused oi-browser/provider/live bridge `34/34`, coordinator/native `17/17`, and full `npm test` `813 total, 811 pass, 0 fail, 2 skipped`; output hashes are recorded in [regression-final-35cc224.json](regression-final-35cc224.json). The current provider cancellation patch was independently reviewed PASS at the committed revision. The queue task `ad044fdf-fbbf-4a99-a4eb-9165dc35987e` remains `UNKNOWN / QUEUE_RECEIPT_AMBIGUOUS` after one exact-ID reconciliation; no duplicate submission; direct C implementation is authoritative code evidence.
+- Prior C cancellation regression at `35cc224`: focused oi-browser/provider/live bridge `34/34`, coordinator/native `17/17`, and full `npm test` `813 total, 811 pass, 0 fail, 2 skipped`; output hashes are recorded in [regression-final-35cc224.json](regression-final-35cc224.json). The queue task `ad044fdf-fbbf-4a99-a4eb-9165dc35987e` remains `UNKNOWN / QUEUE_RECEIPT_AMBIGUOUS` after one exact-ID reconciliation; no duplicate submission; direct C implementation is authoritative code evidence.
 - Controlled repro artifact [memory-provider-regression-repro-590f70a.json](memory-provider-regression-repro-590f70a.json) records one canonical fixture sample despite caller ID changes and `UNKNOWN/provider timeout` after a stalled JSON body at the bounded 100 ms deadline.
 - Syntax checks for native adapters/service/server passed. `git diff --check` passed. Secret scan hits are redaction test fixtures/generated UI text, not credentials.
 - Evidence artifact: [regression-7378f8c.json](regression-7378f8c.json).
@@ -100,6 +100,12 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 - A post-race abort check closes the case where the provider returns an invalid result after cancellation. Regressions cover pending cancellation and this invalid-result race.
 - Evidence: [regression-final-35cc224.json](regression-final-35cc224.json), focused oi-browser/provider/live bridge `34/34`, coordinator/native `17/17`, full `npm test` `813/811/0/2`, independent verifier PASS.
 - Classification: source change `IMPLEMENTED`; tests `FIXTURE_VERIFIED`; C supervisor remains `NATIVE_RESUME_VERIFIED`; no live provider, publication, authority, or external side effect.
+
+## C follow-up: service cancellation wiring (2026-10-29)
+
+- Revision `fa3ebda996041498e44800e181507bd494ee4b72` forwards `input.signal` through `SeedingService.routeOiAgentTask` into the canonical provider router. The service-level regression verifies active-provider abort, fallback suppression, and persisted `FAILED/cancelled` decision state.
+- Evidence: [regression-final-service-signal.json](regression-final-service-signal.json), focused oi-browser/provider/live bridge `35/35`, coordinator/native `17/17`, full `npm test` `814/812/0/2`, independent verifier PASS.
+- Classification: source change `IMPLEMENTED`; tests `FIXTURE_VERIFIED`; no external side effect. The JSON HTTP endpoint cannot carry a live `AbortSignal`; internal service callers can.
 
 ## C follow-up: service cancellation wiring (2026-10-29)
 
