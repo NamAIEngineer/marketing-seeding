@@ -1,6 +1,6 @@
 # Integration decisions
 
-- Candidate: `integration/session-c-reconciled`; final checkpoint `7f2b74acab39987318d0720361f1cefdac0e6b51`; native code/test checkpoint `7378f8c`.
+- Candidate: `integration/session-c-reconciled`; final checkpoint `10ce8686e57464667daf343e8cb502cef46d09fd` (prior integration checkpoint `7f2b74a`); native code/test checkpoint `7378f8c`.
 - A checkpoint `1ed5771` is represented in candidate history. A's current 3-file tracked overlay and untracked files remain untouched.
 - B checkpoint `b675a98` is not an ancestor of the candidate and is not cherry-picked blindly. Its substantive authority behavior (standing reference scope collision protection, second-campaign rejection, delegation validation before browser input/ready exposure/worker start) is present through candidate history from `0232a3e` and is covered by current tests. B's obsolete provider/GPM-era differences remain excluded.
 - `marketing-seeding` remains the only application, `JsonStore`, `SeedingService`, dashboard, and Decision Plane. No second oi-browser app/store/orchestrator was added.
@@ -10,5 +10,5 @@
 - GPM is not active in the server runtime. Historical compatibility modules remain only where existing contracts require them.
 - Active runtime `4318` belongs to A and was not restarted. Candidate verification used private temporary state and port `4337`.
 - Candidate runtime smoke with explicit loopback Qwen configuration returned `SUCCEEDED` and retained one successful route after restart. This is `RUNTIME_VERIFIED` local inference evidence; it does not upgrade A's runtime configuration or prove external provider/live publication.
-- Fixture/runtime evidence remains separate from live evidence. No credential, login, grant, publish, deployment, merge, or external side effect was performed. The C branch is pushed and draft PR #2 is open; merge remains unperformed.
+- Fixture/runtime evidence remains separate from live evidence. No credential, login, grant, publish, deployment, merge, or external side effect was performed. The C branch has local final checkpoint `ac2f7df`; existing draft PR #2 remains open; no merge performed.
 - Native handshake `SESSION-C-HANDSHAKE-20261028T1210Z` returned A/B ACK markers with `turn_started` and exact native terminals. This proves communication, not final A dirty checkpoint reconciliation.

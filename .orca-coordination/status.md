@@ -4,33 +4,33 @@
 
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
-- Code/test checkpoint: `3d1c38064a788c42b64ac7cd745bda7eb8e60513`
+- Code/test checkpoint: `10ce8686e57464667daf343e8cb502cef46d09fd`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
-- C-owned evidence and coordinator source/tests are committed through `7f2b74a`.
+- C-owned evidence and coordinator source/tests are committed through `10ce868`; `7f2b74a` remains the prior integration evidence checkpoint.
 
 ## A/B/C connectivity and ownership
 
-- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed5771`; latest compact status 9 tracked dirty + 80 untracked entries (518 files expanded); owns `127.0.0.1:4318`; current health HTTP 200 with schema 8, 6 UNKNOWN and 0 verified; no restart by C.
-- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, checkpoint `b675a98`; 0 tracked dirty + 23 untracked artifacts excluded.
+- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed5771`; latest read-only status: 13 tracked dirty + 90 untracked entries (A-owned overlay); owns `127.0.0.1:4318`; current health HTTP 200 with schema 8, 6 UNKNOWN and 0 verified; no restart by C.
+- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, checkpoint `b675a98`; 0 tracked dirty + 16 untracked artifacts excluded.
 - SESSION C: candidate above; integration/docs/evidence owner.
 - Orca native handshake marker `SESSION-C-HANDSHAKE-20261028T1210Z`: A and B both returned `turn_started`, exact ACK markers, HEAD/branch/dirty counts, ownership, and native terminal references.
 - No A/B file was edited, staged, reset, stashed, cleaned, or committed by C.
 - Current marker handshake: A and B both returned `turn_started`/real read-only result with marker `ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`; A reported receiver READY, B reported orphaned terminal and follow-up capability unconfirmed.
-- Latest read-only A runtime recheck at `2026-10-28T08:02:47Z`: `127.0.0.1:4318` HTTP 200, PID `49399`, `sourceCommit=1ed5771`, `sourceDirty=true`, schema 8, `UNKNOWN=6`, verified 0, publication unverified 150; Camoufox session metadata is `STALE` and readiness is `UNKNOWN`. C did not restart or mutate A.
+- Latest read-only A runtime recheck at `2026-10-28T12:04:21Z`: `127.0.0.1:4318` HTTP 200, PID `79925`, `sourceCommit=1ed5771`, `sourceDirty=true`, schema 8, `UNKNOWN=6`, verified 0, publication unverified 150; Camoufox session metadata is `STALE` and readiness is `UNKNOWN`. C did not restart or mutate A.
 
 ## Verified candidate evidence
 
 - Baseline `79985bb411afc141f0edf10ae635fb91824d8bc9`: `npm test` → 576 total, 574 pass, 0 fail, 2 skipped.
 - Focused current slices: authority/bootstrap/delegation `47/47`; oi-browser/browser/provider/transport `59/59`; combined `106/106`.
 - Coordinator focused: `node --test test/project-coordinator.test.mjs` → 4 total, 4 pass, 0 fail.
-- Full candidate: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped.
-- Durable regression artifact: `plans/oi-browser-integration/regression-final-7f2b74a.json`, exact source revision and output SHA recorded.
+- Historical candidate `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped. Current `10ce868`: `node --test test/*.test.mjs` → 802 total, 800 pass, 0 fail, 2 skipped.
+- Durable current regression artifact will be `plans/oi-browser-integration/regression-final-10ce868.json`; prior `regression-final-ac2f7df.json` and historical `regression-final-7f2b74a.json` retained.
 - Auxiliary queue verifier task `0e9f9242-0019-4f11-9453-9d155a419221` failed closed at provider authorization validation; no retry or artifact. Direct independent verifier PASS remains authoritative.
-- Auto-GTM current checkout: `python -m unittest discover tests` → 158 total, 158 pass, 0 fail; `pip check` clean.
+- Auto-GTM owner checkout: `/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests` → 160 total, 160 pass, 0 fail; `pip check` clean. The owner worktree remains dirty; C did not modify it.
 - Controlled fixture: `plans/oi-browser-integration/fixture-run-7378f8c.json`, `FIXTURE_VERIFIED`; learning support 2, verified 2; before/after candidate changed; restart and browser replay passed; external side effects false.
 - Isolated runtime: `plans/oi-browser-integration/server-smoke-7378f8c.json`, `RUNTIME_VERIFIED`; port `4337`, exact SHA, auth boundary, memory/static snapshot persistence, restart persistence, explicit local-Qwen route success; Auto-GTM remains unavailable (`feed_not_generated`).
-- Current syntax checks and `git diff --check` passed. Fresh independent verifier reviewed `7f2b74a` at `2026-10-28T07:49:24Z`; coordinator tests are 4/4. Secret scan found no credential-like values in coordinator files; matches elsewhere are test redaction fixtures/generated UI text.
+- Current syntax checks and `git diff --check` passed. Fresh independent verifier reviewed historical `7f2b74a` at `2026-10-28T07:49:24Z`; current native/coordinator/verifier focused checks are 69/69. Secret scan found no credential-like values in coordinator files; matches elsewhere are test redaction fixtures/generated UI text.
 
 ## State
 

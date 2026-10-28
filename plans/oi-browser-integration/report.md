@@ -2,13 +2,13 @@
 
 ## Status
 
-`PARTIAL`. Candidate base revision: `7f2b74acab39987318d0720361f1cefdac0e6b51`; final C continuation revision: `3d1c38064a788c42b64ac7cd745bda7eb8e60513`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; current C code/test revision: `10ce8686e57464667daf343e8cb502cef46d09fd`; prior integration evidence checkpoint: `7f2b74a`; continuation implementation began at `3d1c380`; current final docs/test commit is `10ce868`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
 ## Baseline, ownership, integration
 
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
-- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed5771`; native `SESSION-A-ACK-20261028T1210Z`; latest compact status 9 tracked dirty + 80 untracked entries (518 files expanded); owns runtime `127.0.0.1:4318` PID `49399`. C did not touch it.
-- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, `integration/autonomous-build`, checkpoint `b675a98`; native `SESSION-B-ACK-20261028T1210Z`; tracked scope clean. Exact B commit is not cherry-picked because candidate history already contains/adapts the required authority guard behavior and the remaining diff contains obsolete provider/GPM-era changes.
+- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed5771`; native `SESSION-A-ACK-20261028T1210Z`; latest read-only status 13 tracked dirty + 90 untracked entries; owns runtime `127.0.0.1:4318` PID `79925`. C did not touch it.
+- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, `integration/autonomous-build`, checkpoint `b675a98`; native `SESSION-B-ACK-20261028T1210Z`; tracked scope clean with 16 untracked report/artifact paths. Exact B commit is not cherry-picked because candidate history already contains/adapts the required authority guard behavior and the remaining diff contains obsolete provider/GPM-era changes.
 - SESSION C: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, `integration/session-c-reconciled`, owns integration/docs/evidence.
 - Native communication proof: `SESSION-C-HANDSHAKE-20261028T1210Z` delivered through Orca terminals; both A/B returned `turn_started`, ACK markers, exact checkpoint/dirty scope, and ownership.
 - Origin: `https://github.com/DevAngular333/marketing-seeding.git` (GitHub reports canonical repository `NamAIEngineer/marketing-seeding`). Branch `integration/session-c-reconciled` is pushed; draft PR [#2](https://github.com/NamAIEngineer/marketing-seeding/pull/2) is open against `main`. No merge, deployment, login, grant, publication, or external message.
@@ -49,26 +49,26 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 
 - Baseline `79985bb411afc141f0edf10ae635fb91824d8bc9`: `npm test` → 576 total, 574 pass, 0 fail, 2 skipped.
 - Candidate focused: authority/bootstrap/delegation 47/47; oi-browser/browser/provider/transport 59/59; combined 106/106; coordinator `node --test test/project-coordinator.test.mjs` → 4 total, 4 pass, 0 fail.
-- Candidate full at `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped.
-- Durable regression evidence: [regression-final-7f2b74a.json](regression-final-7f2b74a.json), exact source SHA, command, timestamp and output hash.
+- Historical candidate `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped. Current `10ce868`: `node --test test/*.test.mjs` → 802 total, 800 pass, 0 fail, 2 skipped.
+- Durable current regression evidence: [regression-final-10ce868.json](regression-final-10ce868.json), exact source SHA, command, timestamp and output hash. Prior `regression-final-ac2f7df.json` and historical `regression-final-7f2b74a.json` remain available.
 - Auxiliary System Agentic READ_ONLY verifier task `0e9f9242-0019-4f11-9453-9d155a419221` was rejected by the selected REA provider because `context.target_authorized=true` was absent; no retry, artifact, file edit or external side effect. Direct independent verifier PASS remains the final review evidence.
-- Auto-GTM: `/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests` → 158 total, 158 pass, 0 fail; `pip check` clean.
+- Auto-GTM: `/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests` → 160 total, 160 pass, 0 fail; `pip check` clean. The Auto-GTM owner worktree is dirty; C did not modify it.
 - Syntax checks for native adapters/service/server passed. `git diff --check` passed. Secret scan hits are redaction test fixtures/generated UI text, not credentials.
 - Evidence artifact: [regression-7378f8c.json](regression-7378f8c.json).
-- Fresh independent read-only review at `2026-10-28T07:49:24Z`, HEAD `7f2b74a`; coordinator durability, artifact containment, dedupe/restart, secret safety and A/B boundaries passed. Stale metadata was corrected in this report and the coordination ledger.
+- Fresh independent read-only review at `2026-10-28T07:49:24Z`, historical HEAD `7f2b74a`; current candidate focused/native checks and full regression rerun at `10ce868` pass; follow-up review fixed malformed native recovery ID handling before this final evidence. Gstack queue review was unavailable because the Codex queue provider is unauthenticated; no gstack review claim is made. Stale metadata was corrected in this report and the coordination ledger.
 
 ## Remaining blockers
 
 - A dirty overlay must receive an owner-created clean checkpoint before serial C reconciliation.
 - Fresh authenticated Camoufox readiness, valid live standing authority, publication ID/permalink, live metrics/conversion remain blocked.
 - Auto-GTM generation/media unavailable; only lead-feed capability proven.
-- Latest A `/health` recheck (`2026-10-28T08:02:47Z`) reports `sourceCommit=1ed5771`, `sourceDirty=true`, schema 8, `UNKNOWN=6`, verified 0, publication unverified 150; candidate local inference smoke remains isolated and does not prove A runtime provider inference.
+- Latest A `/health` recheck (`2026-10-28T12:04:21Z`) reports `sourceCommit=1ed5771`, `sourceDirty=true`, schema 8, `UNKNOWN=6`, verified 0, publication unverified 150; candidate local inference smoke remains isolated and does not prove A runtime provider inference.
 
 ## Current coordination and continuation evidence
 
 - Exact ChatGPT thread was matched from a fresh Chrome AX tree by marker `ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01` and URL conversation `6ae09d26-12c4-83ec-bd1f-d53553e707cc`. Fresh bounded bridge receipt `xchg-50bacbd9c3064aa2a7e0` correlated the nonce and marker in a completed assistant turn.
 - Current A/B handshakes were delivered through Orca request IDs `461d4128-4075-41ea-b07f-291c421385bb` and `7cdca6e2-c446-4d8c-b4d6-686e061e9da8`; A returned receiver READY, B returned a real read-only result but follow-up capability unconfirmed.
-- `src/project-coordinator.mjs` provides durable project-scoped dependency state and bounded wake/replay. Focused tests pass 4/4. Rehearsal artifact: `coordination-rehearsal-20261028.json` (`FIXTURE_VERIFIED`, one worker attempt, accepted artifact hash, restart result retained, replay false).
+- `src/project-coordinator.mjs` provides durable project-scoped dependency state and bounded wake/replay. Historical coordinator tests pass 4/4; current native/coordinator/verifier focused tests pass 69/69. Rehearsal artifact: `coordination-rehearsal-20261028.json` (`FIXTURE_VERIFIED`, one worker attempt, accepted artifact hash, restart result retained, replay false).
 - Existing orchestrator remains healthy at `8879`, but GoalRuns v60–v63 remain failed for concrete provider/artifact/approval/reply reasons; this coordinator proof does not upgrade those historical runs or prove automatic agent resume after chat termination.
 
 ### Native resume status

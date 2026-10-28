@@ -3,24 +3,24 @@
 ## Candidate handoff
 
 - Candidate: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`.
-- Code/test checkpoint: `7f2b74acab39987318d0720361f1cefdac0e6b51`.
+- Code/test checkpoint: `10ce8686e57464667daf343e8cb502cef46d09fd`; prior integration checkpoint `7f2b74a` retained.
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
-- A checkpoint represented: `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; current A overlay preserved outside candidate.
-- B owner checkpoint: `b675a98e6dd2da3c12133dff715eddea616c91f5`; not cherry-picked because candidate already contains/adapts substantive behavior and B has unrelated obsolete differences.
+- A checkpoint represented: `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; current A overlay read-only recheck is 13 tracked dirty + 90 untracked, preserved outside candidate.
+- B owner checkpoint: `b675a98e6dd2da3c12133dff715eddea616c91f5`; current B read-only recheck is tracked-clean with 16 untracked paths; not cherry-picked because candidate already contains/adapts substantive behavior.
 - Source pins: oi-browser `1e471c44b5d63aa5aadb708623b21090b6f325b2`; auto-gtm `9368098477d78f75d57fdf5db276129948f3a183`.
 
 ## Evidence
 
 - `plans/oi-browser-integration/fixture-run-7378f8c.json`: `FIXTURE_VERIFIED`, controlled Product X / Community A+B, learning-driven before/after candidate change, static browser intent activation, idempotent replay, restart persistence.
 - `plans/oi-browser-integration/server-smoke-7378f8c.json`: `RUNTIME_VERIFIED`, exact source SHA, isolated port `4337`, auth/memory/static snapshot/restart persistence, explicit local-Qwen route success, `feed_not_generated`.
-- Current tests: focused integration/authority slices `106/106`; coordinator `4/4`; full `794 total, 792 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `158/158`, `pip check` clean.
-- Durable regression artifact: `plans/oi-browser-integration/regression-final-7f2b74a.json`, source `7f2b74a`, output SHA `af10e9c7…`.
+- Current tests: native/coordinator/LinkedIn verifier focused `69/69`; historical integration/authority slices `106/106`; current full `802 total, 800 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `160/160`, `pip check` clean. Historical full `794/792/0/2` remains tied to `7f2b74a`.
+- Durable regression artifact: `plans/oi-browser-integration/regression-final-10ce868.json`, source `10ce868`, final output SHA recorded; prior `regression-final-ac2f7df.json` and historical `regression-final-7f2b74a.json` remain unchanged.
 
 ## Native session evidence
 
 - A: `SESSION-A-ACK-20261028T1210Z`, Orca terminal `term_58af59e8-f5dd-4968-a724-78b48a04cf3c`, HEAD `1ed5771`, dirty scope preserved.
 - B: `SESSION-B-ACK-20261028T1210Z`, Orca terminal `term_41a5601e-887e-4ac0-a8d7-35112fedb375`, HEAD `b675a98`, tracked scope clean.
-- Current marker handshake: A request `461d4128-4075-41ea-b07f-291c421385bb` returned `SESSION-A-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`, HEAD `1ed5771`, then latest compact status showed 9 tracked + 80 untracked entries (518 files expanded), receiver READY. B request `7cdca6e2-c446-4d8c-b4d6-686e061e9da8` returned `SESSION-B-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`, HEAD `b675a98`, 0 tracked + 23 untracked; terminal still reports orphaned/follow-up unconfirmed.
+- Current marker handshake: A request `461d4128-4075-41ea-b07f-291c421385bb` returned `SESSION-A-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`, HEAD `1ed5771`, then latest read-only status showed 13 tracked + 90 untracked entries, receiver READY. B request `7cdca6e2-c446-4d8c-b4d6-686e061e9da8` returned `SESSION-B-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`, HEAD `b675a98`, 0 tracked + 16 untracked; terminal still reports orphaned/follow-up unconfirmed.
 
 ## ChatGPT bridge evidence
 
@@ -31,7 +31,7 @@
 
 - `src/project-coordinator.mjs`, `test/project-coordinator.test.mjs`, and `scripts/coordination-rehearsal.mjs` add a local-only development control plane. It does not select providers/accounts/campaigns and cannot publish.
 - Rehearsal artifact: `plans/oi-browser-integration/coordination-rehearsal-20261028.json`; dependency → wake → worker → accepted artifact → restart/replay check passed, one invocation only.
-- Fresh independent read-only review at `2026-10-28T07:49:24Z` verified HEAD `7f2b74a`; stale test/provenance metadata was corrected before final handoff.
+- Fresh independent read-only review at `2026-10-28T07:49:24Z` verified historical HEAD `7f2b74a`; follow-up review at `12:06Z` found malformed native recovery ID handling, fixed in `10ce868`; current focused/full evidence is recorded at `10ce868`.
 
 ## Runtime boundary
 

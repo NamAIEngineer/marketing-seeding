@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-10-28T11:16:44.547518+00:00",
+  "capturedAt": "2026-10-28T12:06:17Z",
   "source": {
-    "baseRevision": "eb4a920",
+    "baseRevision": "ac2f7df04881e08bd5b063db8b217a60609e0432",
     "branch": "integration/session-c-reconciled",
-    "dirty": true
+    "dirty": false
   },
   "status": "NATIVE_RESUME_VERIFIED",
   "rehearsal": true,
@@ -14,7 +14,7 @@
   "supervisor": {
     "label": "ai.marketing-seeding.project-coordinator",
     "state": "running",
-    "pid": 25191,
+    "pid": 26915,
     "launchdKeepAlive": true,
     "statePath": "~/build-agentic-AI/.agentic/marketing-seeding/project-coordinator/state.json"
   },
