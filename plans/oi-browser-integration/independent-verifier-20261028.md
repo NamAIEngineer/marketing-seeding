@@ -1,20 +1,23 @@
 # Independent read-only verification
 
-- Previous review captured `2026-10-28T02:36:14Z`.
-- Previous candidate: `e9a7bfa9dc561a4dad06035caaeabff35ee0d8f0`; code/test `20ba20f6f8f273a72cb0db88b216d645aeecaeb1`.
-- Previous result: `PASS` for the prior C patch and its evidence boundaries.
-- Current candidate code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`.
-- Current review: `PENDING_FRESH_REVIEW`; do not use the previous PASS as proof for current evidence/docs.
+- Final review captured: `2026-10-28T05:44:28Z` (UTC)
+- Candidate: `integration/session-c-reconciled`
+- Final HEAD: `d4e8ee059644f6fa1abc37a888dcfefb5d4f3d07`
+- Code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`
+- Reviewer: independent read-only verifier (`/root/independent_verifier`)
+- Result: `PASS` for current source/evidence metadata and ownership boundaries
 
-## Current evidence awaiting review
+## Checks
 
-- `plans/oi-browser-integration/fixture-run-7378f8c.json`
-- `plans/oi-browser-integration/server-smoke-7378f8c.json`
-- `plans/oi-browser-integration/regression-7378f8c.json`
-- `.orca-coordination/*.md`
-- `docs/integrations/oi-browser-audit.md`
-- `plans/oi-browser-integration/report.md`
+- Worktree clean at final HEAD.
+- `git diff --name-status 7378f8c..HEAD -- src test`: empty; docs-only commits followed the code/test checkpoint.
+- Focused current evidence: 106 total, 106 pass, 0 fail, 0 skipped.
+- Full regression artifact: 790 total, 788 pass, 0 fail, 2 skipped.
+- Auto-GTM artifact: 158 total, 158 pass, 0 fail; `pip check` clean.
+- Fixture, runtime, regression, provenance, and secret-safety metadata reviewed.
+- Evidence files are tracked/committed; no stale untracked claim remains.
+- Runtime provider persistence metadata matches restart evidence: `decisionPersisted=true`, `provider-decision-d08555d34d96803fb1e2403f`, one successful route after restart.
 
 ## Limits
 
-Live publication, authenticated Camoufox readiness, Auto-GTM generation, and A dirty overlay reconciliation remain separate blockers. Fixture and isolated runtime evidence cannot upgrade them.
+This PASS does not prove A's current dirty overlay is reconciled, authenticated Camoufox readiness, live standing authority, live publication/permalink, live metrics/conversion, or Auto-GTM generation/media. Fixture/runtime evidence remains separately labeled and no external side effect was performed.

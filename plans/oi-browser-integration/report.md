@@ -2,7 +2,7 @@
 
 ## Status
 
-`PARTIAL`. Candidate code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`. Final documentation/evidence commit is pending. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+`PARTIAL`. Candidate code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`. Final documentation/evidence is committed through `d4e8ee0`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
 ## Baseline, ownership, integration
 
@@ -53,7 +53,7 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 - Auto-GTM: `/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests` → 158 total, 158 pass, 0 fail; `pip check` clean.
 - Syntax checks for native adapters/service/server passed. `git diff --check` passed. Secret scan hits are redaction test fixtures/generated UI text, not credentials.
 - Evidence artifact: [regression-7378f8c.json](regression-7378f8c.json).
-- Independent review of current checkpoint is pending; prior PASS covered `20ba20f`/`e9a7bfa` only.
+- Fresh independent read-only review PASS at `2026-10-28T05:44:28Z`, HEAD `d4e8ee0`; source/test diff after `7378f8c` is empty.
 
 ## Remaining blockers
 

@@ -25,7 +25,7 @@
 - Auto-GTM current checkout: `python -m unittest discover tests` → 158 total, 158 pass, 0 fail; `pip check` clean.
 - Controlled fixture: `plans/oi-browser-integration/fixture-run-7378f8c.json`, `FIXTURE_VERIFIED`; learning support 2, verified 2; before/after candidate changed; restart and browser replay passed; external side effects false.
 - Isolated runtime: `plans/oi-browser-integration/server-smoke-7378f8c.json`, `RUNTIME_VERIFIED`; port `4337`, exact SHA, auth boundary, memory/static snapshot persistence, restart persistence, explicit local-Qwen route success; Auto-GTM remains unavailable (`feed_not_generated`).
-- Current syntax checks and `git diff --check` passed. Secret scan was reviewed; matches are test redaction fixtures, not credentials.
+- Current syntax checks and `git diff --check` passed. Fresh independent verifier PASS at `d4e8ee0` (`2026-10-28T05:44:28Z`); source/test diff after `7378f8c` is empty. Secret scan was reviewed; matches are test redaction fixtures, not credentials.
 
 ## State
 

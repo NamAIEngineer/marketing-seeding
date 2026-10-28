@@ -9,6 +9,6 @@
 | AUTO-GTM-GENERATION | OPEN | Runtime/dashboard reports `feed_not_generated`; source capability is lead/feed only | Generation/media acceptance incomplete | Configured owner-approved Auto-GTM generation/media capability artifact |
 | PROVIDER-A-RUNTIME | CONDITIONAL | A runtime `/health` reports `sourceCommit=unknown`; candidate port `4337` explicit Qwen smoke succeeded locally and is isolated | A runtime provider state is not proven by candidate smoke | Owner runtime must expose exact build/config and fresh health/inference evidence |
 | A-B-NATIVE-HANDSHAKE | ACKNOWLEDGED | Orca native `turn_started` plus A/B ACK markers at `1210Z` | Communication proven; checkpoint/reconciliation still serial | A clean checkpoint and C review |
-| INDEPENDENT-REVIEW | STALE | Prior verifier PASS covered `20ba20f`/`e9a7bfa`, not current `7378f8c` | Current final docs/evidence need a fresh independent read-only review | Re-run verifier on final committed candidate |
+| INDEPENDENT-REVIEW | CLOSED | Fresh read-only verifier PASS at `2026-10-28T05:44:28Z`, HEAD `d4e8ee0`; worktree clean; metadata/source recheck passed | No review blocker | None; retain substantive live blockers separately |
 
 No blocker is cleared by fixture success, process liveness, dashboard rendering, or historical evidence.
