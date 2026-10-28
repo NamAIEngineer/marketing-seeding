@@ -88,9 +88,9 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 
 ## C follow-up: immutable browser intent binding (2026-10-29)
 
-- Revision `dd814bf1df82a0371171ce0ca3674d16a1009368` adds fail-closed binding checks in `src/oi-browser-integration.mjs`: immutable intent ID, action/element/snapshot binding, semantic target identity, frame, and action-to-role compatibility are validated before transport input.
+- Revision `dd814bf1df82a0371171ce0ca3674d16a1009368` (historical predecessor of current C source/test checkpoint `35cc224`) adds fail-closed binding checks in `src/oi-browser-integration.mjs`: immutable intent ID, action/element/snapshot binding, semantic target identity, frame, and action-to-role compatibility are validated before transport input.
 - Regression test `browser executor rejects forged action, frame, and semantic identity bindings` covers mutations of action, frame, semantic identity, and intent ID. No browser provider call occurs for these rejected bindings.
-- Focused oi-browser/Camoufox command: 32/32 pass. Coordinator/native command: 17/17 pass. Full `npm test`: 811 total, 809 pass, 0 fail, 2 skipped. Full output SHA-256: `f1f09a5901ab4852adcebeb9459fa6f297d585c95f0100a5af2bf0ee8ef273ab`.
+- Historical focused oi-browser/Camoufox command: 32/32 pass. Current focused and full evidence is recorded under the C provider cancellation follow-up above.
 - Classification: source change `IMPLEMENTED`; fixture checks `FIXTURE_VERIFIED`; prior C LaunchAgent follow-up and restart checks remain `NATIVE_RESUME_VERIFIED`. No `LIVE_VERIFIED` publication or external side effect.
 - Final branch head is pushed and matches `origin/integration/session-c-reconciled`; draft PR #2 remains open. A/B worktrees and runtime `4318` were not changed.
 

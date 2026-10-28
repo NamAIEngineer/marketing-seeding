@@ -42,7 +42,7 @@
 ## Current C regression handoff (2026-10-28)
 
 - Commit `9875db3` fixes independent memory sample counting and provider body/JSON deadlines. Canonical `evidenceRefs` now control sample identity; distinct canonical fixture refs remain independent, while caller ID changes and duplicate polling do not add support. Provider probe/inference deadlines cover fetch, body consumption, and JSON parsing; caller aborts fail fast and timeout remains UNKNOWN/failure.
-- Focused command `node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs`: `22/22` pass. Historical full `npm test` at `9875db3`: `805 total, 803 pass, 0 fail, 2 skipped`, output SHA-256 `e00abd1cf8304e832361bb81643520267d2845939ba31554aecc86b869beae08`.
+- Historical focused command `node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs`: `22/22` pass. Historical full `npm test` at `9875db3`: `805 total, 803 pass, 0 fail, 2 skipped`, output SHA-256 `e00abd1cf8304e832361bb81643520267d2845939ba31554aecc86b869beae08`.
 - Independent verifier: PASS, `2026-10-28T13:42:57Z`, read-only, no A/B/runtime edits. Queue worker `ms-session-c-memory-evidence-20261028` was attempted once and failed closed by no-progress guard before edits; no retry/resubmission. C applied and reviewed the fix directly under the claimed C scope.
 
 ## Continuation supervisor evidence
