@@ -30,6 +30,7 @@
 | C-008 | C | Snapshot deduplication execution trace retention | C-002 | repeated DOM test retains bounded execution bindings | COMPLETED |
 | C-009 | C | Independent memory evidence and provider full-deadline regressions | C-002 | commit `9875db3`; focused `22/22`; historical full `805/803/0/2`; independent review PASS | COMPLETED |
 | C-010 | C | Re-run current candidate regression and reconcile evidence metadata | C-007..C-009 | HEAD `4fe2b7b`; focused oi-browser `22/22`; coordinator/native `17/17`; full `810/808/0/2`; output SHA-256 `8d9a67f68f491b0370f5876d11c8a0ad8f731e6c76d1a49c4792bf9d8bf36ac` | COMPLETED |
+| C-011 | C | Provider caller cancellation and fallback race regression | C-009 | commit `35cc224`; focused oi-browser/provider/live bridge `34/34`; coordinator/native `17/17`; full `813/811/0/2`; independent verifier PASS | COMPLETED |
 | A/B-001 | A/B | Native receiver handshake and checkpoint ACK | existing live sessions | `SESSION-A/B-ACK-20261028T1210Z`, native terminal evidence | ACKNOWLEDGED |
 | LIVE-001 | authorized runtime owner | fresh Camoufox identity/readiness and publication | standing authority + account | separate live evidence | BLOCKED |
 | GTM-001 | Auto-GTM owner | generated feed/content/media artifact | configured source/provider | capability-specific evidence | BLOCKED |

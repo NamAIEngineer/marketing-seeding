@@ -68,3 +68,10 @@
 - `regression-final-dd814bf.json` records focused 32/32, coordinator/native 17/17, full 811/809/0/2, exact output hash, and no live eligibility.
 - Intent binding now rejects forged action, frame, semantic target, or intent ID before transport input. A/B files, A runtime `4318`, credentials, authority, publication, and UNKNOWN records were untouched.
 - Status remains `PARTIAL`: A lacks a clean owner checkpoint; B continuous follow-up is unproven; live authenticated Camoufox/publication/metrics and Auto-GTM generation/media remain blocked.
+
+## Provider cancellation handoff 2026-10-29
+
+- Source/test commit: `35cc224febb5eb9c8368cf88f5f28b6a119b6be3`.
+- `routeAgentTask` now accepts a caller `AbortSignal`, aborts the active provider, stops fallback, and reports cancellation as failure. The post-race guard closes the invalid-result cancellation race.
+- Focused oi-browser/provider/live bridge `34/34`; coordinator/native `17/17`; full suite `813/811/0/2`; independent verifier PASS. Evidence: `plans/oi-browser-integration/regression-final-35cc224.json`.
+- Queue task `ad044fdf-fbbf-4a99-a4eb-9165dc35987e` remains ambiguous after one reconciliation; no retry. A/B dirty/owner state remains untouched. Status remains `PARTIAL`.

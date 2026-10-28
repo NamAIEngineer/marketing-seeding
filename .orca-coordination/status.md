@@ -74,3 +74,10 @@
 - Evidence: `plans/oi-browser-integration/regression-final-dd814bf.json`; source change is `IMPLEMENTED`, test result `FIXTURE_VERIFIED`, existing C launchd follow-up/restart remains `NATIVE_RESUME_VERIFIED`.
 - Queue task `ad044fdf-fbbf-4a99-a4eb-9165dc35987e` reconciled once as `UNKNOWN / QUEUE_RECEIPT_AMBIGUOUS`; no retry. Direct C implementation is the code evidence.
 - A read-only checkpoint remains dirty and not integration-ready; B terminal remains orphaned with continuous follow-up unproven. Live Camoufox, publication/metrics/conversion, and Auto-GTM generation/media blockers remain open.
+
+## C provider cancellation follow-up 2026-10-29
+
+- Commit `35cc224febb5eb9c8368cf88f5f28b6a119b6be3` adds caller cancellation to `routeAgentTask`, aborts the active provider, suppresses fallback, and records `FAILED/cancelled` telemetry.
+- A post-race `signal.aborted` check prevents an adapter that returns an invalid result after cancellation from triggering fallback. Regression covers both pending cancellation and the invalid-result race.
+- Focused oi-browser/provider/live bridge: `34/34`; coordinator/native: `17/17`; full `npm test`: `813 total, 811 pass, 0 fail, 2 skipped`. Exact output hashes are in `plans/oi-browser-integration/regression-final-35cc224.json`.
+- Independent verifier PASS on committed `35cc224`; no A/B worktree or runtime mutation. Classification: source `IMPLEMENTED`, tests `FIXTURE_VERIFIED`, C supervisor evidence remains `NATIVE_RESUME_VERIFIED`, no `LIVE_VERIFIED` external action.

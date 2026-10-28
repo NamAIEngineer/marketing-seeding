@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "35cc224febb5eb9c8368cf88f5f28b6a119b6be3",
+  "branch": "integration/session-c-reconciled",
+  "workspace": "/Users/nam/Documents/marketing-seeding-session-c-reconciled",
+  "capturedAt": "2026-10-29T00:27:12+07:00",
+  "baselineRevision": "79985bb411afc141f0edf10ae635fb91824d8bc9",
+  "checks": [
+    {
+      "command": "node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs test/oi-browser-live-bridge.test.mjs",
+      "classification": "FIXTURE_VERIFIED",
+      "tests": 34,
+      "pass": 34,
+      "fail": 0,
+      "skipped": 0,
+      "result": "PASS",
+      "outputSha256": "079467c33a0750518ac1d83315076078b46d1ba72f72550c2252c81629798fd4"
+    },
+    {
+      "command": "node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs",
+      "classification": "FIXTURE_VERIFIED",
+      "tests": 17,
+      "pass": 17,
+      "fail": 0,
+      "skipped": 0,
+      "result": "PASS",
+      "outputSha256": "f3a25517fd6aac1220cb7742954113cb8348d8a0cdaf301128a1fbff9b9c7dc7"
+    },
+    {
+      "command": "npm test",
+      "classification": "FIXTURE_VERIFIED",
+      "tests": 813,
+      "pass": 811,
+      "fail": 0,
+      "skipped": 2,
+      "result": "PASS",
+      "outputSha256": "4a844338e208e17655a7eba97cf4071b8841a54809ad29f5d0a526d974433d81"
+    },
+    {
+      "command": "node --check src/oi-browser-integration.mjs && node --check src/oi-browser-provider-adapters.mjs && git diff --check HEAD",
+      "classification": "IMPLEMENTED",
+      "result": "PASS"
+    }
+  ],
+  "changes": [
+    "Caller AbortSignal is accepted by routeAgentTask and propagated to the active provider.",
+    "Caller cancellation returns FAILED/cancelled, records cancellation telemetry, and prevents fallback provider execution.",
+    "A post-race signal check closes the cancellation versus invalid-result race before fallback handling.",
+    "Regression coverage includes pending provider cancellation and cancellation racing an invalid result.",
+    "Earlier canonical memory evidence independence and full provider body/JSON deadline fixes remain included from 9875db3."
+  ],
+  "independentReview": {
+    "status": "PASS",
+    "capturedAt": "2026-10-29T00:27:00+07:00",
+    "reviewer": "independent-verifier",
+    "scope": "read-only review of committed 35cc224 source/test diff and focused provider/integration tests",
+    "focusedTests": "25/25",
+    "highOrMediumFindings": 0,
+    "aOrBMutation": false,
+    "secretFindings": 0
+  },
+  "queueAttempt": {
+    "taskId": "ad044fdf-fbbf-4a99-a4eb-9165dc35987e",
+    "status": "UNKNOWN",
+    "reason": "QUEUE_RECEIPT_AMBIGUOUS after exact-ID reconciliation; no retry or resubmission",
+    "resubmitted": false
+  },
+  "liveEligible": false,
+  "externalSideEffects": false,
+  "unknownRetryAllowed": false
+}
