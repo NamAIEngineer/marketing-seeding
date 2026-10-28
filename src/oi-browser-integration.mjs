@@ -14,7 +14,7 @@ export const OI_BROWSER_INTEGRATION_VERSION = 1;
 
 const MEMORY_KINDS = new Set(["RAW_EVENT", "OBSERVATION", "FACT", "INFERENCE", "LEARNING", "POLICY"]);
 const PROVIDER_STATES = new Set(["installed", "authReady", "healthy", "executionSucceeded"]);
-const ROUTE_FAILURES = new Set(["timeout", "nonzero", "invalid_result", "unavailable", "privacy_mismatch"]);
+const ROUTE_FAILURES = new Set(["timeout", "cancelled", "nonzero", "invalid_result", "unavailable", "privacy_mismatch"]);
 const ACTIONS = new Set(["CLICK", "TYPE", "UPLOAD"]);
 const MEMORY_EVIDENCE_STATUSES = new Set(["OBSERVED", "UNKNOWN", "MIXED", "FIXTURE_VERIFIED", "RUNTIME_VERIFIED", "VERIFIED", "MEASURED"]);
 const MEMORY_TTL_MS = Object.freeze({ RAW_EVENT: 24 * 60 * 60 * 1000, OBSERVATION: 7 * 24 * 60 * 60 * 1000, FACT: 30 * 24 * 60 * 60 * 1000, INFERENCE: 7 * 24 * 60 * 60 * 1000, LEARNING: 30 * 24 * 60 * 60 * 1000, POLICY: 90 * 24 * 60 * 60 * 1000 });
@@ -792,7 +792,7 @@ export function providerAvailability(record) {
   return { id: provider.id, installed: provider.installed, authReady: provider.authReady, healthy: provider.healthy, health: provider.health || null, executionSucceeded: false, available: provider.installed && provider.authReady && provider.healthy, capabilities: provider.capabilities, tools: provider.tools, reasoningClasses: provider.reasoningClasses, successRate: provider.successRate };
 }
 
-export async function routeAgentTask(task = {}, { providers = [], now = new Date(), timeoutMs = 20_000 } = {}) {
+export async function routeAgentTask(task = {}, { providers = [], now = new Date(), timeoutMs = 20_000, signal = task.signal } = {}) {
   const capability = text(task.capability, 100);
   const privacy = text(task.privacyClass || "local", 40);
   const taskTools = boundedArray(task.tools, 16);
@@ -801,6 +801,9 @@ export async function routeAgentTask(task = {}, { providers = [], now = new Date
   const reasoningClass = text(task.reasoningClass, 40);
   const candidates = normalizedProviders.filter((provider) => provider.capabilities.includes(capability) && provider.installed && provider.authReady && provider.healthy && provider.privacyClasses.includes(privacy) && (!task.contextSize || provider.contextSize >= task.contextSize) && (!reasoningClass || provider.reasoningClasses.includes(reasoningClass)) && taskTools.every((tool) => provider.tools.includes(tool))).sort((a, b) => ((COST_RANK[a.costClass] ?? COST_RANK.unknown) - (COST_RANK[b.costClass] ?? COST_RANK.unknown) || (b.successRate ?? 0) - (a.successRate ?? 0) || (a.latencyMs ?? 1e9) - (b.latencyMs ?? 1e9) || a.id.localeCompare(b.id)));
   const attempted = [];
+  if (signal?.aborted) {
+    return { schemaVersion: 1, decisionId: `provider-decision-${digest({ capability, privacy, reasoningClass, taskTools, cancelled: true }, 24)}`, providerId: null, status: "FAILED", failure: "cancelled", attempted: [], availability, telemetry: { capability, privacyClass: privacy, reasoningClass: reasoningClass || null, tools: taskTools, cancelled: true } };
+  }
   for (const provider of candidates) {
     const startedAt = iso(now);
     if (!provider.adapter || typeof provider.adapter.infer !== "function") { attempted.push({ providerId: provider.id, status: "unavailable", reason: "adapter_missing" }); continue; }
@@ -808,13 +811,24 @@ export async function routeAgentTask(task = {}, { providers = [], now = new Date
     const boundedTimeoutMs = Math.max(1, Math.min(120_000, Number(timeoutMs) || 20_000));
     const timer = setTimeout(() => controller.abort(), boundedTimeoutMs);
     let raceTimer;
+    let rejectCaller;
+    const callerAbort = new Promise((_, reject) => { rejectCaller = reject; });
+    const onCallerAbort = () => {
+      rejectCaller(Object.assign(new Error("provider request cancelled"), { name: "AbortError", routeFailure: "cancelled" }));
+      controller.abort();
+    };
+    signal?.addEventListener?.("abort", onCallerAbort, { once: true });
     try {
       const result = await Promise.race([
         provider.adapter.infer({ task: { capability, privacyClass: privacy, tools: taskTools, reasoningClass: reasoningClass || null, contextSize: task.contextSize || null }, signal: controller.signal }),
         new Promise((_, reject) => { raceTimer = setTimeout(() => reject(Object.assign(new Error("provider timeout"), { name: "AbortError" })), boundedTimeoutMs); })
-      ]);
+      , callerAbort]);
       clearTimeout(timer);
       clearTimeout(raceTimer);
+      if (signal?.aborted) {
+        attempted.push({ providerId: provider.id, status: "cancelled", reason: "caller_aborted" });
+        break;
+      }
       if (!result || typeof result !== "object") { attempted.push({ providerId: provider.id, status: "invalid_result", reason: "empty_or_invalid" }); continue; }
       if (result.ok !== true) {
         const nonzero = Number.isFinite(Number(result.exitCode)) && Number(result.exitCode) !== 0;
@@ -826,14 +840,17 @@ export async function routeAgentTask(task = {}, { providers = [], now = new Date
     } catch (error) {
       clearTimeout(timer);
       clearTimeout(raceTimer);
-      const reason = error?.name === "AbortError" ? "timeout" : "nonzero";
+      const reason = signal?.aborted ? "cancelled" : (error?.routeFailure || (error?.name === "AbortError" ? "timeout" : "nonzero"));
       attempted.push({ providerId: provider.id, status: reason, reason: redacted(error?.message || reason, 160) });
+      if (reason === "cancelled") break;
+    } finally {
+      signal?.removeEventListener?.("abort", onCallerAbort);
     }
   }
   const capabilityMatches = normalizedProviders.filter((item) => item.capabilities.includes(capability));
   const privacyMismatch = capabilityMatches.some((item) => item.installed && item.authReady && item.healthy && !item.privacyClasses.includes(privacy));
   const failure = attempted.at(-1)?.status || (privacyMismatch ? "privacy_mismatch" : "unavailable");
-  return { schemaVersion: 1, decisionId: `provider-decision-${digest({ capability, privacy, reasoningClass, taskTools, attempted }, 24)}`, providerId: null, status: "FAILED", failure: ROUTE_FAILURES.has(failure) ? failure : "unavailable", attempted, availability, telemetry: { capability, privacyClass: privacy, reasoningClass: reasoningClass || null, tools: taskTools } };
+  return { schemaVersion: 1, decisionId: `provider-decision-${digest({ capability, privacy, reasoningClass, taskTools, attempted }, 24)}`, providerId: null, status: "FAILED", failure: ROUTE_FAILURES.has(failure) ? failure : "unavailable", attempted, availability, telemetry: { capability, privacyClass: privacy, reasoningClass: reasoningClass || null, tools: taskTools, ...(failure === "cancelled" ? { cancelled: true } : {}) } };
 }
 
 export function projectOiBrowserIntegration(state, { now = new Date() } = {}) {

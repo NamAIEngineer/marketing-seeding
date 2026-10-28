@@ -244,6 +244,44 @@ test("provider router distinguishes unavailable, timeout, invalid result, and su
   assert.equal(reasoning.providerId, "deep");
 });
 
+test("provider router cancellation aborts the active provider and does not fall back", async () => {
+  const controller = new AbortController();
+  let firstCalls = 0;
+  let secondCalls = 0;
+  const resultPromise = routeAgentTask({ capability: "research", privacyClass: "local" }, {
+    signal: controller.signal,
+    providers: [
+      { id: "slow", capabilities: ["research"], costClass: "low", installed: true, authReady: true, healthy: true, privacyClasses: ["local"], adapter: { infer: ({ signal }) => { firstCalls += 1; return new Promise((resolve, reject) => signal.addEventListener("abort", () => reject(Object.assign(new Error("aborted"), { name: "AbortError" })))); } } },
+      { id: "fallback", capabilities: ["research"], costClass: "medium", installed: true, authReady: true, healthy: true, privacyClasses: ["local"], adapter: { infer: async () => { secondCalls += 1; return { ok: true, output: "must-not-run" }; } } }
+    ]
+  });
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  controller.abort();
+  const result = await resultPromise;
+  assert.equal(result.status, "FAILED");
+  assert.equal(result.failure, "cancelled");
+  assert.equal(result.telemetry.cancelled, true);
+  assert.equal(result.attempted[0].status, "cancelled");
+  assert.equal(firstCalls, 1);
+  assert.equal(secondCalls, 0);
+});
+
+test("provider router suppresses fallback when cancellation races an invalid result", async () => {
+  const controller = new AbortController();
+  let secondCalls = 0;
+  const result = await routeAgentTask({ capability: "research", privacyClass: "local" }, {
+    signal: controller.signal,
+    providers: [
+      { id: "racing", capabilities: ["research"], costClass: "low", installed: true, authReady: true, healthy: true, privacyClasses: ["local"], adapter: { infer: async () => { controller.abort(); return { ok: false }; } } },
+      { id: "fallback", capabilities: ["research"], costClass: "medium", installed: true, authReady: true, healthy: true, privacyClasses: ["local"], adapter: { infer: async () => { secondCalls += 1; return { ok: true, output: "must-not-run" }; } } }
+    ]
+  });
+  assert.equal(result.status, "FAILED");
+  assert.equal(result.failure, "cancelled");
+  assert.equal(result.attempted[0].status, "cancelled");
+  assert.equal(secondCalls, 0);
+});
+
 test("service persists memory and snapshots in canonical JsonStore and survives restart", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "oi-browser-native-"));
   const file = path.join(root, "state.json");
