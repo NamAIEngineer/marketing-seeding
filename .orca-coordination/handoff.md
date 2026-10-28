@@ -13,7 +13,7 @@
 
 - `plans/oi-browser-integration/fixture-run-7378f8c.json`: `FIXTURE_VERIFIED`, controlled Product X / Community A+B, learning-driven before/after candidate change, static browser intent activation, idempotent replay, restart persistence.
 - `plans/oi-browser-integration/server-smoke-7378f8c.json`: `RUNTIME_VERIFIED`, exact source SHA, isolated port `4337`, auth/memory/static snapshot/restart persistence, explicit local-Qwen route success, `feed_not_generated`.
-- Current tests: focused oi-browser/provider/live bridge `34/34`; coordinator/native `17/17`; historical integration/authority slices `106/106`; current full `813 total, 811 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `160/160`, `pip check` clean. Earlier evidence remains tied to its exact revision.
+- Current tests: focused oi-browser/provider/live bridge `35/35`; coordinator/native `17/17`; historical integration/authority slices `106/106`; current full `814 total, 812 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `160/160`, `pip check` clean. Earlier evidence remains tied to its exact revision.
 - Durable regression artifact: `plans/oi-browser-integration/regression-final-9875db3.json`, source `9875db3`, remains historical. Current candidate evidence is `plans/oi-browser-integration/regression-final-service-signal.json` at `fa3ebda`; prior artifacts remain unchanged.
 
 ## Native session evidence
@@ -31,7 +31,7 @@
 
 - `src/project-coordinator.mjs`, `test/project-coordinator.test.mjs`, and `scripts/coordination-rehearsal.mjs` add a local-only development control plane. It does not select providers/accounts/campaigns and cannot publish.
 - Rehearsal artifact: `plans/oi-browser-integration/coordination-rehearsal-20261028.json`; dependency → wake → worker → accepted artifact → restart/replay check passed, one invocation only.
-- Fresh independent read-only review at `2026-10-28T07:49:24Z` verified historical HEAD `7f2b74a`; follow-up review at `12:06Z` found malformed native recovery ID handling, fixed in `10ce868`; final memory/provider review at `13:58:13Z` passed on `9875db3`; current focused/full evidence is recorded at `9875db3`/`fa376f9`.
+- Fresh independent read-only review at `2026-10-28T07:49:24Z` verified historical HEAD `7f2b74a`; follow-up review at `12:06Z` found malformed native recovery ID handling, fixed in `10ce868`; final service cancellation review passed on `fa3ebda`; current focused/full evidence is recorded in `regression-final-service-signal.json`.
 
 ## Runtime boundary
 
@@ -64,12 +64,12 @@
 
 ## Final C patch handoff 2026-10-29
 
-- `35cc224febb5eb9c8368cf88f5f28b6a119b6be3` is the pushed C source/test checkpoint. It includes immutable browser binding plus provider caller cancellation/fallback suppression.
+- `35cc224febb5eb9c8368cf88f5f28b6a119b6be3` is the prior pushed C source/test checkpoint. It includes immutable browser binding plus provider caller cancellation/fallback suppression.
 - `regression-final-35cc224.json` records focused 34/34, coordinator/native 17/17, full 813/811/0/2, exact output hashes, independent review PASS, and no live eligibility.
 - Intent binding rejects forged action, frame, semantic target, or intent ID before transport input. Provider cancellation prevents fallback after caller abort, including invalid-result races. A/B files, A runtime `4318`, credentials, authority, publication, and UNKNOWN records were untouched.
 - Status remains `PARTIAL`: A lacks a clean owner checkpoint; B continuous follow-up is unproven; live authenticated Camoufox/publication/metrics and Auto-GTM generation/media remain blocked.
 
-## Provider cancellation handoff 2026-10-29
+## Provider cancellation handoff 2026-10-29 (historical predecessor)
 
 - Source/test commit: `35cc224febb5eb9c8368cf88f5f28b6a119b6be3`.
 - `routeAgentTask` now accepts a caller `AbortSignal`, aborts the active provider, stops fallback, and reports cancellation as failure. The post-race guard closes the invalid-result cancellation race.

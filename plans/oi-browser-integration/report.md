@@ -106,9 +106,3 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 - Revision `fa3ebda996041498e44800e181507bd494ee4b72` forwards `input.signal` through `SeedingService.routeOiAgentTask` into the canonical provider router. The service-level regression verifies active-provider abort, fallback suppression, and persisted `FAILED/cancelled` decision state.
 - Evidence: [regression-final-service-signal.json](regression-final-service-signal.json), focused oi-browser/provider/live bridge `35/35`, coordinator/native `17/17`, full `npm test` `814/812/0/2`, independent verifier PASS.
 - Classification: source change `IMPLEMENTED`; tests `FIXTURE_VERIFIED`; no external side effect. The JSON HTTP endpoint cannot carry a live `AbortSignal`; internal service callers can.
-
-## C follow-up: service cancellation wiring (2026-10-29)
-
-- Revision `fa3ebda996041498e44800e181507bd494ee4b72` forwards `input.signal` through `SeedingService.routeOiAgentTask` into the canonical provider router. The service-level regression verifies active-provider abort, fallback suppression, and persisted `FAILED/cancelled` decision state.
-- Evidence: [regression-final-service-signal.json](regression-final-service-signal.json), focused oi-browser/provider/live bridge `35/35`, coordinator/native `17/17`, full `npm test` `814/812/0/2`, independent verifier PASS.
-- Classification: source change `IMPLEMENTED`; tests `FIXTURE_VERIFIED`; no external side effect. The JSON HTTP endpoint cannot carry a live `AbortSignal`; internal service callers can.
