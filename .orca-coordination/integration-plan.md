@@ -4,7 +4,7 @@
 
 - Controller: SESSION C, candidate branch `integration/session-c-reconciled`.
 - Base revision: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
-- Candidate final checkpoint: `5f6f08dd39b8e51bd45e5c2fea6e360b7c912713`; code/test checkpoint `9875db34c3f068c1510b3e92e8c72e4134e641a9`; prior integration checkpoint `7f2b74a`.
+- Candidate final source/evidence checkpoint: `d20c43715fda360321034450eef68f933b161ab`; code/test checkpoint `9875db34c3f068c1510b3e92e8c72e4134e641a9`; prior integration checkpoint `7f2b74a`.
 - Earlier native code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`.
 - Candidate evidence/docs are C-owned changes on top of that checkpoint.
 - Approval gates: no live publication, merge, deploy, credential change, real-data migration, or external messaging.
@@ -13,7 +13,7 @@
 
 - SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; latest read-only status is 13 tracked dirty files plus 90 untracked entries. A owns runtime `127.0.0.1:4318`, PID `79925`.
 - SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, checkpoint `b675a98e6dd2da3c12133dff715eddea616c91f5`; tracked scope clean, 16 untracked reports/artifacts excluded.
-- SESSION C: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`, final checkpoint `5f6f08d` (code/test `9875db3`).
+- SESSION C: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`, final source/evidence checkpoint `d20c437` (code/test `9875db3`).
 - Native handshake `SESSION-C-HANDSHAKE-20261028T1210Z` delivered through Orca terminal handles. A returned `SESSION-A-ACK-20261028T1210Z`; B returned `SESSION-B-ACK-20261028T1210Z`; both showed `turn_started`, exact ownership, and no edits by C.
 
 ## Tasks

@@ -4,7 +4,7 @@
 
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
-- Final candidate docs/evidence revision: `590f70acf8650c599b9f398b60ba671754c1e41c` (new repro artifact pending this docs commit).
+- Final candidate source/evidence revision: `d20c43715fda360321034450eef68f933b161ab`; metadata-only docs follow-up may advance HEAD without changing source/test behavior.
 - Code/test checkpoint: `9875db34c3f068c1510b3e92e8c72e4134e641a9`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
