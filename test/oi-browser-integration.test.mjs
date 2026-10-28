@@ -254,7 +254,7 @@ test("provider router bounds listening analysis, forwards provenance, and redact
     records: Array.from({ length: 24 }, (_, index) => ({
       recordId: `record-${index}`,
       recordType: "COMMUNITY_SIGNAL",
-      sourceUrl: index === 0 ? "https://user:pass@fixture.test/private" : index === 1 ? "https://fixture.test/source/1?token=raw-url-secret&topic=dev" : `https://fixture.test/source/${index}`,
+      sourceUrl: index === 0 ? "https://user:pass@fixture.test/private" : index === 1 ? "https://fixture.test/source/1?token=raw-url-secret&topic=dev" : index === 2 ? "not a url" : `https://fixture.test/source/${index}`,
       title: `Technical signal ${index}`,
       text: `Educational context ${index} token=raw-analysis-secret-${index} ${"bounded ".repeat(900)}`,
       contentHash: `hash-${index}`,
@@ -287,6 +287,7 @@ test("provider router bounds listening analysis, forwards provenance, and redact
   assert.match(observedTask.analysisInput.records[0].text, /token=\[redacted\]/);
   assert.equal(observedTask.analysisInput.records[0].sourceUrl, null);
   assert.match(observedTask.analysisInput.records[1].sourceUrl, /token=\[redacted\]/);
+  assert.equal(observedTask.analysisInput.records[2].sourceUrl, null);
   assert.doesNotMatch(JSON.stringify(observedTask), /raw-analysis-secret|raw-url-secret|user:pass/);
   assert.deepEqual(result.evidenceRefs, observedTask.evidenceRefs);
 });

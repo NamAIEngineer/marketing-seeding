@@ -72,7 +72,7 @@ function normalizeProviderSourceUrl(value) {
     }
     return redacted(parsed.toString(), 800) || null;
   } catch {
-    return redacted(raw, 800) || null;
+    return null;
   }
 }
 
