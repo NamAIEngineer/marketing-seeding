@@ -2,17 +2,17 @@
 
 ## Status
 
-`PARTIAL` at candidate `integration/session-c-reconciled` / `20ba20f6f8f273a72cb0db88b216d645aeecaeb1`.
+`PARTIAL` at candidate branch `integration/session-c-reconciled`. Last committed candidate is `e9a7bfa9dc561a4dad06035caaeabff35ee0d8f0`; current C-owned documentation edits are pending commit. Code/test evidence is pinned to `20ba20f6f8f273a72cb0db88b216d645aeecaeb1`.
 
 The candidate integrates oi-browser memory, provider routing, browser snapshot identity, persistence, and Camoufox bridge seams into marketing-seeding's existing `JsonStore`, `SeedingService`, Decision Plane, canonical authority, executor, verification, metrics, and dashboard. It does not claim live publication, live metrics, Auto-GTM generation, fresh authenticated Camoufox readiness, or native A/B receiver connectivity.
 
 ## Baseline, ownership, and integration
 
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
-- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, `wave/distribution-os-runtime-wave-13-bridge`, HEAD `52072ce`, dirty Camoufox/runtime/server/UI scope, owner of runtime `127.0.0.1:4318` PID `30842`. Its committed checkpoint is present through merge `d195756`.
-- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, `integration/autonomous-build`, HEAD `6899679`, dirty authority/standing-delegation/service/test/report scope. C did not edit, stash, reset, clean, or commit B files.
-- SESSION C: this candidate, owner of oi-browser audit, native integration, tests, evidence, and coordination docs. The current code tree is clean at `20ba20f`; C-owned evidence/docs are updated in this commit.
-- Orca `worktree ps`, `terminal list`, and inbox were checked on 2026-10-28. A and B have zero attached terminals/receivers. Prior sends returned `terminal_not_found`; the remaining inbox marker has no delivery/ACK evidence. Native A/B handshake is `UNVERIFIED`.
+- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, `wave/distribution-os-runtime-wave-13-bridge`, HEAD `52072ce`, dirty Camoufox/runtime/server/UI scope, owner of runtime `127.0.0.1:4318` PID `38672`; owner review marker `RESULT-A-20261028T0420Z`, checkpoint pending. Its committed checkpoint is present through merge `d195756`.
+- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, `integration/autonomous-build`, owner checkpoint `b675a98`, authority/standing-delegation/service/test scope tracked clean after focused `41/41`; C did not edit, stash, reset, clean, or commit B files.
+- SESSION C: this candidate, owner of oi-browser audit, native integration, tests, evidence, and coordination docs. Product source/test tree is unchanged after `20ba20f`; C-owned docs are the only current working-tree edits after committed `e9a7bfa`.
+- Orca follow-up delivery to A/B is proven by `turn_started`; exact review markers `RESULT-A-20261028T0420Z` and `RESULT-B-20261028T0420Z` include native references. B checkpoint is durable; A checkpoint is pending.
 - Origin observed: `https://github.com/DevAngular333/marketing-seeding.git`; no push, PR, merge, deployment, or external message performed.
 
 ## Source reuse
@@ -63,14 +63,14 @@ Exact candidate `20ba20f6f8f273a72cb0db88b216d645aeecaeb1` ran on private port `
 - Syntax: `node --check src/oi-browser-integration.mjs`, `src/oi-browser-provider-adapters.mjs`, `src/oi-browser-camoufox-bridge.mjs`, `src/service.mjs`, `src/server.mjs` passed.
 - `git diff --check` passed after the current source/evidence run.
 - The two skipped tests are existing ACL environment checks.
-- Latest independent verifier task `2fdee808-270a-491c-a042-14dc3fad3972` failed with `Remote end closed connection without response` and produced no report. A prior queue review attempt failed on its no-progress guard. Manual review is `DONE_WITH_CONCERNS`; no independent verifier PASS is claimed.
+- Independent read-only verifier reviewed committed C code/evidence plus the current docs overlay at `2026-10-28T02:36:14Z` and returned PASS for the C patch. No source/test files changed after the verified code revision. Separate queue task `2fdee808-270a-491c-a042-14dc3fad3972` failed with `Remote end closed connection without response`; that operational failure is retained separately.
 
 ## Remaining blockers
 
-- Native A/B receiver/ACK/result delivery unavailable; B dirty work is not reconciled into this candidate.
+- Native A/B receiver delivery and handshake are evidenced by `turn_started`; exact review markers `RESULT-A-20261028T0420Z` and `RESULT-B-20261028T0420Z` include native references. B owner checkpoint `b675a98` is ready for serial integration; A owner checkpoint remains pending.
 - Fresh authenticated Camoufox readiness and live publication/permalink/metrics/conversion remain unverified.
 - Auto-GTM generation/media capability is unavailable; only lead-feed is proven.
 - Production provider configuration is absent in A-owned runtime `4318`; candidate local Qwen smoke is isolated and explicit, with inference blocked by the observed MLX Metal memory failure.
-- Independent verifier PASS remains unavailable.
+- A/B review markers are recorded; B owner checkpoint is recorded. A owner checkpoint and final serial integration remain pending. The independent C verifier PASS is recorded above.
 
 No blocker is cleared by fixture success, process liveness, dashboard rendering, or historical evidence.

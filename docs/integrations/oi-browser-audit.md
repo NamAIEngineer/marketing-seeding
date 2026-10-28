@@ -16,9 +16,10 @@ Required Notice: Copyright (c) 2026 Jang Trinh (https://github.com/jangtrinh). T
 
 ## Session ownership evidence
 
-- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, HEAD `52072ce`, dirty files in Camoufox/session/server/service/strategy/UI lanes. Current observed server PID `30842` listens on `127.0.0.1:4318`; Camoufox owner processes are PIDs `72038` and `98842`. No live Orca agent terminal or receiver was registered.
-- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, HEAD `6899679`, dirty files in campaign authorization/service/standing delegation/test/report lanes. No live Orca agent terminal or receiver was registered.
-- SESSION C: candidate `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`, code checkpoint `20ba20f`; A committed checkpoint `52072ce` is present through merge `d195756`. A/B dirty worktrees were not edited.
+- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, HEAD `52072ce`, dirty files in Camoufox/session/server/service/strategy/UI lanes. Current observed server PID `38672` listens on `127.0.0.1:4318`; `/health` reports `sourceCommit=unknown`, schema 8, `verified=0`, `unknown=6`, `publicationUnverified=150`; owner review marker `RESULT-A-20261028T0420Z`, checkpoint pending.
+- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, owner checkpoint `b675a98`, tracked scope clean after focused `41/41`; native review marker `RESULT-B-20261028T0420Z`; excluded untracked artifacts remain outside the checkpoint.
+- SESSION C: final candidate `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`, docs/evidence revision `e9a7bfa`, code checkpoint `20ba20f`; A committed checkpoint `52072ce` is present through merge `d195756`. A/B dirty worktrees were not edited.
+- Native coordination: Orca terminal sends to A/B returned `turn_started`; A/B returned exact review markers `RESULT-A-20261028T0420Z` and `RESULT-B-20261028T0420Z` with native references. B checkpoint `b675a98` is durable; A checkpoint remains pending. No C process modified A/B worktrees.
 
 ## Subsystem decisions
 
