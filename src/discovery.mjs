@@ -104,6 +104,31 @@ export function normalizeDiscovery(observation, { policies = {}, now = new Date(
     observedAt: redactText(observation.observedAt || now),
     sourceId: observation.sourceId ? redactText(observation.sourceId) : undefined,
   };
+  const contentHash = redactText(observation.contentHash, 128);
+  const extractorRevision = redactText(observation.extractorRevision, 180);
+  const sourceRefs = Array.isArray(observation.sourceRefs)
+    ? [...new Set(observation.sourceRefs.map((ref) => redactText(ref, 300)).filter(Boolean))].slice(0, 16)
+    : [];
+  if (contentHash) provenance.contentHash = contentHash;
+  if (extractorRevision) provenance.extractorRevision = extractorRevision;
+  if (sourceRefs.length) provenance.sourceRefs = sourceRefs;
+  if (observation.fetch && typeof observation.fetch === 'object' && !Array.isArray(observation.fetch)) {
+    provenance.fetch = {
+      backend: redactText(observation.fetch.backend, 40) || null,
+      jobId: redactText(observation.fetch.jobId, 160) || null,
+      contentHash: redactText(observation.fetch.contentHash, 128) || null,
+      extractorRevision: redactText(observation.fetch.extractorRevision, 180) || null,
+      coverage: observation.fetch.coverage && typeof observation.fetch.coverage === 'object' ? {
+        html: observation.fetch.coverage.html === true,
+        jsRendered: observation.fetch.coverage.jsRendered === true,
+        markdown: observation.fetch.coverage.markdown === true,
+        structured: observation.fetch.coverage.structured === true,
+        post: observation.fetch.coverage.post === true,
+        comment: observation.fetch.coverage.comment === true,
+        network: observation.fetch.coverage.network === true
+      } : null
+    };
+  }
   const publishedAt = normalizeTimestamp(observation.publishedAt);
   const normalized = {
     url,
@@ -113,6 +138,9 @@ export function normalizeDiscovery(observation, { policies = {}, now = new Date(
     channel: policy.channel || policy.host,
     policy,
     provenance,
+    ...(observation.recordType ? { recordType: redactText(observation.recordType, 40) } : {}),
+    ...(observation.parentRecordId ? { parentRecordId: redactText(observation.parentRecordId, 240) } : {}),
+    ...(observation.untrusted === true ? { untrusted: true } : {})
   };
   const locale = redactText(observation.locale || observation.localeHint);
   if (locale) normalized.locale = locale;

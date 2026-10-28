@@ -11,6 +11,7 @@
     "init": "node src/cli.mjs init",
     "bootstrap:r19": "node src/cli.mjs bootstrap-r19",
     "status": "node src/cli.mjs status",
+    "listening": "node scripts/listening-run.mjs",
     "test": "node --test test/*.test.mjs",
     "soak": "node scripts/soak.mjs",
     "setup:cloakbrowser": "pnpm.cmd install"

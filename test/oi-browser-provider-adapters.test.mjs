@@ -17,7 +17,10 @@ test("provider adapter accepts loopback only and separates model health from inf
   const health = await probeOpenAiCompatibleProvider({ baseUrl: "http://127.0.0.1:8767/v1", model: "qwen-local", fetchImpl });
   assert.deepEqual(health, { state: "READY", reason: "MODEL_LIST_OBSERVED", model: "qwen-local" });
   const provider = createOpenAiCompatibleProvider({ baseUrl: "http://127.0.0.1:8767/v1", model: "qwen-local", health, fetchImpl });
-  const routed = await routeAgentTask({ capability: "strategy-context", privacyClass: "local" }, { providers: [provider] });
+  const routed = await routeAgentTask({ capability: "strategy-context", privacyClass: "local", analysisInput: {
+    schemaVersion: 1, scope: { campaignId: "campaign-1" },
+    records: [{ recordId: "record-1", recordType: "comment", sourceUrl: "https://example.com", title: "Observed title", text: "Observed content", contentHash: "hash", sourceRefs: ["https://example.com", "listening-record:record-1"] }], digest: "digest-1", untrusted: true
+  }, analysisInputDigest: "digest-1", evidenceRefs: ["https://example.com", "listening-record:record-1"] }, { providers: [provider] });
   assert.equal(routed.status, "SUCCEEDED");
   assert.equal(routed.providerId, provider.id);
   assert.equal(routed.availability[0].health.state, "READY");
@@ -26,6 +29,9 @@ test("provider adapter accepts loopback only and separates model health from inf
   const request = JSON.parse(calls[1].body);
   assert.equal(request.model, "qwen-local");
   assert.match(request.messages[1].content, /strategy-context/);
+  assert.match(request.messages[1].content, /Observed content/);
+  assert.match(request.messages[1].content, /digest-1/);
+  assert.match(request.messages[1].content, /listening-record:record-1/);
   assert.equal(Object.hasOwn(request.messages[1], "memory"), false);
 });
 
