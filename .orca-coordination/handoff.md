@@ -13,8 +13,8 @@
 
 - `plans/oi-browser-integration/fixture-run-7378f8c.json`: `FIXTURE_VERIFIED`, controlled Product X / Community A+B, learning-driven before/after candidate change, static browser intent activation, idempotent replay, restart persistence.
 - `plans/oi-browser-integration/server-smoke-7378f8c.json`: `RUNTIME_VERIFIED`, exact source SHA, isolated port `4337`, auth/memory/static snapshot/restart persistence, explicit local-Qwen route success, `feed_not_generated`.
-- Current tests: native/coordinator/LinkedIn verifier focused `69/69`; historical integration/authority slices `106/106`; current full `802 total, 800 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `160/160`, `pip check` clean. Historical full `794/792/0/2` remains tied to `7f2b74a`.
-- Durable regression artifact: `plans/oi-browser-integration/regression-final-10ce868.json`, source `10ce868`, final output SHA recorded; prior `regression-final-ac2f7df.json` and historical `regression-final-7f2b74a.json` remain unchanged.
+- Current tests: focused oi-browser memory/provider `22/22`; native/coordinator/LinkedIn verifier focused `69/69`; historical integration/authority slices `106/106`; current full `805 total, 803 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `160/160`, `pip check` clean. Historical full `794/792/0/2` remains tied to `7f2b74a`; pre-regression candidate `802/800/0/2` remains tied to `10ce868`.
+- Durable regression artifact: `plans/oi-browser-integration/regression-final-9875db3.json`, source `9875db3`, final output SHA recorded; prior `regression-final-10ce868.json`, `regression-final-ac2f7df.json`, and historical `regression-final-7f2b74a.json` remain unchanged.
 
 ## Native session evidence
 
@@ -31,7 +31,7 @@
 
 - `src/project-coordinator.mjs`, `test/project-coordinator.test.mjs`, and `scripts/coordination-rehearsal.mjs` add a local-only development control plane. It does not select providers/accounts/campaigns and cannot publish.
 - Rehearsal artifact: `plans/oi-browser-integration/coordination-rehearsal-20261028.json`; dependency → wake → worker → accepted artifact → restart/replay check passed, one invocation only.
-- Fresh independent read-only review at `2026-10-28T07:49:24Z` verified historical HEAD `7f2b74a`; follow-up review at `12:06Z` found malformed native recovery ID handling, fixed in `10ce868`; current focused/full evidence is recorded at `10ce868`.
+- Fresh independent read-only review at `2026-10-28T07:49:24Z` verified historical HEAD `7f2b74a`; follow-up review at `12:06Z` found malformed native recovery ID handling, fixed in `10ce868`; final memory/provider review at `13:58:13Z` passed on `9875db3`; current focused/full evidence is recorded at `9875db3`/`5f6f08d`.
 
 ## Runtime boundary
 

@@ -7,7 +7,7 @@
 - Code/test checkpoint: `9875db34c3f068c1510b3e92e8c72e4134e641a9`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
-- C-owned evidence and coordinator source/tests are committed through `10ce868`; `7f2b74a` remains the prior integration evidence checkpoint.
+- C-owned coordinator source/tests are committed through `9875db3`; docs/evidence are committed through `5f6f08d`; `7f2b74a` remains the prior integration evidence checkpoint.
 
 ## A/B/C connectivity and ownership
 
@@ -24,8 +24,8 @@
 - Baseline `79985bb411afc141f0edf10ae635fb91824d8bc9`: `npm test` → 576 total, 574 pass, 0 fail, 2 skipped.
 - Focused current slices: authority/bootstrap/delegation `47/47`; oi-browser/browser/provider/transport `59/59`; combined `106/106`.
 - Historical coordinator focused: `node --test test/project-coordinator.test.mjs` → 4 total, 4 pass, 0 fail; current native/coordinator/LinkedIn verifier suite is 69/69.
-- Historical candidate `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped. Current `10ce868`: `node --test test/*.test.mjs` → 802 total, 800 pass, 0 fail, 2 skipped.
-- Durable current regression artifact is `plans/oi-browser-integration/regression-final-10ce868.json`; prior `regression-final-ac2f7df.json` and historical `regression-final-7f2b74a.json` retained.
+- Historical candidate `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped. Pre-regression candidate `10ce868`: `node --test test/*.test.mjs` → 802 total, 800 pass, 0 fail, 2 skipped. Current `9875db3`/`5f6f08d`: `npm test` → 805 total, 803 pass, 0 fail, 2 skipped.
+- Durable current regression artifact is `plans/oi-browser-integration/regression-final-9875db3.json`; prior `regression-final-10ce868.json`, `regression-final-ac2f7df.json`, and historical `regression-final-7f2b74a.json` retained.
 - Auxiliary queue verifier task `0e9f9242-0019-4f11-9453-9d155a419221` failed closed at provider authorization validation; no retry or artifact. Direct independent verifier PASS remains authoritative.
 - Auto-GTM owner checkout: `/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests` → 160 total, 160 pass, 0 fail; `pip check` clean. The owner worktree remains dirty; C did not modify it.
 - Controlled fixture: `plans/oi-browser-integration/fixture-run-7378f8c.json`, `FIXTURE_VERIFIED`; learning support 2, verified 2; before/after candidate changed; restart and browser replay passed; external side effects false.
