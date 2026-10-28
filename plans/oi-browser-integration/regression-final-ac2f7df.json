@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 2,
+  "evidenceStatus": "RUNTIME_VERIFIED",
+  "capturedAt": "2026-10-28T12:14:15Z",
+  "sourceRevision": "ac2f7df04881e08bd5b063db8b217a60609e0432",
+  "sourceDirty": true,
+  "command": "node --test test/*.test.mjs",
+  "outputSha256": "d466e9ef738da66684be78c39a62fac342adb8f6b651fee8a52ea4b883c10b2c",
+  "result": {
+    "total": 802,
+    "pass": 800,
+    "fail": 0,
+    "skipped": 2
+  },
+  "focused": {
+    "command": "node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs test/linkedin-verification.test.mjs",
+    "total": 69,
+    "pass": 69,
+    "fail": 0,
+    "skipped": 0
+  },
+  "baseline": {
+    "revision": "79985bb411afc141f0edf10ae635fb91824d8bc9",
+    "command": "npm test",
+    "total": 576,
+    "pass": 574,
+    "fail": 0,
+    "skipped": 2
+  },
+  "autoGtm": {
+    "revision": "9368098477d78f75d57fdf5db276129948f3a183",
+    "command": "/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests",
+    "total": 160,
+    "pass": 160,
+    "fail": 0,
+    "pipCheck": "No broken requirements found",
+    "sourceDirty": true,
+    "dirtyScope": "owner worktree unchanged by C"
+  },
+  "classification": {
+    "fixture": "FIXTURE_VERIFIED",
+    "isolatedRuntime": "RUNTIME_VERIFIED",
+    "nativeResume": "NATIVE_RESUME_VERIFIED",
+    "livePublication": "UNVERIFIED",
+    "externalSideEffects": false
+  },
+  "provenance": {
+    "candidateWorktree": "/Users/nam/Documents/marketing-seeding-session-c-reconciled",
+    "branch": "integration/session-c-reconciled",
+    "codeAndTestRevision": "ac2f7df04881e08bd5b063db8b217a60609e0432",
+    "previousEvidenceRevision": "7f2b74acab39987318d0720361f1cefdac0e6b51",
+    "testOutputPath": "/tmp/marketing-seeding-full-final.txt",
+    "capturedAt": "2026-10-28T12:14:15Z",
+    "postFixWorkingTree": "dirty only by intended source/test/docs/evidence changes before commit"
+  }
+}
