@@ -30,7 +30,7 @@
 | C-008 | C | Snapshot deduplication execution trace retention | C-002 | repeated DOM test retains bounded execution bindings | COMPLETED |
 | C-009 | C | Independent memory evidence and provider full-deadline regressions | C-002 | commit `9875db3`; focused `22/22`; historical full `805/803/0/2`; independent review PASS | COMPLETED |
 | C-010 | C | Re-run historical candidate regression and reconcile evidence metadata | C-007..C-009 | historical checkpoint `4fe2b7b`; superseded by current C-011 evidence | COMPLETED |
-| C-011 | C | Provider caller cancellation and fallback race regression | C-009 | commit `35cc224`; focused oi-browser/provider/live bridge `34/34`; coordinator/native `17/17`; full `813/811/0/2`; independent verifier PASS | COMPLETED |
+| C-011 | C | Provider caller cancellation and fallback race regression | C-009 | historical predecessor commit `35cc224`; focused `34/34`; full `813/811/0/2`; independent verifier PASS | COMPLETED |
 | C-012 | C | Wire caller cancellation through SeedingService production entrypoint | C-011 | commit `fa3ebda`; service regression; focused `35/35`; coordinator/native `17/17`; full `814/812/0/2`; independent verifier PASS | COMPLETED |
 | A/B-001 | A/B | Native receiver handshake and checkpoint ACK | existing live sessions | `SESSION-A/B-ACK-20261028T1210Z`, native terminal evidence | ACKNOWLEDGED |
 | LIVE-001 | authorized runtime owner | fresh Camoufox identity/readiness and publication | standing authority + account | separate live evidence | BLOCKED |
