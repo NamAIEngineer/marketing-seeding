@@ -50,7 +50,7 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 ## Tests and hygiene
 
 - Baseline `79985bb411afc141f0edf10ae635fb91824d8bc9`: `npm test` → 576 total, 574 pass, 0 fail, 2 skipped.
-- Historical integration slices: authority/bootstrap/delegation 47/47; oi-browser/browser/provider/transport 59/59; combined 106/106; historical coordinator `node --test test/project-coordinator.test.mjs` → 4 total, 4 pass, 0 fail. Current native/coordinator/LinkedIn verifier focused suite is 69/69.
+- Historical integration slices: authority/bootstrap/delegation 47/47; oi-browser/browser/provider/transport 59/59; combined 106/106. Current coordinator/native focused suite is 16/16; current oi-browser memory/provider focused suite is 22/22.
 - Historical candidate `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped. Pre-regression candidate `10ce868`: `node --test test/*.test.mjs` → 802 total, 800 pass, 0 fail, 2 skipped. Historical `9875db3`/`5f6f08d`: `npm test` → 805 total, 803 pass, 0 fail, 2 skipped.
 - Durable memory/provider regression evidence: [regression-final-9875db3.json](regression-final-9875db3.json), exact source SHA, command, timestamp and output hash. Current coordinator recovery evidence: [regression-final-1589518.json](regression-final-1589518.json). Prior [regression-final-10ce868.json](regression-final-10ce868.json), `regression-final-ac2f7df.json`, and historical `regression-final-7f2b74a.json` remain available.
 - Auxiliary System Agentic READ_ONLY verifier task `0e9f9242-0019-4f11-9453-9d155a419221` was rejected by the selected REA provider because `context.target_authorized=true` was absent; no retry, artifact, file edit or external side effect. Direct independent verifier PASS remains the final review evidence.
@@ -77,9 +77,10 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 
 ### Native resume status
 
-- `IMPLEMENTED`: durable coordinator v2, exact Orca request retry, project supervisor, launchd startup/recovery, raw-output scrubbing, safe artifact contract, restart-safe dedupe.
+- `IMPLEMENTED`: durable coordinator v3, exact Orca request retry, project supervisor, launchd startup/recovery, raw-output scrubbing, safe artifact contract, restart-safe dedupe, bounded 5s/10s/20s recovery backoff, crash-interrupted attempt accounting and fail-closed malformed recovery metadata.
 - `NATIVE_RESUME_VERIFIED`: C launchd #1 request `fc821d69-2281-4757-b5c2-8d1f5628a63b`, one attempt, artifact hash `a6cf8a3201799ff1aaf0ff5aaba1a5ff7b5e727ba848a8caa162d7bc1b9e1960`; C launchd #2 request `4f19fde8-0f31-4f8d-8b40-0d36de8dd45a`, one attempt after exact request replay, artifact hash `4b3e51dad6b2d8aaf63377f416a8a30ecc9f25041986dd19aa21b1f29b0f4770`.
 - A/B native follow-up artifacts/hashes are in the evidence file. A's dirty scope remained untouched. A later Orca listing marked B orphaned; this does not invalidate its earlier completed native request/artifact but leaves continuous receiver availability unproven.
 - Launchd restart kept two results and `attemptCount=1` for both; no replay. Artifacts are rehearsal only (`liveEligible=false`, no external effects, no UNKNOWN retry).
+- Coordinator recovery regression is `FIXTURE_VERIFIED` at source revision `1589518`: exact request ID is preserved, recovery stops after three attempts, restart consumes an interrupted in-flight attempt, and invalid request/timestamp metadata blocks closed. Current focused result: 16/16.
 - Product closed-loop remains `FIXTURE_VERIFIED`; port `4337` remains `RUNTIME_VERIFIED`. No `LIVE_VERIFIED` publication, metric, or conversion.
 - A owner checkpoint request completed natively: request `8ec39d22-ec26-48a9-94b9-1717cf75af60`, artifact hash `94aa53a52b514b198375774fb2ba2cdfd1bebe8731110e3324d00dd0af0803c7`, HEAD `1ed5771`, 12 tracked dirty files, 567 untracked paths. A reports that clean checkpointing requires ownership reconciliation and fresh tests; C did not stage or alter those files.
