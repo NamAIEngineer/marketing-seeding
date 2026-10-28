@@ -4,28 +4,33 @@
 
 - Controller: SESSION C, candidate branch `integration/session-c-reconciled`.
 - Base revision: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
-- Candidate code revision: `20ba20f6f8f273a72cb0db88b216d645aeecaeb1`.
-- Final docs checkpoint before serial A/B integration: `e9a7bfa9dc561a4dad06035caaeabff35ee0d8f0`.
-- Approval gates: no live publication, merge, deploy, credential change, migration of real data, or external messaging.
+- Candidate code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`.
+- Candidate evidence/docs are C-owned changes on top of that checkpoint.
+- Approval gates: no live publication, merge, deploy, credential change, real-data migration, or external messaging.
+
+## Current session evidence
+
+- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; current overlay is 3 tracked dirty files plus 475 untracked entries. A owns runtime `127.0.0.1:4318`, PID `38672`.
+- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, checkpoint `b675a98e6dd2da3c12133dff715eddea616c91f5`; tracked scope clean, untracked reports/artifacts excluded.
+- SESSION C: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`, code/test checkpoint `7378f8c`.
+- Native handshake `SESSION-C-HANDSHAKE-20261028T1210Z` delivered through Orca terminal handles. A returned `SESSION-A-ACK-20261028T1210Z`; B returned `SESSION-B-ACK-20261028T1210Z`; both showed `turn_started`, exact ownership, and no edits by C.
 
 ## Tasks
 
 | Task ID | Owner | Scope | Dependency | Acceptance / evidence | State |
 |---|---|---|---|---|---|
 | C-001 | C | Audit oi-browser and auto-gtm source pins | source checkouts | `docs/integrations/oi-browser-audit.md` | COMPLETED |
-| C-002 | C | Canonical memory/provider/browser contracts and persistence | base store/service | committed native modules/tests | COMPLETED |
-| C-003 | C | Reconcile A committed Camoufox checkpoint | A commit `52072ce` | merge commit `d195756`; exact candidate regression | COMPLETED |
-| C-004 | C | Preserve B authority boundary | B owner checkpoint `b675a98` | checkpoint reviewed; serial cherry-pick and affected regression pending | CHECKPOINTED / INTEGRATION PENDING |
-| C-005 | C | Controlled Product X / Community A+B case | C-002 | final fixture artifact, PASS, before/after learning change and restart | COMPLETED |
-| C-006 | C | Isolated server/provider/restart smoke | C-002 | `server-smoke-20ba20f.json`, exact SHA, private port `4333`; provider failure preserved as `FAILED/nonzero` after MLX OOM | COMPLETED |
-| C-007 | C | Focused/full regression and syntax/diff checks | C-002..C-006 | focused 37/37; full 790/788/0/2; baseline 576/574/0/2; syntax + diff clean | COMPLETED |
-| C-008 | C | Snapshot deduplication execution trace retention | C-002 | repeated DOM test retains bounded execution bindings after restart | COMPLETED |
-| A/B-001 | A/B | Native receiver handshake and dirty checkpoint ACK | existing live sessions | native delivery, result markers, owner checkpoints | HANDSHAKE + REVIEW ACKNOWLEDGED; B COMPLETED; A CHECKPOINT PENDING |
+| C-002 | C | Canonical memory/provider/browser contracts and persistence | base store/service | native modules/tests at `7378f8c` | COMPLETED |
+| C-003 | C | Reconcile A Camoufox checkpoint | A checkpoint `1ed5771` | present in candidate history; A dirty overlay preserved | COMPLETED / OVERLAY PRESERVED |
+| C-004 | C | Preserve B authority boundary | B checkpoint `b675a98` | behavior confirmed by candidate history/tests; exact B commit intentionally not cherry-picked | COMPLETED / ADAPTED |
+| C-005 | C | Controlled Product X / Community A+B case | C-002 | `fixture-run-7378f8c.json`, before/after learning change, restart and idempotent replay | COMPLETED |
+| C-006 | C | Isolated server/provider/restart smoke | C-002 | `server-smoke-7378f8c.json`, port `4337`, exact SHA, no external side effects | COMPLETED |
+| C-007 | C | Focused/full regression and hygiene | C-002..C-006 | focused `106/106`, full `790/788/0/2`, baseline `576/574/0/2`, Auto-GTM `158/158` | COMPLETED |
+| C-008 | C | Snapshot deduplication execution trace retention | C-002 | repeated DOM test retains bounded execution bindings | COMPLETED |
+| A/B-001 | A/B | Native receiver handshake and checkpoint ACK | existing live sessions | `SESSION-A/B-ACK-20261028T1210Z`, native terminal evidence | ACKNOWLEDGED |
 | LIVE-001 | authorized runtime owner | fresh Camoufox identity/readiness and publication | standing authority + account | separate live evidence | BLOCKED |
 | GTM-001 | Auto-GTM owner | generated feed/content/media artifact | configured source/provider | capability-specific evidence | BLOCKED |
 
-| C-009 | C | Re-run current fixture and preserve exact evidence | C-002..C-008 | `fixture-run-20ba20f.json`, learning-driven before/after and restart proof | COMPLETED |
-
 ## Integration rule
 
-Only C-owned files are written here. A/B dirty files are observed and represented in the candidate only through committed checkpoints already in history; no dirty worktree mutation is allowed.
+Only C-owned files are written in this worktree. A/B dirty files remain owner-controlled. Candidate integration uses committed checkpoints and verified behavior; it does not mutate, stash, reset, clean, restart, or commit A/B worktrees.

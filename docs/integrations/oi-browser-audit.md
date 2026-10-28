@@ -16,10 +16,10 @@ Required Notice: Copyright (c) 2026 Jang Trinh (https://github.com/jangtrinh). T
 
 ## Session ownership evidence
 
-- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, HEAD `52072ce`, dirty files in Camoufox/session/server/service/strategy/UI lanes. Current observed server PID `38672` listens on `127.0.0.1:4318`; `/health` reports `sourceCommit=unknown`, schema 8, `verified=0`, `unknown=6`, `publicationUnverified=150`; owner review marker `RESULT-A-20261028T0420Z`, checkpoint pending.
-- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, owner checkpoint `b675a98`, tracked scope clean after focused `41/41`; native review marker `RESULT-B-20261028T0420Z`; excluded untracked artifacts remain outside the checkpoint.
-- SESSION C: final candidate `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`, docs/evidence revision `e9a7bfa`, code checkpoint `20ba20f`; A committed checkpoint `52072ce` is present through merge `d195756`. A/B dirty worktrees were not edited.
-- Native coordination: Orca terminal sends to A/B returned `turn_started`; A/B returned exact review markers `RESULT-A-20261028T0420Z` and `RESULT-B-20261028T0420Z` with native references. B checkpoint `b675a98` is durable; A checkpoint remains pending. No C process modified A/B worktrees.
+- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; native ACK `SESSION-A-ACK-20261028T1210Z` through Orca terminal `term_58af59e8-f5dd-4968-a724-78b48a04cf3c`. Current status: 3 tracked dirty files (unstaged) plus 475 untracked entries; owns runtime PID `38672` on `127.0.0.1:4318`. A's dirty overlay remains untouched.
+- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, checkpoint `b675a98e6dd2da3c12133dff715eddea616c91f5`; native ACK `SESSION-B-ACK-20261028T1210Z` through Orca terminal `term_41a5601e-887e-4ac0-a8d7-35112fedb375`. Tracked scope clean; untracked reports/artifacts excluded.
+- SESSION C: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`, code/test checkpoint `7378f8cac202ce8efc0c5c66cb789e67f504f32e`; C owns integration docs/evidence and the oi-browser adapters.
+- Native coordination: handshake marker `SESSION-C-HANDSHAKE-20261028T1210Z` was delivered to both existing Orca terminals; both returned `turn_started`, exact ACK markers, current HEAD/branch/dirty counts, ownership, and no-edit confirmation. B's exact checkpoint is not cherry-picked because candidate history already contains/adapts its substantive authority behavior and its remaining diff includes obsolete provider/GPM-era changes.
 
 ## Subsystem decisions
 

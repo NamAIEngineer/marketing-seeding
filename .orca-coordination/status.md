@@ -4,28 +4,29 @@
 
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
-- Last committed candidate revision: `e9a7bfa9dc561a4dad06035caaeabff35ee0d8f0` (code/test revision `20ba20f6f8f273a72cb0db88b216d645aeecaeb1`)
-- Candidate source/test tree is unchanged. C docs/evidence finalization is pending commit; A/B worktrees remain owner-controlled and B has checkpoint `b675a98`.
-- Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`
-- Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`; remote `main` and `integration/autonomous-build` observed at `98a499e25c2fab75de6aef85f265e6c2a7364651`.
+- Code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`
+- Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
+- Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
+- C-owned new evidence files are pending commit; source/test tree is unchanged after `7378f8c`.
 
 ## A/B/C connectivity and ownership
 
-- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, owner HEAD `52072ceaf371836a0783b9f8b3c4eda8a46415c5`, dirty Camoufox/runtime/server/UI files, owns `127.0.0.1:4318` PID `38672`; `/health` reports `sourceCommit=unknown`, schema 8, `verified=0`, `unknown=6`, `publicationUnverified=150`; `RESULT-A-20261028T0420Z`; checkpoint pending.
-- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, owner checkpoint HEAD `b675a98e6dd2da3c12133dff715eddea616c91f5`; `RESULT-B-20261028T0420Z`; tracked scope clean, untracked artifacts excluded.
-- SESSION C: final candidate above; owns integration/docs/evidence.
-- Orca `worktree list`, `terminal list`, `worktree ps`, and inbox were checked on 2026-10-28. Initial sends returned `terminal_not_found`, then native follow-up delivery succeeded through A handle `term_58af59e8-f5dd-4968-a724-78b48a04cf3c` and B handle `term_41a5601e-887e-4ac0-a8d7-35112fedb375`; both returned `turn_started`, review markers `RESULT-A-20261028T0420Z` / `RESULT-B-20261028T0420Z`, and native references. B created owner checkpoint `b675a98`; A owner checkpoint remains in progress.
-- No A/B file was edited, staged, reset, stashed, cleaned, or committed by C. Port `4318` was not restarted.
+- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed5771`; current 3 tracked dirty + 475 untracked entries; owns `127.0.0.1:4318` PID `38672`; current health `sourceCommit=unknown`, schema 8; no restart by C.
+- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, checkpoint `b675a98`; tracked scope clean, untracked artifacts excluded.
+- SESSION C: candidate above; integration/docs/evidence owner.
+- Orca native handshake marker `SESSION-C-HANDSHAKE-20261028T1210Z`: A and B both returned `turn_started`, exact ACK markers, HEAD/branch/dirty counts, ownership, and native terminal references.
+- No A/B file was edited, staged, reset, stashed, cleaned, or committed by C.
 
 ## Verified candidate evidence
 
 - Baseline `79985bb411afc141f0edf10ae635fb91824d8bc9`: `npm test` → 576 total, 574 pass, 0 fail, 2 skipped.
-- Controlled Product X / Community A+B fixture: `plans/oi-browser-integration/fixture-run-20ba20f.json`, `FIXTURE_VERIFIED`, PASS; before/after candidate changed, learning applied, restart/idempotent browser replay passed.
-- Isolated server/runtime: `plans/oi-browser-integration/server-smoke-20ba20f.json`, `RUNTIME_VERIFIED`, port `4333`, exact source SHA, auth/memory/static snapshot/restart passed. Qwen `/v1/models` health was ready but inference failed `FAILED/nonzero` because the MLX generation thread died from Metal insufficient memory. Auto-GTM `feed_not_generated`; no external side effect.
-- Focused: 37 pass, 0 fail. Full: 790 total, 788 pass, 0 fail, 2 skipped, exact source/test revision `20ba20f`.
-- Auto-GTM `.venv` suite: 154 pass, 0 fail; `pip check` clean.
-- Camoufox disposable smoke remains unauthenticated runtime proof only; fresh authenticated identity/readiness and publication remain unverified.
+- Focused current slices: authority/bootstrap/delegation `47/47`; oi-browser/browser/provider/transport `59/59`; combined `106/106`.
+- Full candidate: `node --test test/*.test.mjs` → 790 total, 788 pass, 0 fail, 2 skipped.
+- Auto-GTM current checkout: `python -m unittest discover tests` → 158 total, 158 pass, 0 fail; `pip check` clean.
+- Controlled fixture: `plans/oi-browser-integration/fixture-run-7378f8c.json`, `FIXTURE_VERIFIED`; learning support 2, verified 2; before/after candidate changed; restart and browser replay passed; external side effects false.
+- Isolated runtime: `plans/oi-browser-integration/server-smoke-7378f8c.json`, `RUNTIME_VERIFIED`; port `4337`, exact SHA, auth boundary, memory/static snapshot persistence, restart persistence, explicit local-Qwen route success; Auto-GTM remains unavailable (`feed_not_generated`).
+- Current syntax checks and `git diff --check` passed. Secret scan was reviewed; matches are test redaction fixtures, not credentials.
 
 ## State
 
-`PARTIAL`. Native A/B receiver evidence, live authority/readiness/publication/metrics, and Auto-GTM generation are not proven. Do not report COMPLETE.
+`PARTIAL`. Communication is proven. Native A/B handshakes are acknowledged. Live Camoufox readiness/publication/metrics, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
