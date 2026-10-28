@@ -3,7 +3,7 @@
 ## Candidate handoff
 
 - Candidate: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`.
-- Source/test checkpoint: `4fe2b7bf6def6fca538add6b434ee3a97a584302`; metadata/evidence HEAD follows this checkpoint; prior integration checkpoint `7f2b74a` retained.
+- Source/test checkpoint: `35cc224febb5eb9c8368cf88f5f28b6a119b6be3`; metadata/evidence HEAD follows this checkpoint; prior integration checkpoint `7f2b74a` retained.
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - A checkpoint represented: `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; current A overlay read-only recheck is 13 tracked dirty + 90 untracked, preserved outside candidate.
 - B owner checkpoint: `b675a98e6dd2da3c12133dff715eddea616c91f5`; current B read-only recheck is tracked-clean with 16 untracked paths; not cherry-picked because candidate already contains/adapts substantive behavior.
@@ -13,8 +13,8 @@
 
 - `plans/oi-browser-integration/fixture-run-7378f8c.json`: `FIXTURE_VERIFIED`, controlled Product X / Community A+B, learning-driven before/after candidate change, static browser intent activation, idempotent replay, restart persistence.
 - `plans/oi-browser-integration/server-smoke-7378f8c.json`: `RUNTIME_VERIFIED`, exact source SHA, isolated port `4337`, auth/memory/static snapshot/restart persistence, explicit local-Qwen route success, `feed_not_generated`.
-- Current tests: focused oi-browser memory/provider `22/22`; coordinator/native `17/17`; prior native/coordinator/LinkedIn verifier focused `69/69`; historical integration/authority slices `106/106`; current full `810 total, 808 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `160/160`, `pip check` clean. Historical full `794/792/0/2` remains tied to `7f2b74a`; pre-regression candidate `802/800/0/2` remains tied to `10ce868`.
-- Durable regression artifact: `plans/oi-browser-integration/regression-final-9875db3.json`, source `9875db3`, remains historical. Current candidate evidence is `plans/oi-browser-integration/regression-final-1589518.json` at `4fe2b7b`; prior `regression-final-10ce868.json`, `regression-final-ac2f7df.json`, and historical `regression-final-7f2b74a.json` remain unchanged.
+- Current tests: focused oi-browser/provider/live bridge `34/34`; coordinator/native `17/17`; historical integration/authority slices `106/106`; current full `813 total, 811 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `160/160`, `pip check` clean. Earlier evidence remains tied to its exact revision.
+- Durable regression artifact: `plans/oi-browser-integration/regression-final-9875db3.json`, source `9875db3`, remains historical. Current candidate evidence is `plans/oi-browser-integration/regression-final-35cc224.json` at `35cc224`; prior artifacts remain unchanged.
 
 ## Native session evidence
 
@@ -47,7 +47,7 @@
 
 ## Continuation supervisor evidence
 
-- C-owned continuation changes are committed on branch `integration/session-c-reconciled` through `4fe2b7b`; A/B worktrees remain untouched.
+- C-owned continuation changes are committed on branch `integration/session-c-reconciled` through `35cc224`; A/B worktrees remain untouched.
 - LaunchAgent `ai.marketing-seeding.project-coordinator` runs `/Users/nam/Documents/marketing-seeding-session-c-reconciled/scripts/project-coordinator-supervisor.mjs`; rollback: `launchctl bootout gui/$(id -u) "$HOME/Library/LaunchAgents/ai.marketing-seeding.project-coordinator.plist"`.
 - C follow-ups #1/#2 native requests, markers, artifacts, and hashes are recorded in `plans/oi-browser-integration/native-resume-evidence-20261028.json`.
 - Durable coordinator state contains structured receipts/hashes/markers/request IDs; raw `outputExcerpt` is removed on read and not persisted again.
@@ -64,9 +64,9 @@
 
 ## Final C patch handoff 2026-10-29
 
-- `dd814bf1df82a0371171ce0ca3674d16a1009368` is the pushed candidate head. It changes only C-owned browser integration and its regression test.
-- `regression-final-dd814bf.json` records focused 32/32, coordinator/native 17/17, full 811/809/0/2, exact output hash, and no live eligibility.
-- Intent binding now rejects forged action, frame, semantic target, or intent ID before transport input. A/B files, A runtime `4318`, credentials, authority, publication, and UNKNOWN records were untouched.
+- `35cc224febb5eb9c8368cf88f5f28b6a119b6be3` is the pushed C source/test checkpoint. It includes immutable browser binding plus provider caller cancellation/fallback suppression.
+- `regression-final-35cc224.json` records focused 34/34, coordinator/native 17/17, full 813/811/0/2, exact output hashes, independent review PASS, and no live eligibility.
+- Intent binding rejects forged action, frame, semantic target, or intent ID before transport input. Provider cancellation prevents fallback after caller abort, including invalid-result races. A/B files, A runtime `4318`, credentials, authority, publication, and UNKNOWN records were untouched.
 - Status remains `PARTIAL`: A lacks a clean owner checkpoint; B continuous follow-up is unproven; live authenticated Camoufox/publication/metrics and Auto-GTM generation/media remain blocked.
 
 ## Provider cancellation handoff 2026-10-29
