@@ -4,11 +4,11 @@
 
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
-- Final candidate revision: `f767feec35344bdd88392fa7b605039afa7363a6`; coordinator source/test checkpoint: `1589518ec77424d186906b0ba10ba201c763cfe6`; prior code/test revision `9875db34c3f068c1510b3e92e8c72e4134e641a9` remains recorded in historical evidence.
-- Code/test checkpoint: `1589518ec77424d186906b0ba10ba201c763cfe6`
+- Candidate source/test revision: `4fe2b7bf6def6fca538add6b434ee3a97a584302`; metadata/evidence HEAD follows this checkpoint; prior code/test revision `9875db34c3f068c1510b3e92e8c72e4134e641a9` remains recorded in historical evidence.
+- Code/test checkpoint: `4fe2b7bf6def6fca538add6b434ee3a97a584302`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
-- C-owned coordinator source/tests are committed through `1589518`; final docs/evidence are committed through `f767fee`; `7f2b74a` remains the prior integration evidence checkpoint.
+- C-owned coordinator source/tests are committed through `4fe2b7b`; final docs/evidence follow on the candidate branch; `7f2b74a` remains the prior integration evidence checkpoint.
 
 ## A/B/C connectivity and ownership
 
@@ -24,15 +24,15 @@
 
 - Baseline `79985bb411afc141f0edf10ae635fb91824d8bc9`: `npm test` → 576 total, 574 pass, 0 fail, 2 skipped.
 - Focused current slices: authority/bootstrap/delegation `47/47`; oi-browser/browser/provider/transport `59/59`; combined `106/106`.
-- Current coordinator/native focused: `node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs` → 16 total, 16 pass, 0 fail; prior native/coordinator/LinkedIn verifier suite is 69/69.
-- Historical candidate `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped. Pre-regression candidate `10ce868`: `node --test test/*.test.mjs` → 802 total, 800 pass, 0 fail, 2 skipped. Current `1589518`: `node --test test/*.test.mjs` → 807 total, 805 pass, 0 fail, 2 skipped.
-- Durable memory/provider regression artifact is `plans/oi-browser-integration/regression-final-9875db3.json` at source `9875db3`; current coordinator recovery evidence is `plans/oi-browser-integration/regression-final-1589518.json`. Prior `regression-final-10ce868.json`, `regression-final-ac2f7df.json`, and historical `regression-final-7f2b74a.json` retained.
+- Current coordinator/native focused: `node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs` → 17 total, 17 pass, 0 fail; prior native/coordinator/LinkedIn verifier suite is 69/69.
+- Historical candidate `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped. Pre-regression candidate `10ce868`: `node --test test/*.test.mjs` → 802 total, 800 pass, 0 fail, 2 skipped. Historical recovery checkpoint `1589518`: `node --test test/*.test.mjs` → 807 total, 805 pass, 0 fail, 2 skipped.
+- Durable memory/provider regression artifact is `plans/oi-browser-integration/regression-final-9875db3.json` at source `9875db3`; current candidate regression evidence is `plans/oi-browser-integration/regression-final-1589518.json` at source/test revision `4fe2b7b`. Prior `regression-final-10ce868.json`, `regression-final-ac2f7df.json`, and historical `regression-final-7f2b74a.json` retained.
 - Auxiliary queue verifier task `0e9f9242-0019-4f11-9453-9d155a419221` failed closed at provider authorization validation; no retry or artifact. Direct independent verifier PASS remains authoritative.
 - Auto-GTM owner checkout: `/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests` → 160 total, 160 pass, 0 fail; `pip check` clean. The owner worktree remains dirty; C did not modify it.
 - Controlled fixture: `plans/oi-browser-integration/fixture-run-7378f8c.json`, `FIXTURE_VERIFIED`; learning support 2, verified 2; before/after candidate changed; restart and browser replay passed; external side effects false.
 - Isolated runtime: `plans/oi-browser-integration/server-smoke-7378f8c.json`, `RUNTIME_VERIFIED`; port `4337`, exact SHA, auth boundary, memory/static snapshot persistence, restart persistence, explicit local-Qwen route success; Auto-GTM remains unavailable (`feed_not_generated`).
 - Current syntax checks and `git diff --check` passed. Fresh independent verifier reviewed historical `7f2b74a` at `2026-10-28T07:49:24Z`; current native/coordinator/verifier focused checks are 69/69. Secret scan found no credential-like values in coordinator files; matches elsewhere are test redaction fixtures/generated UI text.
-- Regression fix at `9875db3`: canonical evidence refs define independent memory samples; caller publication/sample ID changes cannot inflate support; stalled provider response bodies and JSON parsing remain under the same deadline; already-aborted caller signals fail fast. Recovery hardening at `1589518` adds bounded exact-request reconciliation and crash-safe restart accounting. Focused oi-browser tests `22/22`; coordinator/native tests `16/16`; full candidate suite `809 total, 807 pass, 0 fail, 2 skipped`; evidence: `plans/oi-browser-integration/regression-final-1589518.json`; no A/B/runtime mutation.
+- Regression fix at `9875db3`: canonical evidence refs define independent memory samples; caller publication/sample ID changes cannot inflate support; stalled provider response bodies and JSON parsing remain under the same deadline; already-aborted caller signals fail fast. Recovery hardening at `1589518` adds bounded exact-request reconciliation and crash-safe restart accounting. Focused oi-browser tests `22/22`; current coordinator/native tests `17/17`; full candidate suite `810 total, 808 pass, 0 fail, 2 skipped`; evidence: `plans/oi-browser-integration/regression-final-1589518.json`; no A/B/runtime mutation.
 
 ## State
 

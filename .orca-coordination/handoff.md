@@ -3,7 +3,7 @@
 ## Candidate handoff
 
 - Candidate: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`.
-- Code/test checkpoint: `9875db34c3f068c1510b3e92e8c72e4134e641a9`; prior integration checkpoint `7f2b74a` retained.
+- Source/test checkpoint: `4fe2b7bf6def6fca538add6b434ee3a97a584302`; metadata/evidence HEAD follows this checkpoint; prior integration checkpoint `7f2b74a` retained.
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - A checkpoint represented: `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; current A overlay read-only recheck is 13 tracked dirty + 90 untracked, preserved outside candidate.
 - B owner checkpoint: `b675a98e6dd2da3c12133dff715eddea616c91f5`; current B read-only recheck is tracked-clean with 16 untracked paths; not cherry-picked because candidate already contains/adapts substantive behavior.
@@ -13,8 +13,8 @@
 
 - `plans/oi-browser-integration/fixture-run-7378f8c.json`: `FIXTURE_VERIFIED`, controlled Product X / Community A+B, learning-driven before/after candidate change, static browser intent activation, idempotent replay, restart persistence.
 - `plans/oi-browser-integration/server-smoke-7378f8c.json`: `RUNTIME_VERIFIED`, exact source SHA, isolated port `4337`, auth/memory/static snapshot/restart persistence, explicit local-Qwen route success, `feed_not_generated`.
-- Current tests: focused oi-browser memory/provider `22/22`; native/coordinator/LinkedIn verifier focused `69/69`; historical integration/authority slices `106/106`; current full `809 total, 807 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `160/160`, `pip check` clean. Historical full `794/792/0/2` remains tied to `7f2b74a`; pre-regression candidate `802/800/0/2` remains tied to `10ce868`.
-- Durable regression artifact: `plans/oi-browser-integration/regression-final-9875db3.json`, source `9875db3`, remains historical. Current recovery evidence is `plans/oi-browser-integration/regression-final-1589518.json`; prior `regression-final-10ce868.json`, `regression-final-ac2f7df.json`, and historical `regression-final-7f2b74a.json` remain unchanged.
+- Current tests: focused oi-browser memory/provider `22/22`; coordinator/native `17/17`; prior native/coordinator/LinkedIn verifier focused `69/69`; historical integration/authority slices `106/106`; current full `810 total, 808 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `160/160`, `pip check` clean. Historical full `794/792/0/2` remains tied to `7f2b74a`; pre-regression candidate `802/800/0/2` remains tied to `10ce868`.
+- Durable regression artifact: `plans/oi-browser-integration/regression-final-9875db3.json`, source `9875db3`, remains historical. Current candidate evidence is `plans/oi-browser-integration/regression-final-1589518.json` at `4fe2b7b`; prior `regression-final-10ce868.json`, `regression-final-ac2f7df.json`, and historical `regression-final-7f2b74a.json` remain unchanged.
 
 ## Native session evidence
 
@@ -47,7 +47,7 @@
 
 ## Continuation supervisor evidence
 
-- C-owned continuation changes are committed on branch `integration/session-c-reconciled` through `1589518`; A/B worktrees remain untouched.
+- C-owned continuation changes are committed on branch `integration/session-c-reconciled` through `4fe2b7b`; A/B worktrees remain untouched.
 - LaunchAgent `ai.marketing-seeding.project-coordinator` runs `/Users/nam/Documents/marketing-seeding-session-c-reconciled/scripts/project-coordinator-supervisor.mjs`; rollback: `launchctl bootout gui/$(id -u) "$HOME/Library/LaunchAgents/ai.marketing-seeding.project-coordinator.plist"`.
 - C follow-ups #1/#2 native requests, markers, artifacts, and hashes are recorded in `plans/oi-browser-integration/native-resume-evidence-20261028.json`.
 - Durable coordinator state contains structured receipts/hashes/markers/request IDs; raw `outputExcerpt` is removed on read and not persisted again.
@@ -58,6 +58,6 @@
 - `IMPLEMENTED` in the current C working tree: `src/project-coordinator.mjs` schema v3 preserves v1/v2 state additively and persists native recovery metadata (`attempts`, `inFlightAttempt`, `nextAttemptAt`, epoch and manual recovery count).
 - `IMPLEMENTED`: `WAITING_CHATGPT` uses bounded exponential backoff (5s, 10s, 20s; maximum 3 reconciliation attempts), preserves the exact accepted Orca request ID, and transitions to `BLOCKED_HUMAN_INPUT` after the limit or when the request ID/timestamp is invalid.
 - `IMPLEMENTED`: restart treats a persisted in-flight native attempt as consumed before scheduling the next exact-request reconciliation; crash-loop retries cannot bypass the limit.
-- `FIXTURE_VERIFIED`: coordinator/native focused tests cover backoff, missing request IDs, crash-interrupted recovery, malformed timestamps, duplicate dependency/restart replay and exact request preservation. Current focused result after this change: 16/16 pass.
+- `FIXTURE_VERIFIED`: coordinator/native focused tests cover backoff, missing request IDs, crash-interrupted recovery, malformed timestamps, duplicate dependency/restart replay and exact request preservation. Current focused result after this change: 17/17 pass.
 - No A/B files, runtime 4318, credentials, authority, publication, UNKNOWN records or production state were modified.
 - Durable evidence: `plans/oi-browser-integration/coordinator-recovery-v3-20261028.json` at source revision `1589518ec77424d186906b0ba10ba201c763cfe6`.
