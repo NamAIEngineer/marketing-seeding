@@ -15,6 +15,9 @@ const SAFE_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/;
 const MAX_TASKS = 256;
 const MAX_EVENTS = 512;
 const MAX_ERROR = 240;
+const MAX_ACCEPTANCE_CHECKS = 64;
+const MAX_EVIDENCE_REFS = 32;
+const MAX_FOLLOW_UP_TASKS = 8;
 const NATIVE_RECOVERY_MAX_ATTEMPTS = 3;
 const NATIVE_RECOVERY_BASE_DELAY_MS = 5_000;
 const NATIVE_RECOVERY_MAX_DELAY_MS = 60_000;
@@ -35,6 +38,180 @@ function text(value, label, max = 240) {
   const result = String(value || "").replace(/\s+/g, " ").trim();
   if (!result) throw new Error(`${label} is required`);
   return result.slice(0, max);
+}
+
+function optionalText(value, max = 240) {
+  if (value === null || value === undefined || value === "") return null;
+  return String(value).replace(/\s+/g, " ").trim().slice(0, max) || null;
+}
+
+function evidenceRefs(value) {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.map((item) => optionalText(item, 240)).filter(Boolean))].slice(0, MAX_EVIDENCE_REFS);
+}
+
+function normalizeLimits(value) {
+  const input = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const maxAttempts = Number.isSafeInteger(input.maxAttempts) && input.maxAttempts > 0 ? Math.min(32, input.maxAttempts) : null;
+  const maxRuntimeMs = Number.isSafeInteger(input.maxRuntimeMs) && input.maxRuntimeMs > 0 ? Math.min(900_000, input.maxRuntimeMs) : null;
+  return { maxAttempts, maxRuntimeMs };
+}
+
+function normalizeAcceptanceDeclaration(value) {
+  if (value === null || value === undefined) return null;
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("coordinator acceptance must be an object");
+  const version = Number(value.version || 1);
+  if (version !== 1) throw new Error("unsupported coordinator acceptance version");
+  const checks = Array.isArray(value.checks) ? value.checks : [];
+  if (checks.length > MAX_ACCEPTANCE_CHECKS) throw new Error("coordinator acceptance has too many checks");
+  return {
+    version: 1,
+    checks: checks.map((check) => ({
+      id: id(check?.id, "acceptance check id"),
+      required: check?.required !== false,
+      description: optionalText(check?.description, 240)
+    })),
+    sourceRevision: optionalText(value.sourceRevision, 160),
+    evidenceRefs: evidenceRefs(value.evidenceRefs),
+    limits: normalizeLimits(value.limits)
+  };
+}
+
+function normalizeAcceptanceResult(value) {
+  if (value === null || value === undefined) return null;
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("coordinator acceptance result must be an object");
+  const status = String(value.status || "").trim().toUpperCase();
+  if (!["PASSED", "FAILED", "WAITING", "BLOCKED_HUMAN_INPUT"].includes(status)) throw new Error("invalid coordinator acceptance result status");
+  const checks = Array.isArray(value.checks) ? value.checks.slice(0, MAX_ACCEPTANCE_CHECKS).map((check) => ({
+    id: id(check?.id, "acceptance result check id"),
+    status: String(check?.status || "").trim().toUpperCase(),
+    evidenceRefs: evidenceRefs(check?.evidenceRefs),
+    detail: optionalText(check?.detail, 240)
+  })) : [];
+  if (checks.some((check) => !["PASSED", "FAILED", "WAITING", "BLOCKED_HUMAN_INPUT"].includes(check.status))) throw new Error("invalid coordinator acceptance check status");
+  const waitFor = Array.isArray(value.waitFor) ? [...new Set(value.waitFor.map((item) => id(item, "acceptance dependency")))] : [];
+  return {
+    version: 1,
+    status,
+    sourceRevision: optionalText(value.sourceRevision, 160),
+    evidenceRefs: evidenceRefs(value.evidenceRefs),
+    checks,
+    waitFor: waitFor.slice(0, MAX_EVENTS),
+    reason: optionalText(value.reason, MAX_ERROR)
+  };
+}
+
+function evaluateAcceptance(task, result) {
+  const declaration = task.acceptance;
+  const actual = normalizeAcceptanceResult(result.acceptance);
+  if (!declaration) {
+    return actual || { version: 1, status: "PASSED", sourceRevision: null, evidenceRefs: [], checks: [], waitFor: [], reason: null };
+  }
+  if (!actual) return { version: 1, status: "FAILED", sourceRevision: null, evidenceRefs: [], checks: [], waitFor: [], reason: "COORDINATOR_ACCEPTANCE_RESULT_MISSING" };
+  if (declaration.sourceRevision && actual.sourceRevision !== declaration.sourceRevision) {
+    return { ...actual, status: "FAILED", reason: "COORDINATOR_ACCEPTANCE_SOURCE_REVISION_MISMATCH" };
+  }
+  const missingEvidence = declaration.evidenceRefs.filter((ref) => !actual.evidenceRefs.includes(ref));
+  if (missingEvidence.length) return { ...actual, status: "FAILED", reason: "COORDINATOR_ACCEPTANCE_EVIDENCE_MISSING" };
+  const byId = new Map(actual.checks.map((check) => [check.id, check]));
+  const failedRequired = declaration.checks.filter((check) => check.required && byId.get(check.id)?.status !== "PASSED");
+  if (failedRequired.length) {
+    const waiting = failedRequired.some((check) => byId.get(check.id)?.status === "WAITING");
+    const blocked = failedRequired.some((check) => byId.get(check.id)?.status === "BLOCKED_HUMAN_INPUT");
+    return { ...actual, status: blocked ? "BLOCKED_HUMAN_INPUT" : (waiting ? "WAITING" : "FAILED"), reason: actual.reason || "COORDINATOR_ACCEPTANCE_CHECK_FAILED" };
+  }
+  if (actual.status !== "PASSED") return actual;
+  return actual;
+}
+
+function normalizeDependencies(value) {
+  return [...new Set((Array.isArray(value) ? value : []).map((item) => id(item, "dependencyId")))];
+}
+
+function createTaskRecord(input, now, { parentTaskId = null, relation = null, includeParentDependency = false } = {}) {
+  const normalizedId = id(input.taskId, "taskId");
+  const dependencies = normalizeDependencies(input.dependsOn);
+  if (includeParentDependency && parentTaskId && !dependencies.includes(parentTaskId)) dependencies.unshift(parentTaskId);
+  const workerKind = text(input.workerKind || "CALLBACK", "workerKind", 80).toUpperCase();
+  if (input.native !== null && input.native !== undefined && (typeof input.native !== "object" || Array.isArray(input.native))) throw new Error("native task metadata must be an object or null");
+  const acceptance = normalizeAcceptanceDeclaration(input.acceptance);
+  const limits = normalizeLimits(input.limits || acceptance?.limits);
+  return {
+    taskId: normalizedId,
+    owner: text(input.owner, "owner", 120),
+    scope: text(input.scope, "scope", 240),
+    dependsOn: dependencies,
+    parentTaskId,
+    relation,
+    replaySafe: input.replaySafe === true,
+    workerKind,
+    native: input.native ? sanitizeNative(input.native) : null,
+    nativeRecovery: workerKind === "ORCA_NATIVE" ? initialNativeRecovery() : null,
+    artifactPath: input.artifactPath ? String(input.artifactPath) : `artifacts/${normalizedId}.json`,
+    idempotencyKey: `coord:${normalizedId}`,
+    status: dependencies.length ? "WAITING_DEPENDENCY" : "RUNNING",
+    createdAt: now,
+    attemptCount: 0,
+    limits,
+    acceptance,
+    workerStatus: null,
+    acceptanceStatus: acceptance ? "PENDING" : "UNSPECIFIED",
+    nextTasks: normalizeFollowUps(input.nextTasks),
+    repairTasks: normalizeFollowUps(input.repairTasks),
+    lastResultAt: null,
+    wakeState: dependencies.length ? (input.wakeState || "WAITING_DEPENDENCY") : "READY"
+  };
+}
+
+function findTask(state, taskId) {
+  return state.tasks.find((task) => task.taskId === taskId);
+}
+
+function appendTask(state, input, now, options = {}) {
+  const task = createTaskRecord(input, now, options);
+  const existing = findTask(state, task.taskId);
+  if (existing) {
+    const same = existing.owner === task.owner &&
+      existing.scope === task.scope &&
+      JSON.stringify(existing.dependsOn) === JSON.stringify(task.dependsOn) &&
+      (existing.workerKind || "CALLBACK") === task.workerKind &&
+      existing.replaySafe === task.replaySafe &&
+      (existing.artifactPath || `artifacts/${task.taskId}.json`) === task.artifactPath &&
+      JSON.stringify(existing.acceptance || null) === JSON.stringify(task.acceptance || null) &&
+      (existing.parentTaskId || null) === (task.parentTaskId || null) &&
+      (existing.relation || null) === (task.relation || null);
+    if (!same) throw new Error("COORDINATOR_TASK_ID_CONFLICT");
+    return { task: structuredClone(existing), duplicate: true };
+  }
+  if (state.tasks.length >= MAX_TASKS) throw new Error("COORDINATOR_TASK_LIMIT");
+  state.tasks.push(task);
+  state.wakeEvents.push({ type: "TASK_SCHEDULED", taskId: task.taskId, parentTaskId: task.parentTaskId, relation: task.relation, at: now });
+  return { task: structuredClone(task), duplicate: false };
+}
+
+function normalizeTaskTemplate(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("coordinator follow-up task must be an object");
+  return {
+    taskId: id(value.taskId, "taskId"),
+    owner: text(value.owner, "owner", 120),
+    scope: text(value.scope, "scope", 240),
+    dependsOn: normalizeDependencies(value.dependsOn),
+    wakeState: optionalText(value.wakeState, 120),
+    replaySafe: value.replaySafe === true,
+    artifactPath: optionalText(value.artifactPath, 240),
+    workerKind: text(value.workerKind || "CALLBACK", "workerKind", 80).toUpperCase(),
+    native: value.native ? sanitizeNative(value.native) : null,
+    acceptance: normalizeAcceptanceDeclaration(value.acceptance),
+    limits: normalizeLimits(value.limits),
+    nextTasks: [],
+    repairTasks: []
+  };
+}
+
+function normalizeFollowUps(value, max = MAX_FOLLOW_UP_TASKS) {
+  if (!Array.isArray(value)) return [];
+  if (value.length > max) throw new Error("COORDINATOR_TOO_MANY_FOLLOW_UP_TASKS");
+  return value.map(normalizeTaskTemplate);
 }
 
 function safeError(error) {
@@ -144,6 +321,18 @@ function normalizeState(value) {
   }
   value.revision = Number.isSafeInteger(value.revision) && value.revision >= 0 ? value.revision : 0;
   for (const task of value.tasks) {
+    if (!Array.isArray(task.dependsOn)) task.dependsOn = [];
+    task.dependsOn = normalizeDependencies(task.dependsOn);
+    task.limits = normalizeLimits(task.limits);
+    task.acceptance = normalizeAcceptanceDeclaration(task.acceptance);
+    task.acceptanceStatus = optionalText(task.acceptanceStatus, 80) || (task.acceptance ? "PENDING" : "UNSPECIFIED");
+    task.workerStatus = optionalText(task.workerStatus, 120);
+    task.lastResultAt = optionalText(task.lastResultAt, 80);
+    task.parentTaskId = optionalText(task.parentTaskId, 160);
+    task.relation = optionalText(task.relation, 80);
+    task.lastAcceptance = normalizeAcceptanceResult(task.lastAcceptance);
+    task.nextTasks = normalizeFollowUps(task.nextTasks);
+    task.repairTasks = normalizeFollowUps(task.repairTasks);
     if (task.native) task.native = sanitizeNative(task.native);
     if (task.workerKind === "ORCA_NATIVE") task.nativeRecovery = normalizeNativeRecovery(task.nativeRecovery);
   }
@@ -238,7 +427,7 @@ async function resolveArtifact(stateRoot, rawPath) {
 }
 
 function eventReady(state, dependencyId) {
-  return state.tasks.some((task) => task.taskId === dependencyId && task.status === "COMPLETE") ||
+  return state.tasks.some((task) => task.taskId === dependencyId && task.status === "COMPLETE" && ["PASSED", "UNSPECIFIED"].includes(task.acceptanceStatus || "UNSPECIFIED")) ||
     state.dependencyEvents.some((event) => event.dependencyId === dependencyId && event.accepted === true);
 }
 
@@ -374,42 +563,34 @@ export class ProjectCoordinator {
     await atomicWrite(this.stateFile, state);
   }
 
-  async registerTask({ taskId, owner, scope, dependsOn = [], wakeState = "WAITING_DEPENDENCY", replaySafe = false, artifactPath, workerKind = "CALLBACK", native = null } = {}) {
+  async registerTask(input = {}) {
     if (!this.state) throw new Error("ProjectCoordinator must be initialized first");
     const lock = await acquireProcessLock(this.lockFile);
     try {
     this.state = normalizeState(JSON.parse(await readFile(this.stateFile, "utf8")));
-    const normalizedId = id(taskId, "taskId");
-    const existing = this.state.tasks.find((task) => task.taskId === normalizedId);
-    const dependencies = [...new Set((Array.isArray(dependsOn) ? dependsOn : []).map((item) => id(item, "dependencyId")))];
-    if (existing) {
-      if (existing.owner !== owner || existing.scope !== scope || JSON.stringify(existing.dependsOn) !== JSON.stringify(dependencies)) throw new Error("COORDINATOR_TASK_ID_CONFLICT");
-      return structuredClone(existing);
-    }
-    if (this.state.tasks.length >= MAX_TASKS) throw new Error("COORDINATOR_TASK_LIMIT");
-    const status = dependencies.length ? "WAITING_DEPENDENCY" : "RUNNING";
-    if (!TASK_STATES.has(status)) throw new Error("invalid coordinator task state");
-    const normalizedWorkerKind = text(workerKind, "workerKind", 80).toUpperCase();
-    if (native !== null && (typeof native !== "object" || Array.isArray(native))) throw new Error("native task metadata must be an object or null");
-    const task = {
-      taskId: normalizedId,
-      owner: text(owner, "owner", 120),
-      scope: text(scope, "scope", 240),
-      dependsOn: dependencies,
-      replaySafe: replaySafe === true,
-      workerKind: normalizedWorkerKind,
-      native: native ? sanitizeNative(native) : null,
-      nativeRecovery: normalizedWorkerKind === "ORCA_NATIVE" ? initialNativeRecovery() : null,
-      artifactPath: artifactPath ? String(artifactPath) : `artifacts/${normalizedId}.json`,
-      idempotencyKey: `coord:${normalizedId}`,
-      status,
-      createdAt: this.now(),
-      attemptCount: 0,
-      wakeState: dependencies.length ? wakeState : "READY"
-    };
-    this.state.tasks.push(task);
+    const { task, duplicate } = appendTask(this.state, input, this.now());
+    if (duplicate) return task;
     await this.persist();
     return structuredClone(task);
+    } finally {
+      await releaseProcessLock(this.lockFile, lock);
+    }
+  }
+
+  async registerFollowUps({ parentTaskId, tasks = [], relation = "FOLLOW_UP", includeParentDependency = true } = {}) {
+    if (!this.state) throw new Error("ProjectCoordinator must be initialized first");
+    const lock = await acquireProcessLock(this.lockFile);
+    try {
+      this.state = normalizeState(JSON.parse(await readFile(this.stateFile, "utf8")));
+      const parent = findTask(this.state, id(parentTaskId, "parentTaskId"));
+      if (!parent) throw new Error("COORDINATOR_PARENT_TASK_NOT_FOUND");
+      const scheduled = [];
+      for (const input of normalizeFollowUps(tasks)) {
+        const result = appendTask(this.state, input, this.now(), { parentTaskId: parent.taskId, relation, includeParentDependency });
+        scheduled.push(result.task);
+      }
+      if (scheduled.length) await this.persist();
+      return scheduled;
     } finally {
       await releaseProcessLock(this.lockFile, lock);
     }
@@ -507,6 +688,14 @@ export class ProjectCoordinator {
         if (!(task.status === "RUNNING" || task.status === "WAITING_CHATGPT") || this.state.results.some((result) => result.taskId === task.taskId)) continue;
         let recoveryAttempt = null;
         if (task.status === "RUNNING") {
+          if (task.limits?.maxAttempts && task.attemptCount >= task.limits.maxAttempts) {
+            task.status = "FAILED";
+            task.error = "COORDINATOR_TASK_ATTEMPT_LIMIT_REACHED";
+            task.failedAt = this.now();
+            task.wakeState = "ATTEMPT_LIMIT_REACHED";
+            await this.persist();
+            continue;
+          }
           task.attemptCount += 1;
           task.attemptId = `${task.taskId}:attempt:${task.attemptCount}`;
           task.startedAt = this.now();
@@ -544,6 +733,7 @@ export class ProjectCoordinator {
           continue;
         }
         try {
+          const workerStartedAt = Date.now();
           const result = await this.worker(structuredClone(task), {
             attemptId: task.attemptId,
             idempotencyKey: task.idempotencyKey,
@@ -558,6 +748,9 @@ export class ProjectCoordinator {
               await this.persist();
             }
           });
+          if (task.limits?.maxRuntimeMs && Date.now() - workerStartedAt > task.limits.maxRuntimeMs) {
+            throw new Error("COORDINATOR_TASK_RUNTIME_LIMIT_REACHED");
+          }
           if (!result || typeof result !== "object") throw new Error("COORDINATOR_WORKER_RESULT_INVALID");
           if (result.status === "WAITING_CHATGPT") {
             if (result.native && (typeof result.native !== "object" || Array.isArray(result.native))) throw new Error("native worker result must be an object");
@@ -593,14 +786,48 @@ export class ProjectCoordinator {
             continue;
           }
           if (result.status !== "COMPLETED") throw new Error("COORDINATOR_WORKER_RESULT_NOT_COMPLETED");
+          const acceptance = evaluateAcceptance(task, result);
+          task.lastAcceptance = acceptance;
+          task.acceptanceStatus = acceptance.status;
+          task.workerStatus = optionalText(result.workerStatus, 120);
+          task.lastResultAt = this.now();
+          task.completedAt = task.lastResultAt;
           const artifact = result.artifactPath || task.artifactPath;
           const artifactFile = await resolveArtifact(this.stateRoot, artifact);
           const bytes = await readFile(artifactFile);
           const artifactHash = createHash("sha256").update(bytes).digest("hex");
-          task.status = "COMPLETE";
-          task.completedAt = this.now();
           const stateRootReal = await realpath(this.stateRoot);
           task.artifactPath = path.relative(stateRootReal, artifactFile);
+          if (acceptance.status !== "PASSED") {
+            const followUps = normalizeFollowUps(result.followUpTasks?.length ? result.followUpTasks : task.repairTasks);
+            if (acceptance.status === "WAITING" && acceptance.waitFor.length === 0) {
+              acceptance.status = "BLOCKED_HUMAN_INPUT";
+              acceptance.reason = acceptance.reason || "COORDINATOR_ACCEPTANCE_WAITING_DEPENDENCY_MISSING";
+            }
+            task.acceptanceStatus = acceptance.status;
+            task.status = "COMPLETE";
+            task.error = acceptance.reason || `COORDINATOR_ACCEPTANCE_${acceptance.status}`;
+            task.wakeState = acceptance.status === "WAITING" ? "ACCEPTANCE_WAITING" : "ACCEPTANCE_BLOCKED";
+            if (acceptance.waitFor.length) {
+              for (const dependencyId of acceptance.waitFor) if (!task.dependsOn.includes(dependencyId)) task.dependsOn.push(dependencyId);
+            }
+            const accepted = { taskId: task.taskId, attemptId: task.attemptId, status: "COMPLETED", artifactPath: task.artifactPath, artifactHash, acceptedAt: task.completedAt, workerStatus: task.workerStatus || "EXECUTED", acceptanceStatus: acceptance.status, acceptance, native: task.native ? sanitizeNative(task.native) : null };
+            this.state.results.push(accepted);
+            completed.push(accepted);
+            if (followUps.length) {
+              const scheduled = [];
+              for (const followUp of followUps) {
+                const repair = acceptance.waitFor.length && followUp.dependsOn.length === 0
+                  ? { ...followUp, dependsOn: acceptance.waitFor }
+                  : followUp;
+                const created = appendTask(this.state, repair, this.now(), { parentTaskId: task.taskId, relation: "ACCEPTANCE_REPAIR", includeParentDependency: false });
+                scheduled.push(created.task);
+              }
+            }
+            await this.persist();
+            continue;
+          }
+          task.status = "COMPLETE";
           if (result.native && (typeof result.native !== "object" || Array.isArray(result.native))) throw new Error("native worker result must be an object");
           if (task.native?.requestId && result.native?.requestId && task.native.requestId !== result.native.requestId) throw new Error("COORDINATOR_NATIVE_REQUEST_ID_CONFLICT");
           if (result.native) {
@@ -617,9 +844,13 @@ export class ProjectCoordinator {
             task.nativeRecovery.nextAttemptAt = null;
           }
           task.wakeState = result.workerStatus === "NATIVE_RESUME_VERIFIED" ? "NATIVE_COMPLETED" : "COMPLETED";
-          const accepted = { taskId: task.taskId, attemptId: task.attemptId, status: "COMPLETED", artifactPath: task.artifactPath, artifactHash, acceptedAt: task.completedAt, workerStatus: result.workerStatus || "EXECUTED", native: task.native ? sanitizeNative(task.native) : null };
+          const accepted = { taskId: task.taskId, attemptId: task.attemptId, status: "COMPLETED", artifactPath: task.artifactPath, artifactHash, acceptedAt: task.completedAt, workerStatus: result.workerStatus || "EXECUTED", acceptanceStatus: "PASSED", acceptance, native: task.native ? sanitizeNative(task.native) : null };
           this.state.results.push(accepted);
           completed.push(accepted);
+          const followUps = normalizeFollowUps(result.followUpTasks?.length ? result.followUpTasks : task.nextTasks);
+          if (followUps.length) {
+            for (const followUp of followUps) appendTask(this.state, followUp, this.now(), { parentTaskId: task.taskId, relation: "NEXT_TASK", includeParentDependency: true });
+          }
           await this.persist();
         } catch (error) {
           task.status = "FAILED";
@@ -666,5 +897,8 @@ export {
   NATIVE_RECOVERY_MAX_ATTEMPTS,
   NATIVE_RECOVERY_MAX_DELAY_MS,
   SCHEMA_VERSION,
-  TASK_STATES
+  TASK_STATES,
+  evaluateAcceptance,
+  normalizeAcceptanceDeclaration,
+  normalizeAcceptanceResult
 };

@@ -326,3 +326,115 @@ test("native state strips raw terminal output and marks reconciliation complete"
   assert.equal(persisted.results[0].native.reconciliation, "COMPLETED");
   assert.equal(persisted.tasks[0].wakeState, "NATIVE_COMPLETED");
 });
+
+test("acceptance evidence controls dependency release and schedules the next task once", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-coordinator-acceptance-next-"));
+  const calls = [];
+  const worker = async (task, context) => {
+    calls.push(task.taskId);
+    const artifactPath = path.join(context.stateRoot, task.artifactPath);
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(artifactPath, JSON.stringify({ taskId: task.taskId, rehearsal: true }));
+    return task.taskId === "first"
+      ? {
+        status: "COMPLETED",
+        artifactPath,
+        workerStatus: "EXECUTED",
+        acceptance: {
+          status: "PASSED",
+          sourceRevision: "rev-1",
+          checks: [{ id: "artifact", status: "PASSED", evidenceRefs: ["artifact:first"] }],
+          evidenceRefs: ["artifact:first"]
+        }
+      }
+      : { status: "COMPLETED", artifactPath, workerStatus: "EXECUTED" };
+  };
+  const stateFile = path.join(root, "state.json");
+  const coordinator = new ProjectCoordinator({ stateFile, worker, intervalMs: 25 });
+  await coordinator.init();
+  await coordinator.registerTask({
+    taskId: "first",
+    owner: "session-c",
+    scope: "acceptance",
+    replaySafe: true,
+    acceptance: { version: 1, sourceRevision: "rev-1", checks: [{ id: "artifact" }], evidenceRefs: ["artifact:first"] },
+    nextTasks: [{ taskId: "second", owner: "session-c", scope: "acceptance", replaySafe: true }]
+  });
+  const first = await coordinator.waitFor("first");
+  const second = await coordinator.waitFor("second");
+  assert.equal(first.status, "COMPLETE");
+  assert.equal(first.acceptanceStatus, "PASSED");
+  assert.equal(second.status, "COMPLETE");
+  assert.deepEqual(calls, ["first", "second"]);
+  const state = coordinator.snapshot();
+  assert.deepEqual(state.tasks.find((task) => task.taskId === "second").dependsOn, ["first"]);
+  assert.equal(state.results.length, 2);
+  assert.equal(state.results[0].acceptanceStatus, "PASSED");
+  const restarted = new ProjectCoordinator({ stateFile, worker, intervalMs: 25 });
+  await restarted.init();
+  await restarted.runOnce();
+  assert.deepEqual(calls, ["first", "second"]);
+  assert.equal(restarted.snapshot().tasks.filter((task) => task.taskId === "second").length, 1);
+});
+
+test("failed acceptance is recorded separately and dispatches a bounded repair task", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-coordinator-acceptance-repair-"));
+  const calls = [];
+  const worker = async (task, context) => {
+    calls.push(task.taskId);
+    const artifactPath = path.join(context.stateRoot, task.artifactPath);
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(artifactPath, JSON.stringify({ taskId: task.taskId, rehearsal: true }));
+    return task.taskId === "check"
+      ? { status: "COMPLETED", artifactPath, workerStatus: "EXECUTED", acceptance: { status: "FAILED", checks: [{ id: "clean", status: "FAILED", detail: "dirty" }], reason: "CHECK_FAILED" } }
+      : { status: "COMPLETED", artifactPath, workerStatus: "EXECUTED" };
+  };
+  const stateFile = path.join(root, "state.json");
+  const coordinator = new ProjectCoordinator({ stateFile, worker, intervalMs: 25 });
+  await coordinator.init();
+  await coordinator.registerTask({
+    taskId: "check",
+    owner: "session-c",
+    scope: "acceptance",
+    replaySafe: true,
+    acceptance: { version: 1, checks: [{ id: "clean" }] },
+    repairTasks: [{ taskId: "repair", owner: "session-c", scope: "acceptance-repair", replaySafe: true }]
+  });
+  const check = await coordinator.waitFor("check");
+  const repair = await coordinator.waitFor("repair");
+  assert.equal(check.status, "COMPLETE");
+  assert.equal(check.acceptanceStatus, "FAILED");
+  assert.equal(check.error, "CHECK_FAILED");
+  assert.equal(repair.status, "COMPLETE");
+  assert.deepEqual(calls, ["check", "repair"]);
+  assert.equal(coordinator.snapshot().results[0].acceptanceStatus, "FAILED");
+  const restarted = new ProjectCoordinator({ stateFile, worker, intervalMs: 25 });
+  await restarted.init();
+  await restarted.runOnce();
+  assert.deepEqual(calls, ["check", "repair"]);
+  assert.equal(restarted.snapshot().tasks.filter((task) => task.taskId === "repair").length, 1);
+});
+
+test("acceptance evidence cannot release a dependency when source revision or evidence differs", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-coordinator-acceptance-fence-"));
+  const worker = async (task, context) => {
+    const artifactPath = path.join(context.stateRoot, task.artifactPath);
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(artifactPath, JSON.stringify({ rehearsal: true }));
+    return { status: "COMPLETED", artifactPath, acceptance: { status: "PASSED", sourceRevision: "wrong", evidenceRefs: ["wrong"] } };
+  };
+  const coordinator = new ProjectCoordinator({ stateFile: path.join(root, "state.json"), worker, intervalMs: 25 });
+  await coordinator.init();
+  await coordinator.registerTask({
+    taskId: "fenced",
+    owner: "session-c",
+    scope: "acceptance",
+    replaySafe: true,
+    acceptance: { sourceRevision: "expected", evidenceRefs: ["evidence:expected"], checks: [] }
+  });
+  const task = await coordinator.waitFor("fenced");
+  assert.equal(task.status, "COMPLETE");
+  assert.equal(task.acceptanceStatus, "FAILED");
+  assert.equal(task.lastAcceptance.reason, "COORDINATOR_ACCEPTANCE_SOURCE_REVISION_MISMATCH");
+  assert.equal(coordinator.snapshot().results[0].acceptanceStatus, "FAILED");
+});
