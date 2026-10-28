@@ -22,7 +22,8 @@
     "status": "SUCCEEDED",
     "providerId": "local-qwen",
     "executionSucceeded": true,
-    "persisted": false,
+    "decisionPersisted": true,
+    "persistedDecisionId": "provider-decision-d08555d34d96803fb1e2403f",
     "failure": null
   },
   "memoryWrite": {
