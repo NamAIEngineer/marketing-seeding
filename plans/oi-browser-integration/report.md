@@ -68,6 +68,7 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 - Full `npm test`: `814 total, 812 pass, 0 fail, 2 skipped`; output SHA-256 `7518073eacff1965f09c298588e907feec584781d4df807f00d9205bc64321a5`.
 - Auto-GTM `python -m unittest discover tests`: `160 total, 160 pass, 0 fail`; output SHA-256 `73b129bc08af46e7cd6036f955c8683c36288739122d7a149f5a5aaa20ee4b3f`; `pip check` clean.
 - Independent read-only review at this HEAD: PASS. `git diff --check` passed. Source remains `IMPLEMENTED`; tests are `FIXTURE_VERIFIED`; C LaunchAgent evidence remains `NATIVE_RESUME_VERIFIED`; no `LIVE_VERIFIED` side effect.
+- Auxiliary queue verification was attempted with READ_ONLY scope; REA rejected two submissions for missing local-target metadata and the third exact-ID reconciliation returned `QUEUE_MISSING`. No artifact or workspace mutation occurred. Direct independent read-only review is the authoritative review evidence.
 
 ## Remaining blockers
 
