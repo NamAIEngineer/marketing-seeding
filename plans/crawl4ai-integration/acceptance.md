@@ -6,8 +6,10 @@
 |---|---|---|
 | C integrated runtime | **VERIFIED** | C HEAD `246f02f3e9649acef5adba7ee2b876ac6735a7c3`; full regression 818 passed, 2 skipped, 0 failed; pinned HTTP and nodriver public smokes both `SUCCEEDED` with cleanup receipts. |
 | Standalone D `33b115d17a0aba26776ed4219647a0e671d3d6f3` | **BLOCKED** | Independent report SHA-256 `34fd69d4467cccac1aa07ec25b023df9e18511bda3c2f316f92d076e2a8341c4` identifies the concrete missing `pinnedFetch` and `resolvePublicUrl` exports from that D revision's `src/discovery-observer.mjs`; C overlap integration fixes the seam. |
-| V5 canonical restart proof | **LIMITED** | C smokes prove bounded execution and cleanup. No controlled canonical component-restart artifact proves persisted job-state recovery; D rerun/dedupe evidence remains implementation-side. |
+| V5 canonical restart proof | **OPEN** | C smokes prove bounded execution and cleanup. No controlled canonical component-restart artifact proves persisted job-state recovery; D rerun/dedupe evidence remains implementation-side. |
 | V6 independent review | **COMPLETE WITH BLOCKER** | [`/Users/nam/orca/workspaces/marketing-seeding/session-d-independent-verifier/plans/crawl4ai-integration/independent-verifier-report-20261029.md`](file:///Users/nam/orca/workspaces/marketing-seeding/session-d-independent-verifier/plans/crawl4ai-integration/independent-verifier-report-20261029.md) independently reviewed the exact D SHA and reports the standalone-D blocker above. |
+
+Overall acceptance: **NOT COMPLETE**. V5 remains open; the independent review confirms a concrete blocker for standalone D.
 
 ## Requirements
 

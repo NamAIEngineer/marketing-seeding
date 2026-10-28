@@ -1,6 +1,6 @@
 # Session D Crawl4AI Listening Report
 
-Status: C_INTEGRATED_RUNTIME_VERIFIED; STANDALONE_D_BLOCKED; V5_LIMITED
+Status: C_INTEGRATED_RUNTIME_VERIFIED; STANDALONE_D_BLOCKED; V5_OPEN
 
 ## Final C integration status
 
@@ -8,7 +8,9 @@ C integration is verified at HEAD `246f02f3e9649acef5adba7ee2b876ac6735a7c3` on 
 
 The independent report is [`/Users/nam/orca/workspaces/marketing-seeding/session-d-independent-verifier/plans/crawl4ai-integration/independent-verifier-report-20261029.md`](file:///Users/nam/orca/workspaces/marketing-seeding/session-d-independent-verifier/plans/crawl4ai-integration/independent-verifier-report-20261029.md), SHA-256 `34fd69d4467cccac1aa07ec25b023df9e18511bda3c2f316f92d076e2a8341c4`. It completes V6 review but gives the exact standalone D revision `33b115d17a0aba26776ed4219647a0e671d3d6f3` a **BLOCKED** verdict: `src/listening-adapter.mjs` imports `pinnedFetch` and `resolvePublicUrl`, while that D revision's `src/discovery-observer.mjs` does not export them. C overlap/integration fixes this module contract, and the C runtime was verified independently below.
 
-V5 remains **LIMITED**: the C public smokes prove bounded run and cleanup, but no controlled canonical component-restart artifact proves persisted job-state recovery. The D same-state rerun/dedupe evidence remains implementation-side evidence and is not upgraded to a canonical restart PASS.
+V5 remains **OPEN**: the C public smokes prove bounded run and cleanup, but no controlled canonical component-restart artifact proves persisted job-state recovery. The D same-state rerun/dedupe evidence remains implementation-side evidence and is not upgraded to a canonical restart PASS.
+
+Overall acceptance is **NOT COMPLETE** while V5 remains open and the exact standalone D revision remains blocked.
 
 Base: `dd814bf1df82a0371171ce0ca3674d16a1009368`
 Branch: `integration/session-d-crawl4ai-listening`
@@ -74,4 +76,4 @@ The independent verifier review is now complete at the report path and hash reco
 - nodriver peak RSS is high in the measured sample; keep concurrency at 1 until a larger controlled sample exists.
 - C integration is complete at HEAD `246f02f3e9649acef5adba7ee2b876ac6735a7c3`; no A/B or D worktree, authenticated account, cookie, or publication lane was touched. The exact standalone D revision remains blocked on its missing `pinnedFetch`/`resolvePublicUrl` exports; C's overlap integration supplies that seam.
 
-Overlap handoff details are in [c-overlap-handoff.md](c-overlap-handoff.md). The committed checkpoint below contains only D-owned scripts, listening modules, tests, evidence, and docs; the working tree retains the C-overlap edits unstaged for serial merge.
+Overlap handoff details are in [c-overlap-handoff.md](c-overlap-handoff.md). C applied the overlap serially and is clean at HEAD `246f02f3e9649acef5adba7ee2b876ac6735a7c3`; this report retains the original D handoff file for historical scope and ownership context.
