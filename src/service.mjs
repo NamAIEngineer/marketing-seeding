@@ -7278,6 +7278,10 @@ export class SeedingService {
     } catch {
       sessionReadiness = projectSessionReadiness([], [], { now: new Date() });
     }
+    // Provider-specific session evidence stays separate from canonical
+    // execution readiness. A real Camoufox profile can be authenticated while
+    // the persisted target still carries a legacy ORCA binding or stale
+    // readiness; never collapse those facts or grant execution from this view.
     const camoufoxSessionObservation = sessionReadinessObservation && typeof sessionReadinessObservation === "object"
       ? {
           readOnly: true,

@@ -144,6 +144,7 @@ const service = new SeedingService(store, {
   readinessProviderRegistry,
   browserRuntimeRouter: createDefaultBrowserRuntimeRouter({
     orcaBrowser,
+
     camoufox: {
       executable: camoufoxExecutablePath || null,
       profileReference: camoufoxProfileReference || null,
@@ -249,11 +250,11 @@ function scheduleControlCycle(delayMs = controlCycleMinutes * 60_000) {
     controlCycleRuntime.lastStartedAt = new Date().toISOString();
     try {
       const state = await service.snapshot();
+      const autoGtm = await readAutoGtmFeed(autoGtmFeedFile);
       const results = [];
       for (const campaign of state.campaigns || []) {
         if (shuttingDown) break;
         try {
-          const autoGtm = await readAutoGtmFeed(autoGtmFeedFile);
           const marketOpportunities = projectMarketOpportunities(autoGtm, { productId: campaign.productId || campaign.id });
           results.push(await service.runCampaignControlCycle(campaign.id, { marketOpportunities }, "scheduled-control-cycle"));
         }

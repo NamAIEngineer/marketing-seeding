@@ -1,235 +1,119 @@
-# Session Recovery Audit — Wave 13/14
+# Session Recovery Audit — 2026-10-28
 
-Date: 2026-10-24
 Repository: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`
-Branch: `wave/distribution-os-runtime-wave-13-bridge`
-Candidate HEAD: `9300623` plus dirty Wave 13/14 edits
+Audit mode: read-only runtime/repository inspection plus safe tests/UI build. No login, browser mutation, authority refresh, restart, publication, final Post click, or UNKNOWN retry.
 
-## Scope and safety
+## Current state vs historical state
 
-Read-only recovery and verification. No Git merge, deployment, migration,
-GPM attach, ORCA browser action, LinkedIn navigation, social mutation, final
-Post click, publication, or historical UNKNOWN mutation occurred.
+**CURRENT:** wave-13 bridge branch, HEAD `52072ceaf371836a0783b9f8b3c4eda8a46415c5`, dirty (104 porcelain entries); live dashboard PID 38672 on `127.0.0.1:4318`; source provenance reported by runtime is `unknown/clean`, therefore deployed-source match is UNKNOWN. State schema 8, revision 73653. 13 campaigns, 1 target, 18 posts, 151 execution records, 6 immutable UNKNOWN, 0 verified publications. Camoufox metadata stale; canonical readiness UNKNOWN/ineligible; GPM unavailable; effective authorizations/windows/grants/leases 0/0/0/0; Auto-GTM feed unavailable; Product Factory sandbox unsupported.
 
-Six canonical `UNKNOWN` submissions remain quarantined. The known Wave 10
-execution `39e667ef-f564-4480-bdbb-0247f3213bd0` was not retried, reconciled,
-or mutated.
+**HISTORICAL:** prior ORCA 1.4.237 read-only readiness/connected evidence, reversible fixture certification, six quarantined UNKNOWN submissions, local dry-run/restart tests, and older reports claiming earlier revisions/heads. Historical `COMMAND_COMPLETED`/`CLICK_EMITTED` evidence never established semantic activation, platform acceptance, or publication.
 
 ## Git state
 
-- `main` / `origin/main`: `98a499e25c2fab75de6aef85f265e6c2a7364651`
-- `integration/autonomous-build`: `689967903aea51a4935659c33c2fcc8513ef8565`
-- Current branch: `wave/distribution-os-runtime-wave-13-bridge`
-- Current HEAD: `93006237313f5d7a54713f4380c4544abb6a68fe`
-- `main...HEAD`: `0 52` (current branch is 52 commits ahead, 0 behind)
-- Waves 10–14 remain unmerged and undeployed.
-- Working tree is dirty only with declared Wave 13/14 source, tests and
-  evidence artifacts. No canonical runtime state file is in the diff.
+- `MAIN_HEAD`: `98a499e25c2fab75de6aef85f265e6c2a7364651` (`origin/main`)
+- `INTEGRATION_HEAD`: `689967903aea51a4935659c33c2fcc8513ef8565` (`origin/integration/autonomous-build`)
+- `CURRENT_HEAD`: `52072ceaf371836a0783b9f8b3c4eda8a46415c5`
+- `CURRENT_BRANCH`: `wave/distribution-os-runtime-wave-13-bridge`
+- `WORKTREE`: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`
+- `AHEAD_BEHIND`: `main...CURRENT = 0 72`; `integration...CURRENT = 0 56`
+- `MAIN_MERGED`: NO. Integration is not ancestor of main; main is ancestor of integration.
+- `CANONICAL_DEPLOYED`: UNKNOWN. Live `/health` reports `sourceCommit=unknown`, `sourceDirty=false`; launch wrapper intends to export current HEAD/dirty state, but no restart/provenance proof was performed.
+- `MERGED_WORK`: main contains historical foundation/release work through `98a499e`; current wave-13 dirty Camoufox/market/UI changes are not proven on main.
+- `UNMERGED_WORK`: integration branch and wave-13 bridge work; worker branches remain separate. Useful work exists on `integration/session-c-reconciled` (`e9a7bfa`) and related session branches but is not current canonical main.
+- `DIRTY_FILES`: 14 tracked source/UI/test/assets files modified.
+- `UNTRACKED_FILES`: 90 entries, including Camoufox modules/tests, market intelligence, continuation journals, runtime scripts, and team state.
 
-Latest Wave 13 commits: `7b170b6`, `b260f8f`, `8150af2`, `905c0d1`, `9300623`.
-Wave 14 protocol/resolver work is currently dirty rather than merged into the
-candidate commit history.
-
-## Runtime state
-
-- ORCA executable: `/Applications/Orca 2.app/Contents/Resources/bin/orca`
-- ORCA version/process: `1.4.237`; read-only status `ready`, reachable and
-  connected; no restart or browser command issued.
-- No GPM process or listening GPM endpoint detected.
-- Canonical state: `/Users/nam/build-agentic-AI/.agentic/marketing-seeding/state.json`
-- State schema/revision: `8 / 54861`
-- State SHA-256 at audit: `2ed58f8972072c9f5a0921830c0af6a1502b443017c0db2c2f82856f388eb1d7`
-- Effective time-valid authorizations/windows/grants/leases: `0 / 0 / 0 / 0`.
-- Raw collections include historical expired, consumed, revoked and reserved
-  controls; raw rows do not constitute effective live authority.
-- Six unknown submissions, six unknown publication attempts, zero published
-  posts.
-
-## Implementation truth
-
-### Execution session and transport
-
-`src/execution-session.mjs` defines the bounded immutable provider-neutral
-session. `src/execution-transport.mjs` defines generic interaction primitives.
-`src/gpm-execution-transport.mjs` attaches an injected protocol client only
-after attestation and then verifies account/platform identity. `src/gpm-cdp-client.mjs`
-provides a credential-free CDP client with exact target binding, timeout and
-close handling, read-only expression policy, named mutation operations and
-exact expression hash authorization. `src/gpm-execution-session-resolver.mjs`
-requires explicit account registry, coordinator, attach function, session
-authority and fresh host attestation.
-
-`src/jev-execution-worker.mjs` resolves one READY session before execution,
-checks request/account/provider/transport identity, passes the same transport
-and browser surface into readiness and `LinkedInAdapter`, freezes identity at
-the durable submit boundary, and detaches/releases in `finally`.
-`src/linkedin-adapter.mjs` consumes the injected transport/surface and does not
-silently replace it with ORCA. Legacy no-session construction retains an
-explicit ORCA compatibility path.
-
-### What remains unproven
-
-No production host module currently supplies a live GPM endpoint, account
-registry, coordinator, protocol factory, expression policy, mutation registry
-or host attestation. No real GPM/CDP compatibility, live authenticated
-session, reversible LinkedIn GPM calibration, irreversible transport
-certification, independent publication verification, or 24-hour provider soak
-is proven.
-
-## Product and authority classification
-
-Overall product: `FOUNDATION_ONLY` with a controlled provider-neutral runtime
-seam. Wave result: `CONTROLLED_RUNTIME_READY_FOR_EXTERNAL_CERTIFICATION`.
-Production readiness: `NOT_PRODUCTION_READY`.
-
-The Product Factory remains bounded local-real for typed, allowlisted probes and
-fixture evidence. Arbitrary repository build/run/render/media execution lacks
-independent sandbox attestation. Discovery, intelligence, strategy, grounded
-content, Mission Control, dry-run execution, metrics projections and learning
-are locally implemented/read-only or advisory. Live contextual engagement,
-real multi-account operation, live metrics authenticity and multi-platform
-execution remain incomplete or unproven.
-
-Standing authorization code exists and is tested locally, but no effective live
-package exists now. Software derives IDs, hashes, windows, grants, leases and
-execution envelopes. External authority must supply an authorized account and
-fresh session, target permission, exact harmless payload/media policy, UTC
-validity, standing authorization reference and host/provider attestation. MFA
-or security resolution is required only if triggered.
+Latest meaningful commits: `e9a7bfa`, `20ba20f`, `cd87cc5`, `74a45be`, `0232a3e`, `0ec4fda`, `9fb39cf`, `3794177`, `17993d2`, `d75ce02`, `df2f775`, `16a86d5`, `34acef8`, `4f1066f`, `6600387`, `769e87f`, `80a20ff`, `2e92827`, `9ce01f9`, `f2ccb03`.
 
 ## Fresh verification
 
-- `npm test`: **698 total, 696 pass, 0 fail, 2 skip**.
-- Worker subset: `32/32`.
-- LinkedIn subset: `57/57`.
-- Session/transport/CDP/resolver subset: `29/29`.
-- Readiness subset: `54/54`.
-- Restart/session subset: `3/3`.
-- `node --check src/*.mjs`: PASS.
-- `git diff --check`: PASS.
-- UI `tsc --noEmit`: PASS.
-- UI Vite build: PASS.
-- The two skips are existing host-environment ACL/evidence-directory checks.
+`npm test`: **758 total, 756 pass, 0 fail, 2 skip**. UI `npm run build`: PASS. Focused Camoufox/router/readiness tests: PASS, 0 failures. `git diff --check`: PASS. No new regression observed.
 
-## Final audit verdict
+## Runtime and live evidence
 
-`ACCEPT_CONTROLLED_RUNTIME` for the bounded software seam.
-
-Do not claim a live LinkedIn publication, production readiness, 24/7 readiness,
-or a complete autonomous growth OS. Next action: provide the fresh external
-certification package in
-`plans/autonomous-build/distribution-os-runtime-wave-13/external-input-schema.md`.
-After all gates are green, permit at most one harmless fresh certification
-attempt. If acceptance is uncertain, quarantine immediately and never retry.
+- ORCA executable/version/process: historical read-only evidence `1.4.237`, ready/connected; no live action in this audit. Current active ORCA connection was not mutated.
+- GPM: `UNAVAILABLE`, `PROVIDER_NOT_CONFIGURED`; no configured profiles/sessions.
+- Router: authenticated social execution and independent verification policy select Camoufox. Camoufox readiness code correctly fails closed when resolver/session observation is absent; ORCA fallback remains compatibility-only for non-Camoufox requests.
+- Camoufox: installed local runtime evidence exists (`0.5.8`, browser `156.0.1-beta.36`) from bounded unauthenticated smoke. Current sanitized metadata is `STALE`, `CAMOUFOX_SESSION_METADATA_EXPIRED`; session readiness `UNKNOWN`, executionEligible `false`.
+- LinkedIn evidence: `FRESH_EXECUTION_ID=NONE`; durable fresh submit intent `NONE`; autonomous final Post click `0`; platform accepted `NO PROOF`; post ID/permalink `NONE`; author/content/time/media match `NONE`; independent verification `NONE`; canonical published receipt `NONE`; published count `0`; UNKNOWN count `6`; social mutation count `0` in this audit; historical UNKNOWN rows remain immutable.
+- Authority: standing authorization implementation exists and is tested locally. Effective live counts: active authorizations `0`, time-valid authorizations `0`, active/available windows `0`, active/time-valid grants `0`, active leases `0`. Current account/profile/target/content/media/audience/schedule package is incomplete; account runtime is ineligible due `readiness:expiry_invalid`.
+- Product Factory: local typed/fixture evidence and Seatbelt seams exist. Current sandbox is `UNSUPPORTED`, `executionEligible=false`; arbitrary repo execution, screenshots, demo capture, rendering/export, video/GIF are not production-proven.
+- Auto-GTM: `feed_not_generated`, zero leads/opportunities. Reader/normalizer and strategy advisory consumer exist; producer/export contract absent.
+- Automation: campaign queue enabled at 30 seconds but latest cycle has six `BOOTSTRAP_RENEWAL_BINDING_BLOCKED` failures. Discovery, control cycle, metrics, browser tracking, daily production and fixture worker disabled.
 
 ## Capability matrix
 
-| Component | Status | Implementation / proof | Real vs synthetic | Remaining gap |
-|---|---|---|---|---|
-| PRODUCT_FACTORY | PARTIAL | `src/product-factory.mjs`, `src/product-factory-seatbelt.mjs`; typed staged probes and artifact tests | bounded local-real and fixtures | arbitrary repo build/render/video sandbox attestation |
-| PRODUCT_INTELLIGENCE | LOCAL_REAL | `src/product-intelligence.mjs`, evidence handoff; grounded repository inspection tests | local repository evidence | broader product types and live artifact capture |
-| EVIDENCE_GROUNDING | LOCAL_REAL | `src/evidence-grounding.mjs`, claim graph and source hash checks | local-real bounded evidence | no external publication proof |
-| SYSTEM_AGENTIC_HANDOFF | LOCAL_REAL | `src/system-agentic-handoff-bridge.mjs`; versioned dry-run envelope tests | local persistent handoff | live execution host integration |
-| DISCOVERY | PARTIAL | `src/discovery*.mjs`, public observer and checkpoints | bounded public fixtures/local observer | continuous configured sources and production crawler fleet |
-| AUDIENCE_INTELLIGENCE | PARTIAL | audience/channel fit and opportunity projections | local deterministic scoring | live audience feedback |
-| CHANNEL_INTELLIGENCE | LOCAL_REAL | channel policy/readiness registries and LinkedIn policy | bounded policy data | fresh platform-specific proof |
-| STRATEGY_ENGINE | PARTIAL | `src/strategy.mjs`, next-action and UNKNOWN quarantine tests | local/advisory | outcome-driven live adaptation |
-| CONTENT_ENGINE | PARTIAL | `src/content-foundation.mjs`, exact bytes/hash/grounding | local-real grounded drafts | live approved campaign package |
-| CONTEXTUAL_ENGAGEMENT | DESIGN_ONLY | conversation continuity/context projections | read-only/advisory | bounded comment/reply execution and verification |
-| ACCOUNT_REGISTRY | LOCAL_REAL | account runtime registry/projection modules | bounded non-secret metadata | live authorized pool |
-| ACCOUNT_SELECTOR | LOCAL_REAL | deterministic eligible account selector tests | local deterministic | live multi-account health |
-| SESSION_RUNTIME | PARTIAL | `src/execution-session.mjs`, GPM session/transport bridge | synthetic/injected protocol | live GPM attach and reattach |
-| MULTI_ACCOUNT_RUNTIME | PARTIAL | account selection, coordinator and lease contracts | local single-pool fixtures | many-account provider operation |
-| LINKEDIN_ADAPTER | PARTIAL | `src/linkedin-adapter.mjs`, readiness, exact submit gates | ORCA historical/local fixtures; injected GPM synthetic | fresh GPM reversible certification |
-| BROWSER_TRANSPORT | PARTIAL | ORCA accessibility/pointer transport; GPM CDP seam | ORCA reversible local proof; GPM fake protocol | production provider certification |
-| ORCA_RUNTIME | LOCAL_REAL | installed executable `1.4.237`, read-only `status` ready/connected | live runtime observation only | no new live action in this wave |
-| STANDING_CAMPAIGN_AUTHORIZATION | LOCAL_REAL | authorization/delegation service and regression tests | local persistent controls | fresh effective live authority |
-| ZERO_TOUCH_AUTHORITY_BOOTSTRAP | LOCAL_REAL | bootstrap derives bounded controls in isolated tests | local synthetic/isolated state | external permission input |
-| EXECUTION_WINDOW_GRANT_LEASE | LOCAL_REAL | one-time window, grant, lease services and tests | local durable state; current effective counts zero | fresh valid package |
-| PUBLISH_VERIFICATION | PARTIAL | LinkedIn verifier and independent evidence gates | strict local fixtures; no verified post | actual accepted post with ID/permalink |
-| METRICS | PARTIAL | official collectors, checkpoints and dashboard projections | local/advisory; provider authenticity unproven | live provider collection |
-| OUTCOME_ATTRIBUTION | PARTIAL | bounded post attribution and conversion links | local persisted evidence | verified publication/outcome stream |
-| LEARNING_LOOP | PARTIAL | outcome/strategy learning context with UNKNOWN dominance | local/advisory | live outcome feedback |
-| MISSION_CONTROL | LOCAL_REAL | read-only dashboard/runtime projections and UI build | local data projection | deployed canonical runtime |
-| RESTART_RECOVERY | PARTIAL | dry-run restart/lease/session tests | local restart fixtures | live browser reattach/soak |
-| 24_7_READINESS | BLOCKED | no provider soak or live recovery evidence | none | host/provider certification and soak |
-| MULTI_PLATFORM_SUPPORT | DESIGN_ONLY | adapter registry and unmerged platform branches | contracts only for non-LinkedIn lanes | integrate/certify additional platforms |
+| Component | Status | Implementation files | Latest proof | Real / synthetic | Remaining gap |
+|---|---|---|---|---|---|
+| PRODUCT_FACTORY | PARTIAL | `src/product-factory*.mjs`, `src/product-factory-seatbelt.mjs` | typed/fixture tests; sandbox projection | bounded local-real + fixtures | audited sandbox, arbitrary repo build/run/render/media |
+| PRODUCT_INTELLIGENCE | LOCAL_REAL | `src/product-intelligence.mjs`, handoff modules | grounded repository inspection tests | local-real evidence | broader artifact capture/live product proof |
+| EVIDENCE_GROUNDING | LOCAL_REAL | `src/evidence-grounding.mjs`, claim graph | hashes/claim quarantine tests | local-real | no external publication evidence |
+| SYSTEM_AGENTIC_HANDOFF | LOCAL_REAL | `src/system-agentic-handoff-bridge.mjs` | versioned dry-run envelope tests | local persistent dry-run | live execution host |
+| DISCOVERY | PARTIAL | `src/discovery*.mjs`, public observer | bounded HTTP/RSS/Atom tests | local observer/fixtures | continuous crawler fleet, platform search |
+| AUDIENCE_INTELLIGENCE | PARTIAL | audience/channel fit modules | deterministic fit tests | advisory/local | live audience feedback |
+| CHANNEL_INTELLIGENCE | LOCAL_REAL | channel policy/readiness modules | policy/readiness tests | bounded policy data | fresh platform proof |
+| STRATEGY_ENGINE | PARTIAL | `src/strategy.mjs`, learning modules | deterministic NBA/UNKNOWN tests | local/advisory | outcome-driven adaptation |
+| CONTENT_ENGINE | PARTIAL | content/product intelligence modules | exact bytes/hash/grounding tests | local-real drafts | adaptive contextual generation/live package |
+| CONTEXTUAL_ENGAGEMENT | DESIGN_ONLY | continuity/context projections | read-only tests | advisory only | bounded comment/reply execution + verification |
+| ACCOUNT_REGISTRY | LOCAL_REAL | `src/account-agent-registry.mjs`, service projections | secret-safe deterministic projections | bounded metadata | live authorized pool |
+| ACCOUNT_SELECTOR | LOCAL_REAL | selector/authority modules | deterministic selection tests | local deterministic | live health/failover |
+| SESSION_RUNTIME | PARTIAL | `src/execution-session.mjs`, Camoufox/GPM seams | binding/transport tests | injected/synthetic protocol | live attach/reattach |
+| MULTI_ACCOUNT_RUNTIME | PARTIAL | registry, selector, leases | local pool tests | single-pool fixtures | many-account operation |
+| LINKEDIN_ADAPTER | PARTIAL | `src/linkedin-adapter.mjs`, readiness/verifier | dry-run and safety gates | local/ORCA fixtures | fresh irreversible proof |
+| BROWSER_TRANSPORT | PARTIAL | router, ORCA, Camoufox, GPM transport modules | reversible fixture certification | local reversible | production certification |
+| ORCA_RUNTIME | LOCAL_REAL | `src/orca-browser-client.mjs` | historical 1.4.237 ready/connected probe | live observation only | fresh action certification |
+| STANDING_CAMPAIGN_AUTHORIZATION | LOCAL_REAL | authority/bootstrap service | standing/renewal tests | local durable controls | effective live authority |
+| ZERO_TOUCH_AUTHORITY_BOOTSTRAP | LOCAL_REAL | bootstrap/renewal paths | product-only and idempotence tests | isolated local | external permission/session |
+| EXECUTION_WINDOW_GRANT_LEASE | LOCAL_REAL | window/grant/lease service | exact binding/consumption tests | local durable | fresh valid package |
+| PUBLISH_VERIFICATION | PARTIAL | LinkedIn verifier/receipts | strict fixture verification | synthetic/local | real post ID/permalink |
+| METRICS | PARTIAL | metrics collectors/projections | collector/retry tests | local/advisory | live provider snapshots |
+| OUTCOME_ATTRIBUTION | PARTIAL | attribution/learning modules | verified/UNKNOWN isolation tests | local persisted evidence | verified outcome stream |
+| LEARNING_LOOP | PARTIAL | outcome + strategy learning | UNKNOWN dominance tests | advisory/local | measured live outcomes |
+| MISSION_CONTROL | LOCAL_REAL | `src/server.mjs`, `src/service.mjs`, `ui/src/App.tsx` | API GET + UI build; advisory accountAgents patch | local projection | deployed source match/engineering ledger |
+| RESTART_RECOVERY | PARTIAL | store/lease/soak/session modules | local dry-run restart tests | local fixtures | live browser reattach/soak |
+| 24_7_READINESS | BLOCKED | schedulers/queue/soak scripts | no provider soak | none | certified runtime + long soak |
+| MULTI_PLATFORM_SUPPORT | DESIGN_ONLY | adapter registry + worker branch foundations | contracts only | design/contracts | integrate/certify platforms |
 
-## Zero-touch bootstrap audit
+## Zero-touch bootstrap
 
-| Stage | Classification | Reason |
-|---|---|---|
-| repo/product | CALLER_REQUIRED | high-level product/repository is the user supplied fact; bounded product-only matching exists |
-| campaign | AUTO_DERIVED | bootstrap derives exact campaign identity from the brief |
-| product binding | AUTO_DERIVED | unique bounded repository/evidence match binds the campaign |
-| LinkedIn target | EXTERNAL_AUTHORITY_REQUIRED | target ID/URL and permission must be authorized |
-| account/profile | EXTERNAL_AUTHORITY_REQUIRED | account ownership, profile binding and fresh session are external facts |
-| evidence-grounded content | AUTO_DERIVED | repository evidence can produce grounded draft content |
-| exact payload bytes | AUTO_DERIVED | content materialization derives immutable UTF-8 bytes from approved policy |
-| content hash | AUTO_DERIVED | deterministic hash of exact bytes |
-| media declaration | CALLER_REQUIRED | no-media default is safe; any media needs explicit approved policy |
-| canonical audience | AUTO_DERIVED | normalized from bounded audience policy/objective |
-| UTC bounds | AUTO_DERIVED | derived from supplied validity intent and clock; explicit policy may constrain it |
-| schedule | AUTO_DERIVED | schedule/window policy derives bounded schedule values |
-| standing authorization | EXTERNAL_AUTHORITY_REQUIRED | permission to publish is not software-derived |
-| execution authorization | AUTO_DERIVED | derived only from valid standing authority |
-| window | AUTO_DERIVED | exact one-time window derived from fresh scope |
-| grant | AUTO_DERIVED | exact job/execution grant derived atomically |
-| lease | AUTO_DERIVED | acquired at dispatch under concurrency policy |
-| execution request | AUTO_DERIVED | exact request envelope derived after readiness |
+`repo/product`: CALLER_REQUIRED. `campaign`, `product binding`, `evidence-grounded content`, `exact payload bytes`, `content hash`, `canonical audience`, `UTC bounds`, `schedule`, `execution authorization`, `window`, `grant`, `lease`, `execution request`: AUTO_DERIVED when exact bounded inputs and authority exist. `LinkedIn target`, `account/profile`, `standing authorization`: EXTERNAL_AUTHORITY_REQUIRED. `media declaration`: CALLER_REQUIRED (safe no-media default; media requires policy). No deterministic ID/hash/timestamp is an external blocker.
 
-## Live publication evidence
+## Canonical service/deployment
 
-Fresh Wave 13/14 execution ID: **NONE**. Durable submit intent in this wave:
-**NONE**. Autonomous final Post click in this wave: **0**. Publication attempts in
-this wave: **0**. Platform accepted: **NO PROOF**. Post ID/permalink: **NONE**.
-Author/content/time/media match: **NONE**. Independent publication verification:
-**NONE**. Canonical published receipt: **NONE**. Published post count: **0**.
-
-Historical canonical state contains six immutable UNKNOWN submissions. One
-historical execution explicitly recorded in the prior audit emitted an autonomous
-final click and received
-`COMMAND_COMPLETED`, but semantic activation was `CONTROL_NOT_OBSERVED`,
-platform acceptance remained `UNKNOWN`, and no post ID/permalink was found.
-The current receipt collection contains three historical `CLICK_EMITTED` records
-across UNKNOWN attempts; none is publication proof, and none was reused.
-
-## Authority and deployment snapshot
-
-- Active effective authorizations: `0`
-- Time-valid authorizations: `0`
-- Active/available windows: `0`
-- Active/time-valid grants: `0`
-- Active leases: `0`
-- Standing authorization implementation: YES
-- Effective live standing package: NO
-- Account/profile/target/content/media/audience/schedule binding: no complete
-  fresh live package
-- Canonical deployed source: historical `7eae762`
-- Repository main source: `98a499e`
-- Source match: NO
-- State schema/revision/hash: `8 / 54861 / 2ed58f8972072c9f5a0921830c0af6a1502b443017c0db2c2f82856f388eb1d7`
-- Restart proof: local dry-run/session tests PASS; live browser reattach UNKNOWN
-- Rollback point: historical canonical `7eae762` remains available; candidate
-  has not been deployed
+- `MAIN_MERGED=NO`; `CANONICAL_DEPLOYED=UNKNOWN`.
+- `SERVICE_SOURCE_COMMIT=unknown`; `REPO_MAIN_COMMIT=98a499e25c2fab75de6aef85f265e6c2a7364651`; `SOURCE_MATCH=UNKNOWN`.
+- `STATE_SCHEMA=8`; `STATE_REVISION=73653`; `STATE_HASH=not recomputed in this audit`.
+- `RESTART_PROOF=local dry-run/restart tests PASS; live source/restart proof UNKNOWN`.
+- `ROLLBACK_READY=historical main/integration commits available; no release deployment performed`.
 
 ## Blocker reconciliation
 
 | Blocker | Current status | Class | Evidence | Software remediation | True external input | Next action |
 |---|---|---|---|---|---|---|
-| `ORCA-RUNTIME-CONFIG-001` | RESOLVED/stale | resolved configuration | installed ORCA `1.4.237` status ready/connected | complete | no | keep read-only pin/probe |
-| `LIVE-LINKEDIN-AUTH-001` | OPEN | external hard blocker | effective authority/window/grant/lease `0/0/0/0` | contracts complete | yes | supply one fresh exact package |
-| `ORCA-TRANSPORT-LIVE-CERT-001` | OPEN, re-scoped | provider evidence blocker | no fresh irreversible certification; GPM unavailable | seam complete | yes for live proof | certify reversible transport with fresh session |
-| `METRICS-CHECKPOINT-LIVE-001` | QUARANTINED | live observability | local projections only | partial software exists | provider access required | authorize live metric source |
-| `PRODUCT-FACTORY-SANDBOX-001` | OPEN | environment/product safety | typed Seatbelt probe only; arbitrary execution ineligible | bounded adapter exists | audited sandbox capability | obtain independent sandbox attestation |
-| `RELEASE-JOURNAL-DRIFT-001` | RESOLVED | release documentation | reports reconciled to latest gates | complete | no | preserve current evidence |
+| `ORCA-RUNTIME-CONFIG-001` | RESOLVED/stale | software/config | installed pinned ORCA read-only evidence | YES, complete | NO | retain probe/pin |
+| `LIVE-LINKEDIN-AUTH-001` | OPEN | external authority | effective auth/window/grant/lease `0/0/0/0` | contracts complete | YES | supply fresh authorized package |
+| `ORCA-TRANSPORT-LIVE-CERT-001` | OPEN | environment/provider evidence | no fresh irreversible certification; GPM unavailable | seam/tests complete | YES for live proof | certify reversible transport with fresh session |
+| `METRICS-CHECKPOINT-LIVE-001` | QUARANTINED | provider observation | no live metric snapshots | partial software exists | YES provider access | authorize/attach live metric source |
+| `PRODUCT-FACTORY-SANDBOX-001` | OPEN | environment/safety | sandbox checks unsupported, execution ineligible | adapter exists | YES audited sandbox capability | provide attested bounded backend |
+| `AUTO-GTM-FEED-001` | OPEN | software/integration | `feed_not_generated`, no producer export | YES | NO if producer contract is implemented | define producer-owned versioned export |
+| `DEPLOYED-SOURCE-PROVENANCE-001` | OPEN | software/operations | live `sourceCommit=unknown`, dirty source unproven | YES | NO | controlled restart/provenance verification |
+| `ENGINEERING-LOOP-PROJECTION-001` | OPEN | software/product | no engineering ledger projection in dashboard | YES | NO | add bounded ledger projection after release scope |
 
-## Recovery result
-
-`AUTONOMOUS_BUILD_RESULT = CONTROLLED_RUNTIME_READY_FOR_EXTERNAL_CERTIFICATION`
+## Truthful classification
 
 `CURRENT_PRODUCT = FOUNDATION_ONLY`
 
-`CURRENT_AUTONOMY_LEVEL = CONTROLLED_RUNTIME_READY_FOR_EXTERNAL_CERTIFICATION`
+This is a bounded local distribution runtime with real contracts, durable state, deterministic bootstrap/authority logic, read-only discovery/strategy/content intelligence, strict execution fences, and local reversible transport evidence. It is not a live-proven autonomous distribution OS, not production-ready, and not 24/7 ready.
 
-`PRODUCTION_READINESS = NOT_PRODUCTION_READY`
+## Recommended next action
+
+Prepare a clean release candidate from the current dirty wave, then perform a controlled non-social restart solely to prove source provenance and state recovery. Separately obtain the smallest external package needed for fresh authorized, reversible transport certification. Do not retry six UNKNOWN submissions or perform irreversible publication during this audit.
+
+### Additional current host verification
+
+- ORCA executable `/Applications/Orca 2.app/Contents/Resources/bin/orca`, installed version `1.4.242`; read-only `status`: app running, runtime READY/REACHABLE/CONNECTED. No restart or browser command issued. Prior reports of 1.4.237 are historical and stale.
+- All `src/*.mjs` passed `node --check`.
+- Repeated `npm --prefix ui run build` passed with Vite 8.0.5.
+- `git diff --check` passed after the UI patch and report update.
+- Effective authority counts remain 0/0/0/0. For exact standing authorization/effective window/grant/lease semantics, inspect the `authority` projection in `/api/dashboard`; `/health` does not expose it.

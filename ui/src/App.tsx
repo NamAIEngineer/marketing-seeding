@@ -1109,6 +1109,9 @@ function MissionControlPanel({ data }: { data: R }) {
     : Array.isArray(data?.executionAccounts)
       ? data.executionAccounts
       : []
+  const accountAgents = data?.accountAgents && typeof data.accountAgents === "object" ? data.accountAgents : null
+  const accountAgentRows = Array.isArray(accountAgents?.agents) ? accountAgents.agents : []
+  const accountAgentSelection = accountAgents?.selection && typeof accountAgents.selection === "object" ? accountAgents.selection : null
   const accountRows = accountRuntime.map((account: R) => ({
     id: String(account?.id || "UNKNOWN"),
     platform: String(account?.platform || "UNKNOWN"),
@@ -1302,6 +1305,33 @@ function MissionControlPanel({ data }: { data: R }) {
       <div className="mission-account-runtime">
         <div className="mission-account-head">
           <div>
+            <span className="mission-eyebrow">Account agent selection</span>
+            <small>Read-only advisory selection · execution readiness remains authoritative</small>
+          </div>
+          <span className="status">{accountAgentSelection?.status || "UNKNOWN"}</span>
+        </div>
+        {accountAgentRows.length ? (
+          <div className="mission-account-list">
+            {accountAgentRows.map((agent: R) => {
+              const runtime = accountRows.find((row) => row.id.includes(String(agent.accountId || "")))
+              const selected = String(agent.agentId || "") === String(accountAgentSelection?.selectedAgentId || "")
+              return <article key={String(agent.agentId || agent.accountId || "UNKNOWN")}>
+                <div className="mission-account-title">
+                  <strong>{compactText(agent.accountId, "UNKNOWN", 60)}</strong>
+                  <span className={agent.eligibilityState === "ELIGIBLE" ? "status completed" : "status failed"}>
+                    {compactText(agent.eligibilityState, "UNKNOWN", 24)}{selected ? " · selected" : ""}
+                  </span>
+                </div>
+                <small>{compactText(agent.platform, "UNKNOWN", 32)} · {compactText(agent.provider, "UNKNOWN", 32)} · advisory reasons: {Array.isArray(agent.eligibilityReasons) && agent.eligibilityReasons.length ? agent.eligibilityReasons.join(" · ") : "—"}</small>
+                <small>Execution runtime: {runtime ? (runtime.eligible ? "ELIGIBLE" : `INELIGIBLE · ${runtime.blocker || "UNKNOWN"}`) : "UNKNOWN"}</small>
+              </article>
+            })}
+          </div>
+        ) : <div className="empty-state">Chưa có account agent projection.</div>}
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head">
+          <div>
             <span className="mission-eyebrow">Account / session readiness</span>
             <small>Read-only projection · không đăng nhập, chọn account hoặc chạy browser</small>
           </div>
@@ -1429,7 +1459,7 @@ function MissionControlPanel({ data }: { data: R }) {
           <article>
             <span className="mission-eyebrow">Current blockers</span>
             <strong>{currentBlockerCount}</strong>
-            <small>{currentBlockerCount ? `${executionBlockers.length} execution · ${authorityBlockers.length} authority · ${blockedChannels.length} channel` : "Chưa có blocker projection"}</small>
+            <small>{currentBlockerCount ? `${executionBlockers.length} execution · ${authorityBlockers.length} authority · ${blockedChannels.length} channel · signal count` : "Chưa có blocker projection"}</small>
           </article>
           <article>
             <span className="mission-eyebrow">Standing authority</span>
