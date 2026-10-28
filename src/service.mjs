@@ -2145,7 +2145,7 @@ export class SeedingService {
 
   async routeOiAgentTask(input = {}, actor = "oi-browser-router") {
     const providers = input.providers === undefined ? this.oiBrowserProviders : input.providers;
-    const result = await routeAgentTask(input, { providers, timeoutMs: input.timeoutMs });
+    const result = await routeAgentTask(input, { providers, timeoutMs: input.timeoutMs, signal: input.signal });
     const persisted = await this.store.mutate(actor, "oi_browser_provider_decision_recorded", (state) => {
       state.providerDecisions ||= [];
       const safe = { ...result, output: undefined };

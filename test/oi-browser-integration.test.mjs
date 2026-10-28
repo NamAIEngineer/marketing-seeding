@@ -282,6 +282,29 @@ test("provider router suppresses fallback when cancellation races an invalid res
   assert.equal(secondCalls, 0);
 });
 
+test("service provider route forwards caller cancellation and persists the failed decision", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "oi-browser-provider-cancel-service-"));
+  const controller = new AbortController();
+  let fallbackCalls = 0;
+  const service = new SeedingService(new JsonStore(path.join(root, "state.json")), {
+    oiBrowserProviders: [
+      { id: "slow", capabilities: ["research"], costClass: "low", installed: true, authReady: true, healthy: true, privacyClasses: ["local"], adapter: { infer: ({ signal }) => new Promise((resolve, reject) => signal.addEventListener("abort", () => reject(Object.assign(new Error("aborted"), { name: "AbortError" })))) } },
+      { id: "fallback", capabilities: ["research"], costClass: "medium", installed: true, authReady: true, healthy: true, privacyClasses: ["local"], adapter: { infer: async () => { fallbackCalls += 1; return { ok: true, output: "must-not-run" }; } } }
+    ]
+  });
+  await service.init();
+  const resultPromise = service.routeOiAgentTask({ capability: "research", privacyClass: "local", signal: controller.signal });
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  controller.abort();
+  const result = await resultPromise;
+  assert.equal(result.status, "FAILED");
+  assert.equal(result.failure, "cancelled");
+  assert.equal(result.persisted.failure, "cancelled");
+  assert.equal(fallbackCalls, 0);
+  const state = await service.snapshot();
+  assert.equal(state.providerDecisions.at(-1).failure, "cancelled");
+});
+
 test("service persists memory and snapshots in canonical JsonStore and survives restart", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "oi-browser-native-"));
   const file = path.join(root, "state.json");
