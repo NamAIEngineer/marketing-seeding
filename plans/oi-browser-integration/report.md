@@ -51,6 +51,7 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 - Candidate focused: authority/bootstrap/delegation 47/47; oi-browser/browser/provider/transport 59/59; combined 106/106; coordinator `node --test test/project-coordinator.test.mjs` → 4 total, 4 pass, 0 fail.
 - Candidate full at `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped.
 - Durable regression evidence: [regression-final-7f2b74a.json](regression-final-7f2b74a.json), exact source SHA, command, timestamp and output hash.
+- Auxiliary System Agentic READ_ONLY verifier task `0e9f9242-0019-4f11-9453-9d155a419221` was rejected by the selected REA provider because `context.target_authorized=true` was absent; no retry, artifact, file edit or external side effect. Direct independent verifier PASS remains the final review evidence.
 - Auto-GTM: `/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests` → 158 total, 158 pass, 0 fail; `pip check` clean.
 - Syntax checks for native adapters/service/server passed. `git diff --check` passed. Secret scan hits are redaction test fixtures/generated UI text, not credentials.
 - Evidence artifact: [regression-7378f8c.json](regression-7378f8c.json).

@@ -26,6 +26,7 @@
 - Coordinator focused: `node --test test/project-coordinator.test.mjs` → 4 total, 4 pass, 0 fail.
 - Full candidate: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped.
 - Durable regression artifact: `plans/oi-browser-integration/regression-final-7f2b74a.json`, exact source revision and output SHA recorded.
+- Auxiliary queue verifier task `0e9f9242-0019-4f11-9453-9d155a419221` failed closed at provider authorization validation; no retry or artifact. Direct independent verifier PASS remains authoritative.
 - Auto-GTM current checkout: `python -m unittest discover tests` → 158 total, 158 pass, 0 fail; `pip check` clean.
 - Controlled fixture: `plans/oi-browser-integration/fixture-run-7378f8c.json`, `FIXTURE_VERIFIED`; learning support 2, verified 2; before/after candidate changed; restart and browser replay passed; external side effects false.
 - Isolated runtime: `plans/oi-browser-integration/server-smoke-7378f8c.json`, `RUNTIME_VERIFIED`; port `4337`, exact SHA, auth boundary, memory/static snapshot persistence, restart persistence, explicit local-Qwen route success; Auto-GTM remains unavailable (`feed_not_generated`).
