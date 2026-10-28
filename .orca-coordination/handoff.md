@@ -14,6 +14,7 @@
 - `plans/oi-browser-integration/fixture-run-7378f8c.json`: `FIXTURE_VERIFIED`, controlled Product X / Community A+B, learning-driven before/after candidate change, static browser intent activation, idempotent replay, restart persistence.
 - `plans/oi-browser-integration/server-smoke-7378f8c.json`: `RUNTIME_VERIFIED`, exact source SHA, isolated port `4337`, auth/memory/static snapshot/restart persistence, explicit local-Qwen route success, `feed_not_generated`.
 - Current tests: focused integration/authority slices `106/106`; coordinator `4/4`; full `794 total, 792 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `158/158`, `pip check` clean.
+- Durable regression artifact: `plans/oi-browser-integration/regression-final-7f2b74a.json`, source `7f2b74a`, output SHA `af10e9c7…`.
 
 ## Native session evidence
 

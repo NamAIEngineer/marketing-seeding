@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "evidenceStatus": "RUNTIME_VERIFIED",
+  "capturedAt": "2026-10-28T07:46:50Z",
+  "sourceRevision": "7f2b74acab39987318d0720361f1cefdac0e6b51",
+  "sourceDirty": false,
+  "command": "node --test test/*.test.mjs",
+  "outputSha256": "af10e9c77889c6db76eed7d6b6d21548569b2df01fd91442717fa2b949c32a9e",
+  "result": {
+    "total": 794,
+    "pass": 792,
+    "fail": 0,
+    "skipped": 2,
+    "durationMs": 39743.682959
+  },
+  "focused": {
+    "coordinatorCommand": "node --test test/project-coordinator.test.mjs",
+    "coordinatorTotal": 4,
+    "coordinatorPass": 4,
+    "coordinatorFail": 0,
+    "integrationAuthorityTotal": 106,
+    "integrationAuthorityPass": 106,
+    "integrationAuthorityFail": 0
+  },
+  "baseline": {
+    "revision": "79985bb411afc141f0edf10ae635fb91824d8bc9",
+    "command": "npm test",
+    "total": 576,
+    "pass": 574,
+    "fail": 0,
+    "skipped": 2
+  },
+  "autoGtm": {
+    "revision": "9368098477d78f75d57fdf5db276129948f3a183",
+    "command": "/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests",
+    "total": 158,
+    "pass": 158,
+    "fail": 0,
+    "pipCheck": "No broken requirements found"
+  },
+  "classification": {
+    "fixture": "FIXTURE_VERIFIED",
+    "isolatedRuntime": "RUNTIME_VERIFIED",
+    "livePublication": "UNVERIFIED",
+    "externalSideEffects": false
+  },
+  "provenance": {
+    "candidateWorktree": "/Users/nam/Documents/marketing-seeding-session-c-reconciled",
+    "branch": "integration/session-c-reconciled",
+    "docsOnlyAfterSourceRevision": true
+  }
+}
