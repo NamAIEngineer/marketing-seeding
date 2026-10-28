@@ -102,6 +102,20 @@ test("TYPE intent rejects a transient value that does not match its durable bind
   }), { code: "BROWSER_TRANSIENT_VALUE_MISMATCH" });
 });
 
+test("browser executor rejects forged action, frame, and semantic identity bindings", async () => {
+  const snapshot = createBrowserSnapshot({
+    url: "https://fixture.test/community",
+    html: '<button aria-label="Inspect rules" id="rules">Rules</button>'
+  });
+  const intent = createBrowserExecutionIntent(snapshot, { action: "CLICK", elementId: snapshot.buttons[0].elementId });
+  const authority = { allowed: true, action: "CLICK", snapshotFingerprint: snapshot.fingerprint, targetIdentity: intent.targetIdentity, allowStaticFixture: true, externalSideEffects: false };
+  const transport = fixtureIntentTransport(new BrowserInteractionFixture());
+  await assert.rejects(() => executeBrowserIntent(snapshot, { ...intent, action: "TYPE" }, { transport, authority }), { code: "BROWSER_INTENT_IDENTITY_CHANGED" });
+  await assert.rejects(() => executeBrowserIntent(snapshot, { ...intent, frame: "nested-frame" }, { transport, authority }), { code: "DOM_TARGET_FRAME_CHANGED" });
+  await assert.rejects(() => executeBrowserIntent(snapshot, { ...intent, semanticTargetIdentity: "forged-semantic-id" }, { transport, authority }), { code: "DOM_TARGET_IDENTITY_CHANGED" });
+  await assert.rejects(() => executeBrowserIntent(snapshot, { ...intent, intentId: "intent-forged" }, { transport, authority }), { code: "BROWSER_INTENT_IDENTITY_CHANGED" });
+});
+
 test("memory observation deduplicates duplicate polls, consolidates distinct publications, and scopes retrieval", () => {
   const state = { memoryItems: [], fixtureAutomationRuns: [
     { id: "fixture-1", campaignId: "campaign-x", communityId: "community-a", e2eStatus: "e2e_verified_readonly", fixturePublicationUrl: "https://fixture.local/posts/1", externalSideEffects: false },

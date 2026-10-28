@@ -337,10 +337,25 @@ function transportIdentity(transport) {
 function assertIntentBinding(snapshot, intent) {
   if (!snapshot || snapshot.schemaVersion !== 1) throw Object.assign(new Error("Browser snapshot is invalid"), { code: "DOM_SNAPSHOT_INVALID" });
   if (!intent || intent.schemaVersion !== 1) throw Object.assign(new Error("Browser intent is invalid"), { code: "BROWSER_INTENT_INVALID" });
+  const action = text(intent.action, 20).toUpperCase();
+  if (!text(intent.intentId, 160) || !ACTIONS.has(action)) throw Object.assign(new Error("Browser intent action or ID is invalid"), { code: "BROWSER_INTENT_INVALID" });
   if (intent.snapshotFingerprint !== snapshot.fingerprint) throw Object.assign(new Error("Browser snapshot is stale"), { code: "DOM_SNAPSHOT_STALE" });
+  const expectedIntentId = `intent-${digest({ action, elementId: intent.elementId, snapshotFingerprint: snapshot.fingerprint, valueDigest: intent.valueDigest ?? null }, 24)}`;
+  if (intent.intentId !== expectedIntentId) throw Object.assign(new Error("Browser intent ID binding changed"), { code: "BROWSER_INTENT_IDENTITY_CHANGED" });
   const element = resolveBrowserElement(snapshot, { elementId: intent.elementId });
   const targetIdentity = digest(element, 32);
   if (intent.targetIdentity !== targetIdentity) throw Object.assign(new Error("Browser intent target identity changed"), { code: "DOM_TARGET_IDENTITY_CHANGED" });
+  if (intent.semanticTargetIdentity && intent.semanticTargetIdentity !== browserElementTargetIdentity(element)) {
+    throw Object.assign(new Error("Browser intent semantic target identity changed"), { code: "DOM_TARGET_IDENTITY_CHANGED" });
+  }
+  if (intent.frame && intent.frame !== element.frame) {
+    throw Object.assign(new Error("Browser intent frame changed"), { code: "DOM_TARGET_FRAME_CHANGED" });
+  }
+  const validTarget = action === "CLICK"
+    ? ["button", "link"].includes(element.role)
+    : action === "TYPE" ? ["textbox", "combobox"].includes(element.role)
+      : element.role === "textbox";
+  if (!validTarget) throw Object.assign(new Error("Browser intent action does not match target role"), { code: "BROWSER_INTENT_TARGET_INVALID" });
   return element;
 }
 
