@@ -2,7 +2,22 @@
 
 ## Status
 
-`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; current C source/test checkpoint: `b51c1984ccfbd4151dcb057089f4bf122bbb681b`; current regression artifact: `regression-final-b51c198.json`; prior integration evidence checkpoint: `7f2b74a`; continuation implementation began at `3d1c380`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; current C candidate source/test checkpoint: `85913e984a4c45c2278be2fe644055426a1455c4`; current documentation/evidence HEAD before this update: `358b7ce20eb8be5e61a2d1e2601eb86c185434b3`; current Listening V5 artifact: `v5-restart-evidence-20261029.json`; prior integration evidence checkpoint: `7f2b74a`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+
+### Current candidate source of truth (2026-10-29)
+
+- C branch: `integration/session-c-reconciled`; remote matches documentation HEAD `358b7ce20eb8be5e61a2d1e2601eb86c185434b3`.
+- Product source/test evidence is pinned to `85913e984a4c45c2278be2fe644055426a1455c4`; documentation commits after that revision do not change product behavior.
+- Coordinator acceptance/recovery slice is `IMPLEMENTED`: versioned acceptance checks, source/evidence fences, bounded attempt/runtime limits, durable repair/next-task scheduling, and restart/idempotent replay are in `src/project-coordinator.mjs`.
+- Coordinator/native focused checks at this source revision: `node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs` → `20/20 pass`.
+- Listening/store focused checks at this source revision: `node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs test/listening-v5.test.mjs test/listening-adapter.test.mjs test/listening-contract.test.mjs test/store-migration.test.mjs` → `40/40 pass`; output SHA-256 `07bdb29707a71c018fa8637adc08b71bf630c331c0cce93e6dbb8da3ca85f964`.
+- Full candidate regression at this source revision: `npm test` → `828 total, 826 pass, 0 fail, 2 skipped`; output SHA-256 `7cea4629bfd4958355851af8635d82a59897daf563774780d28ede6b9a7b17cf`.
+- Listening V5 focused checks: `node --test test/listening-v5.test.mjs test/listening-adapter.test.mjs test/listening-contract.test.mjs test/store-migration.test.mjs` → `20/20 pass`.
+- Full candidate regression at the same source/test revision: `npm test` → `825 total, 823 pass, 0 fail, 2 skipped`; output SHA-256 `1aba8fe6ffc35395bed904243f981c2085d2d2f338202082f8a94a548b35f252`.
+- Campaign-scoped public read is `RUNTIME_VERIFIED` for bounded public data only: job `listening-785c32cd7081c573d686b25f231c683d`, one record, canonical discovery/memory persisted, and terminal replay preserved the state hash without another fetch. Evidence: [`v5-restart-evidence-20261029.json`](../crawl4ai-integration/v5-restart-evidence-20261029.json). This does not prove authenticated publication or live metrics.
+- The C candidate remains `PARTIAL`: no authenticated Camoufox readiness, valid live standing authority, publication/permalink, live metrics/conversion, Auto-GTM generation/media, or clean A owner checkpoint is proven. Standalone D remains separately blocked at `33b115d17a0aba26776ed4219647a0e671d3d6f3` because its `discovery-observer.mjs` lacks `pinnedFetch` and `resolvePublicUrl` exports.
+
+Sections below retain historical slice evidence. Each historical claim is tied to its named source revision; it must not override the current candidate pins above.
 
 ### Current C follow-up: bounded provider analysis (2026-10-29)
 

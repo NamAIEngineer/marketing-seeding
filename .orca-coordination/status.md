@@ -2,14 +2,15 @@
 
 ## Candidate
 
-- Current C source/test HEAD: `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`; current Listening V5 evidence: `plans/crawl4ai-integration/v5-restart-evidence-20261029.json`.
+- Current C source/test HEAD: `85913e984a4c45c2278be2fe644055426a1455c4`; current Listening V5 evidence: `plans/crawl4ai-integration/v5-restart-evidence-20261029.json`.
+- Coordinator acceptance continuation at `85913e9` is `IMPLEMENTED`: durable versioned acceptance checks, source/evidence fences, bounded limits, and atomic parent-result plus repair/next-task scheduling. Focused coordinator/native checks `20/20`; Listening/store combined focused checks `40/40`; full candidate `828/826/0/2`.
 - Earlier oi-browser/provider source/test checkpoint `b51c1984ccfbd4151dcb057089f4bf122bbb681b` remains historical; its evidence is retained at `plans/oi-browser-integration/regression-final-b51c198.json`.
 - Historical oi-browser/provider slice: listening-analysis forwarding is bounded, provenance-aware, and secret-safe. Focused C/coordinator/native tests: `55/55`; full suite: `817 total, 815 pass, 0 fail, 2 skipped`; Auto-GTM: `160/160`, `pip check` clean.
 - Independent review found and closed credentialed/malformed source URL leakage before commit. `sourceUrl` userinfo/non-HTTP/malformed values fail closed; secret query params redact. No A/B/runtime mutation.
 
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
-- Candidate source/test revision: `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`; current Listening V5 regression run revision is the same; prior code/test revisions remain recorded in historical evidence.
+- Candidate source/test revision: `85913e984a4c45c2278be2fe644055426a1455c4`; current Listening V5 regression run and coordinator acceptance checks are pinned to this revision; prior code/test revisions remain recorded in historical evidence.
 - Code/test checkpoint: `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.

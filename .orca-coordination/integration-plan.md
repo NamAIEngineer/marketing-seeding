@@ -5,6 +5,7 @@
 - Controller: SESSION C, candidate branch `integration/session-c-reconciled`.
 - Base revision: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Candidate source/test revision: `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`; metadata/evidence commits follow this checkpoint; prior integration checkpoint `7f2b74a`.
+- Latest C source/test revision: `85913e984a4c45c2278be2fe644055426a1455c4`; coordinator acceptance/repair scheduling is implemented and tested on this revision. Documentation/evidence commits follow.
 - Earlier native code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`.
 - Candidate evidence/docs are C-owned changes on top of that checkpoint.
 - Approval gates: no live publication, merge, deploy, credential change, real-data migration, or external messaging.
