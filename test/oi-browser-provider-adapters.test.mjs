@@ -29,6 +29,36 @@ test("provider adapter accepts loopback only and separates model health from inf
   assert.equal(Object.hasOwn(request.messages[1], "memory"), false);
 });
 
+test("provider prompt forwards bounded analysis references without leaking raw secrets", async () => {
+  let requestBody = null;
+  const fetchImpl = async (url, init = {}) => {
+    if (String(url).endsWith("/models")) return response(200, { data: [{ id: "qwen-local" }] });
+    requestBody = JSON.parse(init.body);
+    return response(200, { choices: [{ message: { content: "provider context" } }] });
+  };
+  const health = await probeOpenAiCompatibleProvider({ baseUrl: "http://127.0.0.1:8767/v1", model: "qwen-local", fetchImpl });
+  const provider = createOpenAiCompatibleProvider({ baseUrl: "http://127.0.0.1:8767/v1", model: "qwen-local", health, fetchImpl, capabilities: ["community-research"] });
+  const result = await routeAgentTask({
+    capability: "community-research",
+    privacyClass: "local",
+    analysisInput: {
+      scope: { campaignId: "campaign-prompt", communityId: "community-a" },
+      digest: "analysis-digest",
+      records: [{ recordId: "signal-1", title: "Technical", sourceUrl: "https://user:pass@example.test/?token=raw-url-secret", text: "token=raw-provider-secret" }]
+    },
+    analysisInputDigest: "analysis-digest-explicit",
+    evidenceRefs: ["snapshot:community-a", "fixture:community-rules"]
+  }, { providers: [provider] });
+  assert.equal(result.status, "SUCCEEDED");
+  const prompt = requestBody.messages[1].content;
+  assert.match(prompt, /analysisInputDigest: analysis-digest-explicit/);
+  assert.match(prompt, /snapshot:community-a/);
+  assert.match(prompt, /fixture:community-rules/);
+  assert.match(prompt, /token=\[redacted\]/);
+  assert.doesNotMatch(prompt, /raw-provider-secret|raw-url-secret|user:pass/);
+  assert.ok(prompt.length < 2_000, `prompt exceeded bound: ${prompt.length}`);
+});
+
 test("provider adapter rejects remote, credentialed, missing, and unlisted configuration", async () => {
   assert.equal(createOpenAiCompatibleProvider({ baseUrl: "https://example.test/v1", model: "qwen" }), null);
   assert.equal(createOpenAiCompatibleProvider({ baseUrl: "http://user:pass@127.0.0.1:8767/v1", model: "qwen" }), null);

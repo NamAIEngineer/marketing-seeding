@@ -60,6 +60,22 @@ function redacted(value, max = 800) {
     .replace(/(password|secret|token|cookie|authorization|api[_-]?key|session|credential)\s*[=:]\s*[^\s]+/gi, "$1=[redacted]");
 }
 
+function normalizeProviderSourceUrl(value) {
+  const raw = text(value, 800);
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw);
+    if (parsed.username || parsed.password || !/^https?:$/i.test(parsed.protocol)) return null;
+    parsed.hash = "";
+    for (const key of [...parsed.searchParams.keys()]) {
+      if (SECRET_QUERY_KEY.test(key)) parsed.searchParams.set(key, "[redacted]");
+    }
+    return redacted(parsed.toString(), 800) || null;
+  } catch {
+    return redacted(raw, 800) || null;
+  }
+}
+
 function normalizeProviderAnalysisInput(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const scope = value.scope && typeof value.scope === "object" && !Array.isArray(value.scope)
@@ -71,7 +87,7 @@ function normalizeProviderAnalysisInput(value) {
     .map((record) => ({
       recordId: redacted(record?.recordId, 240) || null,
       recordType: redacted(record?.recordType, 40) || null,
-      sourceUrl: redacted(record?.sourceUrl, 800) || null,
+      sourceUrl: normalizeProviderSourceUrl(record?.sourceUrl),
       title: redacted(record?.title, 500) || "",
       text: redacted(record?.text, MAX_PROVIDER_ANALYSIS_RECORD_TEXT) || "",
       contentHash: redacted(record?.contentHash, 128) || null,

@@ -244,6 +244,53 @@ test("provider router distinguishes unavailable, timeout, invalid result, and su
   assert.equal(reasoning.providerId, "deep");
 });
 
+test("provider router bounds listening analysis, forwards provenance, and redacts secrets", async () => {
+  let observedTask = null;
+  const analysisInput = {
+    schemaVersion: 3,
+    scope: { campaignId: "campaign-analysis", communityId: "community-a", platform: "fixture" },
+    digest: "analysis-digest-from-input",
+    untrusted: true,
+    records: Array.from({ length: 24 }, (_, index) => ({
+      recordId: `record-${index}`,
+      recordType: "COMMUNITY_SIGNAL",
+      sourceUrl: index === 0 ? "https://user:pass@fixture.test/private" : index === 1 ? "https://fixture.test/source/1?token=raw-url-secret&topic=dev" : `https://fixture.test/source/${index}`,
+      title: `Technical signal ${index}`,
+      text: `Educational context ${index} token=raw-analysis-secret-${index} ${"bounded ".repeat(900)}`,
+      contentHash: `hash-${index}`,
+      sourceRefs: Array.from({ length: 12 }, (_, refIndex) => `snapshot:signal-${index}-${refIndex}`)
+    }))
+  };
+  const evidenceRefs = Array.from({ length: 100 }, (_, index) => `snapshot:analysis-${index}`);
+  const result = await routeAgentTask({
+    capability: "community-research",
+    privacyClass: "local",
+    analysisInput,
+    analysisInputDigest: "analysis-digest-explicit",
+    evidenceRefs
+  }, {
+    providers: [{
+      id: "analysis-capture",
+      capabilities: ["community-research"],
+      installed: true,
+      authReady: true,
+      healthy: true,
+      privacyClasses: ["local"],
+      adapter: { infer: async ({ task }) => { observedTask = task; return { ok: true, output: "bounded analysis accepted" }; } }
+    }]
+  });
+  assert.equal(result.status, "SUCCEEDED");
+  assert.equal(observedTask.analysisInputDigest, "analysis-digest-explicit");
+  assert.equal(observedTask.analysisInput.records.length, 12);
+  assert.ok(Buffer.byteLength(JSON.stringify(observedTask.analysisInput), "utf8") <= 16_000);
+  assert.equal(observedTask.evidenceRefs.length, 64);
+  assert.match(observedTask.analysisInput.records[0].text, /token=\[redacted\]/);
+  assert.equal(observedTask.analysisInput.records[0].sourceUrl, null);
+  assert.match(observedTask.analysisInput.records[1].sourceUrl, /token=\[redacted\]/);
+  assert.doesNotMatch(JSON.stringify(observedTask), /raw-analysis-secret|raw-url-secret|user:pass/);
+  assert.deepEqual(result.evidenceRefs, observedTask.evidenceRefs);
+});
+
 test("provider router cancellation aborts the active provider and does not fall back", async () => {
   const controller = new AbortController();
   let firstCalls = 0;
@@ -303,6 +350,41 @@ test("service provider route forwards caller cancellation and persists the faile
   assert.equal(fallbackCalls, 0);
   const state = await service.snapshot();
   assert.equal(state.providerDecisions.at(-1).failure, "cancelled");
+});
+
+test("service persists analysis provenance without raw listening context", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "oi-browser-provider-analysis-service-"));
+  let observedTask = null;
+  const service = new SeedingService(new JsonStore(path.join(root, "state.json")), {
+    oiBrowserProviders: [{
+      id: "analysis-service-capture",
+      capabilities: ["community-research"],
+      installed: true,
+      authReady: true,
+      healthy: true,
+      privacyClasses: ["local"],
+      adapter: { infer: async ({ task }) => { observedTask = task; return { ok: true, output: "service context" }; } }
+    }]
+  });
+  await service.init();
+  const result = await service.routeOiAgentTask({
+    capability: "community-research",
+    privacyClass: "local",
+    analysisInput: {
+      scope: { campaignId: "campaign-service", communityId: "community-a" },
+      records: [{ recordId: "service-signal", text: "password=raw-service-secret" }]
+    },
+    evidenceRefs: ["snapshot:service-signal"]
+  });
+  assert.equal(result.status, "SUCCEEDED");
+  assert.equal(observedTask.evidenceRefs[0], "snapshot:service-signal");
+  assert.ok(observedTask.analysisInputDigest);
+  const state = await service.snapshot();
+  const decision = state.providerDecisions.at(-1);
+  assert.equal(decision.analysisInput, undefined);
+  assert.equal(decision.analysisInputDigest, observedTask.analysisInputDigest);
+  assert.deepEqual(decision.evidenceRefs, ["snapshot:service-signal"]);
+  assert.doesNotMatch(JSON.stringify(state), /raw-service-secret/);
 });
 
 test("service persists memory and snapshots in canonical JsonStore and survives restart", async () => {

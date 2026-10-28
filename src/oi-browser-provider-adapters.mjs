@@ -8,6 +8,8 @@ function text(value, max = 240) {
 }
 function redacted(value, max = 800) {
   return text(value, max)
+    .replace(/https?:\/\/[^\s/@]*@/gi, "https://[redacted]@")
+    .replace(/([?&](?:password|secret|token|cookie|authorization|api[_-]?key|session|credential)=)[^&#\s]+/gi, "$1[redacted]")
     .replace(/bearer\s+[a-z0-9._-]+/gi, "bearer [redacted]")
     .replace(/\b(?:sk|gh[pousr])_[a-z0-9_-]{8,}\b/gi, "[redacted]")
     .replace(/(password|secret|token|cookie|authorization|api[_-]?key|session|credential)\s*[=:]\s*[^\s,;]+/gi, "$1=[redacted]");
