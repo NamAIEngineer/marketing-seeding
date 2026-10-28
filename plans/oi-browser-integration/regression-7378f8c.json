@@ -4,17 +4,18 @@
   "capturedAt": "2026-10-28T05:24:43Z",
   "candidateSourceRevision": "7378f8cac202ce8efc0c5c66cb789e67f504f32e",
   "candidateTrackedSourceDirty": false,
-  "candidateUntrackedEvidence": [
-    "plans/oi-browser-integration/fixture-run-7378f8c.json",
-    "plans/oi-browser-integration/server-smoke-7378f8c.json",
-    "plans/oi-browser-integration/regression-7378f8c.json"
-  ],
+  "candidateUntrackedEvidence": [],
   "baseline": {
     "revision": "79985bb411afc141f0edf10ae635fb91824d8bc9",
     "worktree": "/Users/nam/Documents/marketing-seeding",
     "branch": "pr3-4-2-presubmit-cancel",
     "command": "npm test",
-    "result": { "total": 576, "pass": 574, "fail": 0, "skipped": 2 },
+    "result": {
+      "total": 576,
+      "pass": 574,
+      "fail": 0,
+      "skipped": 2
+    },
     "classification": "BASELINE_PASS_WITH_EXISTING_SKIPS"
   },
   "candidate": {
@@ -25,22 +26,40 @@
         "node --test test/oi-browser-integration.test.mjs test/browser-runtime-router.test.mjs test/oi-browser-provider-adapters.test.mjs test/oi-browser-live-bridge.test.mjs test/browser-interaction-transport.test.mjs",
         "node --test test/campaign-authorization.test.mjs test/campaign-bootstrap.test.mjs test/standing-campaign-delegation.test.mjs"
       ],
-      "result": { "total": 106, "pass": 106, "fail": 0, "skipped": 0 }
+      "result": {
+        "total": 106,
+        "pass": 106,
+        "fail": 0,
+        "skipped": 0
+      }
     },
     "full": {
       "command": "node --test test/*.test.mjs",
-      "result": { "total": 790, "pass": 788, "fail": 0, "skipped": 2 }
+      "result": {
+        "total": 790,
+        "pass": 788,
+        "fail": 0,
+        "skipped": 2
+      }
     },
     "syntax": {
       "command": "node --check src/oi-browser-integration.mjs && node --check src/oi-browser-provider-adapters.mjs && node --check src/oi-browser-camoufox-bridge.mjs && node --check src/service.mjs && node --check src/server.mjs",
       "result": "PASS"
     },
-    "diffCheck": { "command": "git diff --check", "result": "PASS" },
+    "diffCheck": {
+      "command": "git diff --check",
+      "result": "PASS"
+    },
     "skipReason": "Existing ACL environment checks; no candidate failures"
   },
   "autoGtm": {
     "command": "/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests",
-    "result": { "total": 158, "pass": 158, "fail": 0, "errors": 0 },
+    "result": {
+      "total": 158,
+      "pass": 158,
+      "fail": 0,
+      "errors": 0
+    },
     "pipCheck": "No broken requirements found",
     "revision": "9368098477d78f75d57fdf5db276129948f3a183"
   },
@@ -77,5 +96,11 @@
     "status": "PENDING_FRESH_REVIEW",
     "priorReview": "plans/oi-browser-integration/independent-verifier-20261028.md",
     "priorReviewRevision": "e9a7bfa9dc561a4dad06035caaeabff35ee0d8f0"
-  }
+  },
+  "candidateCommittedEvidence": [
+    "plans/oi-browser-integration/fixture-run-7378f8c.json",
+    "plans/oi-browser-integration/server-smoke-7378f8c.json",
+    "plans/oi-browser-integration/regression-7378f8c.json"
+  ],
+  "metadataNote": "Evidence artifact list captured after commit a453fbe; files are tracked and committed, not untracked."
 }

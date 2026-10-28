@@ -27,7 +27,7 @@ Memory records distinguish `RAW_EVENT`, `OBSERVATION`, `FACT`, `INFERENCE`, `LEA
 
 ## Provider / Decision Plane
 
-`AgentTask` and `ProviderDecision` are versioned and persisted in canonical state. Routing filters capability, tools, privacy, context, reasoning class, availability, health, timeout, and history. Installed, auth-ready, healthy, and execution success are separate. Runtime smoke on isolated port `4337` with explicit loopback Qwen config returned `SUCCEEDED`, persisted the decision, and retained one successful route after restart. This is local `RUNTIME_VERIFIED`; it does not prove A runtime configuration or an external provider.
+`AgentTask` and `ProviderDecision` are versioned and persisted in canonical state. Routing filters capability, tools, privacy, context, reasoning class, availability, health, timeout, and history. Installed, auth-ready, healthy, and execution success are separate. Runtime smoke on isolated port `4337` with explicit loopback Qwen config returned `SUCCEEDED`; the response included `decisionPersisted=true` and a persisted decision ID, and restart retained one successful route. This is local `RUNTIME_VERIFIED`; it does not prove A runtime configuration or an external provider.
 
 ## Browser intelligence / Camoufox / execution
 
