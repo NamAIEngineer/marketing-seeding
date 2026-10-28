@@ -3,7 +3,7 @@
   "sourceRevision": "1589518ec77424d186906b0ba10ba201c763cfe6",
   "branch": "integration/session-c-reconciled",
   "workspace": "/Users/nam/Documents/marketing-seeding-session-c-reconciled",
-  "capturedAt": "2026-10-28T15:29:37Z",
+  "capturedAt": "2026-10-28T15:35:00Z",
   "baselineRevision": "79985bb411afc141f0edf10ae635fb91824d8bc9",
   "checks": [
     {
@@ -27,11 +27,12 @@
     {
       "command": "node --test test/*.test.mjs",
       "classification": "FIXTURE_VERIFIED",
-      "tests": 807,
-      "pass": 805,
+      "tests": 809,
+      "pass": 807,
       "fail": 0,
       "skipped": 2,
-      "result": "PASS"
+      "result": "PASS",
+      "outputSha256": "cf8593d640c989ad7225f578be328ef29e0e68c4884612f22121abec83a4b599"
     },
     {
       "command": "git diff --check HEAD",
