@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-10-28T10:53:13.959993+00:00",
+  "capturedAt": "2026-10-28T11:16:44.547518+00:00",
   "source": {
-    "baseRevision": "6bb0eee183e93467436c1af5b340c1cef1883c0f",
+    "baseRevision": "eb4a920",
     "branch": "integration/session-c-reconciled",
     "dirty": true
   },
@@ -82,7 +82,7 @@
     }
   ],
   "state": {
-    "revision": 19,
+    "revision": 26,
     "tasks": [
       {
         "taskId": "launchd-c-followup-1",
@@ -101,9 +101,18 @@
         "status": "COMPLETE",
         "attemptCount": 1,
         "wakeState": "NATIVE_COMPLETED"
+      },
+      {
+        "taskId": "session-a-checkpoint-20261028",
+        "owner": "session-a",
+        "requestId": "8ec39d22-ec26-48a9-94b9-1717cf75af60",
+        "marker": "SESSION-A-CHECKPOINT-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028T1600Z",
+        "status": "COMPLETE",
+        "attemptCount": 2,
+        "wakeState": "NATIVE_COMPLETED"
       }
     ],
-    "resultCount": 2,
+    "resultCount": 3,
     "replayAfterRestart": false
   },
   "artifacts": [
@@ -174,6 +183,53 @@
         "externalSideEffects": false,
         "unknownRetryAllowed": false,
         "task": "launchd-c-followup-2"
+      },
+      "createdBySession": true
+    },
+    {
+      "session": "session-a",
+      "marker": "SESSION-A-CHECKPOINT-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028T1600Z",
+      "path": "/Users/nam/build-agentic-AI/.agentic/marketing-seeding/project-coordinator/artifacts/session-a-checkpoint-20261028.json",
+      "sha256": "94aa53a52b514b198375774fb2ba2cdfd1bebe8731110e3324d00dd0af0803c7",
+      "contract": {
+        "schemaVersion": 1,
+        "rehearsal": true,
+        "liveEligible": false,
+        "externalSideEffects": false,
+        "unknownRetryAllowed": false,
+        "workspace": "/Users/nam/Documents/marketing-seeding-wave-13-bridge",
+        "head": "1ed57710f66d8ca1a6284d16b149d9039fcb032e",
+        "branch": "wave/distribution-os-runtime-wave-13-bridge",
+        "trackedDirtyFileCount": 12,
+        "trackedDirtyDiffstat": "public/assets/index-DNqX5qeD.js            | 28 +++++++--------\n src/auto-gtm-feed.mjs                      | 41 ++++++++++++++++++---\n src/camoufox-execution-transport.mjs       |  7 +++-\n src/camoufox-playwright-protocol.mjs       | 57 +++++++++++++++++++++++++++---\n src/market-intelligence.mjs                | 12 +++++--\n src/server.mjs                             | 29 +++++++++++++--\n src/service.mjs                            |  9 +++++\n test/auto-gtm-feed.test.mjs                | 39 ++++++++++++++++++++\n test/camoufox-execution-transport.test.mjs | 11 ++++++\n test/camoufox-playwright-protocol.test.mjs | 17 +++++++++\n test/server-lifecycle.test.mjs             | 11 +++++-\n ui/src/App.tsx                             | 23 ++++++++++++\n 12 files changed, 254 insertions(+), 30 deletions(-)",
+        "untrackedPathCount": 567,
+        "ownedModules": [
+          "Camoufox runtime and browser protocol/transport",
+          "readiness and execution-session paths",
+          "server and service",
+          "strategy and market intelligence / Auto-GTM",
+          "Mission Control UI and built assets",
+          "related tests and implementation docs"
+        ],
+        "ownershipNotes": "Server, service, and UI paths have prior integration overlap requiring serial ownership reconciliation.",
+        "latestCompletedImplementationCheckpoint": {
+          "commit": "1ed57710f66d8ca1a6284d16b149d9039fcb032e",
+          "subject": "chore(runtime): checkpoint camoufox bridge",
+          "files": 36
+        },
+        "focusedTestsPreviouslyRun": {
+          "evidenceSource": "plans/autonomous-build/session-recovery-audit.md at current HEAD",
+          "results": [
+            "`npm test`: **758 total, 756 pass, 0 fail, 2 skip**. UI `npm run build`: PASS. Focused Camoufox/router/readiness tests: PASS, 0 failures. `git diff --check`: PASS. No new regression observed."
+          ],
+          "currentDirtyOverlayVerified": false
+        },
+        "cleanCheckpointWithoutDroppingUnrelatedFiles": {
+          "possibleWithExactPathSelection": true,
+          "readyNow": false,
+          "blocker": "Tracked changes span A-owned implementation and shared integration paths; untracked continuation/runtime artifacts must remain untouched. Existing focused test evidence predates the current dirty overlay."
+        },
+        "blockerAndNextAction": "Reconcile ownership and intended hunks for shared server/service/UI paths, then run focused tests on the current overlay before selecting only approved tracked paths for a checkpoint."
       },
       "createdBySession": true
     }
