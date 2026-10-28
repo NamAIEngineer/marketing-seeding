@@ -2,9 +2,7 @@
 
 ## Status
 
-`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; final C source/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`; fresh regression run revision: `616377f429ebfcd17000685e7c776ffed108aa3a`; subsequent branch commits are documentation/evidence-only; prior integration evidence checkpoint: `7f2b74a`; continuation implementation began at `3d1c380`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
-
-Current C source/test revision is `b51c1984ccfbd4151dcb057089f4bf122bbb681b`. The current regression artifact is `regression-final-b51c198.json`. It supersedes the earlier `616377f` counts for the current tree.
+`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; current C source/test checkpoint: `b51c1984ccfbd4151dcb057089f4bf122bbb681b`; current regression artifact: `regression-final-b51c198.json`; prior integration evidence checkpoint: `7f2b74a`; continuation implementation began at `3d1c380`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
 ### Current C follow-up: bounded provider analysis (2026-10-29)
 
