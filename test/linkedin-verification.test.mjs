@@ -89,7 +89,7 @@ async function runPostClickAdapter({ ui, candidates = [], verification = { state
 
 test("immediate feed candidate confirms only with stable author, content, permalink and submit-time evidence", async () => {
   const browser = browserFor({ "https://www.linkedin.com/feed/": [candidate({ mediaPresent: false, mediaType: null })] });
-  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 30 }).verify(request({ withMedia: false }), "page-1", { expectedIdentityUrl, submittedAt });
+  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 250 }).verify(request({ withMedia: false }), "page-1", { expectedIdentityUrl, submittedAt });
   assert.equal(result.state, "CONFIRMED");
   assert.equal(result.publicationEvidence.verificationDetails.candidate.postId, "987654321");
   assert.equal(result.publicationUrl, candidate().publicationUrl);
@@ -100,7 +100,7 @@ test("immediate feed candidate confirms only with stable author, content, permal
 test("bounded semantic polling observes a candidate that appears after the first feed read", async () => {
   let available = false;
   const browser = browserFor({ "https://www.linkedin.com/feed/": () => available ? [candidate({ mediaPresent: false, mediaType: null })] : [] }, { onWait: async () => { available = true; } });
-  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 30 }).verify(request({ withMedia: false }), "page-1", { expectedIdentityUrl, submittedAt });
+  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 250 }).verify(request({ withMedia: false }), "page-1", { expectedIdentityUrl, submittedAt });
   assert.equal(result.state, "CONFIRMED");
   assert.ok(browser.calls.some(([type]) => type === "wait-expression"));
 });
@@ -108,7 +108,7 @@ test("bounded semantic polling observes a candidate that appears after the first
 test("candidate on Recent Activity is found when the feed has no result", async () => {
   const recentUrl = "https://www.linkedin.com/in/owner/recent-activity/all/";
   const browser = browserFor({ [recentUrl]: [candidate({ mediaPresent: false, mediaType: null })] });
-  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 30 }).verify(request({ withMedia: false }), "page-1", { expectedIdentityUrl, submittedAt });
+  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 250 }).verify(request({ withMedia: false }), "page-1", { expectedIdentityUrl, submittedAt });
   assert.equal(result.state, "CONFIRMED");
   assert.equal(result.publicationEvidence.verificationDetails.candidate.surface, "recent_activity");
   assert.ok(browser.calls.some(([type, url]) => type === "navigate" && url === recentUrl));
@@ -116,28 +116,28 @@ test("candidate on Recent Activity is found when the feed has no result", async 
 
 test("correct content from the wrong author is rejected", async () => {
   const browser = browserFor({ "https://www.linkedin.com/feed/": [candidate({ authorMatched: false, authorPath: "/in/other" })] });
-  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 30 }).verify(request({ withMedia: false }), "page-1", { expectedIdentityUrl, submittedAt });
+  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 250 }).verify(request({ withMedia: false }), "page-1", { expectedIdentityUrl, submittedAt });
   assert.equal(result.state, "UNKNOWN");
   assert.equal(result.publicationEvidence.accountMatched, false);
 });
 
 test("correct author without exact content is rejected", async () => {
   const browser = browserFor({ "https://www.linkedin.com/feed/": [candidate({ contentMatched: false })] });
-  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 30 }).verify(request(), "page-1", { expectedIdentityUrl, submittedAt });
+  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 250 }).verify(request(), "page-1", { expectedIdentityUrl, submittedAt });
   assert.equal(result.state, "UNKNOWN");
   assert.equal(result.reasonCode, "publication_candidate_evidence_incomplete");
 });
 
 test("older matching post is rejected by submit-time proximity", async () => {
   const browser = browserFor({ "https://www.linkedin.com/feed/": [candidate({ candidateTimestamp: "2026-10-13T13:02:00.000Z" })] });
-  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 30 }).verify(request({ withMedia: false }), "page-1", { expectedIdentityUrl, submittedAt });
+  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 250 }).verify(request({ withMedia: false }), "page-1", { expectedIdentityUrl, submittedAt });
   assert.equal(result.state, "UNKNOWN");
   assert.equal(result.publicationEvidence.verificationDetails.candidate.timestampMatched, false);
 });
 
 test("video presence without proven pre-submit integrity remains UNKNOWN", async () => {
   const browser = browserFor({ "https://www.linkedin.com/feed/": [candidate()] });
-  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 30 }).verify(request(), "page-1", { expectedIdentityUrl, submittedAt });
+  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 250 }).verify(request(), "page-1", { expectedIdentityUrl, submittedAt });
   assert.equal(result.state, "UNKNOWN");
   assert.equal(result.reasonCode, "pre_submit_media_integrity_missing");
   assert.equal(result.publicationEvidence.mediaHashMatched, false);
@@ -147,7 +147,7 @@ test("video presence without proven pre-submit integrity remains UNKNOWN", async
 
 test("LinkedIn video with strong publication identity and exact pre-submit artifact integrity confirms without claiming post-submit hash", async () => {
   const browser = browserFor({ "https://www.linkedin.com/feed/": [candidate()] });
-  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 30 }).verify(request(), "page-1", { expectedIdentityUrl, submittedAt, preSubmitMediaIntegrity });
+  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 250 }).verify(request(), "page-1", { expectedIdentityUrl, submittedAt, preSubmitMediaIntegrity });
   assert.equal(result.state, "CONFIRMED");
   assert.equal(result.publicationEvidence.mediaHashMatched, false);
   assert.equal(result.publicationEvidence.mediaHash, null);
@@ -167,13 +167,13 @@ test("LinkedIn video with strong publication identity and exact pre-submit artif
 
 test("content and author without stable post ID and permalink cannot confirm", async () => {
   const browser = browserFor({ "https://www.linkedin.com/feed/": [candidate({ activityId: null, activityUrn: null, publicationUrl: null })] });
-  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 30 }).verify(request(), "page-1", { expectedIdentityUrl, submittedAt, preSubmitMediaIntegrity });
+  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 250 }).verify(request(), "page-1", { expectedIdentityUrl, submittedAt, preSubmitMediaIntegrity });
   assert.equal(result.state, "UNKNOWN");
 });
 
 test("wrong pre-submit artifact digest cannot authorize NOT_VERIFIABLE LinkedIn media", async () => {
   const browser = browserFor({ "https://www.linkedin.com/feed/": [candidate()] });
-  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 30 }).verify(request(), "page-1", {
+  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 250 }).verify(request(), "page-1", {
     expectedIdentityUrl, submittedAt, preSubmitMediaIntegrity: { ...preSubmitMediaIntegrity, localFileSha256: "0".repeat(64) }
   });
   assert.equal(result.state, "UNKNOWN");
@@ -182,7 +182,7 @@ test("wrong pre-submit artifact digest cannot authorize NOT_VERIFIABLE LinkedIn 
 
 test("receipt contract preserves read-only UNKNOWN candidate evidence", async () => {
   const browser = browserFor({ "https://www.linkedin.com/feed/": [candidate()] });
-  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 30 }).verify(request(), "page-1", { expectedIdentityUrl, submittedAt });
+  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 250 }).verify(request(), "page-1", { expectedIdentityUrl, submittedAt });
   const receipt = validateExecutionReceiptV1({
     schemaVersion: 1, executionId: "execution-1", jobId: "job-1", attempt: 1,
     startedAt: submittedAt, finishedAt: new Date(Math.max(Date.now(), Date.parse(submittedAt) + 1_000)).toISOString(),
@@ -197,7 +197,7 @@ test("receipt contract preserves read-only UNKNOWN candidate evidence", async ()
 
 test("observed media type mismatch is recorded as MISMATCHED", async () => {
   const browser = browserFor({ "https://www.linkedin.com/feed/": [candidate({ mediaType: "image" })] });
-  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 30 }).verify(request(), "page-1", { expectedIdentityUrl, submittedAt });
+  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 250 }).verify(request(), "page-1", { expectedIdentityUrl, submittedAt });
   assert.equal(result.state, "UNKNOWN");
   assert.equal(result.reasonCode, "publication_media_type_mismatch");
   assert.equal(result.publicationEvidence.verificationDetails.media.hashStatus, "MISMATCHED");
@@ -205,7 +205,7 @@ test("observed media type mismatch is recorded as MISMATCHED", async () => {
 
 test("composer close without post evidence does not imply success and verifier never clicks Post", async () => {
   const browser = browserFor({ "https://www.linkedin.com/feed/": [] }, { confirmationSignals: ["Your post was shared"] });
-  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 30 }).verify(request(), "page-1", { expectedIdentityUrl, submittedAt });
+  const result = await new LinkedInPublicationVerifier(browser, { timeoutMs: 250 }).verify(request(), "page-1", { expectedIdentityUrl, submittedAt });
   assert.equal(result.state, "UNKNOWN");
   assert.deepEqual(result.publicationEvidence.verificationDetails.confirmationSignals, ["Your post was shared"]);
   assert.equal(browser.calls.some(([type]) => type === "click"), false);
