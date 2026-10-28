@@ -2,8 +2,8 @@
 
 ## Candidate handoff
 
-- Candidate: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`; source/test checkpoint `fa3ebda`; later commits are documentation/evidence-only.
-- Source/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`; metadata/evidence HEAD follows this checkpoint; prior integration checkpoint `7f2b74a` retained.
+- Candidate: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`; source/test checkpoint `3d3d0b0`; later commits are documentation/evidence-only.
+- Source/test checkpoint: `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`; metadata/evidence HEAD follows this checkpoint; prior integration checkpoint `7f2b74a` retained.
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - A checkpoint represented: `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; current A overlay read-only recheck is 13 tracked dirty + 90 untracked, preserved outside candidate.
 - B owner checkpoint: `b675a98e6dd2da3c12133dff715eddea616c91f5`; current B read-only recheck is tracked-clean with 16 untracked paths; not cherry-picked because candidate already contains/adapts substantive behavior.
@@ -81,6 +81,14 @@
 - Commit `fa3ebda996041498e44800e181507bd494ee4b72` passes caller `AbortSignal` through `SeedingService.routeOiAgentTask`.
 - Focused `35/35`, coordinator/native `17/17`, full `814/812/0/2`; independent verifier PASS. Evidence: `plans/oi-browser-integration/regression-final-service-signal.json`.
 - Internal callers can cancel; JSON HTTP input cannot carry a live signal. A/B worktrees and runtime `4318` remain untouched. Status remains `PARTIAL`.
+
+## Listening V5 handoff (2026-10-29)
+
+- Candidate source/test revision: `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`; branch `integration/session-c-reconciled`.
+- Files: `src/store.mjs`, `src/listening-contract.mjs`, `src/listening-adapter.mjs`, `src/service.mjs`, `scripts/listening-run.mjs`, `test/listening-v5.test.mjs`, `test/store-migration.test.mjs`.
+- Entrypoint remains `node scripts/listening-run.mjs --urls ... --backend http|nodriver [--campaign-id ...]`; campaign-scoped runs acquire the canonical writer lease, resume deterministic job rows and persist only bounded redacted metadata.
+- V5 acceptance: `IMPLEMENTED`; focused `FIXTURE_VERIFIED` 20/20 (output SHA-256 `7a31b212517a75f431bc923a1a75c9f60b06475cbf66e09f53ba29131b7484f0`); full `FIXTURE_VERIFIED` 825/823/0/2 (output SHA-256 `1aba8fe6ffc35395bed904243f981c2085d2d2f338202082f8a94a548b35f252`); public campaign-scoped `RUNTIME_VERIFIED` success and terminal replay with unchanged state hash. No `LIVE_VERIFIED` publication, authority, metrics or conversion evidence.
+- Review: independent verifier PASS after closing UNKNOWN promotion caveat. D owner worktree and overlap files remain untouched; C integrated overlap seam only in C candidate.
 # C handoff — provider analysis boundary (2026-10-29)
 
 - Commit: `b51c1984ccfbd4151dcb057089f4bf122bbb681b`.

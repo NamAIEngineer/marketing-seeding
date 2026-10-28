@@ -1,16 +1,31 @@
 # Session D Crawl4AI Listening Report
 
-Status: C_INTEGRATED_RUNTIME_VERIFIED; STANDALONE_D_BLOCKED; V5_OPEN
+Status: C_INTEGRATED_RUNTIME_VERIFIED; V5_RUNTIME_VERIFIED; STANDALONE_D_BLOCKED
+
+## C continuation: V5 restart-safe Listening (2026-10-29)
+
+Source/test revision: `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`.
+
+Implemented additive `listeningJobs` persistence in the existing `JsonStore`, deterministic scope-bound job identity, per-source checkpoints, restart resume, terminal replay without fetch, dashboard projection, writer lease handling and immutable `UNKNOWN` quarantine. Checkpoint rows exclude raw HTML, Markdown, extracted record bodies and provider output; public discovery/memory persistence continues through canonical `SeedingService` only.
+
+Evidence:
+
+- Focused Listening/contract/store checks: **20/20 pass** (`FIXTURE_VERIFIED`).
+- Full `npm test`: **825 total, 823 pass, 0 fail, 2 skipped** at the exact revision (`FIXTURE_VERIFIED`), output SHA-256 `1aba8fe6ffc35395bed904243f981c2085d2d2f338202082f8a94a548b35f252`.
+- Campaign-scoped public read using pinned D environment (`Python 3.12.15`, Crawl4AI `v0.9.5` pin) returned `SUCCEEDED`, one public page record, one canonical discovery and one memory item. Evidence is redacted metadata only, SHA-256 `2a4a5f61bc967f6ee92c7470d668285d7ba7208aa0805eb8dedb30f9d6317231` (`RUNTIME_VERIFIED`).
+- Replaying the same terminal job with an invalid extractor environment returned `SUCCEEDED` without fetch/extraction and left the state hash unchanged (`490439f64c1a895b80b5131f408f24a364a615db95be414176ef1e88dddb5e8d`), replay evidence SHA-256 `69b129e81381cf28592c29287da6fe53b850ed7192505c9decbf7fb818eeb27c` (`RUNTIME_VERIFIED`).
+
+V5 is closed on the C candidate. Standalone D revision `33b115d` remains independently `BLOCKED` by missing `pinnedFetch`/`resolvePublicUrl` exports; no D files were edited.
 
 ## Final C integration status
 
-C integration is verified at HEAD `246f02f3e9649acef5adba7ee2b876ac6735a7c3` on `integration/session-c-reconciled`. The integrated C runtime passed the full regression with **818 passed, 2 skipped, 0 failed**. This result is separate from the historical D-worktree count of 812 passed, 2 skipped, 0 failed.
+C integration is verified at candidate HEAD `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd` on `integration/session-c-reconciled`. The full regression at this exact revision passed **823 of 825 tests, with 0 failures and 2 skipped**. Earlier C integration counts (`246f02f`, 818 passed) and the D-worktree count (812 passed) remain historical evidence tied to their recorded revisions.
 
 The independent report is [`/Users/nam/orca/workspaces/marketing-seeding/session-d-independent-verifier/plans/crawl4ai-integration/independent-verifier-report-20261029.md`](file:///Users/nam/orca/workspaces/marketing-seeding/session-d-independent-verifier/plans/crawl4ai-integration/independent-verifier-report-20261029.md), SHA-256 `34fd69d4467cccac1aa07ec25b023df9e18511bda3c2f316f92d076e2a8341c4`. It completes V6 review but gives the exact standalone D revision `33b115d17a0aba26776ed4219647a0e671d3d6f3` a **BLOCKED** verdict: `src/listening-adapter.mjs` imports `pinnedFetch` and `resolvePublicUrl`, while that D revision's `src/discovery-observer.mjs` does not export them. C overlap/integration fixes this module contract, and the C runtime was verified independently below.
 
-V5 remains **OPEN**: the C public smokes prove bounded run and cleanup, but no controlled canonical component-restart artifact proves persisted job-state recovery. The D same-state rerun/dedupe evidence remains implementation-side evidence and is not upgraded to a canonical restart PASS.
+V5 is **CLOSED on this candidate**. The campaign-scoped run persisted a canonical job row and memory/discovery records; a controlled terminal replay reused that row without fetch/extraction and preserved the state hash. The exact standalone D revision remains independently blocked by its missing exports, while the C candidate contains the reviewed overlap seam.
 
-Overall acceptance is **NOT COMPLETE** while V5 remains open and the exact standalone D revision remains blocked.
+Overall acceptance remains **PARTIAL** because authenticated Camoufox readiness/publication, live metrics/conversion, Auto-GTM generation/media, and A's dirty runtime overlay are still unverified or blocked. These gates do not invalidate the completed C Listening slice.
 
 Base: `dd814bf1df82a0371171ce0ca3674d16a1009368`
 Branch: `integration/session-d-crawl4ai-listening`
@@ -65,7 +80,7 @@ Using the already pinned D virtualenv without changing C source or dependency fi
 
 ## Verification
 
-Focused checks pass: 29 tests covering contract bounds/hash failure, relative URL/provenance, extraction persistence/dedupe, provider content forwarding, observer safety, and deadlines. The C integrated full project regression passed with **818 tests passing, 2 skipped, and 0 failures**. The D-worktree report's **812/2/0** count is historical implementation-side evidence for the pre-integration revision. Syntax checks pass for Node/Python workers; `git diff --cached --check` passes. Direct nodriver smoke passed with no remaining browser process. Extraction worker is HTML-only and no browser/network/model call is made after IPC.
+Focused Listening/V5 checks pass: **20/20** covering contract bounds/hash failure, relative URL/provenance, extraction persistence/dedupe, restart resume, terminal replay, UNKNOWN quarantine, dashboard projection, and store migration. The full project regression at candidate `3d3d0b0` passed **823/825, 0 failed, 2 skipped**. Historical 29-test/818-pass and D-worktree 812-pass counts remain tied to their exact earlier revisions. Syntax checks pass for Node/Python workers; the current committed diff is clean. Direct nodriver smoke passed with no remaining browser process. Extraction worker is HTML-only and no browser/network/model call is made after IPC.
 
 The independent verifier review is now complete at the report path and hash recorded above. It is a valid V6 review result with a concrete BLOCKED verdict for standalone D; it does not convert the standalone D revision to PASS. `verifier-report.md` in this C tree remains implementation-side evidence and is not the independent report.
 
@@ -74,6 +89,6 @@ The independent verifier review is now complete at the report path and hash reco
 - Python community page returned incomplete HTML in this environment; status remains `PARTIAL`.
 - Public channel policy defaults may classify unconfigured hosts as `UNSUPPORTED`; this is preserved in canonical discovery state.
 - nodriver peak RSS is high in the measured sample; keep concurrency at 1 until a larger controlled sample exists.
-- C integration is complete at HEAD `246f02f3e9649acef5adba7ee2b876ac6735a7c3`; no A/B or D worktree, authenticated account, cookie, or publication lane was touched. The exact standalone D revision remains blocked on its missing `pinnedFetch`/`resolvePublicUrl` exports; C's overlap integration supplies that seam.
+- C integration is complete for the Listening slice at candidate HEAD `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`; no A/B or D worktree, authenticated account, cookie, or publication lane was touched. The exact standalone D revision remains blocked on its missing `pinnedFetch`/`resolvePublicUrl` exports; C's overlap integration supplies that seam.
 
-Overlap handoff details are in [c-overlap-handoff.md](c-overlap-handoff.md). C applied the overlap serially and is clean at HEAD `246f02f3e9649acef5adba7ee2b876ac6735a7c3`; this report retains the original D handoff file for historical scope and ownership context.
+Overlap handoff details are in [c-overlap-handoff.md](c-overlap-handoff.md). C applied the overlap serially; the current source/test candidate is `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`. This report retains the original D handoff file for historical scope and ownership context.

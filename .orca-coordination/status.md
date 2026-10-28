@@ -2,17 +2,18 @@
 
 ## Candidate
 
-- Current C source/test HEAD: `b51c1984ccfbd4151dcb057089f4bf122bbb681b`; current evidence: `plans/oi-browser-integration/regression-final-b51c198.json`.
-- Provider listening-analysis forwarding is bounded, provenance-aware, and secret-safe. Focused C/coordinator/native tests: `55/55`; full suite: `817 total, 815 pass, 0 fail, 2 skipped`; Auto-GTM: `160/160`, `pip check` clean.
+- Current C source/test HEAD: `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`; current Listening V5 evidence: `plans/crawl4ai-integration/v5-restart-evidence-20261029.json`.
+- Earlier oi-browser/provider source/test checkpoint `b51c1984ccfbd4151dcb057089f4bf122bbb681b` remains historical; its evidence is retained at `plans/oi-browser-integration/regression-final-b51c198.json`.
+- Historical oi-browser/provider slice: listening-analysis forwarding is bounded, provenance-aware, and secret-safe. Focused C/coordinator/native tests: `55/55`; full suite: `817 total, 815 pass, 0 fail, 2 skipped`; Auto-GTM: `160/160`, `pip check` clean.
 - Independent review found and closed credentialed/malformed source URL leakage before commit. `sourceUrl` userinfo/non-HTTP/malformed values fail closed; secret query params redact. No A/B/runtime mutation.
 
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
-- Candidate source/test revision: `b51c1984ccfbd4151dcb057089f4bf122bbb681b`; current regression run revision: `b51c1984ccfbd4151dcb057089f4bf122bbb681b`; prior code/test revisions remain recorded in historical evidence.
-- Code/test checkpoint: `b51c1984ccfbd4151dcb057089f4bf122bbb681b`
+- Candidate source/test revision: `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`; current Listening V5 regression run revision is the same; prior code/test revisions remain recorded in historical evidence.
+- Code/test checkpoint: `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
-- C-owned source/tests are committed through `b51c198`; current docs/evidence follow on the candidate branch; `7f2b74a` remains the prior integration evidence checkpoint.
+- C-owned source/tests for the earlier oi-browser/provider slice are committed through `b51c198`; Listening V5 source/tests are committed through `3d3d0b0`; current docs/evidence follow on the candidate branch; `7f2b74a` remains the prior integration evidence checkpoint.
 
 ## A/B/C connectivity and ownership
 
@@ -21,13 +22,24 @@
 - SESSION C: candidate above; integration/docs/evidence owner.
 - Orca native handshake marker `SESSION-C-HANDSHAKE-20261028T1210Z`: A and B both returned `turn_started`, exact ACK markers, HEAD/branch/dirty counts, ownership, and native terminal references.
 - No A/B file was edited, staged, reset, stashed, cleaned, or committed by C.
+
+## C Listening V5 continuation (2026-10-29)
+
+- C source/test commit: `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`.
+- `IMPLEMENTED`: canonical `JsonStore.listeningJobs` additive collection, deterministic scope-bound Listening job IDs, per-source checkpoints, restart resume for pending sources, terminal replay without fetch, bounded dashboard projection, writer-lease-safe CLI path, and immutable UNKNOWN quarantine.
+- `FIXTURE_VERIFIED`: `node --test test/listening-v5.test.mjs test/listening-adapter.test.mjs test/listening-contract.test.mjs test/store-migration.test.mjs` → 20/20; independent read-only review PASS after UNKNOWN promotion fix.
+- `FIXTURE_VERIFIED`: full `npm test` at exact commit → 825 total, 823 pass, 0 fail, 2 skipped; output SHA-256 `1aba8fe6ffc35395bed904243f981c2085d2d2f338202082f8a94a548b35f252`.
+- `RUNTIME_VERIFIED` public-only campaign-scoped rehearsal with pinned D Python `3.12.15`/Crawl4AI environment: `SUCCEEDED`, one public page record, one canonical discovery and memory record, no publication or external write. Redacted evidence SHA-256 `2a4a5f61bc967f6ee92c7470d668285d7ba7208aa0805eb8dedb30f9d6317231`.
+- `RUNTIME_VERIFIED` terminal replay: same job ID, invalid extractor environment supplied, `SUCCEEDED` without extraction/fetch; state SHA-256 unchanged `490439f64c1a895b80b5131f408f24a364a615db95be414176ef1e88dddb5e8d` before/after. Replay evidence SHA-256 `69b129e81381cf28592c29287da6fe53b850ed7192505c9decbf7fb818eeb27c`.
+- Raw HTML, Markdown, provider output and credentials are excluded from durable checkpoints/evidence. A/B/D worktrees and A runtime `4318` remain untouched.
+- The Listening V5 slice is closed on C; the overall candidate remains `PARTIAL` while A's dirty runtime overlay, authenticated Camoufox/publication/metrics, and Auto-GTM generation/media remain open.
 - Current marker handshake: A and B both returned `turn_started`/real read-only result with marker `ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`; A reported receiver READY, B reported orphaned terminal and follow-up capability unconfirmed.
 - Latest read-only A runtime recheck at `2026-10-28T12:04:21Z`: `127.0.0.1:4318` HTTP 200, PID `79925`, `sourceCommit=1ed5771`, `sourceDirty=true`, schema 8, `UNKNOWN=6`, verified 0, publication unverified 150; Camoufox session metadata is `STALE` and readiness is `UNKNOWN`. C did not restart or mutate A.
 
-## Verified candidate evidence
+## Historical and current candidate evidence
 
 - Baseline `79985bb411afc141f0edf10ae635fb91824d8bc9`: `npm test` → 576 total, 574 pass, 0 fail, 2 skipped.
-- Focused current slices: authority/bootstrap/delegation `47/47`; oi-browser/browser/provider/transport `59/59`; combined `106/106`.
+- Historical focused slices: authority/bootstrap/delegation `47/47`; oi-browser/browser/provider/transport `59/59`; combined `106/106`.
 - Current coordinator/native focused: `node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs` → 17 total, 17 pass, 0 fail; prior native/coordinator/LinkedIn verifier suite is 69/69.
 - Historical candidate `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped. Pre-regression candidate `10ce868`: `node --test test/*.test.mjs` → 802 total, 800 pass, 0 fail, 2 skipped. Historical recovery checkpoint `1589518`: `node --test test/*.test.mjs` → 807 total, 805 pass, 0 fail, 2 skipped.
 - Durable memory/provider regression artifact is `plans/oi-browser-integration/regression-final-9875db3.json` at source `9875db3`; current candidate regression evidence is `plans/oi-browser-integration/regression-final-service-signal.json` at source/test revision `fa3ebda`. Prior evidence artifacts remain retained.
