@@ -2,13 +2,17 @@
 
 ## Candidate
 
+- Current C source/test HEAD: `b51c1984ccfbd4151dcb057089f4bf122bbb681b`; current evidence: `plans/oi-browser-integration/regression-final-b51c198.json`.
+- Provider listening-analysis forwarding is bounded, provenance-aware, and secret-safe. Focused C/coordinator/native tests: `55/55`; full suite: `817 total, 815 pass, 0 fail, 2 skipped`; Auto-GTM: `160/160`, `pip check` clean.
+- Independent review found and closed credentialed/malformed source URL leakage before commit. `sourceUrl` userinfo/non-HTTP/malformed values fail closed; secret query params redact. No A/B/runtime mutation.
+
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
-- Candidate source/test revision: `fa3ebda996041498e44800e181507bd494ee4b72`; fresh regression run revision: `616377f429ebfcd17000685e7c776ffed108aa3a`; subsequent branch commits are documentation/evidence-only; prior code/test revisions remain recorded in historical evidence.
-- Code/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`
+- Candidate source/test revision: `b51c1984ccfbd4151dcb057089f4bf122bbb681b`; current regression run revision: `b51c1984ccfbd4151dcb057089f4bf122bbb681b`; prior code/test revisions remain recorded in historical evidence.
+- Code/test checkpoint: `b51c1984ccfbd4151dcb057089f4bf122bbb681b`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
-- C-owned source/tests are committed through `fa3ebda`; final docs/evidence follow on the candidate branch; `7f2b74a` remains the prior integration evidence checkpoint.
+- C-owned source/tests are committed through `b51c198`; current docs/evidence follow on the candidate branch; `7f2b74a` remains the prior integration evidence checkpoint.
 
 ## A/B/C connectivity and ownership
 

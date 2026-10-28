@@ -81,3 +81,11 @@
 - Commit `fa3ebda996041498e44800e181507bd494ee4b72` passes caller `AbortSignal` through `SeedingService.routeOiAgentTask`.
 - Focused `35/35`, coordinator/native `17/17`, full `814/812/0/2`; independent verifier PASS. Evidence: `plans/oi-browser-integration/regression-final-service-signal.json`.
 - Internal callers can cancel; JSON HTTP input cannot carry a live signal. A/B worktrees and runtime `4318` remain untouched. Status remains `PARTIAL`.
+# C handoff — provider analysis boundary (2026-10-29)
+
+- Commit: `b51c1984ccfbd4151dcb057089f4bf122bbb681b`.
+- Scope: `src/oi-browser-integration.mjs`, `src/oi-browser-provider-adapters.mjs`, focused regressions.
+- Behavior: bounded analysis forwarding (12 records/16 KB), digest/evidence provenance, prompt redaction, credentialed/malformed/non-HTTP URL fail-closed handling, and canonical-store persistence without raw analysis.
+- Evidence: `plans/oi-browser-integration/regression-final-b51c198.json`; focused/coordinator/native `55/55`; full `817/815/0/2`; Auto-GTM `160/160`, pip check clean.
+- Review: independent read-only review PASS after closing credentialed and malformed URL edge. Classification `IMPLEMENTED` source, `FIXTURE_VERIFIED` tests; no live side effects.
+- A/B: untouched. A remains dirty at owner HEAD `1ed5771`; B tracked clean at `b675a98`. Do not reconcile until A supplies a clean owner checkpoint.

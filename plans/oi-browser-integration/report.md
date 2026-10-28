@@ -4,6 +4,16 @@
 
 `PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; final C source/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`; fresh regression run revision: `616377f429ebfcd17000685e7c776ffed108aa3a`; subsequent branch commits are documentation/evidence-only; prior integration evidence checkpoint: `7f2b74a`; continuation implementation began at `3d1c380`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
+Current C source/test revision is `b51c1984ccfbd4151dcb057089f4bf122bbb681b`. The current regression artifact is `regression-final-b51c198.json`. It supersedes the earlier `616377f` counts for the current tree.
+
+### Current C follow-up: bounded provider analysis (2026-10-29)
+
+- `5bcb5e0` forwards bounded community/listening analysis through the existing provider router. `b51c198` closes the privacy boundary and adds regression coverage.
+- Analysis is capped at 12 records and 16 KB, with bounded record text, source refs, digest, and evidence refs. Provider prompts receive bounded context plus provenance only.
+- Credentialed, malformed, and non-HTTP source URLs are dropped. Secret-like text and query parameters are redacted. Canonical `JsonStore` decisions retain digest/evidence refs and output digest, never raw analysis.
+- Focused browser/provider/live-bridge/coordinator/native tests: `55/55` pass. Full candidate suite: `817 total, 815 pass, 0 fail, 2 skipped`. Auto-GTM: `160/160`, `pip check` clean.
+- Independent read-only review: PASS at `b51c198`. Classification: source `IMPLEMENTED`, tests `FIXTURE_VERIFIED`; no A/B or runtime mutation, no live side effect.
+
 ## Baseline, ownership, integration
 
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
