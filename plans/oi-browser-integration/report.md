@@ -2,7 +2,7 @@
 
 ## Status
 
-`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; final source/evidence revision: `fa376f9bd2eddc11e41bcc21099eb229d214954d`; current C code/test revision: `9875db34c3f068c1510b3e92e8c72e4134e641a9`; prior integration evidence checkpoint: `7f2b74a`; continuation implementation began at `3d1c380`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; final candidate revision: `bb4ea533b8c0b3997d44e7fdd6b478d7852f20e7`; coordinator code/test revision: `1589518ec77424d186906b0ba10ba201c763cfe6`; prior integration evidence checkpoint: `7f2b74a`; continuation implementation began at `3d1c380`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
 ## Baseline, ownership, integration
 
@@ -41,7 +41,7 @@ Standing authorization guards remain canonical. Candidate tests cover scope coll
 
 Artifact: [fixture-run-7378f8c.json](fixture-run-7378f8c.json). Controlled Product X developer-awareness campaign: Community A has technical/educational evidence; Community B prohibits direct promotion while allowing educational context. `SeedingService.runCampaignControlCycle` chose a candidate before consolidation. Two distinct verified fixture observations consolidated into one `LEARNING` with `sampleSupport=2`, `verifiedCount=2`, and evidence `fixture:fixture-publication-a` / `fixture:fixture-publication-b`. The next production strategy entrypoint selected a different candidate and included `memory:learning-1adbd95424b288d5e6db412b`. Browser semantic CLICK crossed `BrowserInteractionFixture`, verified `CONTROL_ACTIVATED`, replay clicked once, and restart retained memory, learning, snapshot, execution, and provider decisions. Evidence: `FIXTURE_VERIFIED`; no external side effect.
 
-Final C candidate source/evidence revision: `fa376f9bd2eddc11e41bcc21099eb229d214954d`; C code/test revision: `9875db34c3f068c1510b3e92e8c72e4134e641a9`.
+Final C candidate revision: `bb4ea533b8c0b3997d44e7fdd6b478d7852f20e7`; coordinator code/test revision: `1589518ec77424d186906b0ba10ba201c763cfe6`.
 
 ## Runtime proof — isolated candidate
 
@@ -55,7 +55,7 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 - Durable memory/provider regression evidence: [regression-final-9875db3.json](regression-final-9875db3.json), exact source SHA, command, timestamp and output hash. Current coordinator recovery evidence: [regression-final-1589518.json](regression-final-1589518.json). Prior [regression-final-10ce868.json](regression-final-10ce868.json), `regression-final-ac2f7df.json`, and historical `regression-final-7f2b74a.json` remain available.
 - Auxiliary System Agentic READ_ONLY verifier task `0e9f9242-0019-4f11-9453-9d155a419221` was rejected by the selected REA provider because `context.target_authorized=true` was absent; no retry, artifact, file edit or external side effect. Direct independent verifier PASS remains the final review evidence.
 - Auto-GTM: `/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests` → 160 total, 160 pass, 0 fail; `pip check` clean. The Auto-GTM owner worktree is dirty; C did not modify it.
-- Current C regression: `node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs` → 22 pass, 0 fail. `npm test` at `9875db3` → 805 total, 803 pass, 0 fail, 2 skipped; output SHA-256 `e00abd1cf8304e832361bb81643520267d2845939ba31554aecc86b869beae08`. Final candidate run at `1589518`/`ef6510f`: 809 total, 807 pass, 0 fail, 2 skipped; output SHA-256 `cf8593d640c989ad7225f578be328ef29e0e68c4884612f22121abec83a4b599`. The earlier queue task `ms-session-c-memory-evidence-20261028` failed closed before edit under the local no-progress guard; no duplicate submission; C direct fix was independently reviewed PASS.
+- Current C regression: `node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs` → 22 pass, 0 fail. Historical `npm test` at `9875db3` → 805 total, 803 pass, 0 fail, 2 skipped; output SHA-256 `e00abd1cf8304e832361bb81643520267d2845939ba31554aecc86b869beae08`. Final candidate run at `1589518`/`bb4ea53`: 809 total, 807 pass, 0 fail, 2 skipped; output SHA-256 `cf8593d640c989ad7225f578be328ef29e0e68c4884612f22121abec83a4b599`. The earlier queue task `ms-session-c-memory-evidence-20261028` failed closed before edit under the local no-progress guard; no duplicate submission; C direct fix was independently reviewed PASS.
 - Controlled repro artifact [memory-provider-regression-repro-590f70a.json](memory-provider-regression-repro-590f70a.json) records one canonical fixture sample despite caller ID changes and `UNKNOWN/provider timeout` after a stalled JSON body at the bounded 100 ms deadline.
 - Syntax checks for native adapters/service/server passed. `git diff --check` passed. Secret scan hits are redaction test fixtures/generated UI text, not credentials.
 - Evidence artifact: [regression-7378f8c.json](regression-7378f8c.json).
