@@ -1,11 +1,14 @@
-# Ownership
+# Ownership and claims
 
-Candidate C integration checkpoint: `6600387b254db13bf0494fc14a8f512a6f990e1a`.
+| Session | Worktree / branch | Owned scope observed | Claim state | Evidence |
+|---|---|---|---|---|
+| A | `/Users/nam/Documents/marketing-seeding-wave-13-bridge` / `wave/distribution-os-runtime-wave-13-bridge` | Camoufox session/transport/server/service/strategy/UI dirty files | PRESERVED; not reclaimed | HEAD `52072ce`; dirty status; port `4318` PID `30842`; no receiver |
+| B | `/Users/nam/Documents/marketing-seeding-integration` / `integration/autonomous-build` | authority/standing-delegation/service/tests/reports dirty files | PRESERVED; not reclaimed | HEAD `6899679`; dirty status; no receiver |
+| C | `/Users/nam/Documents/marketing-seeding-session-c-reconciled` / `integration/session-c-reconciled` | oi-browser audit, native memory/provider/browser contracts, integration docs/evidence, reconciled candidate | CLAIMED; code at `20ba20f`, evidence/docs pending commit | exact HEAD `20ba20f6f8f273a72cb0db88b216d645aeecaeb1` |
 
-| Session | Worktree/branch | Observed scope | Status |
-|---|---|---|---|
-| A | `/Users/nam/Documents/marketing-seeding-wave-13-bridge` / `wave/distribution-os-runtime-wave-13-bridge` | Camoufox session/transport/server/service/strategy plus tests/UI dirty | REQUESTED evidence only; do not edit |
-| B | `/Users/nam/Documents/marketing-seeding-integration` / `integration/autonomous-build` | authority/service/standing delegation/tests/reports dirty | REQUESTED evidence only; do not edit |
-| C | `/Users/nam/Documents/marketing-seeding-session-c-candidate` / `integration/session-c-candidate` | oi-browser audit + disjoint native modules/tests/docs + candidate evidence | CLAIMED by current session; evidence commit pending |
+Rules:
 
-Ownership state: A/B claims remain preserved and are not reclaimed. No A/B dirty file was edited, staged, reset, stashed, or committed by C. Native receiver status for A/B is `UNVERIFIED`.
+- A/B claims are not released by silence or missing heartbeat.
+- C may integrate only committed A/B checkpoints or disjoint patches after inspection.
+- Dirty A/B files remain outside C's write set.
+- `REQUESTED`, `ACKNOWLEDGED`, and `COMPLETED` require receiver evidence; current A/B status is `UNVERIFIED`, not ACKNOWLEDGED.

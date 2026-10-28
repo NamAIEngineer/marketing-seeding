@@ -1,0 +1,457 @@
+{
+  "schemaVersion": 1,
+  "evidenceStatus": "RUNTIME_VERIFIED",
+  "runRevision": "20ba20f6f8f273a72cb0db88b216d645aeecaeb1",
+  "sourceDirty": false,
+  "port": 4333,
+  "stateDirectory": "private temporary state directory",
+  "externalSideEffects": false,
+  "credentialsUsed": false,
+  "providerModel": "/Users/nam/.cache/system-agentic-ai/Qwen3-8B-4bit",
+  "livePublication": false,
+  "health": {
+    "status": 200,
+    "payload": {
+      "pid": 39477,
+      "sourceCommit": "20ba20f6f8f273a72cb0db88b216d645aeecaeb1",
+      "sourceDirty": false,
+      "schemaVersion": 8,
+      "stateRevision": 0
+    }
+  },
+  "unauthorizedProviderRoute": {
+    "status": 401,
+    "error": "operator_token_required"
+  },
+  "operatorSession": {
+    "status": 200,
+    "payload": {
+      "ok": true,
+      "actor": "local-human-operator"
+    }
+  },
+  "memoryWrite": {
+    "status": 201,
+    "payload": {
+      "item": {
+        "schemaVersion": 1,
+        "id": "memory-aa769917a4e06510361124f9",
+        "kind": "OBSERVATION",
+        "entityRef": null,
+        "scope": {
+          "campaignId": "smoke-campaign",
+          "accountId": null,
+          "communityId": null,
+          "platform": null,
+          "channel": null
+        },
+        "content": "local smoke observation",
+        "fingerprint": "aa769917a4e06510361124f9c9b0a8f8b2d2fbde616723283123fd3b879ce98c",
+        "source": "server-smoke",
+        "provenance": {
+          "source": "server-smoke",
+          "revision": "1e471c44b5d63aa5aadb708623b21090b6f325b2",
+          "evidenceRefs": [
+            "fixture:server-smoke"
+          ],
+          "observationRefs": []
+        },
+        "evidenceRefs": [
+          "fixture:server-smoke"
+        ],
+        "observationRefs": [],
+        "observedAt": "2026-10-28T00:39:52.474Z",
+        "createdAt": "2026-10-28T00:39:52.474Z",
+        "updatedAt": "2026-10-28T00:39:52.474Z",
+        "confidence": 0.5,
+        "freshness": "bounded",
+        "expiresAt": "2026-11-04T00:39:52.474Z",
+        "sampleIds": [
+          "fixture:server-smoke"
+        ],
+        "supportCount": 1,
+        "retractedAt": null,
+        "campaignId": "smoke-campaign",
+        "accountId": null,
+        "communityId": null,
+        "platform": null,
+        "channel": null,
+        "evidenceStatus": "OBSERVED",
+        "evidenceStatusRequested": "VERIFIED",
+        "evidenceStatusReason": "canonical_evidence_missing",
+        "decisionHint": null
+      },
+      "deduplicated": false,
+      "persisted": true,
+      "externalSideEffects": false
+    }
+  },
+  "snapshotWrite": {
+    "status": 201,
+    "payload": {
+      "snapshot": {
+        "schemaVersion": 1,
+        "integrationVersion": 1,
+        "source": "STATIC_HTTP",
+        "url": "https://fixture.test/smoke",
+        "title": "Smoke",
+        "headings": [],
+        "text": "Smoke Rules",
+        "forms": [],
+        "buttons": [
+          {
+            "elementId": "oi-element-ebeec2ead7329a9f854927e1",
+            "role": "button",
+            "tag": "button",
+            "label": "Rules",
+            "href": null,
+            "stableAttributes": {
+              "id": null,
+              "name": null,
+              "type": null
+            },
+            "frame": "top",
+            "visible": true,
+            "enabled": true,
+            "confidence": 0.82,
+            "context": "Smoke"
+          }
+        ],
+        "links": [],
+        "elements": [
+          {
+            "elementId": "oi-element-ebeec2ead7329a9f854927e1",
+            "role": "button",
+            "tag": "button",
+            "label": "Rules",
+            "href": null,
+            "stableAttributes": {
+              "id": null,
+              "name": null,
+              "type": null
+            },
+            "frame": "top",
+            "visible": true,
+            "enabled": true,
+            "confidence": 0.82,
+            "context": "Smoke"
+          }
+        ],
+        "frame": "top",
+        "capturedAt": "2026-10-28T00:39:52.478Z",
+        "fingerprint": "95fb00fc02bef4fff3e90b0a72eaa8e703a399b709f64b93b5f19e3a5aa5c0a7",
+        "screenshotReference": null,
+        "runtimeEvidence": null,
+        "evidenceStatus": "FIXTURE_VERIFIED",
+        "executionId": null,
+        "executionIds": [],
+        "executionBindings": [],
+        "campaignId": null,
+        "communityId": null
+      },
+      "persisted": true,
+      "externalSideEffects": false
+    }
+  },
+  "providerRoute": {
+    "status": 200,
+    "payload": {
+      "schemaVersion": 1,
+      "decisionId": "provider-decision-237d11a295167653a2483b68",
+      "providerId": null,
+      "status": "FAILED",
+      "failure": "nonzero",
+      "attempted": [
+        {
+          "providerId": "local-qwen",
+          "status": "nonzero",
+          "reason": "exit_code_404"
+        }
+      ],
+      "availability": [
+        {
+          "id": "local-qwen",
+          "installed": true,
+          "authReady": true,
+          "healthy": true,
+          "health": {
+            "state": "READY",
+            "reason": "MODEL_LIST_OBSERVED",
+            "model": "/Users/nam/.cache/system-agentic-ai/Qwen3-8B-4bit"
+          },
+          "executionSucceeded": false,
+          "available": true,
+          "capabilities": [
+            "strategy-context",
+            "community-research",
+            "content-context"
+          ],
+          "tools": [],
+          "reasoningClasses": [
+            "deterministic",
+            "general"
+          ],
+          "successRate": 0
+        }
+      ],
+      "telemetry": {
+        "capability": "strategy-context",
+        "privacyClass": "local",
+        "reasoningClass": "deterministic",
+        "tools": []
+      },
+      "persisted": {
+        "schemaVersion": 1,
+        "decisionId": "provider-decision-237d11a295167653a2483b68",
+        "providerId": null,
+        "status": "FAILED",
+        "failure": "nonzero",
+        "attempted": [
+          {
+            "providerId": "local-qwen",
+            "status": "nonzero",
+            "reason": "exit_code_404"
+          }
+        ],
+        "availability": [
+          {
+            "id": "local-qwen",
+            "installed": true,
+            "authReady": true,
+            "healthy": true,
+            "health": {
+              "state": "READY",
+              "reason": "MODEL_LIST_OBSERVED",
+              "model": "/Users/nam/.cache/system-agentic-ai/Qwen3-8B-4bit"
+            },
+            "executionSucceeded": false,
+            "available": true,
+            "capabilities": [
+              "strategy-context",
+              "community-research",
+              "content-context"
+            ],
+            "tools": [],
+            "reasoningClasses": [
+              "deterministic",
+              "general"
+            ],
+            "successRate": 0
+          }
+        ],
+        "telemetry": {
+          "capability": "strategy-context",
+          "privacyClass": "local",
+          "reasoningClass": "deterministic",
+          "tools": []
+        }
+      },
+      "externalSideEffects": false
+    }
+  },
+  "dashboard": {
+    "status": 200,
+    "payload": {
+      "integrationVersion": 1,
+      "sourceRevision": "1e471c44b5d63aa5aadb708623b21090b6f325b2",
+      "memory": {
+        "total": 1,
+        "fresh": 1,
+        "learnings": 0,
+        "recent": [
+          {
+            "schemaVersion": 1,
+            "id": "memory-aa769917a4e06510361124f9",
+            "kind": "OBSERVATION",
+            "entityRef": null,
+            "scope": {
+              "campaignId": "smoke-campaign",
+              "accountId": null,
+              "communityId": null,
+              "platform": null,
+              "channel": null
+            },
+            "content": "local smoke observation",
+            "fingerprint": "aa769917a4e06510361124f9c9b0a8f8b2d2fbde616723283123fd3b879ce98c",
+            "source": "server-smoke",
+            "provenance": {
+              "source": "server-smoke",
+              "revision": "1e471c44b5d63aa5aadb708623b21090b6f325b2",
+              "evidenceRefs": [
+                "fixture:server-smoke"
+              ],
+              "observationRefs": []
+            },
+            "evidenceRefs": [
+              "fixture:server-smoke"
+            ],
+            "observationRefs": [],
+            "observedAt": "2026-10-28T00:39:52.474Z",
+            "createdAt": "2026-10-28T00:39:52.474Z",
+            "updatedAt": "2026-10-28T00:39:52.474Z",
+            "confidence": 0.5,
+            "freshness": "bounded",
+            "expiresAt": "2026-11-04T00:39:52.474Z",
+            "sampleIds": [
+              "fixture:server-smoke"
+            ],
+            "supportCount": 1,
+            "retractedAt": null,
+            "campaignId": "smoke-campaign",
+            "accountId": null,
+            "communityId": null,
+            "platform": null,
+            "channel": null,
+            "evidenceStatus": "OBSERVED",
+            "evidenceStatusRequested": "VERIFIED",
+            "evidenceStatusReason": "canonical_evidence_missing",
+            "decisionHint": null
+          }
+        ]
+      },
+      "browser": {
+        "totalSnapshots": 1,
+        "recent": [
+          {
+            "schemaVersion": 1,
+            "integrationVersion": 1,
+            "source": "STATIC_HTTP",
+            "url": "https://fixture.test/smoke",
+            "title": "Smoke",
+            "headings": [],
+            "text": "Smoke Rules",
+            "forms": [],
+            "buttons": [
+              {
+                "elementId": "oi-element-ebeec2ead7329a9f854927e1",
+                "role": "button",
+                "tag": "button",
+                "label": "Rules",
+                "href": null,
+                "stableAttributes": {
+                  "id": null,
+                  "name": null,
+                  "type": null
+                },
+                "frame": "top",
+                "visible": true,
+                "enabled": true,
+                "confidence": 0.82,
+                "context": "Smoke"
+              }
+            ],
+            "links": [],
+            "elements": [
+              {
+                "elementId": "oi-element-ebeec2ead7329a9f854927e1",
+                "role": "button",
+                "tag": "button",
+                "label": "Rules",
+                "href": null,
+                "stableAttributes": {
+                  "id": null,
+                  "name": null,
+                  "type": null
+                },
+                "frame": "top",
+                "visible": true,
+                "enabled": true,
+                "confidence": 0.82,
+                "context": "Smoke"
+              }
+            ],
+            "frame": "top",
+            "capturedAt": "2026-10-28T00:39:52.478Z",
+            "fingerprint": "95fb00fc02bef4fff3e90b0a72eaa8e703a399b709f64b93b5f19e3a5aa5c0a7",
+            "screenshotReference": null,
+            "runtimeEvidence": null,
+            "evidenceStatus": "FIXTURE_VERIFIED",
+            "executionId": null,
+            "executionIds": [],
+            "executionBindings": [],
+            "campaignId": null,
+            "communityId": null
+          }
+        ],
+        "liveVerified": 0,
+        "staticOnly": 1
+      },
+      "executions": {
+        "total": 0,
+        "recent": []
+      },
+      "providers": {
+        "recentDecisions": [
+          {
+            "schemaVersion": 1,
+            "decisionId": "provider-decision-237d11a295167653a2483b68",
+            "providerId": null,
+            "status": "FAILED",
+            "failure": "nonzero",
+            "attempted": [
+              {
+                "providerId": "local-qwen",
+                "status": "nonzero",
+                "reason": "exit_code_404"
+              }
+            ],
+            "availability": [
+              {
+                "id": "local-qwen",
+                "installed": true,
+                "authReady": true,
+                "healthy": true,
+                "health": {
+                  "state": "READY",
+                  "reason": "MODEL_LIST_OBSERVED",
+                  "model": "/Users/nam/.cache/system-agentic-ai/Qwen3-8B-4bit"
+                },
+                "executionSucceeded": false,
+                "available": true,
+                "capabilities": [
+                  "strategy-context",
+                  "community-research",
+                  "content-context"
+                ],
+                "tools": [],
+                "reasoningClasses": [
+                  "deterministic",
+                  "general"
+                ],
+                "successRate": 0
+              }
+            ],
+            "telemetry": {
+              "capability": "strategy-context",
+              "privacyClass": "local",
+              "reasoningClass": "deterministic",
+              "tools": []
+            },
+            "outputDigest": null,
+            "recordedAt": "2026-10-28T00:39:52.486Z"
+          }
+        ],
+        "healthy": 1,
+        "successfulRoutes": 0
+      },
+      "autoGtm": {
+        "sourceRevision": "9368098477d78f75d57fdf5db276129948f3a183",
+        "capability": "lead-feed",
+        "generation": "not_claimed"
+      },
+      "evidenceStatus": "IMPLEMENTED"
+    }
+  },
+  "shutdown": {
+    "status": 202
+  },
+  "persistenceAfterRestart": {
+    "sourceCommit": "20ba20f6f8f273a72cb0db88b216d645aeecaeb1",
+    "schemaVersion": 8,
+    "memoryItems": 1,
+    "browserSnapshots": 1,
+    "successfulProviderRoutes": 0,
+    "providerDecisionVisible": true,
+    "verified": true
+  }
+}

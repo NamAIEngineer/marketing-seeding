@@ -1,115 +1,76 @@
 # oi-browser integration report
 
-## Current candidate
+## Status
 
-- Candidate branch: `integration/session-c-candidate`.
-- Candidate code revision: `6600387b254db13bf0494fc14a8f512a6f990e1a`.
-- Isolated smoke source revision: `df2f775ee23dd4475e9b358bc42f5e1770b73e29`; this documentation commit may advance the candidate HEAD without changing the smoke provenance (no source/test changes after the code checkpoint).
-- Candidate source tree was clean before review artifacts were generated; evidence artifacts are C-owned.
+`PARTIAL` at candidate `integration/session-c-reconciled` / `20ba20f6f8f273a72cb0db88b216d645aeecaeb1`.
 
-## Outcome
+The candidate integrates oi-browser memory, provider routing, browser snapshot identity, persistence, and Camoufox bridge seams into marketing-seeding's existing `JsonStore`, `SeedingService`, Decision Plane, canonical authority, executor, verification, metrics, and dashboard. It does not claim live publication, live metrics, Auto-GTM generation, fresh authenticated Camoufox readiness, or native A/B receiver connectivity.
 
-`PARTIAL`. Useful oi-browser primitives are native in marketing-seeding's existing control plane. Live social publication, fresh Camoufox readiness, Auto-GTM generation, and A/B reconciliation remain unproven.
+## Baseline, ownership, and integration
 
-## Baseline and ownership
+- Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
+- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, `wave/distribution-os-runtime-wave-13-bridge`, HEAD `52072ce`, dirty Camoufox/runtime/server/UI scope, owner of runtime `127.0.0.1:4318` PID `30842`. Its committed checkpoint is present through merge `d195756`.
+- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, `integration/autonomous-build`, HEAD `6899679`, dirty authority/standing-delegation/service/test/report scope. C did not edit, stash, reset, clean, or commit B files.
+- SESSION C: this candidate, owner of oi-browser audit, native integration, tests, evidence, and coordination docs. The current code tree is clean at `20ba20f`; C-owned evidence/docs are updated in this commit.
+- Orca `worktree ps`, `terminal list`, and inbox were checked on 2026-10-28. A and B have zero attached terminals/receivers. Prior sends returned `terminal_not_found`; the remaining inbox marker has no delivery/ACK evidence. Native A/B handshake is `UNVERIFIED`.
+- Origin observed: `https://github.com/DevAngular333/marketing-seeding.git`; no push, PR, merge, deployment, or external message performed.
 
-- C base: `79985bb411afc141f0edf10ae635fb91824d8bc9`, branch `integration/session-c-oi-browser`.
-- C implementation commits: `f2ccb030be6d118320c1c5ced9d51c523ea83a89` (`feat: absorb oi-browser primitives into distribution OS`) and `9ce01f9` (`feat: route provider context through strategy`).
-- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, `wave/distribution-os-runtime-wave-13-bridge`, HEAD `52072ce`, dirty Camoufox/runtime/server/UI files. Observed server `127.0.0.1:4318` reports source commit `52072ce` and dirty state; it is not this C revision.
-- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, `integration/autonomous-build`, HEAD `6899679`, dirty authority/service/standing-delegation files.
-- Orca records A and B as worktree metadata only. `orca terminal list` has no terminal attached to either path, and `orca orchestration inbox` is empty. Handshake sends returned `terminal_not_found`; no live native session ID, receiver, handshake, ACK, or task consumption was observed. A/B files were not edited or committed by C.
+## Source reuse
 
-## Files and architecture
+- oi-browser pin: `1e471c44b5d63aa5aadb708623b21090b6f325b2`.
+- auto-gtm pin: `9368098477d78f75d57fdf5db276129948f3a183`.
+- Audit: [docs/integrations/oi-browser-audit.md](../../docs/integrations/oi-browser-audit.md).
+- Reused/adapted: oi-browser memory shape and consolidation concepts, bounded provider registry/router concepts, static DOM parsing and semantic identity concepts. Native code is in `src/oi-browser-integration.mjs`, `src/oi-browser-provider-adapters.mjs`, `src/oi-browser-camoufox-bridge.mjs`.
+- Not used: oi-browser companion application shell, SQLite workspace store, fruit catalog, seeded demo state, and CLI simulation path as execution proof.
+- Auto-GTM remains the existing `lead-feed` consumer. `feed_not_generated` stays unavailable; generation/media is not relabeled.
+- GPM is not active in the server runtime. Historical compatibility modules remain only where existing contracts require them.
+- Attribution/license notice retained in the audit and the source license URL in the audit.
 
-- `src/oi-browser-integration.mjs`: bounded memory contracts/consolidation, provider routing, BrowserSnapshot normalization/semantic identity, validated CLICK/TYPE/UPLOAD seam, redaction, dashboard projection.
-- `src/store.mjs`: additive `memoryItems`, `browserSnapshots`, `browserExecutions`, `providerDecisions` collections; existing migration/lease remains canonical.
-- `src/service.mjs`: service/API call paths for persistence, retrieval, consolidation, routing, snapshot/intent/execution, replay and failure recording.
-- `src/strategy.mjs`: campaign-scoped fresh memory retrieval; verified supported `prefer_target:<targetId>` learning changes candidate selection and rationale; optional provider routing context is persisted through the same `deriveStrategy` and control-cycle entrypoints.
-- `src/server.mjs`: authenticated operator/automation routes under `/api/oi-browser/*`.
-- `docs/integrations/oi-browser-audit.md`: source-grounded decisions and risks.
+## Memory and community intelligence
 
-No second dashboard, database, orchestrator, authority, or GPM lane was introduced.
-
-## Source reuse decisions
-
-- oi-browser memory engine: `REUSE_AND_ADAPT`; observation/entity shape retained, consolidation made support-aware, deduplicated, scoped, fresh, retractable, and evidence-bound.
-- oi-browser CLI harness: `DO_NOT_USE` for execution; status/simulation/timeout behavior is not inference proof. Native router requires installed/auth-ready/healthy/privacy/capability checks and classifies timeout/nonzero/invalid results as failure.
-- oi-browser DOM service: `REUSE_AND_ADAPT` for bounded static research/preflight. Static snapshots never claim authenticated live DOM. Element IDs combine semantic fields and fingerprints; stale/ambiguous targets fail closed.
-- oi-browser companion orchestrator and SQLite store: `DO_NOT_USE`; existing `SeedingService` and leased `JsonStore` remain sole owners.
-- official fruit companion catalog: `DO_NOT_USE`.
-- auto-gtm: existing lead-feed boundary retained (`MERGE_INTO_EXISTING_MODULE`); generation/media is not claimed. Source revision pinned in audit and code.
-
-## Memory
-
-Memory kinds: `RAW_EVENT`, `OBSERVATION`, `FACT`, `INFERENCE`, `LEARNING`, `POLICY`. Records carry scope, entity, provenance/source revision, evidence refs, timestamps, confidence, freshness/expiry, sample IDs, support count, and retraction. Duplicate publication polling merges support instead of creating independent samples. Consolidation requires at least two distinct samples and all support evidence in `VERIFIED`, `MEASURED`, or `RUNTIME_VERIFIED` state. Retrieval is bounded, scoped, and freshness checked. Retraction invalidates dependent items.
+Memory records distinguish `RAW_EVENT`, `OBSERVATION`, `FACT`, `INFERENCE`, `LEARNING`, and `POLICY`, with scope, provenance/source revision, evidence refs, timestamps, confidence, freshness/expiry, sample IDs, and retraction. Retrieval is bounded and campaign/community scoped. Duplicate polling merges support; consolidation requires distinct supported evidence and does not learn from unknown, stale, unverified, or retracted material. Community discovery/profile evidence is consumed by strategy fit and prohibition checks.
 
 ## Provider / agent router
 
-Provider records distinguish installed, auth-ready, healthy, and execution success. Routing filters capability, privacy class, context size, requested tools, reasoning class, then ranks bounded cost, success history, latency, and ID before timeout/fallback. Invalid/empty/nonzero/timeout outcomes fail closed. Telemetry stores metadata and output digest, never output text.
+`AgentTask` and `ProviderDecision` are versioned and persisted in the canonical store. Routing filters capability, tools, privacy, context, reasoning class, health, and availability, then applies bounded ranking and fail-closed timeout/nonzero/empty-result handling. Installed, auth-ready, healthy, and execution success are separate states. The server only loads a configured local provider; absent configuration reports unavailable. The isolated runtime smoke supplied explicit loopback Qwen configuration: `/v1/models` was health-ready, but generation failed with HTTP 404 after the MLX server logged `generation thread died` caused by Metal `Insufficient Memory`. The route remained `FAILED/nonzero`; no false success was recorded.
 
-The C HTTP server does not invent or auto-discover an inference adapter. Its provider route therefore returns `FAILED/unavailable` until a configured adapter is injected by the owning runtime. The controlled fixture injects `local-fixture-provider` and records `SUCCEEDED`; the server smoke verified the fail-closed production behavior and dashboard projection.
+## Browser intelligence / Camoufox
 
-## Browser intelligence / execution
+`BrowserSnapshot` and semantic `InteractiveElement` identities are versioned, fingerprint-bound, redacted, frame-aware, and separated between `STATIC_HTTP` and `LIVE_DOM`. Intent mapping uses the same IDs as snapshot parsing. Stale, ambiguous, duplicate, forged, or runtime-unbound live identities fail closed. The Camoufox bridge validates exact profile/page/url bindings and persists live snapshots through the canonical store. Execution continues through existing authority/pre-submit/verification hooks; it does not create a parallel publisher.
 
-`BrowserSnapshot` is versioned and includes URL/title/headings/text/forms/buttons/links/elements/frame/visibility/enabled/confidence/capturedAt/fingerprint/source/evidence status. Static HTTP and live DOM are distinct; `LIVE_DOM` requires verified provider runtime evidence plus a service-injected runtime validator. Intent identity binds action, element, snapshot fingerprint, target identity, and transient value digest. Executor requires explicit authority, immediate pre-provider validation, certified click transport, verification, and idempotent replay. Live execution additionally requires an injected runtime authority validator; static execution is restricted to safe fixture hosts and `externalSideEffects=false`. Provider-started failures become `OUTCOME_UNKNOWN`.
+## Auto-GTM and execution
 
-## Community / Auto-GTM / execution
+Auto-GTM capability is verified only at lead/feed level. The configured feed is unavailable with `feed_not_generated`. No artifact is fabricated. Camoufox/API/direct transport seams remain bounded by existing authority, idempotency, UNKNOWN quarantine, and verification contracts. No login, MFA/CAPTCHA handling, grant, public submit, permalink, conversion, or live metric was performed.
 
-Community evidence enters the existing discovery path and campaign-scoped memory. Auto-GTM remains a real lead-feed capability with source revision `9368098477d78f75d57fdf5db276129948f3a183`; configured v26 feed currently reports `feed_not_generated`. Camoufox/API/direct transports remain owned by A/B; C provides no competing live publisher and no GPM activation.
+## Closed learning proof: fixture
 
-## Closed learning proof
+Artifact: [fixture-run-20ba20f.json](fixture-run-20ba20f.json).
 
-Controlled fixture campaign has two eligible targets. Before memory consolidation, deterministic strategy selected one candidate. Two verified observations with evidence `publication:fixture-1` and `publication:fixture-2` consolidated into a `LEARNING` with support `2` and `decisionHint=prefer_target:<targetId>`. The second strategy decision selected the other target and included the learning ID in rationale/evidence. This proof ran through the production `deriveStrategyDecision` path and persisted state; it is fixture evidence, not live publication proof.
+Controlled Product X developer-awareness campaign used local provenance for Community A educational evidence and Community B direct-promotion prohibition. `SeedingService.runCampaignControlCycle` selected a target before consolidation. Two distinct verified fixture observations consolidated into one `LEARNING` (`sampleSupport=2`, `verifiedCount=2`, evidence `fixture:fixture-publication-a`, `fixture:fixture-publication-b`). The next production strategy entrypoint selected a different candidate and included the learning evidence. A static semantic CLICK crossed `BrowserInteractionFixture`, verified `CONTROL_ACTIVATED`, and idempotent replay did not click twice. Restart retained memory, learning, snapshot, execution, provider decisions, and strategy. Evidence level: `FIXTURE_VERIFIED`, no external side effect. Exact source: `20ba20f6f8f273a72cb0db88b216d645aeecaeb1`.
 
-## Fixture browser proof
+## Runtime proof: isolated candidate
 
-`https://fixture.test/community` static snapshot produced a semantic button ID. A CLICK intent crossed the validated fixture transport once, emitted `COMMAND_COMPLETED`, observed `CONTROL_ACTIVATED`, and retained `fixture:before`/`fixture:after` evidence. A replay after restart returned the persisted execution without a second click. `TYPE` transient value mismatch is rejected before transport.
+Artifact: [server-smoke-20ba20f.json](server-smoke-20ba20f.json).
 
-Machine-readable summary: `plans/oi-browser-integration/fixture-evidence.json` (legacy summary; its `provenance.sourceRevision` is the pinned oi-browser source, not the candidate revision).
+Exact candidate `20ba20f6f8f273a72cb0db88b216d645aeecaeb1` ran on private port `4333` with a temporary state directory. `/health` reported schema v8 and the exact source SHA. Unauthorized provider route returned `401`; operator session returned `200`. Memory and `STATIC_HTTP` snapshot writes persisted after restart. The configured local Qwen provider was listed by `/v1/models`, but its inference route returned `FAILED/nonzero` (`exit_code_404`); the model server log recorded `generation thread died` / Metal `Insufficient Memory`. Provider decision persistence remained visible after restart, with `successfulProviderRoutes=0`. Auto-GTM remained `feed_not_generated`. No credential, login, publication, or external write occurred. Evidence level: `RUNTIME_VERIFIED`, not live proof.
 
-Latest controlled run artifact: `plans/oi-browser-integration/fixture-run-6600387.json`. It executed `SeedingService.runCampaignControlCycle` on exact candidate revision `6600387b254db13bf0494fc14a8f512a6f990e1a` with a temporary `JsonStore`, then crossed the persisted static snapshot → CLICK intent → validated fixture transport → `CONTROL_ACTIVATED` path. Before/after candidate IDs differ after a supported learning (`sampleSupport=2`, `verifiedCount=2`), provider routing is `SUCCEEDED`, and restart retains memory, snapshot, execution, provider decision, and strategy records. This remains `FIXTURE_VERIFIED`; no public publication occurred.
+## Tests
 
-Latest server case: `plans/oi-browser-integration/server-smoke-6600387-rerun.json`. Exact candidate server ran on isolated port `4323` with local Qwen model health observed from loopback `/models`; provider inference succeeded through the authenticated operator API and was persisted as a digest. Unauthorized provider POST returned `401`. Auto-GTM returned `feed_not_generated`; no external side effect occurred. This is `RUNTIME_VERIFIED`, not live publication proof.
+- Baseline `79985bb411afc141f0edf10ae635fb91824d8bc9`: `npm test` → `576 total, 574 pass, 0 fail, 2 skipped`.
+- Focused exact candidate: `node --test test/oi-browser-integration.test.mjs test/browser-runtime-router.test.mjs test/oi-browser-provider-adapters.test.mjs test/oi-browser-live-bridge.test.mjs` → `37 total, 37 pass, 0 fail`.
+- Full exact candidate: `node --test test/*.test.mjs` → `790 total, 788 pass, 0 fail, 2 skipped`.
+- Auto-GTM pinned checkout: `/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests` → `154 total, 154 pass, 0 fail`; `pip check` clean.
+- Syntax: `node --check src/oi-browser-integration.mjs`, `src/oi-browser-provider-adapters.mjs`, `src/oi-browser-camoufox-bridge.mjs`, `src/service.mjs`, `src/server.mjs` passed.
+- `git diff --check` passed after the current source/evidence run.
+- The two skipped tests are existing ACL environment checks.
+- Latest independent verifier task `2fdee808-270a-491c-a042-14dc3fad3972` failed with `Remote end closed connection without response` and produced no report. A prior queue review attempt failed on its no-progress guard. Manual review is `DONE_WITH_CONCERNS`; no independent verifier PASS is claimed.
 
-Final isolated rerun on port `4324` used exact source `df2f775ee23dd4475e9b358bc42f5e1770b73e29`, private state, and loopback Qwen. Health reported source clean/schema v8; provider route succeeded; memory and static snapshot remained visible after restart; unauthorized provider route returned `401`; Auto-GTM remained unavailable; no external side effect occurred. This is `RUNTIME_VERIFIED`, not live publication proof.
+## Remaining blockers
 
-Machine-readable final rerun: `plans/oi-browser-integration/server-smoke-df2f775.json`.
+- Native A/B receiver/ACK/result delivery unavailable; B dirty work is not reconciled into this candidate.
+- Fresh authenticated Camoufox readiness and live publication/permalink/metrics/conversion remain unverified.
+- Auto-GTM generation/media capability is unavailable; only lead-feed is proven.
+- Production provider configuration is absent in A-owned runtime `4318`; candidate local Qwen smoke is isolated and explicit, with inference blocked by the observed MLX Metal memory failure.
+- Independent verifier PASS remains unavailable.
 
-Latest isolated rerun: `plans/oi-browser-integration/server-smoke-d75ce02.json`. Exact candidate HEAD `d75ce028b4cfeef80822b760686afae1813634bb` ran on port `4325` with a private temporary state directory. Loopback Qwen routing returned `SUCCEEDED`; the unauthorized route returned `401`; a scoped memory observation and `STATIC_HTTP` snapshot persisted; after restart the same state exposed one memory item, one snapshot, and one successful provider route. The provider persistence field is deliberately described as verified by restart/dashboard because the API returns the persisted row object, not a boolean. Auto-GTM remained unavailable (`feed_not_generated`). No login, credential, publication, or external write occurred.
-
-Final isolated rerun: `plans/oi-browser-integration/server-smoke-17993d2.json`. Exact candidate HEAD `17993d287a4a047a5994af140799c8963b86d94f` produced the same bounded result on port `4325`: local Qwen route `SUCCEEDED`, unauthorized route `401`, scoped memory and static snapshot retained after restart, provider decision visible after restart, schema v8, and Auto-GTM `feed_not_generated`. The run used a private temporary state directory and no external side effect.
-
-Final provenance rerun: `plans/oi-browser-integration/server-smoke-3794177.json`. Exact final candidate `379417778e1bd007e990030b12c7d448af6b02ba` produced the same result on isolated port `4325`; restart retained one memory item, one static snapshot, and one successful provider decision. No external side effect occurred.
-
-Post-evidence regression at final candidate `9fb39cf8a670fe77323f5196c3bd5aab56053b33`: focused `24/24` pass; full `732` tests, `730` pass, `0` fail, `2` skipped. The only skips are existing ACL environment checks.
-
-## Verification evidence
-
-Commands run in C worktree:
-
-```text
-node --test test/oi-browser-integration.test.mjs test/browser-runtime-router.test.mjs test/oi-browser-provider-adapters.test.mjs
-24 tests, 24 pass, 0 fail
-
-node --test test/*.test.mjs
-732 tests, 730 pass, 0 fail, 2 skipped
-
-node --check src/oi-browser-integration.mjs
-node --check src/service.mjs
-node --check src/server.mjs
-git diff --check
-```
-
-The full-suite result above is from exact candidate revision `6600387b254db13bf0494fc14a8f512a6f990e1a`, including transient-value binding, semantic identity validation, provider nonzero/reasoning/tool/cost selection, authenticated memory query scoping, live runtime hook boundaries, and provider routing through the production strategy entrypoint. Two ACL environment checks were skipped. No external write, credential use, live social submit, merge, deploy, or publication was performed.
-
-Independent read-only review attempt `oi-browser-candidate-independent-review-6600387-local` reached `FAILED` with exit code `1` because the local worker hit its repeated-tool-call no-progress guard. Its provisional report is not accepted as verifier completion. Manual bounded review covered persistence, memory, routing, snapshot redaction, live/static boundaries, authority, API safety, A/B ownership, and exact runtime artifacts. Receipt: `plans/oi-browser-integration/independent-review-6600387.md`.
-
-## Known limitations / next action
-
-- A/B dirty work remains unintegrated; overlapping server/service/strategy files need serial reconcile and rerun after a real owner checkpoint or receiver ACK.
-- Current runtime at `127.0.0.1:4318` is A's `52072ce`, not C's branch. Do not treat its health or Camoufox process as proof of C integration. C's current isolated runtime case used port `4323` and was stopped after the check.
-- `plans/oi-browser-integration/fixture-run-20261027.json` is a historical superseded fixture artifact from `2e92827511ec48d68cb02cf048360997c2d91e26`; use `fixture-run-6600387.json` for current candidate evidence.
-- Auto-GTM feed generation is unavailable; no artifact is fabricated.
-- The live server at `4318` has no proven configured inference adapter. C's isolated server can use the explicitly configured loopback Qwen adapter, but production provider configuration and owner integration remain dependencies for the final runtime branch.
-- Fresh Camoufox identity/readiness and live publication/verification remain blocked or unproven.
-- Next autonomous action: reconcile C with A Camoufox/runtime and B authority/standing-delegation checkpoints in a clean candidate, resolve owned hunks, rerun focused/full checks, then perform only explicitly authorized safe/runtime verification. Live publication still requires valid standing authority, healthy account, certified transport, and independent verification.
+No blocker is cleared by fixture success, process liveness, dashboard rendering, or historical evidence.

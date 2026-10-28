@@ -1,9 +1,13 @@
 # Blockers
 
-- Auto-GTM v26 evidence says configured feed is unavailable/feed_not_generated.
-- Fresh Camoufox identity/readiness/publication is not proven in v26 evidence; current process alone is not proof.
-- C server provider route is fail-closed `unavailable` without an explicitly injected inference adapter; fixture injection is verified, live adapter registration is pending integration owner/runtime configuration.
-- A/B worktrees are dirty without live agent terminals; integration uses commit/worktree evidence only.
-- Native session handshake/receiver ACK is unverified: Orca metadata has no attached A/B terminals and the shared inbox is empty. Do not claim `DELIVERED`, `ACKNOWLEDGED`, or `COMPLETED` for A/B tasks.
-- Native handshake sends for A and B returned `terminal_not_found` (Orca request IDs `0408b48d-877a-4cbb-8ff7-f390cd60c111` and `82daa91d-7d44-40e8-9780-5537883d9b39`); no receiver consumed marker `C-A-4f1066f` or `C-B-4f1066f`.
-- Independent review queue attempt `oi-browser-candidate-independent-review-6600387-local` failed closed on the no-progress guard; manual review is bounded and marked `DONE_WITH_CONCERNS`.
+| ID | Status | Evidence | Impact | Minimum resolution |
+|---|---|---|---|---|
+| A-B-NATIVE-HANDSHAKE | OPEN / UNVERIFIED | Orca worktree metadata exists; A/B `terminal list` empty; inbox contains one undelivered historical marker; prior sends returned `terminal_not_found` | Cannot claim three-session connected task delivery or ACK | Existing A/B sessions need a runtime-supported receiver/terminal handle and must return marker ACK/result refs |
+| B-DIRTY-CHECKPOINT | OPEN | B worktree HEAD `6899679`, authority/service files dirty | Cannot claim B work is reconciled or committed into candidate | B owner checkpoint/ACK, then serial diff reconcile and rerun affected tests |
+| CAMOUFOX-LIVE-AUTH | OPEN | Disposable Camoufox smoke only; no fresh exact authenticated identity/readiness evidence | No live publish proof | Authorized fresh account/profile lane with canonical readiness and independent publication verification |
+| LIVE-PUBLICATION-METRICS | OPEN | No live post ID/permalink/metrics/conversion | Closed loop live acceptance incomplete | Valid standing authority plus certified transport and independent verification |
+| AUTO-GTM-GENERATION | OPEN | Runtime/dashboard reports `feed_not_generated`; source report says lead/feed capability only | Generation/media acceptance incomplete | Configured owner-approved Auto-GTM feed/provider artifact; retain read-only boundary |
+| PROVIDER-PRODUCTION-CONFIG | CONDITIONAL | Local Qwen succeeds only when explicit loopback adapter env is supplied; absent config fails closed | Production inference availability depends on runtime config | Explicit local adapter config and health evidence in the owner runtime |
+| INDEPENDENT-REVIEW | OPEN | Latest task `2fdee808-270a-491c-a042-14dc3fad3972` failed with `Remote end closed connection without response`; prior queue attempt hit no-progress guard | No independent verifier PASS | Separate read-only reviewer after final candidate changes |
+
+No blocker is cleared by fixture success, process liveness, dashboard rendering, or historical evidence.

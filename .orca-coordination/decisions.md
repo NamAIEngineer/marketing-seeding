@@ -1,11 +1,13 @@
-# Decisions
+# Integration decisions
 
-- Candidate `6600387` is the C integration checkpoint. Evidence artifacts must cite this exact revision.
-- Isolated server smoke on port `4324` used source revision `df2f775ee23dd4475e9b358bc42f5e1770b73e29`, private state, and loopback Qwen configuration. Later documentation commits must not be presented as that runtime revision.
-- Treat the local review queue result as `FAILED`, not PASS: no-progress guard prevented independent verifier completion. Keep manual review at `DONE_WITH_CONCERNS`.
-- Keep the active runtime at `4318` untouched because Orca ties it to A's worktree. C smoke uses isolated ports/data only.
-
-- Keep marketing-seeding as sole app/store/orchestrator.
-- oi-browser source is pinned externally and only useful primitives are adapted.
-- Camoufox/API/direct transports remain executor lanes; no GPM.
-- Safe fixture evidence never upgrades to live verification.
+- Candidate is `integration/session-c-reconciled` at exact SHA `20ba20f6f8f273a72cb0db88b216d645aeecaeb1`; current evidence/docs are uncommitted C-owned changes on top.
+- Candidate history contains merge commit `d195756af715e686de46b2f6de8fbb11b7cace9b`, which merged A's committed Camoufox checkpoint `52072ce` into the C candidate. B's dirty worktree at `6899679` is inspected but not silently committed or treated as integrated.
+- `marketing-seeding` remains the only application, `JsonStore`, `SeedingService`, dashboard, and Decision Plane. No second oi-browser app/store/orchestrator was added.
+- oi-browser source pin: `1e471c44b5d63aa5aadb708623b21090b6f325b2`; auto-gtm source pin: `9368098477d78f75d57fdf5db276129948f3a183`.
+- oi-browser memory, provider routing, static BrowserSnapshot/semantic identity, and validated intent seam are adapted into the canonical store/service. Static evidence cannot prove live DOM or publication.
+- Auto-GTM remains a read-only `lead-feed` capability. `feed_not_generated` is surfaced as unavailable; no generation/media claim is made.
+- GPM is not active in the server runtime. Historical compatibility modules remain only where existing contracts require them.
+- Active runtime `4318` belongs to A and was not restarted. Candidate verification uses private temporary state and port `4333`.
+- Loopback Qwen `/v1/models` health is not inference proof: current smoke returned `FAILED/nonzero` with `exit_code_404`; the local MLX log records `generation thread died` from Metal `Insufficient Memory`. Keep provider execution unavailable until a fresh inference succeeds.
+- Fixture/runtime evidence remains separate from live evidence. No credentials, login, grant, publish, deployment, merge, push, or external side effect was performed.
+- The latest independent verifier task `2fdee808-270a-491c-a042-14dc3fad3972` failed with `Remote end closed connection without response` and returned no report; an earlier queue attempt failed on its no-progress guard. Manual review is `DONE_WITH_CONCERNS`, not an independent verifier PASS.
