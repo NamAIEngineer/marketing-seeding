@@ -111,7 +111,9 @@ export async function runOrcaNativeFollowUp({
   const before = await orcaJson(orcaPath, ["terminal", "read", "--terminal", handle], 15_000, runCommand);
   const baselineOutput = readTail(before);
   const baselineCursor = readCursor(before);
-  const priorRequestId = SAFE_REQUEST.test(String(nativeRequestId || "")) ? String(nativeRequestId) : null;
+  const suppliedRequestId = nativeRequestId === null || nativeRequestId === undefined ? null : String(nativeRequestId).trim();
+  if (suppliedRequestId !== null && !SAFE_REQUEST.test(suppliedRequestId)) throw new Error("ORCA_NATIVE_REQUEST_ID_INVALID");
+  const priorRequestId = suppliedRequestId;
   const initial = priorRequestId
     ? await orcaJson(orcaPath, ["terminal", "send", "--terminal", handle, "--text", text, "--enter", "--retry-request", priorRequestId, "--wait-submit", String(Math.ceil(submitTimeoutMs / 1000))], submitTimeoutMs + 10_000, runCommand)
     : await orcaJson(orcaPath, ["terminal", "send", "--terminal", handle, "--text", text, "--enter", "--wait-submit", String(Math.ceil(submitTimeoutMs / 1000))], submitTimeoutMs + 10_000, runCommand);

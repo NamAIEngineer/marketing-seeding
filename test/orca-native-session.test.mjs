@@ -71,6 +71,21 @@ test("native recovery rejects an old marker when exact replay is not confirmed",
   assert.equal(calls.some((args) => args.includes("--retry-request") && args.includes("request-recovery-stale")), true);
 });
 
+test("native recovery rejects a malformed persisted request ID without sending a fresh prompt", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-native-session-recovery-invalid-"));
+  const calls = [];
+  const runCommand = async (_orca, args) => {
+    calls.push(args);
+    if (args[0] === "terminal" && args[1] === "read") return { terminal: { status: "running", tail: [] } };
+    throw new Error("unexpected command");
+  };
+  await assert.rejects(() => runOrcaNativeFollowUp({
+    terminal: "term_test-native-invalid", prompt: "safe recovery", marker: "INVALID-ID-MARKER",
+    nativeRequestId: "malformed request id", stateRoot: root, artifactPath: "artifacts/result.json", runCommand
+  }), /ORCA_NATIVE_REQUEST_ID_INVALID/);
+  assert.equal(calls.filter((args) => args[1] === "send").length, 0);
+});
+
 test("native recovery accepts a fresh turn receipt when terminal cursor is unavailable", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-native-session-recovery-fresh-"));
   const marker = "RECOVERY-FRESH-MARKER";
