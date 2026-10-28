@@ -36,5 +36,5 @@
 ## Runtime boundary
 
 - Runtime `127.0.0.1:4318` remains A-owned and untouched.
-- No login, MFA/CAPTCHA handling, authority grant, live submit, deployment, push, merge, PR, or external side effect occurred.
+- No login, MFA/CAPTCHA handling, authority grant, live submit, deployment, merge, or external side effect occurred. Branch `integration/session-c-reconciled` is pushed and draft PR [NamAIEngineer/marketing-seeding#2](https://github.com/NamAIEngineer/marketing-seeding/pull/2) is open; no merge performed.
 - Fixture and isolated runtime evidence do not upgrade live publication, authenticated Camoufox readiness, or external metrics.

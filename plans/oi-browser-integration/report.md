@@ -11,7 +11,7 @@
 - SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, `integration/autonomous-build`, checkpoint `b675a98`; native `SESSION-B-ACK-20261028T1210Z`; tracked scope clean. Exact B commit is not cherry-picked because candidate history already contains/adapts the required authority guard behavior and the remaining diff contains obsolete provider/GPM-era changes.
 - SESSION C: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, `integration/session-c-reconciled`, owns integration/docs/evidence.
 - Native communication proof: `SESSION-C-HANDSHAKE-20261028T1210Z` delivered through Orca terminals; both A/B returned `turn_started`, ACK markers, exact checkpoint/dirty scope, and ownership.
-- Origin: `https://github.com/DevAngular333/marketing-seeding.git`. No push, PR, merge, deployment, login, grant, publication, or external message.
+- Origin: `https://github.com/DevAngular333/marketing-seeding.git` (GitHub reports canonical repository `NamAIEngineer/marketing-seeding`). Branch `integration/session-c-reconciled` is pushed; draft PR [#2](https://github.com/NamAIEngineer/marketing-seeding/pull/2) is open against `main`. No merge, deployment, login, grant, publication, or external message.
 
 ## oi-browser and auto-GTM
 
