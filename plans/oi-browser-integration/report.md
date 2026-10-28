@@ -2,7 +2,7 @@
 
 ## Status
 
-`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; final C source/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`; prior integration evidence checkpoint: `7f2b74a`; continuation implementation began at `3d1c380`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; final C source/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`; current candidate/documentation HEAD: `616377f429ebfcd17000685e7c776ffed108aa3a`; prior integration evidence checkpoint: `7f2b74a`; continuation implementation began at `3d1c380`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
 ## Baseline, ownership, integration
 
@@ -60,6 +60,14 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 - Syntax checks for native adapters/service/server passed. `git diff --check` passed. Secret scan hits are redaction test fixtures/generated UI text, not credentials.
 - Evidence artifact: [regression-7378f8c.json](regression-7378f8c.json).
 - Fresh independent read-only review at `2026-10-28T07:49:24Z`, historical HEAD `7f2b74a`; follow-up review fixed malformed native recovery ID handling at `10ce868`; final memory/provider review at `13:58:13Z` passed on `9875db3`. Gstack queue review was unavailable because the Codex queue provider is unauthenticated; no gstack review claim is made. Stale metadata was corrected in this report and the coordination ledger.
+
+## Fresh regression evidence at current candidate HEAD
+
+- Artifact: `plans/oi-browser-integration/regression-final-616377f.json`; source/documentation revision `616377f429ebfcd17000685e7c776ffed108aa3`; classification `FIXTURE_VERIFIED`.
+- Focused C browser/provider/service/coordinator/native command: `52/52 pass, 0 fail, 0 skipped`.
+- Full `npm test`: `814 total, 812 pass, 0 fail, 2 skipped`; output SHA-256 `7518073eacff1965f09c298588e907feec584781d4df807f00d9205bc64321a5`.
+- Auto-GTM `python -m unittest discover tests`: `160 total, 160 pass, 0 fail`; output SHA-256 `73b129bc08af46e7cd6036f955c8683c36288739122d7a149f5a5aaa20ee4b3f`; `pip check` clean.
+- Independent read-only review at this HEAD: PASS. `git diff --check` passed. Source remains `IMPLEMENTED`; tests are `FIXTURE_VERIFIED`; C LaunchAgent evidence remains `NATIVE_RESUME_VERIFIED`; no `LIVE_VERIFIED` side effect.
 
 ## Remaining blockers
 

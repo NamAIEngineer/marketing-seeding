@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-28T18:20:31.073336Z",
+  "classification": "FIXTURE_VERIFIED",
+  "sourceRevision": "616377f429ebfcd17000685e7c776ffed108aa3a",
+  "commands": [
+    {
+      "command": "node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs test/oi-browser-live-bridge.test.mjs test/project-coordinator.test.mjs test/orca-native-session.test.mjs",
+      "result": "52/52 pass, 0 fail, 0 skipped"
+    },
+    {
+      "command": "npm test",
+      "result": "814 total, 812 pass, 0 fail, 2 skipped",
+      "outputSha256": "7518073eacff1965f09c298588e907feec584781d4df807f00d9205bc64321a5"
+    },
+    {
+      "command": "/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests",
+      "workspace": "/Users/nam/Documents/auto-gtm",
+      "result": "160 total, 160 pass, 0 fail",
+      "outputSha256": "73b129bc08af46e7cd6036f955c8683c36288739122d7a149f5a5aaa20ee4b3f"
+    }
+  ],
+  "gitStatus": "clean tracked tree; untracked .system-agentic-goals excluded",
+  "independentReview": {
+    "status": "PASS",
+    "head": "616377f429ebfcd17000685e7c776ffed108aa3a",
+    "scope": "read-only browser/provider/service/memory/retraction/cancellation"
+  },
+  "liveEligible": false,
+  "externalSideEffects": false,
+  "unknownRetryAllowed": false,
+  "limitations": [
+    "A dirty overlay not reconciled",
+    "Camoufox/auth/authority/publication/metrics live proof unavailable",
+    "Auto-GTM generation/media unavailable; lead-feed only"
+  ]
+}

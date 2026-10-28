@@ -4,7 +4,7 @@
 
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
-- Candidate source/test revision: `fa3ebda996041498e44800e181507bd494ee4b72`; metadata/evidence HEAD follows this checkpoint; prior code/test revisions remain recorded in historical evidence.
+- Candidate source/test revision: `fa3ebda996041498e44800e181507bd494ee4b72`; current candidate/documentation HEAD: `616377f429ebfcd17000685e7c776ffed108aa3a`; prior code/test revisions remain recorded in historical evidence.
 - Code/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
@@ -33,6 +33,7 @@
 - Isolated runtime: `plans/oi-browser-integration/server-smoke-7378f8c.json`, `RUNTIME_VERIFIED`; port `4337`, exact SHA, auth boundary, memory/static snapshot persistence, restart persistence, explicit local-Qwen route success; Auto-GTM remains unavailable (`feed_not_generated`).
 - Current syntax checks and `git diff --check` passed. Fresh independent verifier reviewed historical `7f2b74a` at `2026-10-28T07:49:24Z`; current native/coordinator/verifier focused checks are 69/69. Secret scan found no credential-like values in coordinator files; matches elsewhere are test redaction fixtures/generated UI text.
 - Regression fix at `9875db3`: canonical evidence refs define independent memory samples; caller publication/sample ID changes cannot inflate support; stalled provider response bodies and JSON parsing remain under the same deadline; already-aborted caller signals fail fast. Recovery hardening at `1589518` adds bounded exact-request reconciliation and crash-safe restart accounting. Cancellation hardening at `35cc224` aborts the active provider and suppresses fallback, including the invalid-result race. Service wiring at `fa3ebda` forwards cancellation through the production service entrypoint. Current focused oi-browser/provider/live bridge tests `35/35`; coordinator/native tests `17/17`; full candidate suite `814 total, 812 pass, 0 fail, 2 skipped`; evidence: `plans/oi-browser-integration/regression-final-service-signal.json`; no A/B/runtime mutation.
+- Fresh HEAD evidence `plans/oi-browser-integration/regression-final-616377f.json`: focused C browser/provider/service/coordinator/native `52/52`; full `npm test` `814 total, 812 pass, 0 fail, 2 skipped` (output SHA-256 `7518073eacff1965f09c298588e907feec584781d4df807f00d9205bc64321a5`); Auto-GTM `160/160`, `pip check` clean (output SHA-256 `73b129bc08af46e7cd6036f955c8683c36288739122d7a149f5a5aaa20ee4b3f`). Independent read-only review PASS; no A/B/runtime mutation.
 
 ## State
 
