@@ -60,3 +60,4 @@
 - `IMPLEMENTED`: restart treats a persisted in-flight native attempt as consumed before scheduling the next exact-request reconciliation; crash-loop retries cannot bypass the limit.
 - `FIXTURE_VERIFIED`: coordinator/native focused tests cover backoff, missing request IDs, crash-interrupted recovery, malformed timestamps, duplicate dependency/restart replay and exact request preservation. Current focused result after this change: 16/16 pass.
 - No A/B files, runtime 4318, credentials, authority, publication, UNKNOWN records or production state were modified.
+- Durable evidence: `plans/oi-browser-integration/coordinator-recovery-v3-20261028.json` at source revision `1589518ec77424d186906b0ba10ba201c763cfe6`.

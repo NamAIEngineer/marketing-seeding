@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "rehearsal": true,
+  "liveEligible": false,
+  "externalSideEffects": false,
+  "unknownRetryAllowed": false,
+  "classification": "FIXTURE_VERIFIED",
+  "sourceRevision": "1589518ec77424d186906b0ba10ba201c763cfe6",
+  "workspace": "/Users/nam/Documents/marketing-seeding-session-c-reconciled",
+  "branch": "integration/session-c-reconciled",
+  "capturedAt": "2026-10-28T15:29:37Z",
+  "baselineRevision": "79985bb411afc141f0edf10ae635fb91824d8bc9",
+  "contract": {
+    "schemaVersion": 3,
+    "maxRecoveryAttempts": 3,
+    "backoffMs": [5000, 10000, 20000],
+    "exactRequestIdPreserved": true,
+    "interruptedAttemptConsumedOnRestart": true,
+    "invalidRequestIdFailsClosed": true,
+    "invalidTimestampFailsClosed": true
+  },
+  "checks": [
+    {
+      "command": "node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs",
+      "tests": 16,
+      "pass": 16,
+      "fail": 0,
+      "skipped": 0,
+      "result": "PASS"
+    },
+    {
+      "command": "node --test test/*.test.mjs",
+      "tests": 807,
+      "pass": 805,
+      "fail": 0,
+      "skipped": 2,
+      "result": "PASS"
+    },
+    {
+      "command": "git diff --check HEAD",
+      "result": "PASS"
+    }
+  ],
+  "independentReview": {
+    "status": "PASS",
+    "capturedAt": "2026-10-28T15:26:44Z",
+    "reviewer": "independent-verifier",
+    "scope": "read-only coordinator recovery review",
+    "highOrMediumFindings": 0,
+    "aOrBMutation": false,
+    "secretFindings": 0
+  },
+  "nativeResumeBoundary": {
+    "c": "NATIVE_RESUME_VERIFIED on prior launchd rehearsals; schema-v3 recovery change is fixture-verified and awaits a future supervisor restart before runtime proof",
+    "a": "ACKNOWLEDGED but clean checkpoint blocked by dirty shared overlay",
+    "b": "ACKNOWLEDGED local rehearsal; continuous receiver remains unproven"
+  }
+}
