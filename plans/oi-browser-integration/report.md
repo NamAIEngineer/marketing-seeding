@@ -41,6 +41,8 @@ Standing authorization guards remain canonical. Candidate tests cover scope coll
 
 Artifact: [fixture-run-7378f8c.json](fixture-run-7378f8c.json). Controlled Product X developer-awareness campaign: Community A has technical/educational evidence; Community B prohibits direct promotion while allowing educational context. `SeedingService.runCampaignControlCycle` chose a candidate before consolidation. Two distinct verified fixture observations consolidated into one `LEARNING` with `sampleSupport=2`, `verifiedCount=2`, and evidence `fixture:fixture-publication-a` / `fixture:fixture-publication-b`. The next production strategy entrypoint selected a different candidate and included `memory:learning-1adbd95424b288d5e6db412b`. Browser semantic CLICK crossed `BrowserInteractionFixture`, verified `CONTROL_ACTIVATED`, replay clicked once, and restart retained memory, learning, snapshot, execution, and provider decisions. Evidence: `FIXTURE_VERIFIED`; no external side effect.
 
+Final C candidate source/evidence revision: `0cce4c374308698c64cc20494d0e878f6501ceb0`; C code/test revision: `9875db34c3f068c1510b3e92e8c72e4134e641a9`.
+
 ## Runtime proof — isolated candidate
 
 Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, temporary state directory, exact source SHA `7378f8c`; `/health` 200, unauthorized provider route 401, memory and `STATIC_HTTP` snapshot writes 201, restart persistence passed. Explicit local-Qwen inference returned `SUCCEEDED` and remained visible after restart. Dashboard reported `feed_not_generated`. Evidence: `RUNTIME_VERIFIED`; no credentials, login, publication, or external side effect. Runtime A `4318` stayed untouched.

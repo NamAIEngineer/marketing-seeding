@@ -31,7 +31,7 @@
 
 - `src/project-coordinator.mjs`, `test/project-coordinator.test.mjs`, and `scripts/coordination-rehearsal.mjs` add a local-only development control plane. It does not select providers/accounts/campaigns and cannot publish.
 - Rehearsal artifact: `plans/oi-browser-integration/coordination-rehearsal-20261028.json`; dependency → wake → worker → accepted artifact → restart/replay check passed, one invocation only.
-- Fresh independent read-only review at `2026-10-28T07:49:24Z` verified historical HEAD `7f2b74a`; follow-up review at `12:06Z` found malformed native recovery ID handling, fixed in `10ce868`; final memory/provider review at `13:58:13Z` passed on `9875db3`; current focused/full evidence is recorded at `9875db3`/`5f6f08d`.
+- Fresh independent read-only review at `2026-10-28T07:49:24Z` verified historical HEAD `7f2b74a`; follow-up review at `12:06Z` found malformed native recovery ID handling, fixed in `10ce868`; final memory/provider review at `13:58:13Z` passed on `9875db3`; current focused/full evidence is recorded at `9875db3`/`0cce4c3`.
 
 ## Runtime boundary
 
