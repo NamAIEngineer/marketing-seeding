@@ -21,6 +21,10 @@ const MEMORY_TTL_MS = Object.freeze({ RAW_EVENT: 24 * 60 * 60 * 1000, OBSERVATIO
 const SECRET_QUERY_KEY = /(?:password|secret|token|cookie|authorization|api[_-]?key|session|credential)/i;
 const COST_RANK = Object.freeze({ free: 0, local: 1, low: 2, medium: 3, high: 4, unknown: 5 });
 const CANONICAL_MEMORY_EVIDENCE = /^(?:publication|metric|browser-execution|fixture|snapshot):[^:]+(?::.*)?$/;
+const MAX_PROVIDER_ANALYSIS_RECORDS = 12;
+const MAX_PROVIDER_ANALYSIS_RECORD_TEXT = 2_500;
+const MAX_PROVIDER_ANALYSIS_BYTES = 16_000;
+const MAX_PROVIDER_ANALYSIS_REFS = 64;
 
 function text(value, max = 240) {
   return String(value ?? "").replace(/\s+/g, " ").trim().slice(0, max);
@@ -54,6 +58,59 @@ function redacted(value, max = 800) {
     .replace(/bearer\s+[a-z0-9._-]+/gi, "bearer [redacted]")
     .replace(/\b(?:sk|gh[pousr])_[a-z0-9_-]{8,}\b/gi, "[redacted]")
     .replace(/(password|secret|token|cookie|authorization|api[_-]?key|session|credential)\s*[=:]\s*[^\s]+/gi, "$1=[redacted]");
+}
+
+function normalizeProviderAnalysisInput(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const scope = value.scope && typeof value.scope === "object" && !Array.isArray(value.scope)
+    ? Object.fromEntries(["campaignId", "communityId", "platform", "channel", "purpose", "locale"]
+      .map((key) => [key, redacted(value.scope[key], 160) || null]))
+    : {};
+  const records = (Array.isArray(value.records) ? value.records : [])
+    .slice(0, MAX_PROVIDER_ANALYSIS_RECORDS)
+    .map((record) => ({
+      recordId: redacted(record?.recordId, 240) || null,
+      recordType: redacted(record?.recordType, 40) || null,
+      sourceUrl: redacted(record?.sourceUrl, 800) || null,
+      title: redacted(record?.title, 500) || "",
+      text: redacted(record?.text, MAX_PROVIDER_ANALYSIS_RECORD_TEXT) || "",
+      contentHash: redacted(record?.contentHash, 128) || null,
+      sourceRefs: boundedArray(record?.sourceRefs, 8)
+    }))
+    .filter((record) => record.recordId || record.title || record.text || record.sourceUrl);
+  const normalized = {
+    schemaVersion: Number.isInteger(value.schemaVersion) ? value.schemaVersion : 1,
+    scope,
+    records,
+    ...(redacted(value.digest, 128) ? { digest: redacted(value.digest, 128) } : {}),
+    untrusted: value.untrusted === true
+  };
+  let textLimit = MAX_PROVIDER_ANALYSIS_RECORD_TEXT;
+  while (Buffer.byteLength(JSON.stringify(normalized), "utf8") > MAX_PROVIDER_ANALYSIS_BYTES && textLimit > 160) {
+    textLimit = Math.floor(textLimit * 0.75);
+    for (const record of normalized.records) record.text = redacted(record.text, textLimit);
+  }
+  if (Buffer.byteLength(JSON.stringify(normalized), "utf8") > MAX_PROVIDER_ANALYSIS_BYTES) {
+    for (const record of normalized.records) record.sourceRefs = record.sourceRefs.slice(0, 2);
+    while (normalized.records.length > 1 && Buffer.byteLength(JSON.stringify(normalized), "utf8") > MAX_PROVIDER_ANALYSIS_BYTES) normalized.records.pop();
+  }
+  if (Buffer.byteLength(JSON.stringify(normalized), "utf8") > MAX_PROVIDER_ANALYSIS_BYTES) {
+    normalized.records = normalized.records.map((record) => ({
+      ...record,
+      sourceUrl: redacted(record.sourceUrl, 240),
+      title: redacted(record.title, 120),
+      text: redacted(record.text, 160),
+      sourceRefs: []
+    }));
+  }
+  return normalized;
+}
+
+function providerAnalysisContext(task = {}) {
+  const analysisInput = normalizeProviderAnalysisInput(task.analysisInput);
+  const analysisInputDigest = redacted(task.analysisInputDigest || analysisInput?.digest, 128) || (analysisInput ? digest(analysisInput, 64) : null);
+  const evidenceRefs = boundedArray(task.evidenceRefs, MAX_PROVIDER_ANALYSIS_REFS);
+  return { analysisInput, analysisInputDigest, evidenceRefs };
 }
 
 function stripTags(value) {
@@ -796,13 +853,15 @@ export async function routeAgentTask(task = {}, { providers = [], now = new Date
   const capability = text(task.capability, 100);
   const privacy = text(task.privacyClass || "local", 40);
   const taskTools = boundedArray(task.tools, 16);
+  const { analysisInput, analysisInputDigest, evidenceRefs } = providerAnalysisContext(task);
   const normalizedProviders = providers.map(normalizeProviderRecord);
   const availability = normalizedProviders.map(providerAvailability);
   const reasoningClass = text(task.reasoningClass, 40);
   const candidates = normalizedProviders.filter((provider) => provider.capabilities.includes(capability) && provider.installed && provider.authReady && provider.healthy && provider.privacyClasses.includes(privacy) && (!task.contextSize || provider.contextSize >= task.contextSize) && (!reasoningClass || provider.reasoningClasses.includes(reasoningClass)) && taskTools.every((tool) => provider.tools.includes(tool))).sort((a, b) => ((COST_RANK[a.costClass] ?? COST_RANK.unknown) - (COST_RANK[b.costClass] ?? COST_RANK.unknown) || (b.successRate ?? 0) - (a.successRate ?? 0) || (a.latencyMs ?? 1e9) - (b.latencyMs ?? 1e9) || a.id.localeCompare(b.id)));
   const attempted = [];
+  const decisionContext = { capability, privacy, reasoningClass, taskTools, analysisInputDigest, evidenceRefs };
   if (signal?.aborted) {
-    return { schemaVersion: 1, decisionId: `provider-decision-${digest({ capability, privacy, reasoningClass, taskTools, cancelled: true }, 24)}`, providerId: null, status: "FAILED", failure: "cancelled", attempted: [], availability, telemetry: { capability, privacyClass: privacy, reasoningClass: reasoningClass || null, tools: taskTools, cancelled: true } };
+    return { schemaVersion: 1, decisionId: `provider-decision-${digest({ ...decisionContext, cancelled: true }, 24)}`, providerId: null, status: "FAILED", failure: "cancelled", attempted: [], availability, analysisInputDigest, evidenceRefs, telemetry: { capability, privacyClass: privacy, reasoningClass: reasoningClass || null, tools: taskTools, analysisInputDigest, evidenceRefs, cancelled: true } };
   }
   for (const provider of candidates) {
     const startedAt = iso(now);
@@ -820,7 +879,7 @@ export async function routeAgentTask(task = {}, { providers = [], now = new Date
     signal?.addEventListener?.("abort", onCallerAbort, { once: true });
     try {
       const result = await Promise.race([
-        provider.adapter.infer({ task: { capability, privacyClass: privacy, tools: taskTools, reasoningClass: reasoningClass || null, contextSize: task.contextSize || null }, signal: controller.signal }),
+        provider.adapter.infer({ task: { capability, privacyClass: privacy, tools: taskTools, reasoningClass: reasoningClass || null, contextSize: task.contextSize || null, analysisInput, analysisInputDigest, evidenceRefs }, signal: controller.signal }),
         new Promise((_, reject) => { raceTimer = setTimeout(() => reject(Object.assign(new Error("provider timeout"), { name: "AbortError" })), boundedTimeoutMs); })
       , callerAbort]);
       clearTimeout(timer);
@@ -836,7 +895,7 @@ export async function routeAgentTask(task = {}, { providers = [], now = new Date
         continue;
       }
       if (!text(result.output, 2_000)) { attempted.push({ providerId: provider.id, status: "invalid_result", reason: "empty_or_invalid" }); continue; }
-      return { schemaVersion: 1, decisionId: `provider-decision-${digest({ capability, privacy, reasoningClass, taskTools, provider: provider.id, startedAt }, 24)}`, providerId: provider.id, status: "SUCCEEDED", startedAt, completedAt: new Date().toISOString(), attempted: [...attempted, { providerId: provider.id, status: "executionSucceeded" }], availability: availability.map((item) => item.id === provider.id ? { ...item, executionSucceeded: true } : item), output: text(result.output, 2_000), telemetry: { capability, privacyClass: privacy, reasoningClass: reasoningClass || null, tools: taskTools, providerId: provider.id, successRate: provider.successRate } };
+      return { schemaVersion: 1, decisionId: `provider-decision-${digest({ ...decisionContext, provider: provider.id, startedAt }, 24)}`, providerId: provider.id, status: "SUCCEEDED", startedAt, completedAt: new Date().toISOString(), attempted: [...attempted, { providerId: provider.id, status: "executionSucceeded" }], availability: availability.map((item) => item.id === provider.id ? { ...item, executionSucceeded: true } : item), analysisInputDigest, evidenceRefs, output: text(result.output, 2_000), telemetry: { capability, privacyClass: privacy, reasoningClass: reasoningClass || null, tools: taskTools, analysisInputDigest, evidenceRefs, providerId: provider.id, successRate: provider.successRate } };
     } catch (error) {
       clearTimeout(timer);
       clearTimeout(raceTimer);
@@ -850,7 +909,7 @@ export async function routeAgentTask(task = {}, { providers = [], now = new Date
   const capabilityMatches = normalizedProviders.filter((item) => item.capabilities.includes(capability));
   const privacyMismatch = capabilityMatches.some((item) => item.installed && item.authReady && item.healthy && !item.privacyClasses.includes(privacy));
   const failure = attempted.at(-1)?.status || (privacyMismatch ? "privacy_mismatch" : "unavailable");
-  return { schemaVersion: 1, decisionId: `provider-decision-${digest({ capability, privacy, reasoningClass, taskTools, attempted }, 24)}`, providerId: null, status: "FAILED", failure: ROUTE_FAILURES.has(failure) ? failure : "unavailable", attempted, availability, telemetry: { capability, privacyClass: privacy, reasoningClass: reasoningClass || null, tools: taskTools, ...(failure === "cancelled" ? { cancelled: true } : {}) } };
+  return { schemaVersion: 1, decisionId: `provider-decision-${digest({ ...decisionContext, attempted }, 24)}`, providerId: null, status: "FAILED", failure: ROUTE_FAILURES.has(failure) ? failure : "unavailable", attempted, availability, analysisInputDigest, evidenceRefs, telemetry: { capability, privacyClass: privacy, reasoningClass: reasoningClass || null, tools: taskTools, analysisInputDigest, evidenceRefs, ...(failure === "cancelled" ? { cancelled: true } : {}) } };
 }
 
 export function projectOiBrowserIntegration(state, { now = new Date() } = {}) {

@@ -1,8 +1,16 @@
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "::1"]);
 const MAX_TEXT = 2_000;
+const MAX_ANALYSIS_PROMPT = 1_200;
+const MAX_EVIDENCE_REFS = 64;
 
 function text(value, max = 240) {
   return String(value ?? "").replace(/\s+/g, " ").trim().slice(0, max);
+}
+function redacted(value, max = 800) {
+  return text(value, max)
+    .replace(/bearer\s+[a-z0-9._-]+/gi, "bearer [redacted]")
+    .replace(/\b(?:sk|gh[pousr])_[a-z0-9_-]{8,}\b/gi, "[redacted]")
+    .replace(/(password|secret|token|cookie|authorization|api[_-]?key|session|credential)\s*[=:]\s*[^\s,;]+/gi, "$1=[redacted]");
 }
 function safeUrl(value) {
   let parsed;
@@ -76,9 +84,13 @@ function extractOutput(payload) {
 }
 
 function providerTaskPrompt(task = {}) {
-  // Provider routing receives task metadata only. Campaign content, memory,
-  // credentials and browser evidence stay in the canonical local control plane.
-  return `Capability: ${text(task.capability, 100)}; privacy: ${text(task.privacyClass, 40)}; tools: ${(Array.isArray(task.tools) ? task.tools : []).map((item) => text(item, 40)).filter(Boolean).join(",") || "none"}; reasoning: ${text(task.reasoningClass || "deterministic", 60)}`;
+  const metadata = `Capability: ${text(task.capability, 100)}; privacy: ${text(task.privacyClass, 40)}; tools: ${(Array.isArray(task.tools) ? task.tools : []).map((item) => text(item, 40)).filter(Boolean).join(",") || "none"}; reasoning: ${text(task.reasoningClass || "deterministic", 60)}`;
+  const digest = redacted(task.analysisInputDigest || task.analysisInput?.digest, 128);
+  const refs = (Array.isArray(task.evidenceRefs) ? task.evidenceRefs : []).map((item) => redacted(item, 240)).filter(Boolean).slice(0, MAX_EVIDENCE_REFS);
+  const analysis = task.analysisInput && typeof task.analysisInput === "object"
+    ? redacted(JSON.stringify(task.analysisInput), MAX_ANALYSIS_PROMPT)
+    : "";
+  return [metadata, digest ? `analysisInputDigest: ${digest}` : "", refs.length ? `evidenceRefs: ${refs.join(",")}` : "", analysis ? `analysisInput: ${analysis}` : ""].filter(Boolean).join("; ");
 }
 
 export function createOpenAiCompatibleProvider({
