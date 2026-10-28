@@ -2,7 +2,7 @@
 
 ## Status
 
-`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; final C source/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`; current candidate/documentation HEAD: `134480a6985646b9bfdf42dd980760c0c635de8a`; fresh regression run revision: `616377f429ebfcd17000685e7c776ffed108aa3a`; prior integration evidence checkpoint: `7f2b74a`; continuation implementation began at `3d1c380`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; final C source/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`; fresh regression run revision: `616377f429ebfcd17000685e7c776ffed108aa3a`; subsequent branch commits are documentation/evidence-only; prior integration evidence checkpoint: `7f2b74a`; continuation implementation began at `3d1c380`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
 ## Baseline, ownership, integration
 

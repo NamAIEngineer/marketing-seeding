@@ -2,7 +2,7 @@
 
 ## Candidate handoff
 
-- Candidate: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`, current HEAD `134480a6985646b9bfdf42dd980760c0c635de8a`.
+- Candidate: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`; source/test checkpoint `fa3ebda`; later commits are documentation/evidence-only.
 - Source/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`; metadata/evidence HEAD follows this checkpoint; prior integration checkpoint `7f2b74a` retained.
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - A checkpoint represented: `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; current A overlay read-only recheck is 13 tracked dirty + 90 untracked, preserved outside candidate.
