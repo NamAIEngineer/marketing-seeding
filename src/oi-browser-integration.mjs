@@ -16,8 +16,11 @@ const MEMORY_KINDS = new Set(["RAW_EVENT", "OBSERVATION", "FACT", "INFERENCE", "
 const PROVIDER_STATES = new Set(["installed", "authReady", "healthy", "executionSucceeded"]);
 const ROUTE_FAILURES = new Set(["timeout", "nonzero", "invalid_result", "unavailable", "privacy_mismatch"]);
 const ACTIONS = new Set(["CLICK", "TYPE", "UPLOAD"]);
+const MEMORY_EVIDENCE_STATUSES = new Set(["OBSERVED", "UNKNOWN", "MIXED", "FIXTURE_VERIFIED", "RUNTIME_VERIFIED", "VERIFIED", "MEASURED"]);
+const MEMORY_TTL_MS = Object.freeze({ RAW_EVENT: 24 * 60 * 60 * 1000, OBSERVATION: 7 * 24 * 60 * 60 * 1000, FACT: 30 * 24 * 60 * 60 * 1000, INFERENCE: 7 * 24 * 60 * 60 * 1000, LEARNING: 30 * 24 * 60 * 60 * 1000, POLICY: 90 * 24 * 60 * 60 * 1000 });
 const SECRET_QUERY_KEY = /(?:password|secret|token|cookie|authorization|api[_-]?key|session|credential)/i;
 const COST_RANK = Object.freeze({ free: 0, local: 1, low: 2, medium: 3, high: 4, unknown: 5 });
+const CANONICAL_MEMORY_EVIDENCE = /^(?:publication|metric|browser-execution|fixture|snapshot):[^:]+(?::.*)?$/;
 
 function text(value, max = 240) {
   return String(value ?? "").replace(/\s+/g, " ").trim().slice(0, max);
@@ -30,6 +33,10 @@ function iso(value, fallback = new Date().toISOString()) {
 
 function boundedArray(value, max = 32) {
   return [...new Set((Array.isArray(value) ? value : []).map((item) => redacted(item, 240)).filter(Boolean))].slice(0, max);
+}
+
+function isCanonicalMemoryEvidenceRef(value) {
+  return CANONICAL_MEMORY_EVIDENCE.test(String(value || ""));
 }
 
 function stable(value) {
@@ -470,8 +477,24 @@ export function normalizeMemoryItem(input = {}, { now = new Date().toISOString()
   const source = text(input.source || input.provenance?.source, 180);
   if (!source) throw new Error("memory source is required");
   const observedAt = iso(input.observedAt || input.createdAt, iso(now));
-  const expiresAt = input.expiresAt ? iso(input.expiresAt, "") : null;
-  const evidenceRefs = boundedArray(input.evidenceRefs || input.evidence, 64);
+  const createdAt = iso(input.createdAt, iso(now));
+  const defaultTtl = MEMORY_TTL_MS[kind] || MEMORY_TTL_MS.OBSERVATION;
+  const hasExplicitExpiry = input.expiresAt !== undefined && input.expiresAt !== null && String(input.expiresAt).trim() !== "";
+  let expiresAt;
+  if (hasExplicitExpiry) {
+    const expiryMs = Date.parse(String(input.expiresAt));
+    if (!Number.isFinite(expiryMs)) throw new Error("memory expiresAt must be a valid timestamp");
+    expiresAt = new Date(expiryMs).toISOString();
+  } else {
+    expiresAt = new Date(Date.parse(createdAt) + defaultTtl).toISOString();
+  }
+  const suppliedEvidence = input.evidenceRefs ?? input.evidence ?? [];
+  const rawEvidenceRefs = boundedArray([
+    ...(Array.isArray(suppliedEvidence) ? suppliedEvidence : [suppliedEvidence]),
+    ...(Array.isArray(input.observationRefs) ? input.observationRefs : [])
+  ], 64);
+  const evidenceRefs = rawEvidenceRefs.filter(isCanonicalMemoryEvidenceRef);
+  const observationRefs = rawEvidenceRefs.filter((ref) => !isCanonicalMemoryEvidenceRef(ref));
   const publicationSample = input.postId || input.publicationId ? [`publication:${input.publicationId || input.postId}`] : [];
   const sampleIds = boundedArray(publicationSample.length ? publicationSample : [
     ...(Array.isArray(input.sampleIds) ? input.sampleIds : []), ...(input.sampleId ? [input.sampleId] : []),
@@ -483,34 +506,158 @@ export function normalizeMemoryItem(input = {}, { now = new Date().toISOString()
   const confidence = Math.min(1, Math.max(0, Number.isFinite(Number(input.confidence)) ? Number(input.confidence) : 0.5));
   return {
     schemaVersion: 1, id: text(input.id, 120) || `memory-${fingerprint.slice(0, 24)}`, kind, entityRef, scope, content, fingerprint,
-    source, provenance: { source, revision: text(input.sourceRevision, 80) || OI_BROWSER_SOURCE_REVISION, evidenceRefs }, evidenceRefs,
-    observedAt, createdAt: iso(input.createdAt, iso(now)), updatedAt: iso(input.updatedAt, iso(now)), confidence,
+    source, provenance: { source, revision: text(input.sourceRevision, 80) || OI_BROWSER_SOURCE_REVISION, evidenceRefs, observationRefs }, evidenceRefs, observationRefs,
+    observedAt, createdAt, updatedAt: iso(input.updatedAt, iso(now)), confidence,
     freshness: text(input.freshness, 40) || "bounded", expiresAt, sampleIds, supportCount: Math.max(1, sampleIds.length || 1),
     retractedAt: input.retractedAt ? iso(input.retractedAt, "") : null,
     campaignId: scope.campaignId, accountId: scope.accountId, communityId: scope.communityId, platform: scope.platform, channel: scope.channel,
-    evidenceStatus: text(input.evidenceStatus, 40).toUpperCase() || "OBSERVED", decisionHint: text(input.decisionHint, 80) || null
+    evidenceStatus: MEMORY_EVIDENCE_STATUSES.has(text(input.evidenceStatus, 40).toUpperCase()) ? text(input.evidenceStatus, 40).toUpperCase() : "OBSERVED",
+    evidenceStatusRequested: text(input.evidenceStatus, 40).toUpperCase() || "OBSERVED",
+    evidenceStatusReason: null,
+    decisionHint: text(input.decisionHint, 80) || null
   };
+}
+
+function memoryEvidenceForRef(state, ref) {
+  const value = text(ref, 240);
+  if (!value) return null;
+  const [kind, ...parts] = value.split(":");
+  const id = parts.join(":");
+  if (!id) return null;
+  if (kind === "publication") {
+    const row = (state?.executionReceipts || []).find((item) => {
+      const receipt = item?.receipt || item;
+      const evidence = receipt?.publicationEvidence;
+      return receipt?.submitState === "CONFIRMED" && (item?.id === id || item?.executionId === id || receipt?.publicationReference === id || receipt?.publicationUrl === id || evidence?.evidenceReference === id);
+    });
+    if (row) return { ref: value, status: "VERIFIED", row };
+    const fixture = (state?.fixtureAutomationRuns || []).find((item) => item?.id === id || item?.fixturePublicationUrl === id || item?.fixturePublicationUrl === value);
+    if (fixture && fixture.externalSideEffects !== true && fixture.e2eStatus === "e2e_verified_readonly" && fixture.fixturePublicationUrl) return { ref: value, status: "FIXTURE_VERIFIED", row: fixture };
+    return null;
+  }
+  if (kind === "metric") {
+    const row = (state?.metricSnapshots || []).find((item) => item?.id === id && Object.values(item.coverage || {}).some((status) => status === "measured") && ["official_api", "browser_verified", "verified_manual"].includes(item.provenance?.kind));
+    return row ? { ref: value, status: "MEASURED", row } : null;
+  }
+  if (kind === "browser-execution") {
+    const row = (state?.browserExecutions || []).find((item) => item?.intentId === id || item?.id === id);
+    if (!row || row.executionStatus !== "COMMAND_COMPLETED" || !row.verification || ["UNKNOWN", "CONTROL_NOT_OBSERVED", "FAILED"].includes(String(row.verification.status || "").toUpperCase())) return null;
+    return { ref: value, status: row.evidenceStatus === "RUNTIME_VERIFIED" ? "RUNTIME_VERIFIED" : "FIXTURE_VERIFIED", row };
+  }
+  if (kind === "fixture") {
+    const row = (state?.fixtureAutomationRuns || []).find((item) => item?.id === id);
+    if (!row || row.externalSideEffects === true || row.e2eStatus !== "e2e_verified_readonly" || !row.fixturePublicationUrl) return null;
+    return { ref: value, status: "FIXTURE_VERIFIED", row };
+  }
+  if (kind === "snapshot") {
+    const row = (state?.browserSnapshots || []).find((item) => item?.fingerprint === id || item?.id === id);
+    if (!row || !["STATIC_HTTP", "LIVE_DOM"].includes(row.source)) return null;
+    return { ref: value, status: row.source === "LIVE_DOM" ? "RUNTIME_VERIFIED" : "FIXTURE_VERIFIED", row };
+  }
+  return null;
+}
+
+function evidenceStatusRank(status) {
+  return { OBSERVED: 0, UNKNOWN: 0, MIXED: 0, FIXTURE_VERIFIED: 1, RUNTIME_VERIFIED: 2, VERIFIED: 3, MEASURED: 4 }[status] ?? 0;
+}
+
+function strongestEvidenceStatus(statuses) {
+  const values = [...new Set(statuses)].filter((status) => MEMORY_EVIDENCE_STATUSES.has(status));
+  if (!values.length) return "OBSERVED";
+  // A consolidated claim inherits the least-assured supporting evidence.
+  return values.sort((a, b) => evidenceStatusRank(a) - evidenceStatusRank(b))[0];
+}
+
+function evidenceBindingMatchesScope(state, item, entry) {
+  const scope = item?.scope || {};
+  if (!entry?.row) return false;
+  const row = entry.row;
+  const receipt = row.receipt || row;
+  const postId = row.postId || row.jobId || receipt.jobId;
+  let post = null;
+  const target = () => {
+    if (!post && postId) post = (state?.posts || []).find((candidate) => candidate?.id === postId) || null;
+    return post ? (state?.targets || []).find((candidate) => candidate?.id === post.targetId) || null : null;
+  };
+  if (scope.campaignId && row.campaignId !== undefined && String(row.campaignId) !== String(scope.campaignId)) return false;
+  if (scope.campaignId && row.campaignId === undefined && target()?.campaignId !== scope.campaignId) {
+    if (!post || post.campaignId !== scope.campaignId) return false;
+  }
+  for (const [scopeKey, rowKey] of [["accountId", "accountId"], ["platform", "platform"], ["channel", "channel"], ["communityId", "communityId"]]) {
+    if (!scope[scopeKey]) continue;
+    if (row[rowKey] !== undefined) {
+      if (String(row[rowKey]) !== String(scope[scopeKey])) return false;
+      continue;
+    }
+    const boundTarget = target();
+    const targetValue = rowKey === "accountId" ? boundTarget?.accountId : rowKey === "communityId" ? boundTarget?.communityId : boundTarget?.channel;
+    if (targetValue !== scope[scopeKey]) return false;
+  }
+  return true;
+}
+
+/**
+ * Resolve a memory claim against canonical product evidence. Caller supplied
+ * evidenceStatus is only a request; it cannot promote an observation.
+ */
+export function resolveMemoryEvidence(state, item) {
+  const refs = Array.isArray(item?.evidenceRefs) ? item.evidenceRefs : [];
+  // Opaque refs remain provenance, but cannot promote a claim. Legacy rows may
+  // still contain them in evidenceRefs, so require every ref to be canonical.
+  const canonicalRefs = refs.filter(isCanonicalMemoryEvidenceRef);
+  const evidence = canonicalRefs.map((ref) => memoryEvidenceForRef(state, ref)).filter((entry) => entry && evidenceBindingMatchesScope(state, item, entry));
+  const allRefsSupported = refs.length > 0 && refs.every(isCanonicalMemoryEvidenceRef) && evidence.length === canonicalRefs.length;
+  const status = allRefsSupported ? strongestEvidenceStatus(evidence.map((entry) => entry.status)) : "OBSERVED";
+  return {
+    supported: allRefsSupported,
+    status,
+    evidence,
+    reason: allRefsSupported ? null : refs.length ? "canonical_evidence_missing" : "canonical_evidence_required"
+  };
+}
+
+function effectiveMemoryEvidence(state, item) {
+  if (!item) return { supported: false, status: "OBSERVED", evidence: [], reason: "memory_missing" };
+  const resolved = resolveMemoryEvidence(state, item);
+  if (resolved.supported) return resolved;
+  if (["UNKNOWN", "MIXED"].includes(item.evidenceStatus)) return { ...resolved, status: item.evidenceStatus, reason: item.evidenceStatus };
+  return { ...resolved, status: "OBSERVED", reason: resolved.reason || "observation_not_verified" };
 }
 
 export function memoryItemIsFresh(item, now = new Date()) {
   if (!item || item.retractedAt) return false;
   const current = now instanceof Date ? now.getTime() : Date.parse(String(now));
-  const expiry = Date.parse(String(item.expiresAt || ""));
-  return !Number.isFinite(expiry) || expiry > current;
+  const explicitExpiry = Date.parse(String(item.expiresAt || ""));
+  if (String(item.expiresAt || "").trim() && !Number.isFinite(explicitExpiry)) return false;
+  const fallbackTtl = MEMORY_TTL_MS[String(item.kind || "OBSERVATION").toUpperCase()] || MEMORY_TTL_MS.OBSERVATION;
+  const observed = Date.parse(String(item.createdAt || item.observedAt || ""));
+  const expiry = Number.isFinite(explicitExpiry) ? explicitExpiry : Number.isFinite(observed) ? observed + fallbackTtl : NaN;
+  return Number.isFinite(current) && Number.isFinite(expiry) && expiry > current;
 }
 
 export function recordMemoryObservation(state, input, { now = new Date().toISOString() } = {}) {
   const item = normalizeMemoryItem({ ...input, kind: input.kind || "OBSERVATION" }, { now });
+  const requestedStatus = item.evidenceStatus;
+  if (!["OBSERVED", "UNKNOWN", "MIXED"].includes(requestedStatus)) {
+    const resolved = resolveMemoryEvidence(state, item);
+    item.evidenceStatus = resolved.supported ? resolved.status : "OBSERVED";
+    item.evidenceStatusReason = resolved.reason;
+  }
   state.memoryItems ||= [];
   const existing = state.memoryItems.find((candidate) => candidate.fingerprint === item.fingerprint && candidate.kind === item.kind && stable(candidate.scope) === stable(item.scope));
   if (existing) {
+    const priorEvidenceRefs = Array.isArray(existing.evidenceRefs) ? existing.evidenceRefs : [];
     existing.sampleIds = boundedArray([...(existing.sampleIds || []), ...(item.sampleIds || [])], 64);
     existing.supportCount = Math.max(1, existing.sampleIds.length);
     existing.updatedAt = item.updatedAt;
     existing.observedAt = item.observedAt > existing.observedAt ? item.observedAt : existing.observedAt;
-    existing.evidenceRefs = boundedArray([...(existing.evidenceRefs || []), ...(item.evidenceRefs || [])], 64);
-    existing.provenance = { ...existing.provenance, evidenceRefs: existing.evidenceRefs };
-    if (existing.evidenceStatus !== item.evidenceStatus) existing.evidenceStatus = "MIXED";
+    existing.evidenceRefs = boundedArray([...(existing.evidenceRefs || []), ...(item.evidenceRefs || [])].filter(isCanonicalMemoryEvidenceRef), 64);
+    existing.observationRefs = boundedArray([...(existing.observationRefs || []), ...(item.observationRefs || []), ...priorEvidenceRefs.filter((ref) => !isCanonicalMemoryEvidenceRef(ref))], 64);
+    existing.provenance = { ...existing.provenance, evidenceRefs: existing.evidenceRefs, observationRefs: existing.observationRefs };
+    const resolved = resolveMemoryEvidence(state, existing);
+    existing.evidenceStatus = resolved.supported ? resolved.status : (existing.evidenceStatus !== item.evidenceStatus ? "MIXED" : existing.evidenceStatus);
+    existing.evidenceStatusReason = resolved.reason;
+    existing.evidenceStatusRequested = item.evidenceStatusRequested || existing.evidenceStatusRequested || item.evidenceStatus;
     return { item: existing, deduplicated: true };
   }
   state.memoryItems.push(item);
@@ -523,7 +670,7 @@ function scopeMatches(item, scope = {}) {
 
 export function retrieveBoundedMemory(state, { scope = {}, entityRef = null, limit = 24, now = new Date() } = {}) {
   const max = Math.max(1, Math.min(100, Number(limit) || 24));
-  return (state?.memoryItems || []).filter((item) => memoryItemIsFresh(item, now) && scopeMatches(item, scope) && (!entityRef || item.entityRef === entityRef))
+  return (state?.memoryItems || []).filter((item) => memoryItemIsFresh(item, now) && scopeMatches(item, scope) && (!entityRef || item.entityRef === entityRef) && (item.kind !== "LEARNING" || effectiveMemoryEvidence(state, item).supported))
     .sort((a, b) => Number(b.confidence) - Number(a.confidence) || Number(b.supportCount) - Number(a.supportCount) || String(b.updatedAt).localeCompare(String(a.updatedAt)))
     .slice(0, max);
 }
@@ -542,15 +689,17 @@ export function consolidateMemory(state, { scope = {}, now = new Date() } = {}) 
     const sampleSupport = sampleIds.size || 1;
     const verifiedCount = group.items.reduce((total, item) => {
       const samples = Math.max(1, Array.isArray(item.sampleIds) ? item.sampleIds.length : 0);
-      return total + (["VERIFIED", "MEASURED", "RUNTIME_VERIFIED"].includes(item.evidenceStatus) ? samples : 0);
+      const resolved = effectiveMemoryEvidence(state, item);
+      return total + (resolved.supported && ["VERIFIED", "MEASURED", "RUNTIME_VERIFIED", "FIXTURE_VERIFIED"].includes(resolved.status) ? samples : 0);
     }, 0);
     if (sampleSupport < 2) continue;
     if (verifiedCount < sampleSupport) continue;
     const first = group.items[0];
+    const evidenceStatus = strongestEvidenceStatus(group.items.map((item) => effectiveMemoryEvidence(state, item).status));
     const learning = normalizeMemoryItem({
       kind: "LEARNING", scope: first.scope, entityRef: first.entityRef, content: first.content, source: "oi-browser-consolidation",
       sourceRevision: OI_BROWSER_SOURCE_REVISION, evidenceRefs: [...group.evidence], confidence: Math.min(0.98, Number(first.confidence || 0.5) + Math.min(0.35, sampleSupport / 100)),
-      sampleIds: [...sampleIds], supportCount: sampleSupport, observedAt: first.observedAt, evidenceStatus: "VERIFIED", decisionHint: first.decisionHint,
+      sampleIds: [...sampleIds], supportCount: sampleSupport, observedAt: first.observedAt, evidenceStatus, decisionHint: first.decisionHint,
       id: `learning-${digest({ fingerprint: first.fingerprint, scope: first.scope, evidence: [...group.evidence].sort() }, 24)}`
     }, { now: iso(now) });
     learnings.push({ ...learning, support: { sampleSupport, evidenceCount: group.evidence.size, verifiedCount }, supersedes: first.id });
@@ -651,7 +800,12 @@ export function projectOiBrowserIntegration(state, { now = new Date() } = {}) {
   return {
     integrationVersion: OI_BROWSER_INTEGRATION_VERSION,
     sourceRevision: OI_BROWSER_SOURCE_REVISION,
-    memory: { total: (state?.memoryItems || []).length, fresh: items.length, learnings: (state?.memoryItems || []).filter((item) => item.kind === "LEARNING" && memoryItemIsFresh(item, now)).length, recent: items },
+    memory: {
+      total: (state?.memoryItems || []).length,
+      fresh: items.length,
+      learnings: (state?.memoryItems || []).filter((item) => item.kind === "LEARNING" && memoryItemIsFresh(item, now) && effectiveMemoryEvidence(state, item).supported).length,
+      recent: items
+    },
     browser: { totalSnapshots: (state?.browserSnapshots || []).length, recent: snapshots, liveVerified: snapshots.filter((item) => item.source === "LIVE_DOM").length, staticOnly: snapshots.filter((item) => item.source !== "LIVE_DOM").length },
     executions: { total: (state?.browserExecutions || []).length, recent: (state?.browserExecutions || []).slice(-12) },
     providers: { recentDecisions: decisions, healthy: healthyProviders.size, successfulRoutes: decisions.filter((item) => item.status === "SUCCEEDED").length },

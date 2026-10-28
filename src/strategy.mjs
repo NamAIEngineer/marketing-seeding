@@ -245,8 +245,8 @@ function dynamicWaitReasons(posts, schedules, now) {
   return [...new Set(reasonsFound)].sort();
 }
 
-function memoryTargetPreference(memoryItems = []) {
-  return memoryItems.find((item) => item.kind === "LEARNING" && item.evidenceStatus === "VERIFIED" && Number(item.supportCount) >= 2 && /^prefer_target:[^\s]+$/.test(String(item.decisionHint || ""))) || null;
+function memoryTargetPreference(memoryItems = [], campaign = null) {
+  return memoryItems.find((item) => item.kind === "LEARNING" && (item.evidenceStatus !== "FIXTURE_VERIFIED" || campaign?.testJob === true) && ["FIXTURE_VERIFIED", "RUNTIME_VERIFIED", "VERIFIED", "MEASURED"].includes(item.evidenceStatus) && Number(item.supportCount) >= 2 && /^prefer_target:[^\s]+$/.test(String(item.decisionHint || ""))) || null;
 }
 
 /** Deterministic advisory strategy. It reads state and never creates execution authority. */
@@ -294,7 +294,7 @@ export function deriveStrategyDecision(state, campaignId, { now = new Date(), pr
       if (decision.allowed) publishable.push({ post, decision });
     }
     if (publishable.length) {
-      const preference = memoryTargetPreference(remembered);
+      const preference = memoryTargetPreference(remembered, campaign);
       const selected = preference
         ? publishable.find(({ post }) => `prefer_target:${post.targetId}` === preference.decisionHint) || publishable[0]
         : publishable[0];

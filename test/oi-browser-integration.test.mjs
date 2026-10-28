@@ -12,6 +12,7 @@ import {
   normalizeBrowserSnapshot,
   createBrowserSnapshot,
   normalizeMemoryItem,
+  memoryItemIsFresh,
   recordMemoryObservation,
   retrieveBoundedMemory,
   consolidateMemory,
@@ -102,15 +103,18 @@ test("TYPE intent rejects a transient value that does not match its durable bind
 });
 
 test("memory observation deduplicates duplicate polls, consolidates distinct publications, and scopes retrieval", () => {
-  const state = { memoryItems: [] };
-  const input = normalizeMemoryItem({ kind: "OBSERVATION", scope: { campaignId: "campaign-x", communityId: "community-a" }, content: "technical educational content accepted", source: "fixture-community", evidenceRefs: ["snapshot-1"], publicationId: "fixture-publication-1", pollId: "poll-1", confidence: 0.8, evidenceStatus: "VERIFIED", decisionHint: "educational" });
+  const state = { memoryItems: [], fixtureAutomationRuns: [
+    { id: "fixture-1", campaignId: "campaign-x", communityId: "community-a", e2eStatus: "e2e_verified_readonly", fixturePublicationUrl: "https://fixture.local/posts/1", externalSideEffects: false },
+    { id: "fixture-2", campaignId: "campaign-x", communityId: "community-a", e2eStatus: "e2e_verified_readonly", fixturePublicationUrl: "https://fixture.local/posts/2", externalSideEffects: false }
+  ] };
+  const input = normalizeMemoryItem({ kind: "OBSERVATION", scope: { campaignId: "campaign-x", communityId: "community-a" }, content: "technical educational content accepted", source: "fixture-community", evidenceRefs: ["fixture:fixture-1"], publicationId: "fixture-publication-1", pollId: "poll-1", confidence: 0.8, evidenceStatus: "VERIFIED", decisionHint: "educational" });
   const first = recordMemoryObservation(state, input, { now: "2026-10-27T00:00:00.000Z" });
   const second = recordMemoryObservation(state, { ...input, pollId: "poll-2", evidenceRefs: ["snapshot-2"] }, { now: "2026-10-27T00:01:00.000Z" });
   assert.equal(first.deduplicated, false);
   assert.equal(second.deduplicated, true);
   assert.equal(state.memoryItems.length, 1);
   assert.equal(state.memoryItems[0].supportCount, 1);
-  const third = recordMemoryObservation(state, { ...input, publicationId: "fixture-publication-2", evidenceRefs: ["snapshot-3"] }, { now: "2026-10-27T00:02:00.000Z" });
+  const third = recordMemoryObservation(state, { ...input, publicationId: "fixture-publication-2", evidenceRefs: ["fixture:fixture-2"] }, { now: "2026-10-27T00:02:00.000Z" });
   assert.equal(third.deduplicated, true);
   assert.equal(state.memoryItems[0].supportCount, 2);
   const learnings = consolidateMemory(state, { scope: { campaignId: "campaign-x", communityId: "community-a" }, now: new Date("2026-10-27T00:02:00.000Z") });
@@ -118,6 +122,47 @@ test("memory observation deduplicates duplicate polls, consolidates distinct pub
   assert.equal(learnings[0].kind, "LEARNING");
   assert.equal(learnings[0].support.sampleSupport, 2);
   assert.equal(retrieveBoundedMemory(state, { scope: { campaignId: "campaign-x", communityId: "community-b" } }).length, 0);
+});
+
+test("caller supplied VERIFIED status cannot create learning without canonical evidence", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "oi-browser-memory-boundary-"));
+  const service = new SeedingService(new JsonStore(path.join(root, "state.json")));
+  await service.init();
+  await service.recordOiMemory({ kind: "OBSERVATION", scope: { campaignId: "c1" }, content: "unsupported claim", source: "caller", evidenceRefs: ["publication:does-not-exist-1"], publicationId: "does-not-exist-1", evidenceStatus: "VERIFIED", decisionHint: "prefer_target:target" });
+  await service.recordOiMemory({ kind: "OBSERVATION", scope: { campaignId: "c1" }, content: "unsupported claim", source: "caller", evidenceRefs: ["publication:does-not-exist-2"], publicationId: "does-not-exist-2", evidenceStatus: "VERIFIED", decisionHint: "prefer_target:target" });
+  const state = await service.snapshot();
+  assert.equal(state.memoryItems.every((item) => item.evidenceStatus === "OBSERVED"), true);
+  assert.equal((await service.consolidateOiMemory({ scope: { campaignId: "c1" } })).learnings.length, 0);
+});
+
+test("memory expiry rejects invalid explicit timestamps and fails closed for legacy rows", () => {
+  assert.throws(() => normalizeMemoryItem({ kind: "OBSERVATION", content: "bad expiry", source: "fixture", expiresAt: "not-a-date" }), /expiresAt must be a valid timestamp/);
+  assert.equal(memoryItemIsFresh({ kind: "OBSERVATION", content: "legacy bad expiry", createdAt: "2026-10-27T00:00:00Z", expiresAt: "not-a-date" }, new Date("2026-10-27T00:01:00Z")), false);
+});
+
+test("memory evidence is scoped, expires, and retracts learning support", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "oi-browser-memory-scope-"));
+  const file = path.join(root, "state.json");
+  const service = new SeedingService(new JsonStore(file));
+  await service.init();
+  await service.store.mutate("fixture", "fixture_evidence_seed", (state) => {
+    state.fixtureAutomationRuns.push(
+      { id: "fixture-a", campaignId: "campaign-a", communityId: "community-a", e2eStatus: "e2e_verified_readonly", fixturePublicationUrl: "https://fixture.local/posts/a", externalSideEffects: false },
+      { id: "fixture-a2", campaignId: "campaign-a", communityId: "community-a", e2eStatus: "e2e_verified_readonly", fixturePublicationUrl: "https://fixture.local/posts/a2", externalSideEffects: false },
+      { id: "fixture-b", campaignId: "campaign-b", communityId: "community-a", e2eStatus: "e2e_verified_readonly", fixturePublicationUrl: "https://fixture.local/posts/b", externalSideEffects: false }
+    );
+  });
+  await service.recordOiMemory({ kind: "OBSERVATION", scope: { campaignId: "campaign-a", communityId: "community-a" }, content: "scoped fit", source: "fixture", evidenceRefs: ["fixture:fixture-a"], publicationId: "fixture-a", evidenceStatus: "VERIFIED", expiresAt: "2026-10-27T00:30:00Z" });
+  await service.recordOiMemory({ kind: "OBSERVATION", scope: { campaignId: "campaign-a", communityId: "community-a" }, content: "scoped fit", source: "fixture", evidenceRefs: ["fixture:fixture-a2"], publicationId: "fixture-a2", evidenceStatus: "VERIFIED", expiresAt: "2026-10-27T00:30:00Z" });
+  await service.recordOiMemory({ kind: "OBSERVATION", scope: { campaignId: "campaign-b", communityId: "community-a" }, content: "foreign fit", source: "fixture", evidenceRefs: ["fixture:fixture-b"], publicationId: "fixture-b", evidenceStatus: "VERIFIED" });
+  const state = await service.snapshot();
+  assert.equal(state.memoryItems.filter((item) => item.content === "scoped fit").every((item) => item.evidenceStatus === "FIXTURE_VERIFIED"), true);
+  assert.equal(state.memoryItems.find((item) => item.content === "foreign fit").evidenceStatus, "FIXTURE_VERIFIED");
+  assert.equal((await service.retrieveOiMemory({ scope: { campaignId: "campaign-a" }, now: "2026-10-27T01:00:00Z" })).items.length, 0);
+  const valid = await service.retrieveOiMemory({ scope: { campaignId: "campaign-a" }, now: "2026-10-27T00:10:00Z" });
+  assert.equal(valid.items.length, 1);
+  await service.retractOiMemoryEvidence("fixture:fixture-a");
+  assert.equal((await service.consolidateOiMemory({ scope: { campaignId: "campaign-a" }, now: "2026-10-27T00:10:00Z" })).learnings.length, 0);
 });
 
 test("provider router distinguishes unavailable, timeout, invalid result, and success without leaking output", async () => {
@@ -168,8 +213,14 @@ test("service persists memory and snapshots in canonical JsonStore and survives 
   const file = path.join(root, "state.json");
   const service = new SeedingService(new JsonStore(file));
   await service.init();
-  const observed = await service.recordOiMemory({ kind: "OBSERVATION", scope: { campaignId: "c1" }, content: "Community A accepts technical education", source: "fixture", evidenceRefs: ["e1"], publicationId: "fixture-publication-1", evidenceStatus: "VERIFIED" });
-  await service.recordOiMemory({ kind: "OBSERVATION", scope: { campaignId: "c1" }, content: "Community A accepts technical education", source: "fixture", evidenceRefs: ["e2"], publicationId: "fixture-publication-2", evidenceStatus: "VERIFIED" });
+  await service.store.mutate("fixture", "fixture_evidence_seed", (state) => {
+    state.fixtureAutomationRuns.push(
+      { id: "fixture-1", campaignId: "c1", e2eStatus: "e2e_verified_readonly", fixturePublicationUrl: "https://fixture.local/posts/1", externalSideEffects: false },
+      { id: "fixture-2", campaignId: "c1", e2eStatus: "e2e_verified_readonly", fixturePublicationUrl: "https://fixture.local/posts/2", externalSideEffects: false }
+    );
+  });
+  const observed = await service.recordOiMemory({ kind: "OBSERVATION", scope: { campaignId: "c1" }, content: "Community A accepts technical education", source: "fixture", evidenceRefs: ["fixture:fixture-1"], publicationId: "fixture-publication-1", evidenceStatus: "VERIFIED" });
+  await service.recordOiMemory({ kind: "OBSERVATION", scope: { campaignId: "c1" }, content: "Community A accepts technical education", source: "fixture", evidenceRefs: ["fixture:fixture-2"], publicationId: "fixture-publication-2", evidenceStatus: "VERIFIED" });
   const consolidated = await service.consolidateOiMemory({ scope: { campaignId: "c1" } });
   assert.equal(consolidated.learnings.length, 1);
   const recorded = await service.recordBrowserSnapshot({ url: "https://fixture.test/a", html: '<title>A</title><button aria-label="Inspect">Inspect</button>' });
@@ -256,7 +307,7 @@ test("verified learning changes the next production strategy candidate", async (
   await (await import("node:fs/promises")).writeFile(path.join(productRepo, "README.md"), "grounded product", "utf8");
   const service = new SeedingService(new JsonStore(path.join(root, "state.json")));
   await service.init();
-  const campaign = await service.createCampaign({ name: "Memory strategy", objective: "Developer awareness", productRepo });
+  const campaign = await service.createCampaign({ name: "Memory strategy", objective: "Developer awareness", productRepo, testJob: true });
   const targetA = await service.createTarget({ channel: "threads", name: "Community A", url: "https://www.threads.net/@a", accountId: "account-a", status: "active" });
   const targetB = await service.createTarget({ channel: "threads", name: "Community B", url: "https://www.threads.net/@b", accountId: "account-b", status: "active" });
   const postA = await service.createPost({ campaignId: campaign.id, targetId: targetA.id, content: "Technical education A", contentId: "content-a" });
@@ -271,12 +322,16 @@ test("verified learning changes the next production strategy candidate", async (
       post.approvedAt = new Date().toISOString();
       post.approvalBinding = approvalFingerprint(post, state.targets.find((target) => target.id === post.targetId));
     }
+    state.fixtureAutomationRuns.push(
+      { id: "fixture-1", campaignId: campaign.id, e2eStatus: "e2e_verified_readonly", fixturePublicationUrl: "https://fixture.local/posts/1", externalSideEffects: false },
+      { id: "fixture-2", campaignId: campaign.id, e2eStatus: "e2e_verified_readonly", fixturePublicationUrl: "https://fixture.local/posts/2", externalSideEffects: false }
+    );
   });
   const before = deriveStrategyDecision(await service.snapshot(), campaign.id, { now: new Date("2026-10-27T01:00:00Z") });
   assert.equal(before.action, "publish");
   const preferredTargetId = before.candidateId === postA.id ? targetB.id : targetA.id;
-  await service.recordOiMemory({ kind: "OBSERVATION", scope: { campaignId: campaign.id }, content: "verified community fit", source: "fixture-community", evidenceRefs: ["publication:fixture-1"], publicationId: "fixture-publication-1", evidenceStatus: "VERIFIED", decisionHint: `prefer_target:${preferredTargetId}` });
-  await service.recordOiMemory({ kind: "OBSERVATION", scope: { campaignId: campaign.id }, content: "verified community fit", source: "fixture-community", evidenceRefs: ["publication:fixture-2"], publicationId: "fixture-publication-2", evidenceStatus: "VERIFIED", decisionHint: `prefer_target:${preferredTargetId}` });
+  await service.recordOiMemory({ kind: "OBSERVATION", scope: { campaignId: campaign.id }, content: "verified community fit", source: "fixture-community", evidenceRefs: ["fixture:fixture-1"], publicationId: "fixture-publication-1", evidenceStatus: "VERIFIED", decisionHint: `prefer_target:${preferredTargetId}` });
+  await service.recordOiMemory({ kind: "OBSERVATION", scope: { campaignId: campaign.id }, content: "verified community fit", source: "fixture-community", evidenceRefs: ["fixture:fixture-2"], publicationId: "fixture-publication-2", evidenceStatus: "VERIFIED", decisionHint: `prefer_target:${preferredTargetId}` });
   const consolidated = await service.consolidateOiMemory({ scope: { campaignId: campaign.id }, now: "2026-10-27T01:01:00Z" });
   assert.equal(consolidated.learnings.length, 1);
   const after = deriveStrategyDecision(await service.snapshot(), campaign.id, { now: new Date("2026-10-27T01:02:00Z") });

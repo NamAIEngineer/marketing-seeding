@@ -3101,6 +3101,9 @@ export class SeedingService {
     const productRepo = await requireProductRepo(input.productRepo);
     const track = optionalProductTrack(input.track);
     const discoveryFit = normalizeDiscoveryFit(input.discoveryFit);
+    if (input.testJob === true && !["operator", "local-human-operator"].includes(actor)) {
+      throw new Error("Only an operator can mark a campaign as a fixture/test campaign");
+    }
     const result = await this.store.mutate(actor, "campaign_created", (state) => {
       const campaign = {
         id: randomUUID(),
@@ -3113,6 +3116,7 @@ export class SeedingService {
         audience: Array.isArray(input.audience) ? input.audience : [],
         discoverySources: normalizeDiscoverySources(input.discoverySources) || [],
         ...(discoveryFit ? { discoveryFit } : {}),
+        testJob: input.testJob === true,
         status: "draft",
         createdAt: nowIso()
       };
