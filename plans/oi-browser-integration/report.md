@@ -2,7 +2,7 @@
 
 ## Status
 
-`PARTIAL`. Candidate code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`; final candidate docs plus coordinator changes are now on the working tree after `21da258`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+`PARTIAL`. Candidate final revision: `7f2b74acab39987318d0720361f1cefdac0e6b51`. Final candidate includes durable project coordination and evidence updates. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
 ## Baseline, ownership, integration
 
@@ -48,12 +48,12 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 ## Tests and hygiene
 
 - Baseline `79985bb411afc141f0edf10ae635fb91824d8bc9`: `npm test` → 576 total, 574 pass, 0 fail, 2 skipped.
-- Candidate focused: authority/bootstrap/delegation 47/47; oi-browser/browser/provider/transport 59/59; combined 106/106.
-- Candidate full: `node --test test/*.test.mjs` → 790 total, 788 pass, 0 fail, 2 skipped.
+- Candidate focused: authority/bootstrap/delegation 47/47; oi-browser/browser/provider/transport 59/59; combined 106/106; coordinator `node --test test/project-coordinator.test.mjs` → 4 total, 4 pass, 0 fail.
+- Candidate full at `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped.
 - Auto-GTM: `/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests` → 158 total, 158 pass, 0 fail; `pip check` clean.
 - Syntax checks for native adapters/service/server passed. `git diff --check` passed. Secret scan hits are redaction test fixtures/generated UI text, not credentials.
 - Evidence artifact: [regression-7378f8c.json](regression-7378f8c.json).
-- Fresh independent read-only review PASS at `2026-10-28T05:44:28Z`, HEAD `d4e8ee0`; source/test diff after `7378f8c` is empty.
+- Fresh independent read-only review at `2026-10-28T07:49:24Z`, HEAD `7f2b74a`; coordinator durability, artifact containment, dedupe/restart, secret safety and A/B boundaries passed. Stale metadata was corrected in this report and the coordination ledger.
 
 ## Remaining blockers
 
@@ -66,5 +66,5 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 
 - Exact ChatGPT thread was matched from a fresh Chrome AX tree by marker `ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01` and URL conversation `6ae09d26-12c4-83ec-bd1f-d53553e707cc`. Fresh bounded bridge receipt `xchg-50bacbd9c3064aa2a7e0` correlated the nonce and marker in a completed assistant turn.
 - Current A/B handshakes were delivered through Orca request IDs `461d4128-4075-41ea-b07f-291c421385bb` and `7cdca6e2-c446-4d8c-b4d6-686e061e9da8`; A returned receiver READY, B returned a real read-only result but follow-up capability unconfirmed.
-- `src/project-coordinator.mjs` provides durable project-scoped dependency state and bounded wake/replay. Focused tests pass 3/3. Rehearsal artifact: `coordination-rehearsal-20261028.json` (`FIXTURE_VERIFIED`, one worker attempt, accepted artifact hash, restart result retained, replay false).
+- `src/project-coordinator.mjs` provides durable project-scoped dependency state and bounded wake/replay. Focused tests pass 4/4. Rehearsal artifact: `coordination-rehearsal-20261028.json` (`FIXTURE_VERIFIED`, one worker attempt, accepted artifact hash, restart result retained, replay false).
 - Existing orchestrator remains healthy at `8879`, but GoalRuns v60–v63 remain failed for concrete provider/artifact/approval/reply reasons; this coordinator proof does not upgrade those historical runs or prove automatic agent resume after chat termination.

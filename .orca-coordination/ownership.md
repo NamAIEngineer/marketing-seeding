@@ -4,7 +4,7 @@
 |---|---|---|---|---|
 | A | `/Users/nam/Documents/marketing-seeding-wave-13-bridge` / `wave/distribution-os-runtime-wave-13-bridge` | Camoufox session/transport/server/strategy/UI; current overlay includes `src/auto-gtm-feed.mjs`, `src/camoufox-execution-transport.mjs`, `src/camoufox-playwright-protocol.mjs`, `src/market-intelligence.mjs`, and related tests | PRESERVED; not reclaimed | Current marker ACK `SESSION-A-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`; HEAD `1ed5771`; 8 tracked dirty + 509 untracked; port `4318` remains A-owned; receiver reported READY |
 | B | `/Users/nam/Documents/marketing-seeding-integration` / `integration/autonomous-build` | authority/standing-delegation/service/tests/reports | CHECKPOINTED; behavior adapted in candidate | Current marker ACK `SESSION-B-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`; owner commit `b675a98`; 0 tracked dirty + 23 untracked; follow-up capability remains unconfirmed because Orca marks terminal orphaned |
-| C | `/Users/nam/Documents/marketing-seeding-session-c-reconciled` / `integration/session-c-reconciled` | oi-browser audit, native memory/provider/browser contracts, integration docs/evidence, reconciled candidate | CLAIMED; code/test checkpoint `7378f8c` | C-owned candidate and evidence; no A/B worktree mutation |
+| C | `/Users/nam/Documents/marketing-seeding-session-c-reconciled` / `integration/session-c-reconciled` | oi-browser audit, native memory/provider/browser contracts, durable coordination, integration docs/evidence, reconciled candidate | CLAIMED; code/test checkpoint `7f2b74a` | C-owned candidate and evidence; no A/B worktree mutation |
 
 Rules:
 

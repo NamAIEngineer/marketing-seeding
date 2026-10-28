@@ -3,7 +3,7 @@
 ## Candidate handoff
 
 - Candidate: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`.
-- Code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`.
+- Code/test checkpoint: `7f2b74acab39987318d0720361f1cefdac0e6b51`.
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - A checkpoint represented: `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; current A overlay preserved outside candidate.
 - B owner checkpoint: `b675a98e6dd2da3c12133dff715eddea616c91f5`; not cherry-picked because candidate already contains/adapts substantive behavior and B has unrelated obsolete differences.
@@ -13,7 +13,7 @@
 
 - `plans/oi-browser-integration/fixture-run-7378f8c.json`: `FIXTURE_VERIFIED`, controlled Product X / Community A+B, learning-driven before/after candidate change, static browser intent activation, idempotent replay, restart persistence.
 - `plans/oi-browser-integration/server-smoke-7378f8c.json`: `RUNTIME_VERIFIED`, exact source SHA, isolated port `4337`, auth/memory/static snapshot/restart persistence, explicit local-Qwen route success, `feed_not_generated`.
-- Current tests: focused integration/authority slices `106/106`; full `790 total, 788 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `158/158`, `pip check` clean.
+- Current tests: focused integration/authority slices `106/106`; coordinator `4/4`; full `794 total, 792 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `158/158`, `pip check` clean.
 
 ## Native session evidence
 
@@ -30,6 +30,7 @@
 
 - `src/project-coordinator.mjs`, `test/project-coordinator.test.mjs`, and `scripts/coordination-rehearsal.mjs` add a local-only development control plane. It does not select providers/accounts/campaigns and cannot publish.
 - Rehearsal artifact: `plans/oi-browser-integration/coordination-rehearsal-20261028.json`; dependency → wake → worker → accepted artifact → restart/replay check passed, one invocation only.
+- Fresh independent read-only review at `2026-10-28T07:49:24Z` verified HEAD `7f2b74a`; stale test/provenance metadata was corrected before final handoff.
 
 ## Runtime boundary
 

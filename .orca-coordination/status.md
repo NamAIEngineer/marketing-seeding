@@ -4,10 +4,10 @@
 
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
-- Code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`
+- Code/test checkpoint: `7f2b74acab39987318d0720361f1cefdac0e6b51`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
-- C-owned evidence is committed through `93dd290`; source/test tree is unchanged after `7378f8c`.
+- C-owned evidence and coordinator source/tests are committed through `7f2b74a`.
 
 ## A/B/C connectivity and ownership
 
@@ -22,11 +22,12 @@
 
 - Baseline `79985bb411afc141f0edf10ae635fb91824d8bc9`: `npm test` → 576 total, 574 pass, 0 fail, 2 skipped.
 - Focused current slices: authority/bootstrap/delegation `47/47`; oi-browser/browser/provider/transport `59/59`; combined `106/106`.
-- Full candidate: `node --test test/*.test.mjs` → 790 total, 788 pass, 0 fail, 2 skipped.
+- Coordinator focused: `node --test test/project-coordinator.test.mjs` → 4 total, 4 pass, 0 fail.
+- Full candidate: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped.
 - Auto-GTM current checkout: `python -m unittest discover tests` → 158 total, 158 pass, 0 fail; `pip check` clean.
 - Controlled fixture: `plans/oi-browser-integration/fixture-run-7378f8c.json`, `FIXTURE_VERIFIED`; learning support 2, verified 2; before/after candidate changed; restart and browser replay passed; external side effects false.
 - Isolated runtime: `plans/oi-browser-integration/server-smoke-7378f8c.json`, `RUNTIME_VERIFIED`; port `4337`, exact SHA, auth boundary, memory/static snapshot persistence, restart persistence, explicit local-Qwen route success; Auto-GTM remains unavailable (`feed_not_generated`).
-- Current syntax checks and `git diff --check` passed. Fresh independent verifier PASS at `d4e8ee0` (`2026-10-28T05:44:28Z`); source/test diff after `7378f8c` is empty. Secret scan was reviewed; matches are test redaction fixtures, not credentials.
+- Current syntax checks and `git diff --check` passed. Fresh independent verifier reviewed `7f2b74a` at `2026-10-28T07:49:24Z`; coordinator tests are 4/4. Secret scan found no credential-like values in coordinator files; matches elsewhere are test redaction fixtures/generated UI text.
 
 ## State
 

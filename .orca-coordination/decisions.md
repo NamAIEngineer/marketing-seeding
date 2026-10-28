@@ -1,6 +1,6 @@
 # Integration decisions
 
-- Candidate: `integration/session-c-reconciled`; code/test checkpoint `7378f8cac202ce8efc0c5c66cb789e67f504f32e`.
+- Candidate: `integration/session-c-reconciled`; final checkpoint `7f2b74acab39987318d0720361f1cefdac0e6b51`; native code/test checkpoint `7378f8c`.
 - A checkpoint `1ed5771` is represented in candidate history. A's current 3-file tracked overlay and untracked files remain untouched.
 - B checkpoint `b675a98` is not an ancestor of the candidate and is not cherry-picked blindly. Its substantive authority behavior (standing reference scope collision protection, second-campaign rejection, delegation validation before browser input/ready exposure/worker start) is present through candidate history from `0232a3e` and is covered by current tests. B's obsolete provider/GPM-era differences remain excluded.
 - `marketing-seeding` remains the only application, `JsonStore`, `SeedingService`, dashboard, and Decision Plane. No second oi-browser app/store/orchestrator was added.
