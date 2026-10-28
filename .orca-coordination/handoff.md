@@ -13,7 +13,7 @@
 
 - `plans/oi-browser-integration/fixture-run-7378f8c.json`: `FIXTURE_VERIFIED`, controlled Product X / Community A+B, learning-driven before/after candidate change, static browser intent activation, idempotent replay, restart persistence.
 - `plans/oi-browser-integration/server-smoke-7378f8c.json`: `RUNTIME_VERIFIED`, exact source SHA, isolated port `4337`, auth/memory/static snapshot/restart persistence, explicit local-Qwen route success, `feed_not_generated`.
-- Current tests: focused oi-browser memory/provider `22/22`; native/coordinator/LinkedIn verifier focused `69/69`; historical integration/authority slices `106/106`; current full `805 total, 803 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `160/160`, `pip check` clean. Historical full `794/792/0/2` remains tied to `7f2b74a`; pre-regression candidate `802/800/0/2` remains tied to `10ce868`.
+- Current tests: focused oi-browser memory/provider `22/22`; native/coordinator/LinkedIn verifier focused `69/69`; historical integration/authority slices `106/106`; current full `809 total, 807 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `160/160`, `pip check` clean. Historical full `794/792/0/2` remains tied to `7f2b74a`; pre-regression candidate `802/800/0/2` remains tied to `10ce868`.
 - Durable regression artifact: `plans/oi-browser-integration/regression-final-9875db3.json`, source `9875db3`, remains historical. Current recovery evidence is `plans/oi-browser-integration/regression-final-1589518.json`; prior `regression-final-10ce868.json`, `regression-final-ac2f7df.json`, and historical `regression-final-7f2b74a.json` remain unchanged.
 
 ## Native session evidence
@@ -42,7 +42,7 @@
 ## Current C regression handoff (2026-10-28)
 
 - Commit `9875db3` fixes independent memory sample counting and provider body/JSON deadlines. Canonical `evidenceRefs` now control sample identity; distinct canonical fixture refs remain independent, while caller ID changes and duplicate polling do not add support. Provider probe/inference deadlines cover fetch, body consumption, and JSON parsing; caller aborts fail fast and timeout remains UNKNOWN/failure.
-- Focused command `node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs`: `22/22` pass. Full `npm test`: `805 total, 803 pass, 0 fail, 2 skipped`, output SHA-256 `e00abd1cf8304e832361bb81643520267d2845939ba31554aecc86b869beae08`.
+- Focused command `node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs`: `22/22` pass. Historical full `npm test` at `9875db3`: `805 total, 803 pass, 0 fail, 2 skipped`, output SHA-256 `e00abd1cf8304e832361bb81643520267d2845939ba31554aecc86b869beae08`.
 - Independent verifier: PASS, `2026-10-28T13:42:57Z`, read-only, no A/B/runtime edits. Queue worker `ms-session-c-memory-evidence-20261028` was attempted once and failed closed by no-progress guard before edits; no retry/resubmission. C applied and reviewed the fix directly under the claimed C scope.
 
 ## Continuation supervisor evidence
