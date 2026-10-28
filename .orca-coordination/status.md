@@ -4,7 +4,7 @@
 
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
-- Code/test checkpoint: `10ce8686e57464667daf343e8cb502cef46d09fd`
+- Code/test checkpoint: `9875db34c3f068c1510b3e92e8c72e4134e641a9`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
 - C-owned evidence and coordinator source/tests are committed through `10ce868`; `7f2b74a` remains the prior integration evidence checkpoint.
@@ -31,6 +31,7 @@
 - Controlled fixture: `plans/oi-browser-integration/fixture-run-7378f8c.json`, `FIXTURE_VERIFIED`; learning support 2, verified 2; before/after candidate changed; restart and browser replay passed; external side effects false.
 - Isolated runtime: `plans/oi-browser-integration/server-smoke-7378f8c.json`, `RUNTIME_VERIFIED`; port `4337`, exact SHA, auth boundary, memory/static snapshot persistence, restart persistence, explicit local-Qwen route success; Auto-GTM remains unavailable (`feed_not_generated`).
 - Current syntax checks and `git diff --check` passed. Fresh independent verifier reviewed historical `7f2b74a` at `2026-10-28T07:49:24Z`; current native/coordinator/verifier focused checks are 69/69. Secret scan found no credential-like values in coordinator files; matches elsewhere are test redaction fixtures/generated UI text.
+- Regression fix at `9875db3`: canonical evidence refs define independent memory samples; caller publication/sample ID changes cannot inflate support; stalled provider response bodies and JSON parsing remain under the same deadline; already-aborted caller signals fail fast. Focused oi-browser tests `22/22`; full `npm test` `805 total, 803 pass, 0 fail, 2 skipped`; output SHA-256 `e00abd1cf8304e832361bb81643520267d2845939ba31554aecc86b869beae08`. Independent read-only review PASS at `2026-10-28T13:42:57Z`; no A/B/runtime mutation.
 
 ## State
 

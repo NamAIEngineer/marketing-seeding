@@ -3,7 +3,7 @@
 ## Candidate handoff
 
 - Candidate: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`.
-- Code/test checkpoint: `10ce8686e57464667daf343e8cb502cef46d09fd`; prior integration checkpoint `7f2b74a` retained.
+- Code/test checkpoint: `9875db34c3f068c1510b3e92e8c72e4134e641a9`; prior integration checkpoint `7f2b74a` retained.
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - A checkpoint represented: `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; current A overlay read-only recheck is 13 tracked dirty + 90 untracked, preserved outside candidate.
 - B owner checkpoint: `b675a98e6dd2da3c12133dff715eddea616c91f5`; current B read-only recheck is tracked-clean with 16 untracked paths; not cherry-picked because candidate already contains/adapts substantive behavior.
@@ -38,6 +38,12 @@
 - Runtime `127.0.0.1:4318` remains A-owned and untouched.
 - No login, MFA/CAPTCHA handling, authority grant, live submit, deployment, merge, or external side effect occurred. Branch `integration/session-c-reconciled` is pushed and draft PR [NamAIEngineer/marketing-seeding#2](https://github.com/NamAIEngineer/marketing-seeding/pull/2) is open; no merge performed.
 - Fixture and isolated runtime evidence do not upgrade live publication, authenticated Camoufox readiness, or external metrics.
+
+## Current C regression handoff (2026-10-28)
+
+- Commit `9875db3` fixes independent memory sample counting and provider body/JSON deadlines. Canonical `evidenceRefs` now control sample identity; distinct canonical fixture refs remain independent, while caller ID changes and duplicate polling do not add support. Provider probe/inference deadlines cover fetch, body consumption, and JSON parsing; caller aborts fail fast and timeout remains UNKNOWN/failure.
+- Focused command `node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs`: `22/22` pass. Full `npm test`: `805 total, 803 pass, 0 fail, 2 skipped`, output SHA-256 `e00abd1cf8304e832361bb81643520267d2845939ba31554aecc86b869beae08`.
+- Independent verifier: PASS, `2026-10-28T13:42:57Z`, read-only, no A/B/runtime edits. Queue worker `ms-session-c-memory-evidence-20261028` was attempted once and failed closed by no-progress guard before edits; no retry/resubmission. C applied and reviewed the fix directly under the claimed C scope.
 
 ## Continuation supervisor evidence
 
