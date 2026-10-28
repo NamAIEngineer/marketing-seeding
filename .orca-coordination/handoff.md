@@ -38,3 +38,10 @@
 - Runtime `127.0.0.1:4318` remains A-owned and untouched.
 - No login, MFA/CAPTCHA handling, authority grant, live submit, deployment, merge, or external side effect occurred. Branch `integration/session-c-reconciled` is pushed and draft PR [NamAIEngineer/marketing-seeding#2](https://github.com/NamAIEngineer/marketing-seeding/pull/2) is open; no merge performed.
 - Fixture and isolated runtime evidence do not upgrade live publication, authenticated Camoufox readiness, or external metrics.
+
+## Continuation supervisor evidence
+
+- C-owned continuation changes are pending on branch `integration/session-c-reconciled` above `6bb0eee`; A/B worktrees remain untouched.
+- LaunchAgent `ai.marketing-seeding.project-coordinator` runs `/Users/nam/Documents/marketing-seeding-session-c-reconciled/scripts/project-coordinator-supervisor.mjs`; rollback: `launchctl bootout gui/$(id -u) "$HOME/Library/LaunchAgents/ai.marketing-seeding.project-coordinator.plist"`.
+- C follow-ups #1/#2 native requests, markers, artifacts, and hashes are recorded in `plans/oi-browser-integration/native-resume-evidence-20261028.json`.
+- Durable coordinator state contains structured receipts/hashes/markers/request IDs; raw `outputExcerpt` is removed on read and not persisted again.

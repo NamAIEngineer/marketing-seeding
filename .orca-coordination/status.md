@@ -41,4 +41,24 @@
 - Existing System Agentic service: `8879`, local-only, health/doctor PASS, but prior GoalRuns v60–v63 failed in worker/artifact or ChatGPT approval/reply paths.
 - Added `src/project-coordinator.mjs` as a project-scoped, bounded integration coordinator. It persists task/dependency/wake/result state, uses a process lock, deduplicates event IDs, wakes only satisfied dependencies, rejects non replay-safe recovery, and accepts artifacts only after reading and hashing the declared file.
 - Rehearsal: `plans/oi-browser-integration/coordination-rehearsal-20261028.json`, `FIXTURE_VERIFIED`. Event `dependency-a-event` from A checkpoint woke `wake-proof`; one worker attempt completed; restart retained one result and replay executed false. No external side effect.
-- This proves the local coordinator loop, not automatic Orca agent resume after this chat ends. Native A is follow-up capable; B follow-up capability remains unconfirmed.
+
+## Native resume continuation (2026-10-28)
+
+- `IMPLEMENTED`: coordinator schema v2 additive migration, durable native request/attempt/result state, exact-request recovery, process lock, restart dedupe, raw terminal-output scrubbing.
+- `IMPLEMENTED`: Orca adapter uses observed CLI protocol: `terminal send --wait-submit`, exact `--retry-request`, `terminal wait --for tui-idle`, `terminal read`; verifies marker and agent-created safe artifact.
+- `IMPLEMENTED`: project-scoped supervisor and macOS LaunchAgent `ai.marketing-seeding.project-coordinator`, configured `RunAtLoad` + `KeepAlive`.
+- `NATIVE_RESUME_VERIFIED`: C launchd follow-up #1 request `fc821d69-2281-4757-b5c2-8d1f5628a63b`, artifact hash `a6cf8a3201799ff1aaf0ff5aaba1a5ff7b5e727ba848a8caa162d7bc1b9e1960`, one attempt.
+- `NATIVE_RESUME_VERIFIED`: C launchd follow-up #2 request `4f19fde8-0f31-4f8d-8b40-0d36de8dd45a`, artifact hash `4b3e51dad6b2d8aaf63377f416a8a30ecc9f25041986dd19aa21b1f29b0f4770`, one attempt after exact request replay/recovery. Launchd restart retained two results and did not replay.
+- A/B native follow-up artifacts also exist: A request `536fa680-2dd7-4330-8573-67566db016cb`, hash `2903df5db1800124fa59515c8042e966a1e9498a528122d75309deace9291f22`; B request `b705ab7f-a863-44b7-bf54-8f57a05d269f`, hash `97799c6641a26e9b0967240331c6c370aba39f3041c4c9f453f9e79e07ff7441`.
+- All artifacts are local rehearsals: `rehearsal=true`, `liveEligible=false`, `externalSideEffects=false`, `unknownRetryAllowed=false`.
+
+
+## Native resume continuation (2026-10-28)
+
+- `IMPLEMENTED`: coordinator schema v2 additive migration, durable native request/attempt/result state, exact-request recovery, process lock, restart dedupe, raw terminal-output scrubbing.
+- `IMPLEMENTED`: Orca adapter uses observed CLI protocol: `terminal send --wait-submit`, exact `--retry-request`, `terminal wait --for tui-idle`, `terminal read`; verifies marker and agent-created safe artifact.
+- `IMPLEMENTED`: project-scoped supervisor and macOS LaunchAgent `ai.marketing-seeding.project-coordinator`, configured `RunAtLoad` + `KeepAlive`.
+- `NATIVE_RESUME_VERIFIED`: C launchd follow-up #1 request `fc821d69-2281-4757-b5c2-8d1f5628a63b`, artifact hash `a6cf8a3201799ff1aaf0ff5aaba1a5ff7b5e727ba848a8caa162d7bc1b9e1960`, one attempt.
+- `NATIVE_RESUME_VERIFIED`: C launchd follow-up #2 request `4f19fde8-0f31-4f8d-8b40-0d36de8dd45a`, artifact hash `4b3e51dad6b2d8aaf63377f416a8a30ecc9f25041986dd19aa21b1f29b0f4770`, one attempt after exact request replay/recovery. Launchd restart retained two results and did not replay.
+- A/B native follow-up artifacts also exist: A request `536fa680-2dd7-4330-8573-67566db016cb`, hash `2903df5db1800124fa59515c8042e966a1e9498a528122d75309deace9291f22`; B request `b705ab7f-a863-44b7-bf54-8f57a05d269f`, hash `97799c6641a26e9b0967240331c6c370aba39f3041c4c9f453f9e79e07ff7441`.
+- All artifacts are local rehearsals: `rehearsal=true`, `liveEligible=false`, `externalSideEffects=false`, `unknownRetryAllowed=false`.

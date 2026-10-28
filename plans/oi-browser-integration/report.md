@@ -2,7 +2,7 @@
 
 ## Status
 
-`PARTIAL`. Candidate final revision: `7f2b74acab39987318d0720361f1cefdac0e6b51`. Final candidate includes durable project coordination and evidence updates. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+`PARTIAL`. Candidate base revision: `7f2b74acab39987318d0720361f1cefdac0e6b51`; current C continuation changes remain uncommitted pending final checks. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
 ## Baseline, ownership, integration
 
@@ -70,3 +70,11 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 - Current A/B handshakes were delivered through Orca request IDs `461d4128-4075-41ea-b07f-291c421385bb` and `7cdca6e2-c446-4d8c-b4d6-686e061e9da8`; A returned receiver READY, B returned a real read-only result but follow-up capability unconfirmed.
 - `src/project-coordinator.mjs` provides durable project-scoped dependency state and bounded wake/replay. Focused tests pass 4/4. Rehearsal artifact: `coordination-rehearsal-20261028.json` (`FIXTURE_VERIFIED`, one worker attempt, accepted artifact hash, restart result retained, replay false).
 - Existing orchestrator remains healthy at `8879`, but GoalRuns v60–v63 remain failed for concrete provider/artifact/approval/reply reasons; this coordinator proof does not upgrade those historical runs or prove automatic agent resume after chat termination.
+
+### Native resume status
+
+- `IMPLEMENTED`: durable coordinator v2, exact Orca request retry, project supervisor, launchd startup/recovery, raw-output scrubbing, safe artifact contract, restart-safe dedupe.
+- `NATIVE_RESUME_VERIFIED`: C launchd #1 request `fc821d69-2281-4757-b5c2-8d1f5628a63b`, one attempt, artifact hash `a6cf8a3201799ff1aaf0ff5aaba1a5ff7b5e727ba848a8caa162d7bc1b9e1960`; C launchd #2 request `4f19fde8-0f31-4f8d-8b40-0d36de8dd45a`, one attempt after exact request replay, artifact hash `4b3e51dad6b2d8aaf63377f416a8a30ecc9f25041986dd19aa21b1f29b0f4770`.
+- A/B native follow-up artifacts/hashes are in the evidence file. A's dirty scope remained untouched. A later Orca listing marked B orphaned; this does not invalidate its earlier completed native request/artifact but leaves continuous receiver availability unproven.
+- Launchd restart kept two results and `attemptCount=1` for both; no replay. Artifacts are rehearsal only (`liveEligible=false`, no external effects, no UNKNOWN retry).
+- Product closed-loop remains `FIXTURE_VERIFIED`; port `4337` remains `RUNTIME_VERIFIED`. No `LIVE_VERIFIED` publication, metric, or conversion.

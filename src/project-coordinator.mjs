@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdir, open, readFile, realpath, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 const TASK_STATES = new Set([
   "RUNNING",
   "WAITING_DEPENDENCY",
@@ -36,8 +36,22 @@ function text(value, label, max = 240) {
 
 function safeError(error) {
   return String(error?.code || error?.message || error || "COORDINATOR_TASK_FAILED")
-    .replace(/(?:password|passphrase|secret|token|cookie|credential|api[_-]?key|bearer)\s*[:=]\s*[^\s,;]+/gi, "$1=[REDACTED]")
+    .replace(/(password|passphrase|secret|token|cookie|credential|api[_-]?key|bearer)\s*[:=]\s*[^\s,;]+/gi, "$1=[REDACTED]")
     .slice(0, MAX_ERROR);
+}
+
+function sanitizeNative(value) {
+  if (value === null || value === undefined) return value;
+  if (Array.isArray(value)) return value.map((item) => sanitizeNative(item));
+  if (typeof value !== "object") return value;
+  const result = {};
+  for (const [key, item] of Object.entries(value)) {
+    // Raw terminal streams may contain private task data. Persist structured
+    // receipts, hashes and markers only.
+    if (["outputExcerpt", "stdout", "stderr", "rawOutput", "terminalOutput"].includes(key)) continue;
+    result[key] = key === "lastError" ? safeError(item) : sanitizeNative(item);
+  }
+  return result;
 }
 
 function initialState() {
@@ -56,11 +70,44 @@ function initialState() {
 
 function normalizeState(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("coordinator state must be an object");
+  if (value.schemaVersion === 1) {
+    // Schema v2 is additive. Existing task/result history remains authoritative;
+    // native follow-up receipts are optional fields on the same records.
+    value.schemaVersion = SCHEMA_VERSION;
+    value.migration = { from: 1, migratedAt: iso() };
+    for (const task of Array.isArray(value.tasks) ? value.tasks : []) {
+      if (!Object.hasOwn(task, "workerKind")) task.workerKind = "CALLBACK";
+      if (!Object.hasOwn(task, "native")) task.native = null;
+    }
+    for (const result of Array.isArray(value.results) ? value.results : []) {
+      if (!Object.hasOwn(result, "native")) result.native = null;
+    }
+  }
   if (value.schemaVersion !== SCHEMA_VERSION) throw new Error(`Unsupported coordinator schema version: ${String(value.schemaVersion)}`);
   for (const key of ["tasks", "dependencyEvents", "wakeEvents", "results"]) {
     if (!Array.isArray(value[key])) value[key] = [];
   }
   value.revision = Number.isSafeInteger(value.revision) && value.revision >= 0 ? value.revision : 0;
+  for (const task of value.tasks) if (task.native) task.native = sanitizeNative(task.native);
+  for (const result of value.results) if (result.native) result.native = sanitizeNative(result.native);
+  const resultByTask = new Map(value.results.map((result) => [result.taskId, result]));
+  for (const task of value.tasks) {
+    if (task.status === "COMPLETE" && resultByTask.get(task.taskId)?.workerStatus === "NATIVE_RESUME_VERIFIED") {
+      task.wakeState = "NATIVE_COMPLETED";
+    }
+  }
+  for (const result of value.results) {
+    if (result.workerStatus === "NATIVE_RESUME_VERIFIED" && result.native && result.native.reconciliation !== "COMPLETED") {
+      result.native.reconciliation = "COMPLETED";
+      result.native.reconciledAt = result.acceptedAt || null;
+    }
+  }
+  for (const task of value.tasks) {
+    if (task.status === "COMPLETE" && task.workerKind === "ORCA_NATIVE" && task.native && task.native.reconciliation !== "COMPLETED") {
+      task.native.reconciliation = "COMPLETED";
+      task.native.reconciledAt = task.completedAt || null;
+    }
+  }
   return value;
 }
 
@@ -70,6 +117,13 @@ async function atomicWrite(filePath, value) {
   const temporary = `${filePath}.${process.pid}.${randomUUID()}.tmp`;
   await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
   await rename(temporary, filePath);
+}
+
+function hasRawNative(value) {
+  if (!value || typeof value !== "object") return false;
+  if (Array.isArray(value)) return value.some(hasRawNative);
+  if (Object.hasOwn(value, "outputExcerpt") || Object.hasOwn(value, "stdout") || Object.hasOwn(value, "stderr") || Object.hasOwn(value, "rawOutput") || Object.hasOwn(value, "terminalOutput")) return true;
+  return Object.values(value).some(hasRawNative);
 }
 
 async function acquireProcessLock(lockPath) {
@@ -158,8 +212,14 @@ export class ProjectCoordinator {
 
   async init() {
     await mkdir(this.stateRoot, { recursive: true });
+    let scrubbedRawNative = false;
+    let normalizedStateChanged = false;
     try {
-      this.state = normalizeState(JSON.parse(await readFile(this.stateFile, "utf8")));
+      const parsed = JSON.parse(await readFile(this.stateFile, "utf8"));
+      const beforeNormalization = JSON.stringify(parsed);
+      scrubbedRawNative = hasRawNative(parsed.tasks) || hasRawNative(parsed.results);
+      this.state = normalizeState(parsed);
+      normalizedStateChanged = JSON.stringify(this.state) !== beforeNormalization;
     } catch (error) {
       if (error.code !== "ENOENT") throw error;
       this.state = initialState();
@@ -171,7 +231,8 @@ export class ProjectCoordinator {
     for (const task of this.state.tasks) {
       if (task.status === "RUNNING" && !this.state.results.some((result) => result.taskId === task.taskId)) {
         if (task.replaySafe === true) {
-          task.status = task.dependsOn.length ? "WAITING_DEPENDENCY" : "RUNNING";
+          task.status = task.native?.requestId ? "WAITING_CHATGPT" : (task.dependsOn.length ? "WAITING_DEPENDENCY" : "RUNNING");
+          if (task.native?.requestId) task.wakeState = "NATIVE_REQUEST_RECONCILIATION";
           task.recoveredAt = this.now();
           recovered.push(task.taskId);
           changed = true;
@@ -184,8 +245,12 @@ export class ProjectCoordinator {
         }
       }
     }
-    if (changed) {
+    if (changed || scrubbedRawNative || normalizedStateChanged) {
       this.state.wakeEvents.push({ type: "RECOVERY", recoveredTaskIds: recovered, failedTaskIds: failed, at: this.now() });
+      await this.persist();
+    }
+    if (this.state.migration && this.state.migration.from === 1 && !this.state.migration.persistedAt) {
+      this.state.migration.persistedAt = this.now();
       await this.persist();
     }
     return this.snapshot();
@@ -193,18 +258,22 @@ export class ProjectCoordinator {
 
   snapshot() { return structuredClone(this.state); }
 
-  async persist() {
-    this.state.revision += 1;
-    this.state.updatedAt = this.now();
-    this.state.tasks = this.state.tasks.slice(-MAX_TASKS);
-    this.state.dependencyEvents = this.state.dependencyEvents.slice(-MAX_EVENTS);
-    this.state.wakeEvents = this.state.wakeEvents.slice(-MAX_EVENTS);
-    this.state.results = this.state.results.slice(-MAX_EVENTS);
-    await atomicWrite(this.stateFile, this.state);
+  async persist(state = this.state) {
+    if (!state) throw new Error("ProjectCoordinator must be initialized first");
+    state.revision += 1;
+    state.updatedAt = this.now();
+    state.tasks = state.tasks.slice(-MAX_TASKS);
+    state.dependencyEvents = state.dependencyEvents.slice(-MAX_EVENTS);
+    state.wakeEvents = state.wakeEvents.slice(-MAX_EVENTS);
+    state.results = state.results.slice(-MAX_EVENTS);
+    await atomicWrite(this.stateFile, state);
   }
 
-  async registerTask({ taskId, owner, scope, dependsOn = [], wakeState = "WAITING_DEPENDENCY", replaySafe = false, artifactPath } = {}) {
+  async registerTask({ taskId, owner, scope, dependsOn = [], wakeState = "WAITING_DEPENDENCY", replaySafe = false, artifactPath, workerKind = "CALLBACK", native = null } = {}) {
     if (!this.state) throw new Error("ProjectCoordinator must be initialized first");
+    const lock = await acquireProcessLock(this.lockFile);
+    try {
+    this.state = normalizeState(JSON.parse(await readFile(this.stateFile, "utf8")));
     const normalizedId = id(taskId, "taskId");
     const existing = this.state.tasks.find((task) => task.taskId === normalizedId);
     const dependencies = [...new Set((Array.isArray(dependsOn) ? dependsOn : []).map((item) => id(item, "dependencyId")))];
@@ -215,12 +284,16 @@ export class ProjectCoordinator {
     if (this.state.tasks.length >= MAX_TASKS) throw new Error("COORDINATOR_TASK_LIMIT");
     const status = dependencies.length ? "WAITING_DEPENDENCY" : "RUNNING";
     if (!TASK_STATES.has(status)) throw new Error("invalid coordinator task state");
+    const normalizedWorkerKind = text(workerKind, "workerKind", 80).toUpperCase();
+    if (native !== null && (typeof native !== "object" || Array.isArray(native))) throw new Error("native task metadata must be an object or null");
     const task = {
       taskId: normalizedId,
       owner: text(owner, "owner", 120),
       scope: text(scope, "scope", 240),
       dependsOn: dependencies,
       replaySafe: replaySafe === true,
+      workerKind: normalizedWorkerKind,
+      native: native ? sanitizeNative(native) : null,
       artifactPath: artifactPath ? String(artifactPath) : `artifacts/${normalizedId}.json`,
       idempotencyKey: `coord:${normalizedId}`,
       status,
@@ -231,10 +304,16 @@ export class ProjectCoordinator {
     this.state.tasks.push(task);
     await this.persist();
     return structuredClone(task);
+    } finally {
+      await releaseProcessLock(this.lockFile, lock);
+    }
   }
 
   async emitDependency({ eventId, dependencyId, owner, checkpoint, requestId = null } = {}) {
     if (!this.state) throw new Error("ProjectCoordinator must be initialized first");
+    const lock = await acquireProcessLock(this.lockFile);
+    try {
+    this.state = normalizeState(JSON.parse(await readFile(this.stateFile, "utf8")));
     const normalizedEventId = id(eventId, "eventId");
     const normalizedDependency = id(dependencyId, "dependencyId");
     const prior = this.state.dependencyEvents.find((event) => event.eventId === normalizedEventId);
@@ -251,6 +330,34 @@ export class ProjectCoordinator {
     this.state.dependencyEvents.push(event);
     await this.persist();
     return structuredClone(event);
+    } finally {
+      await releaseProcessLock(this.lockFile, lock);
+    }
+  }
+
+  async recoverTask({ taskId, reason = "reconcile durable worker request" } = {}) {
+    if (!this.state) throw new Error("ProjectCoordinator must be initialized first");
+    const lock = await acquireProcessLock(this.lockFile);
+    try {
+    this.state = normalizeState(JSON.parse(await readFile(this.stateFile, "utf8")));
+    const normalizedId = id(taskId, "taskId");
+    const task = this.state.tasks.find((item) => item.taskId === normalizedId);
+    if (!task) throw new Error("COORDINATOR_TASK_NOT_FOUND");
+    if (task.status === "COMPLETE") return structuredClone(task);
+    if (task.replaySafe !== true || task.workerKind !== "ORCA_NATIVE" || !task.native?.requestId) {
+      throw new Error("COORDINATOR_NATIVE_RECOVERY_REQUIRES_REQUEST_ID");
+    }
+    if (!["FAILED", "WAITING_CHATGPT", "RUNNING"].includes(task.status)) throw new Error("COORDINATOR_TASK_NOT_RECOVERABLE");
+    task.status = task.native?.requestId ? "WAITING_CHATGPT" : (task.dependsOn.length ? "WAITING_DEPENDENCY" : "RUNNING");
+    task.error = null;
+    task.wakeState = "NATIVE_REQUEST_RECONCILIATION";
+    task.recoveredAt = this.now();
+    this.state.wakeEvents.push({ type: "NATIVE_REQUEST_RECONCILIATION", taskId: normalizedId, requestId: task.native.requestId, reason: text(reason, "reason", 200), at: task.recoveredAt });
+    await this.persist();
+    return structuredClone(task);
+    } finally {
+      await releaseProcessLock(this.lockFile, lock);
+    }
   }
 
   async runOnce() {
@@ -277,27 +384,56 @@ export class ProjectCoordinator {
           this.state.wakeEvents.push({ type: "DEPENDENCY_SATISFIED", taskId: task.taskId, at: task.wokenAt });
           await this.persist();
         }
-        if (task.status !== "RUNNING" || this.state.results.some((result) => result.taskId === task.taskId)) continue;
-        task.attemptCount += 1;
-        task.attemptId = `${task.taskId}:attempt:${task.attemptCount}`;
-        task.startedAt = this.now();
-        await this.persist();
+        if (!(task.status === "RUNNING" || task.status === "WAITING_CHATGPT") || this.state.results.some((result) => result.taskId === task.taskId)) continue;
+        if (task.status === "RUNNING") {
+          task.attemptCount += 1;
+          task.attemptId = `${task.taskId}:attempt:${task.attemptCount}`;
+          task.startedAt = this.now();
+          await this.persist();
+        }
         try {
           const result = await this.worker(structuredClone(task), {
             attemptId: task.attemptId,
             idempotencyKey: task.idempotencyKey,
             stateRoot: this.stateRoot,
-            now: this.now()
+            now: this.now(),
+            recordNative: async (patch = {}) => {
+              const current = this.state.tasks.find((item) => item.taskId === task.taskId);
+              if (!current) throw new Error("COORDINATOR_TASK_NOT_FOUND");
+              if (!patch || typeof patch !== "object" || Array.isArray(patch)) throw new Error("native receipt patch must be an object");
+              current.native = sanitizeNative({ ...(current.native || {}), ...structuredClone(patch) });
+              await this.persist();
+            }
           });
-          if (!result || result.status !== "COMPLETED") throw new Error("COORDINATOR_WORKER_RESULT_NOT_COMPLETED");
+          if (!result || typeof result !== "object") throw new Error("COORDINATOR_WORKER_RESULT_INVALID");
+          if (result.status === "WAITING_CHATGPT") {
+            task.status = "WAITING_CHATGPT";
+            task.wakeState = "WAITING_CHATGPT";
+            if (result.native && (typeof result.native !== "object" || Array.isArray(result.native))) throw new Error("native worker result must be an object");
+            if (result.native) task.native = sanitizeNative({ ...(task.native || {}), ...structuredClone(result.native) });
+            await this.persist();
+            continue;
+          }
+          if (result.status !== "COMPLETED") throw new Error("COORDINATOR_WORKER_RESULT_NOT_COMPLETED");
           const artifact = result.artifactPath || task.artifactPath;
           const artifactFile = await resolveArtifact(this.stateRoot, artifact);
           const bytes = await readFile(artifactFile);
           const artifactHash = createHash("sha256").update(bytes).digest("hex");
           task.status = "COMPLETE";
           task.completedAt = this.now();
-          task.artifactPath = path.relative(this.stateRoot, artifactFile);
-          const accepted = { taskId: task.taskId, attemptId: task.attemptId, status: "COMPLETED", artifactPath: task.artifactPath, artifactHash, acceptedAt: task.completedAt, workerStatus: result.workerStatus || "EXECUTED" };
+          const stateRootReal = await realpath(this.stateRoot);
+          task.artifactPath = path.relative(stateRootReal, artifactFile);
+          if (result.native && (typeof result.native !== "object" || Array.isArray(result.native))) throw new Error("native worker result must be an object");
+          if (result.native) {
+            const nativeReceipt = { ...(task.native || {}), ...structuredClone(result.native) };
+            if (task.workerKind === "ORCA_NATIVE") {
+              nativeReceipt.reconciliation = "COMPLETED";
+              nativeReceipt.reconciledAt = task.completedAt;
+            }
+            task.native = sanitizeNative(nativeReceipt);
+          }
+          task.wakeState = result.workerStatus === "NATIVE_RESUME_VERIFIED" ? "NATIVE_COMPLETED" : "COMPLETED";
+          const accepted = { taskId: task.taskId, attemptId: task.attemptId, status: "COMPLETED", artifactPath: task.artifactPath, artifactHash, acceptedAt: task.completedAt, workerStatus: result.workerStatus || "EXECUTED", native: task.native ? sanitizeNative(task.native) : null };
           this.state.results.push(accepted);
           completed.push(accepted);
           await this.persist();
