@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { createLiveBrowserSnapshot, normalizeBrowserSnapshot, resolveBrowserElement } from "./oi-browser-integration.mjs";
+import { browserElementTargetIdentity, createLiveBrowserSnapshot, normalizeBrowserSnapshot, resolveBrowserElement } from "./oi-browser-integration.mjs";
 
 const text = (value, limit = 240) => String(value ?? "").replace(/\s+/g, " ").trim().slice(0, limit);
 
@@ -93,8 +93,20 @@ export function createCamoufoxOiBrowserBridge({ transport, browserSurface } = {}
 
   async function resolveTarget({ snapshot, intent, element, pageId = null, profileId = null } = {}) {
     const fresh = await capture({ pageId, profileId, url: snapshot?.url });
-    const freshElement = resolveBrowserElement(fresh.snapshot, { role: element?.role, label: element?.label });
-    if (freshElement.elementId !== intent?.elementId || freshElement.runtimeRef === null) {
+    let freshElement;
+    try {
+      freshElement = resolveBrowserElement(fresh.snapshot, { role: element?.role, label: element?.label });
+    } catch (error) {
+      if (error?.code === "DOM_TARGET_MISSING") {
+        throw Object.assign(new Error("Camoufox semantic target is stale or changed"), { code: "DOM_TARGET_IDENTITY_CHANGED" });
+      }
+      throw error;
+    }
+    const semanticTargetIdentity = text(intent?.semanticTargetIdentity, 100);
+    const targetIdentityMatches = semanticTargetIdentity
+      ? browserElementTargetIdentity(freshElement) === semanticTargetIdentity
+      : freshElement.runtimeRef === text(element?.runtimeRef, 120);
+    if (freshElement.elementId !== intent?.elementId || freshElement.runtimeRef === null || fresh.snapshot.frame !== element?.frame || !targetIdentityMatches) {
       throw Object.assign(new Error("Camoufox semantic target is stale or changed"), { code: "DOM_TARGET_IDENTITY_CHANGED" });
     }
     return { targetRef: freshElement.runtimeRef, targetIdentity: intent.targetIdentity, pageId: fresh.pageId, snapshot: fresh.snapshot };

@@ -2075,7 +2075,8 @@ export class SeedingService {
             } catch { return false; }
           })();
           const accessibility = String(await surface.snapshot(pageId) || "");
-          const refsPresent = (suppliedSnapshot.elements || []).every((element) => {
+          const snapshotElements = Array.isArray(suppliedSnapshot.elements) ? suppliedSnapshot.elements : [];
+          const refsPresent = snapshotElements.length > 0 && snapshotElements.every((element) => {
             const ref = String(element?.runtimeRef || "").trim();
             return ref && accessibility.includes(`[ref=${ref}]`);
           });

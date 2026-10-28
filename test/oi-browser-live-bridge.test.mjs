@@ -5,7 +5,7 @@ import path from "node:path";
 import { mkdtemp } from "node:fs/promises";
 import { JsonStore } from "../src/store.mjs";
 import { SeedingService } from "../src/service.mjs";
-import { createLiveBrowserSnapshot, normalizeBrowserSnapshot } from "../src/oi-browser-integration.mjs";
+import { createBrowserExecutionIntent, createLiveBrowserSnapshot, normalizeBrowserSnapshot } from "../src/oi-browser-integration.mjs";
 import { createCamoufoxOiBrowserBridge } from "../src/oi-browser-camoufox-bridge.mjs";
 import { evaluateQueue } from "../src/guards.mjs";
 
@@ -33,6 +33,7 @@ test("LIVE_DOM accessibility snapshots keep semantic IDs, runtime refs, and reje
   assert.equal(snapshot.forms[0].runtimeRef, "cf-2");
   const normalized = normalizeBrowserSnapshot(snapshot);
   assert.equal(normalized.forms[0].runtimeRef, "cf-2");
+  assert.throws(() => normalizeBrowserSnapshot({ ...snapshot, elements: [{ ...snapshot.elements[0], runtimeRef: null }] }), { code: "LIVE_DOM_RUNTIME_REF_REQUIRED" });
   assert.throws(() => createLiveBrowserSnapshot({
     url: "https://fixture.test/community",
     accessibilitySnapshot: '- button "Inspect" [ref=cf-0]',
@@ -65,6 +66,18 @@ test("Camoufox bridge selects exact profile/page and persists LIVE_DOM through J
   assert.equal(dashboard.oiBrowser.browser.recent[0].runtimeEvidence.provider, "camoufox");
 });
 
+test("service rejects an attached LIVE_DOM snapshot with no interactive evidence", async () => {
+  const runtime = fakeRuntime({ snapshot: "- document \"Empty\"" });
+  const root = await mkdtemp(path.join(os.tmpdir(), "oi-browser-live-empty-"));
+  const service = new SeedingService(new JsonStore(path.join(root, "state.json")));
+  await service.init();
+  const captured = await createCamoufoxOiBrowserBridge(runtime).capture({ pageId: "page-1", profileId: "profile-a" });
+  await assert.rejects(() => service.recordBrowserSnapshot({
+    snapshot: captured.snapshot,
+    runtimeBinding: { ...runtime, pageId: "page-1", profileId: "profile-a" }
+  }), { code: "LIVE_DOM_RUNTIME_UNVERIFIED" });
+});
+
 test("Camoufox bridge fails closed for ambiguous profile/page selection", async () => {
   const runtime = fakeRuntime();
   runtime.browserSurface.listTabs = async () => [
@@ -73,6 +86,31 @@ test("Camoufox bridge fails closed for ambiguous profile/page selection", async 
   ];
   const bridge = createCamoufoxOiBrowserBridge(runtime);
   await assert.rejects(() => bridge.capture({ profileId: "profile-a", url: "https://fixture.test/community" }), { code: "OI_BROWSER_PAGE_AMBIGUOUS" });
+});
+
+test("Camoufox bridge rebinds a changed transient runtime reference only when semantic identity is stable", async () => {
+  const runtime = fakeRuntime({ snapshot: '- button "Inspect rules" [ref=cf-old]' });
+  const bridge = createCamoufoxOiBrowserBridge(runtime);
+  const captured = await bridge.capture({ pageId: "page-1", profileId: "profile-a" });
+  const element = captured.snapshot.buttons[0];
+  const intent = createBrowserExecutionIntent(captured.snapshot, { action: "CLICK", elementId: element.elementId });
+  runtime.browserSurface.snapshot = async () => '- button "Inspect rules" [ref=cf-new]';
+  const rebound = await bridge.resolveTarget({
+    snapshot: captured.snapshot,
+    intent,
+    element,
+    pageId: "page-1",
+    profileId: "profile-a"
+  });
+  assert.equal(rebound.targetRef, "cf-new");
+  assert.equal(rebound.targetIdentity, intent.targetIdentity);
+  assert.ok(intent.semanticTargetIdentity);
+  runtime.browserSurface.snapshot = async () => '- button "Different control" [ref=cf-newer]';
+  await assert.rejects(() => bridge.resolveTarget({ snapshot: captured.snapshot, intent, element, pageId: "page-1", profileId: "profile-a" }), { code: "DOM_TARGET_IDENTITY_CHANGED" });
+  runtime.browserSurface.snapshot = async () => '- button "Inspect rules" [ref=cf-newest]';
+  const legacyIntent = { ...intent };
+  delete legacyIntent.semanticTargetIdentity;
+  await assert.rejects(() => bridge.resolveTarget({ snapshot: captured.snapshot, intent: legacyIntent, element, pageId: "page-1", profileId: "profile-a" }), { code: "DOM_TARGET_IDENTITY_CHANGED" });
 });
 
 test("Camoufox bridge accepts only the bounded LinkedIn feed redirect", async () => {

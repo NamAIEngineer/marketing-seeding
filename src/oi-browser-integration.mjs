@@ -88,6 +88,23 @@ function elementIdentity({ role, label, href, id, name, context }) {
   return `oi-element-${digest({ role, label: label.toLowerCase(), href: href || null, id: id || null, name: name || null, context: text(context, 120).toLowerCase() }, 24)}`;
 }
 
+// Stable authority identity. Runtime refs and other live state stay transient.
+export function browserElementTargetIdentity(element = {}) {
+  return digest({
+    elementId: text(element.elementId, 120),
+    role: text(element.role, 40).toLowerCase(),
+    label: text(element.label, 160).toLowerCase(),
+    href: element.href || null,
+    stableAttributes: {
+      id: text(element.stableAttributes?.id, 100) || null,
+      name: text(element.stableAttributes?.name, 100) || null,
+      type: text(element.stableAttributes?.type, 40) || null
+    },
+    frame: text(element.frame, 80) || "top",
+    context: text(element.context, 120).toLowerCase()
+  }, 32);
+}
+
 function normalizeHref(href, baseUrl) {
   if (!href) return null;
   try {
@@ -256,7 +273,7 @@ export function createBrowserExecutionIntent(snapshot, { action, elementId, valu
   if ((normalizedAction === "TYPE" || normalizedAction === "UPLOAD") && (value === null || value === undefined || String(value) === "")) throw new Error(`${normalizedAction} requires a transient value`);
   const transientValue = normalizedAction === "TYPE" ? text(value, 2_000) : normalizedAction === "UPLOAD" ? text(value, 500) : null;
   const valueDigest = transientValue === null ? null : digest({ value: transientValue }, 24);
-  return Object.freeze({ schemaVersion: 1, intentId: `intent-${digest({ action: normalizedAction, elementId, snapshotFingerprint, valueDigest }, 24)}`, action: normalizedAction, elementId: element.elementId, targetIdentity: digest(element, 32), snapshotFingerprint, frame: element.frame, ...(includeTransientValue && transientValue !== null ? { value: transientValue } : {}), valueDigest, valueTransient: transientValue !== null, createdAt: iso(now), executionAllowed: false, authorityRequired: true });
+  return Object.freeze({ schemaVersion: 1, intentId: `intent-${digest({ action: normalizedAction, elementId, snapshotFingerprint, valueDigest }, 24)}`, action: normalizedAction, elementId: element.elementId, targetIdentity: digest(element, 32), semanticTargetIdentity: browserElementTargetIdentity(element), snapshotFingerprint, frame: element.frame, ...(includeTransientValue && transientValue !== null ? { value: transientValue } : {}), valueDigest, valueTransient: transientValue !== null, createdAt: iso(now), executionAllowed: false, authorityRequired: true });
 }
 
 function normalizedSnapshotUrl(value) {
@@ -285,6 +302,7 @@ export function normalizeBrowserSnapshot(input = {}) {
     runtimeRef: /^[A-Za-z0-9._:-]{1,120}$/.test(String(item?.runtimeRef || "")) ? String(item.runtimeRef) : null
   })) : [];
   if (elements.some((item) => !item.elementId) || new Set(elements.map((item) => item.elementId)).size !== elements.length) throw Object.assign(new Error("BrowserSnapshot element identities must be unique"), { code: "DOM_SNAPSHOT_INVALID" });
+  if (source === "LIVE_DOM" && elements.some((item) => !item.runtimeRef)) throw Object.assign(new Error("LIVE_DOM elements require runtime references"), { code: "LIVE_DOM_RUNTIME_REF_REQUIRED" });
   if (elements.some((item) => item.elementId !== elementIdentity({ role: item.role, label: item.label, href: item.href, id: item.stableAttributes.id, name: item.stableAttributes.name, context: item.context }))) {
     throw Object.assign(new Error("BrowserSnapshot element identity does not match semantic fields"), { code: "DOM_SNAPSHOT_IDENTITY_MISMATCH" });
   }
