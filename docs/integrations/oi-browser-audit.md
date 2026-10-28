@@ -16,9 +16,9 @@ Required Notice: Copyright (c) 2026 Jang Trinh (https://github.com/jangtrinh). T
 
 ## Session ownership evidence
 
-- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; native ACK `SESSION-A-ACK-20261028T1210Z` through Orca terminal `term_58af59e8-f5dd-4968-a724-78b48a04cf3c`. Current status: 3 tracked dirty files (unstaged) plus 475 untracked entries; owns runtime PID `38672` on `127.0.0.1:4318`. A's dirty overlay remains untouched.
+- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; native ACK `SESSION-A-ACK-20261028T1210Z` through Orca terminal `term_58af59e8-f5dd-4968-a724-78b48a04cf3c`. Historical audit snapshot recorded 3 tracked dirty files + 475 untracked entries and PID `38672`; latest compact read-only status records 9 tracked + 80 untracked entries (518 expanded) and PID `49399` on `127.0.0.1:4318`. A's dirty overlay remains untouched.
 - SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, checkpoint `b675a98e6dd2da3c12133dff715eddea616c91f5`; native ACK `SESSION-B-ACK-20261028T1210Z` through Orca terminal `term_41a5601e-887e-4ac0-a8d7-35112fedb375`. Tracked scope clean; untracked reports/artifacts excluded.
-- SESSION C: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`, code/test checkpoint `7378f8cac202ce8efc0c5c66cb789e67f504f32e`; C owns integration docs/evidence and the oi-browser adapters.
+- SESSION C: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`, final checkpoint `5b4ad7037c002079f72e609c22f60ff66a64c886`; native code/test checkpoint `7f2b74acab39987318d0720361f1cefdac0e6b51`; C owns integration docs/evidence and the oi-browser adapters.
 - Native coordination: handshake marker `SESSION-C-HANDSHAKE-20261028T1210Z` was delivered to both existing Orca terminals; both returned `turn_started`, exact ACK markers, current HEAD/branch/dirty counts, ownership, and no-edit confirmation. B's exact checkpoint is not cherry-picked because candidate history already contains/adapts its substantive authority behavior and its remaining diff includes obsolete provider/GPM-era changes.
 
 ## Subsystem decisions
@@ -43,6 +43,6 @@ Required Notice: Copyright (c) 2026 Jang Trinh (https://github.com/jangtrinh). T
 
 ### Status: AUDITED / PARTIAL PRODUCT INTEGRATION
 
-Fresh independent read-only review PASS: `d4e8ee0` at `2026-10-28T05:44:28Z`. Remaining concerns are live capability blockers recorded in coordination docs.
+Fresh independent read-only review PASS: `5b4ad70` at `2026-10-28T08:08:14Z`; source/test diff after `7f2b74a` is empty. Remaining concerns are live capability blockers recorded in coordination docs.
 
 Audit is source-grounded and complete for the requested modules. Live publication, authenticated Camoufox readiness, Auto-GTM feed generation, and A/B dirty-worktree integration remain unproven and outside this isolated audit.
