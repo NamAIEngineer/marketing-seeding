@@ -19,7 +19,7 @@
 
 - A: `SESSION-A-ACK-20261028T1210Z`, Orca terminal `term_58af59e8-f5dd-4968-a724-78b48a04cf3c`, HEAD `1ed5771`, dirty scope preserved.
 - B: `SESSION-B-ACK-20261028T1210Z`, Orca terminal `term_41a5601e-887e-4ac0-a8d7-35112fedb375`, HEAD `b675a98`, tracked scope clean.
-- Current marker handshake: A request `461d4128-4075-41ea-b07f-291c421385bb` returned `SESSION-A-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`, HEAD `1ed5771`, 8 tracked + 509 untracked, receiver READY. B request `7cdca6e2-c446-4d8c-b4d6-686e061e9da8` returned `SESSION-B-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`, HEAD `b675a98`, 0 tracked + 23 untracked; terminal still reports orphaned/follow-up unconfirmed.
+- Current marker handshake: A request `461d4128-4075-41ea-b07f-291c421385bb` returned `SESSION-A-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`, HEAD `1ed5771`, then latest compact status showed 9 tracked + 80 untracked entries (518 files expanded), receiver READY. B request `7cdca6e2-c446-4d8c-b4d6-686e061e9da8` returned `SESSION-B-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`, HEAD `b675a98`, 0 tracked + 23 untracked; terminal still reports orphaned/follow-up unconfirmed.
 
 ## ChatGPT bridge evidence
 

@@ -11,12 +11,13 @@
 
 ## A/B/C connectivity and ownership
 
-- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed5771`; current 8 tracked dirty + 509 untracked entries; owns `127.0.0.1:4318`; current health HTTP 200 with schema 8, 6 UNKNOWN and 0 verified; no restart by C.
+- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed5771`; latest compact status 9 tracked dirty + 80 untracked entries (518 files expanded); owns `127.0.0.1:4318`; current health HTTP 200 with schema 8, 6 UNKNOWN and 0 verified; no restart by C.
 - SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, checkpoint `b675a98`; 0 tracked dirty + 23 untracked artifacts excluded.
 - SESSION C: candidate above; integration/docs/evidence owner.
 - Orca native handshake marker `SESSION-C-HANDSHAKE-20261028T1210Z`: A and B both returned `turn_started`, exact ACK markers, HEAD/branch/dirty counts, ownership, and native terminal references.
 - No A/B file was edited, staged, reset, stashed, cleaned, or committed by C.
 - Current marker handshake: A and B both returned `turn_started`/real read-only result with marker `ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`; A reported receiver READY, B reported orphaned terminal and follow-up capability unconfirmed.
+- Latest read-only A runtime recheck at `2026-10-28T08:02:47Z`: `127.0.0.1:4318` HTTP 200, PID `49399`, `sourceCommit=1ed5771`, `sourceDirty=true`, schema 8, `UNKNOWN=6`, verified 0, publication unverified 150; Camoufox session metadata is `STALE` and readiness is `UNKNOWN`. C did not restart or mutate A.
 
 ## Verified candidate evidence
 

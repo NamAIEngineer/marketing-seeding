@@ -11,7 +11,7 @@
 
 ## Current session evidence
 
-- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; current overlay is 3 tracked dirty files plus 475 untracked entries. A owns runtime `127.0.0.1:4318`, PID `38672`.
+- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; latest compact status is 9 tracked dirty files plus 80 untracked entries (518 files expanded). A owns runtime `127.0.0.1:4318`, PID `49399`.
 - SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, checkpoint `b675a98e6dd2da3c12133dff715eddea616c91f5`; tracked scope clean, untracked reports/artifacts excluded.
 - SESSION C: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`, final checkpoint `7f2b74a`.
 - Native handshake `SESSION-C-HANDSHAKE-20261028T1210Z` delivered through Orca terminal handles. A returned `SESSION-A-ACK-20261028T1210Z`; B returned `SESSION-B-ACK-20261028T1210Z`; both showed `turn_started`, exact ownership, and no edits by C.

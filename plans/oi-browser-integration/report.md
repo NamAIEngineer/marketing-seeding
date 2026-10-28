@@ -7,7 +7,7 @@
 ## Baseline, ownership, integration
 
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
-- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed5771`; native `SESSION-A-ACK-20261028T1210Z`; 3 tracked dirty + 475 untracked; owns runtime `127.0.0.1:4318` PID `38672`. C did not touch it.
+- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed5771`; native `SESSION-A-ACK-20261028T1210Z`; latest compact status 9 tracked dirty + 80 untracked entries (518 files expanded); owns runtime `127.0.0.1:4318` PID `49399`. C did not touch it.
 - SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, `integration/autonomous-build`, checkpoint `b675a98`; native `SESSION-B-ACK-20261028T1210Z`; tracked scope clean. Exact B commit is not cherry-picked because candidate history already contains/adapts the required authority guard behavior and the remaining diff contains obsolete provider/GPM-era changes.
 - SESSION C: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, `integration/session-c-reconciled`, owns integration/docs/evidence.
 - Native communication proof: `SESSION-C-HANDSHAKE-20261028T1210Z` delivered through Orca terminals; both A/B returned `turn_started`, ACK markers, exact checkpoint/dirty scope, and ownership.
@@ -60,7 +60,7 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 - A dirty overlay must receive an owner-created clean checkpoint before serial C reconciliation.
 - Fresh authenticated Camoufox readiness, valid live standing authority, publication ID/permalink, live metrics/conversion remain blocked.
 - Auto-GTM generation/media unavailable; only lead-feed capability proven.
-- A runtime `/health` has `sourceCommit=unknown`; candidate local inference smoke is isolated.
+- Latest A `/health` recheck (`2026-10-28T08:02:47Z`) reports `sourceCommit=1ed5771`, `sourceDirty=true`, schema 8, `UNKNOWN=6`, verified 0, publication unverified 150; candidate local inference smoke remains isolated and does not prove A runtime provider inference.
 
 ## Current coordination and continuation evidence
 
