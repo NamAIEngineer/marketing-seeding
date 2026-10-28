@@ -1,6 +1,14 @@
 # Session D Crawl4AI Listening Report
 
-Status: READY_FOR_C_REVIEW_WITH_VERIFICATION_GAP
+Status: C_INTEGRATED_RUNTIME_VERIFIED; STANDALONE_D_BLOCKED; V5_LIMITED
+
+## Final C integration status
+
+C integration is verified at HEAD `246f02f3e9649acef5adba7ee2b876ac6735a7c3` on `integration/session-c-reconciled`. The integrated C runtime passed the full regression with **818 passed, 2 skipped, 0 failed**. This result is separate from the historical D-worktree count of 812 passed, 2 skipped, 0 failed.
+
+The independent report is [`/Users/nam/orca/workspaces/marketing-seeding/session-d-independent-verifier/plans/crawl4ai-integration/independent-verifier-report-20261029.md`](file:///Users/nam/orca/workspaces/marketing-seeding/session-d-independent-verifier/plans/crawl4ai-integration/independent-verifier-report-20261029.md), SHA-256 `34fd69d4467cccac1aa07ec25b023df9e18511bda3c2f316f92d076e2a8341c4`. It completes V6 review but gives the exact standalone D revision `33b115d17a0aba26776ed4219647a0e671d3d6f3` a **BLOCKED** verdict: `src/listening-adapter.mjs` imports `pinnedFetch` and `resolvePublicUrl`, while that D revision's `src/discovery-observer.mjs` does not export them. C overlap/integration fixes this module contract, and the C runtime was verified independently below.
+
+V5 remains **LIMITED**: the C public smokes prove bounded run and cleanup, but no controlled canonical component-restart artifact proves persisted job-state recovery. The D same-state rerun/dedupe evidence remains implementation-side evidence and is not upgraded to a canonical restart PASS.
 
 Base: `dd814bf1df82a0371171ce0ca3674d16a1009368`
 Branch: `integration/session-d-crawl4ai-listening`
@@ -55,15 +63,15 @@ Using the already pinned D virtualenv without changing C source or dependency fi
 
 ## Verification
 
-Focused checks pass: 29 tests covering contract bounds/hash failure, relative URL/provenance, extraction persistence/dedupe, provider content forwarding, observer safety, and deadlines. Full project regression passed with 812 tests passing, 2 skipped, and 0 failures. Syntax checks pass for Node/Python workers; `git diff --cached --check` passes. Direct nodriver smoke passed with no remaining browser process. Extraction worker is HTML-only and no browser/network/model call is made after IPC.
+Focused checks pass: 29 tests covering contract bounds/hash failure, relative URL/provenance, extraction persistence/dedupe, provider content forwarding, observer safety, and deadlines. The C integrated full project regression passed with **818 tests passing, 2 skipped, and 0 failures**. The D-worktree report's **812/2/0** count is historical implementation-side evidence for the pre-integration revision. Syntax checks pass for Node/Python workers; `git diff --cached --check` passes. Direct nodriver smoke passed with no remaining browser process. Extraction worker is HTML-only and no browser/network/model call is made after IPC.
 
-The requested independent verifier dispatch was attempted once as task `session-d-crawl4ai-independent-verifier-20261029-r1` through the live provider registry. It returned `REFUSED / NO_PROVIDER` after three local-Qwen preflight attempts, so `V6` remains open. `verifier-report.md` is implementation-side evidence and is not counted as an independent verifier result.
+The independent verifier review is now complete at the report path and hash recorded above. It is a valid V6 review result with a concrete BLOCKED verdict for standalone D; it does not convert the standalone D revision to PASS. `verifier-report.md` in this C tree remains implementation-side evidence and is not the independent report.
 
 ## Limitations / handoff
 
 - Python community page returned incomplete HTML in this environment; status remains `PARTIAL`.
 - Public channel policy defaults may classify unconfigured hosts as `UNSUPPORTED`; this is preserved in canonical discovery state.
 - nodriver peak RSS is high in the measured sample; keep concurrency at 1 until a larger controlled sample exists.
-- C must review and integrate this branch into the target runtime. C's current observed HEAD is `da0301dc5cc91e9db91bb9e23aaf12a4f8eea3ff`; no A/B/C worktree was modified. Overlap files are left for C's serial integration because C owns the provider, discovery, and integration contracts. No authenticated account or publication lane was touched.
+- C integration is complete at HEAD `246f02f3e9649acef5adba7ee2b876ac6735a7c3`; no A/B or D worktree, authenticated account, cookie, or publication lane was touched. The exact standalone D revision remains blocked on its missing `pinnedFetch`/`resolvePublicUrl` exports; C's overlap integration supplies that seam.
 
 Overlap handoff details are in [c-overlap-handoff.md](c-overlap-handoff.md). The committed checkpoint below contains only D-owned scripts, listening modules, tests, evidence, and docs; the working tree retains the C-overlap edits unstaged for serial merge.
