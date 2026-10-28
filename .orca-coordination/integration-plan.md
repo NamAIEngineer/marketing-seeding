@@ -26,7 +26,7 @@
 | C-004 | C | Preserve B authority boundary | B checkpoint `b675a98` | behavior confirmed by candidate history/tests; exact B commit intentionally not cherry-picked | COMPLETED / ADAPTED |
 | C-005 | C | Controlled Product X / Community A+B case | C-002 | `fixture-run-7378f8c.json`, before/after learning change, restart and idempotent replay | COMPLETED |
 | C-006 | C | Isolated server/provider/restart smoke | C-002 | `server-smoke-7378f8c.json`, port `4337`, exact SHA, no external side effects | COMPLETED |
-| C-007 | C | Focused/full regression and hygiene | C-002..C-006 | historical focused/full evidence retained; current candidate totals are recorded in C-011 | COMPLETED |
+| C-007 | C | Focused/full regression and hygiene | C-002..C-006 | historical focused/full evidence retained; current candidate totals are recorded in C-012 | COMPLETED |
 | C-008 | C | Snapshot deduplication execution trace retention | C-002 | repeated DOM test retains bounded execution bindings | COMPLETED |
 | C-009 | C | Independent memory evidence and provider full-deadline regressions | C-002 | commit `9875db3`; focused `22/22`; historical full `805/803/0/2`; independent review PASS | COMPLETED |
 | C-010 | C | Re-run historical candidate regression and reconcile evidence metadata | C-007..C-009 | historical checkpoint `4fe2b7b`; superseded by current C-011 evidence | COMPLETED |
