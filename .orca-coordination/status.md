@@ -25,7 +25,7 @@
 - Focused current slices: authority/bootstrap/delegation `47/47`; oi-browser/browser/provider/transport `59/59`; combined `106/106`.
 - Coordinator focused: `node --test test/project-coordinator.test.mjs` → 4 total, 4 pass, 0 fail.
 - Historical candidate `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped. Current `10ce868`: `node --test test/*.test.mjs` → 802 total, 800 pass, 0 fail, 2 skipped.
-- Durable current regression artifact will be `plans/oi-browser-integration/regression-final-10ce868.json`; prior `regression-final-ac2f7df.json` and historical `regression-final-7f2b74a.json` retained.
+- Durable current regression artifact is `plans/oi-browser-integration/regression-final-10ce868.json`; prior `regression-final-ac2f7df.json` and historical `regression-final-7f2b74a.json` retained.
 - Auxiliary queue verifier task `0e9f9242-0019-4f11-9453-9d155a419221` failed closed at provider authorization validation; no retry or artifact. Direct independent verifier PASS remains authoritative.
 - Auto-GTM owner checkout: `/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests` → 160 total, 160 pass, 0 fail; `pip check` clean. The owner worktree remains dirty; C did not modify it.
 - Controlled fixture: `plans/oi-browser-integration/fixture-run-7378f8c.json`, `FIXTURE_VERIFIED`; learning support 2, verified 2; before/after candidate changed; restart and browser replay passed; external side effects false.

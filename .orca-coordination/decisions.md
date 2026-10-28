@@ -10,5 +10,5 @@
 - GPM is not active in the server runtime. Historical compatibility modules remain only where existing contracts require them.
 - Active runtime `4318` belongs to A and was not restarted. Candidate verification used private temporary state and port `4337`.
 - Candidate runtime smoke with explicit loopback Qwen configuration returned `SUCCEEDED` and retained one successful route after restart. This is `RUNTIME_VERIFIED` local inference evidence; it does not upgrade A's runtime configuration or prove external provider/live publication.
-- Fixture/runtime evidence remains separate from live evidence. No credential, login, grant, publish, deployment, merge, or external side effect was performed. The C branch has local final checkpoint `ac2f7df`; existing draft PR #2 remains open; no merge performed.
+- Fixture/runtime evidence remains separate from live evidence. No credential, login, grant, publish, deployment, merge, or external side effect was performed. C code/test checkpoint is `10ce868`; current docs/evidence commits follow it; existing draft PR #2 remains open; no merge performed.
 - Native handshake `SESSION-C-HANDSHAKE-20261028T1210Z` returned A/B ACK markers with `turn_started` and exact native terminals. This proves communication, not final A dirty checkpoint reconciliation.
