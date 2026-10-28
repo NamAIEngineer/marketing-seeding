@@ -48,7 +48,7 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 ## Tests and hygiene
 
 - Baseline `79985bb411afc141f0edf10ae635fb91824d8bc9`: `npm test` → 576 total, 574 pass, 0 fail, 2 skipped.
-- Candidate focused: authority/bootstrap/delegation 47/47; oi-browser/browser/provider/transport 59/59; combined 106/106; coordinator `node --test test/project-coordinator.test.mjs` → 4 total, 4 pass, 0 fail.
+- Historical integration slices: authority/bootstrap/delegation 47/47; oi-browser/browser/provider/transport 59/59; combined 106/106; historical coordinator `node --test test/project-coordinator.test.mjs` → 4 total, 4 pass, 0 fail. Current native/coordinator/LinkedIn verifier focused suite is 69/69.
 - Historical candidate `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped. Current `10ce868`: `node --test test/*.test.mjs` → 802 total, 800 pass, 0 fail, 2 skipped.
 - Durable current regression evidence: [regression-final-10ce868.json](regression-final-10ce868.json), exact source SHA, command, timestamp and output hash. Prior `regression-final-ac2f7df.json` and historical `regression-final-7f2b74a.json` remain available.
 - Auxiliary System Agentic READ_ONLY verifier task `0e9f9242-0019-4f11-9453-9d155a419221` was rejected by the selected REA provider because `context.target_authorized=true` was absent; no retry, artifact, file edit or external side effect. Direct independent verifier PASS remains the final review evidence.
