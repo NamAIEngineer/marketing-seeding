@@ -7,8 +7,8 @@ import { fileURLToPath } from "node:url";
 import { resolvePublicUrl, pinnedFetch } from "./discovery-observer.mjs";
 import {
   CRAWL4AI_SOURCE_REVISION, EXTRACTOR_REVISION, FETCHER_REVISIONS, LISTENING_CONTRACT_VERSION,
-  createListeningJobId, normalizeAnalysisInput, normalizeBackend, normalizeExtractedRecord,
-  normalizeFetchResult, normalizePublicUrl, normalizeScope, publicRunSummary, sha256, stableHash
+  createListeningJobId, LISTENING_TERMINAL_STATUSES, normalizeAnalysisInput, normalizeBackend, normalizeExtractedRecord,
+  normalizeFetchResult, normalizeListeningJob, normalizePublicUrl, normalizeScope, publicRunSummary, sha256, stableHash
 } from "./listening-contract.mjs";
 
 const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -105,8 +105,8 @@ async function runPythonWorker(script, input, { timeoutMs = 45_000, maxOutputByt
   }
 }
 
-async function boundedFetchHtml(rawUrl, { timeoutMs = 20_000, maxBytes = DEFAULT_MAX_HTML_BYTES, fetchImpl = null } = {}) {
-  const resolved = await resolvePublicUrl(rawUrl, { timeoutMs: Math.min(timeoutMs, 8_000) });
+async function boundedFetchHtml(rawUrl, { timeoutMs = 20_000, maxBytes = DEFAULT_MAX_HTML_BYTES, fetchImpl = null, resolvePublicUrlImpl = resolvePublicUrl } = {}) {
+  const resolved = await resolvePublicUrlImpl(rawUrl, { timeoutMs: Math.min(timeoutMs, 8_000) });
   const url = resolved.url;
   if (fetchImpl !== null && typeof fetchImpl !== "function") throw new Error("fetch implementation unavailable");
   const controller = new AbortController();
@@ -146,9 +146,13 @@ async function fetchWithBackend({ jobId, url, backend, options = {} }) {
   return normalizeFetchResult(result, { sourceUrl: url, backend });
 }
 
-async function extractHtml(fetchResult, { timeoutMs = 30_000, python, extractorScript } = {}) {
+async function extractHtml(fetchResult, { timeoutMs = 30_000, python, extractorScript, extractorImpl = null } = {}) {
   if (fetchResult.status !== "SUCCEEDED" || !fetchResult.html) {
     return { ...fetchResult, extracted: { status: fetchResult.status, reason: fetchResult.reason, records: [], markdown: "", extractedHash: sha256("") } };
+  }
+  if (typeof extractorImpl === "function") {
+    const result = await extractorImpl(structuredClone(fetchResult));
+    return { ...fetchResult, extracted: result && typeof result === "object" ? result : { status: "FAILED", reason: "extractor implementation returned invalid result", records: [], markdown: "", extractedHash: sha256("") } };
   }
   const result = await runPythonWorker(extractorScript || path.join(APP_ROOT, "scripts", "crawl4ai_extract.py"), {
     contractVersion: LISTENING_CONTRACT_VERSION, jobId: fetchResult.jobId, sourceUrl: fetchResult.sourceUrl,
@@ -157,36 +161,99 @@ async function extractHtml(fetchResult, { timeoutMs = 30_000, python, extractorS
   return { ...fetchResult, extracted: result };
 }
 
-export async function runListeningExtraction({ urls = [], backend = process.env.SEEDING_LISTENING_BACKEND || "http", campaignId = null, scope = {}, policies = {}, keywords = [], blockedKeywords = [], jobId = null, options = {} } = {}) {
+function listeningStatus(statuses = []) {
+  const normalized = statuses.map((item) => String(item || "UNKNOWN").toUpperCase());
+  return normalized.some((item) => item === "SUCCEEDED")
+    ? (normalized.some((item) => ["BLOCKED", "PARTIAL", "FAILED", "UNKNOWN"].includes(item)) ? "PARTIAL" : "SUCCEEDED")
+    : (normalized[0] || "UNKNOWN");
+}
+
+function checkpointFetch(item) {
+  return {
+    ...item,
+    html: undefined,
+    extracted: item.extracted ? {
+      ...item.extracted,
+      markdown: undefined,
+      records: undefined
+    } : null
+  };
+}
+
+function makeListeningJob({ jobId, campaignId, backend, sourceRevision, extractorRevision, sourceUrls, scope, policies, keywords, blockedKeywords, sources, records, status, startedAt, completedAt = null, providerReceipt = null, persistenceStatus = "PENDING", persistedSummary = null } = {}) {
+  return normalizeListeningJob({
+    schemaVersion: 1, jobId, campaignId, backend, sourceRevision, extractorRevision, sourceUrls, scope, policies, keywords, blockedKeywords,
+    sources: sourceUrls.map((url, index) => {
+      const source = sources[index] || {};
+      return { url, status: source.status || "PENDING", reason: source.reason || null, fetch: source.fetch || null, records: source.records || [] };
+    }), records, status, startedAt, completedAt, providerReceipt, persistenceStatus, persistedSummary
+  });
+}
+
+function runFromListeningJob(job) {
+  const records = Array.isArray(job.records) ? job.records : [];
+  const statuses = Array.isArray(job.statuses) ? job.statuses : (job.sources || []).map((item) => item.status);
+  return {
+    contractVersion: LISTENING_CONTRACT_VERSION, jobId: job.jobId, campaignId: job.campaignId, backend: job.backend,
+    sourceRevision: job.sourceRevision, extractorRevision: job.extractorRevision, sourceUrls: job.sourceUrls,
+    scope: job.scope, policies: job.policies, keywords: job.keywords, blockedKeywords: job.blockedKeywords,
+    startedAt: job.startedAt, completedAt: job.completedAt, statuses,
+    fetches: (job.sources || []).map((source) => source.fetch ? { ...source.fetch, sourceUrl: source.url, extracted: source.fetch.extracted || null } : { sourceUrl: source.url, status: source.status, reason: source.reason, extracted: null }),
+    records, analysisInput: normalizeAnalysisInput(records, job.scope), sourceHashes: (job.sources || []).map((source) => source.fetch?.contentHash).filter(Boolean),
+    extractedHashes: (job.sources || []).map((source) => source.fetch?.extracted?.extractedHash).filter(Boolean),
+    status: job.status, providerReceipt: job.providerReceipt, persistedSummary: job.persistedSummary || null
+  };
+}
+
+export async function runListeningExtraction({ urls = [], backend = process.env.SEEDING_LISTENING_BACKEND || "http", campaignId = null, scope = {}, policies = {}, keywords = [], blockedKeywords = [], jobId = null, resumeJob = null, checkpoint = null, options = {} } = {}) {
   const normalizedBackend = normalizeBackend(backend);
   const sourceUrls = [...new Set((Array.isArray(urls) ? urls : []).slice(0, 20).map(normalizePublicUrl))];
   if (!sourceUrls.length) throw new Error("at least one public listening URL is required");
   const normalizedScope = normalizeScope({ ...scope, campaignId: scope.campaignId || campaignId });
-  const resolvedJobId = jobId || createListeningJobId({ campaignId, urls: sourceUrls, backend: normalizedBackend, sourceRevision: FETCHER_REVISIONS[normalizedBackend] });
-  const startedAt = nowIso();
-  const results = [];
+  const resolvedJobId = jobId || createListeningJobId({ campaignId, urls: sourceUrls, backend: normalizedBackend, sourceRevision: FETCHER_REVISIONS[normalizedBackend], scope: normalizedScope, policies, keywords, blockedKeywords });
+  const startedAt = resumeJob?.startedAt || nowIso();
+  const existing = resumeJob && resumeJob.jobId === resolvedJobId ? normalizeListeningJob(resumeJob) : null;
+  if (existing && LISTENING_TERMINAL_STATUSES.includes(existing.status) && existing.sources.every((source) => LISTENING_TERMINAL_STATUSES.includes(source.status))) return runFromListeningJob(existing);
+  const sources = sourceUrls.map((url, index) => existing?.sources?.[index] ? { ...existing.sources[index], url } : { url, status: "PENDING", reason: null, fetch: null, records: [] });
+  const results = sources.map((source) => source.fetch ? { ...source.fetch, sourceUrl: source.url, extracted: source.fetch.extracted || null } : null);
+  const records = sources.flatMap((source) => source.records || []);
+  const persistCheckpoint = async (status = "RUNNING", completedAt = null) => {
+    if (typeof checkpoint !== "function") return;
+    const job = makeListeningJob({ jobId: resolvedJobId, campaignId, backend: normalizedBackend, sourceRevision: FETCHER_REVISIONS[normalizedBackend], extractorRevision: EXTRACTOR_REVISION, sourceUrls, scope: normalizedScope, policies, keywords, blockedKeywords, sources, records, status, startedAt, completedAt });
+    await checkpoint(job);
+  };
+  await persistCheckpoint("RUNNING");
   for (const url of sourceUrls) {
-    const fetched = await fetchWithBackend({ jobId: resolvedJobId, url, backend: normalizedBackend, options });
+    const index = sourceUrls.indexOf(url);
+    if (LISTENING_TERMINAL_STATUSES.includes(String(sources[index].status || "").toUpperCase())) continue;
+    const fetched = typeof options.fetchImpl === "function"
+      ? await boundedFetchHtml(url, options)
+      : await fetchWithBackend({ jobId: resolvedJobId, url, backend: normalizedBackend, options });
+    if (fetched.status === "FAILED" && /timeout|aborted|deadline/i.test(String(fetched.reason || ""))) fetched.status = "UNKNOWN";
     const extracted = await extractHtml(fetched, options);
-    results.push(extracted);
-  }
-  const records = [];
-  for (const item of results) {
-    for (const [index, record] of (item.extracted?.records || []).entries()) {
-      try { records.push(normalizeExtractedRecord(record, { ...item, jobId: resolvedJobId }, index)); } catch {}
+    const sourceRecords = [];
+    for (const [recordIndex, record] of (extracted.extracted?.records || []).entries()) {
+      try { sourceRecords.push(normalizeExtractedRecord(record, { ...extracted, jobId: resolvedJobId }, recordIndex)); } catch {}
     }
+    sources[index] = { url, status: String(extracted.extracted?.status || extracted.status || "UNKNOWN").toUpperCase(), reason: extracted.extracted?.reason || extracted.reason || null, fetch: checkpointFetch(extracted), records: sourceRecords };
+    results[index] = extracted;
+    const merged = [...records.filter((record) => record.sourceUrl !== url), ...sourceRecords];
+    records.splice(0, records.length, ...new Map(merged.map((record) => [`${record.sourceUrl}\u0000${record.recordId}\u0000${record.contentHash}`, record])).values());
+    await persistCheckpoint("RUNNING");
   }
   const uniqueRecords = [...new Map(records.map((record) => [`${record.sourceUrl}\u0000${record.recordId}\u0000${record.contentHash}`, record])).values()];
-  return {
+  const status = listeningStatus(sources.map((source) => source.status));
+  const run = {
     contractVersion: LISTENING_CONTRACT_VERSION, jobId: resolvedJobId, campaignId, backend: normalizedBackend,
     sourceRevision: FETCHER_REVISIONS[normalizedBackend], extractorRevision: EXTRACTOR_REVISION,
-    sourceUrls, scope: normalizedScope, policies, keywords, blockedKeywords, startedAt, completedAt: nowIso(),
-    fetches: results.map((item) => ({ ...item, html: undefined, extracted: item.extracted ? { ...item.extracted, markdown: undefined } : null })),
+    sourceUrls, scope: normalizedScope, policies, keywords, blockedKeywords, startedAt, completedAt: nowIso(), status,
+    fetches: results.map((item) => item ? { ...item, html: undefined, extracted: item.extracted ? { ...item.extracted, markdown: undefined } : null } : null),
     records: uniqueRecords, analysisInput: normalizeAnalysisInput(uniqueRecords, normalizedScope),
-    statuses: results.map((item) => item.extracted?.status || item.status),
-    sourceHashes: results.map((item) => item.contentHash).filter(Boolean),
-    extractedHashes: results.map((item) => item.extracted?.extractedHash).filter(Boolean)
+    statuses: sources.map((source) => source.status), sourceHashes: sources.map((source) => source.fetch?.contentHash).filter(Boolean),
+    extractedHashes: sources.map((source) => source.fetch?.extracted?.extractedHash).filter(Boolean)
   };
+  await persistCheckpoint(status, run.completedAt);
+  return run;
 }
 
 export async function persistListeningRun(service, run, { actor = "listening-public-observer", providerTask = null } = {}) {

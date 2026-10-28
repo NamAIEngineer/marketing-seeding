@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 
 export const LISTENING_CONTRACT_VERSION = 1;
 export const CRAWL4AI_SOURCE_REVISION = "v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586";
@@ -11,6 +11,8 @@ export const FETCHER_REVISIONS = Object.freeze({
 
 export const LISTENING_STATUSES = Object.freeze(["RUNNING", "SUCCEEDED", "PARTIAL", "BLOCKED", "FAILED", "UNKNOWN"]);
 export const RECORD_TYPES = Object.freeze(["post", "comment", "page", "item", "unknown"]);
+export const LISTENING_JOB_SCHEMA_VERSION = 1;
+export const LISTENING_TERMINAL_STATUSES = Object.freeze(["SUCCEEDED", "PARTIAL", "BLOCKED", "FAILED", "UNKNOWN"]);
 
 function boundedText(value, max = 8000) {
   return String(value ?? "").replace(/\s+/g, " ").trim().slice(0, max);
@@ -18,6 +20,24 @@ function boundedText(value, max = 8000) {
 
 function boundedArray(value, max = 32) {
   return [...new Set((Array.isArray(value) ? value : []).map((item) => boundedText(item, 600)).filter(Boolean))].slice(0, max);
+}
+
+function stripMarkup(value, max = 8_000) {
+  return boundedText(String(value ?? "").replace(/<[^>]*>/g, " "), max);
+}
+
+function safePolicyMap(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(Object.entries(value).slice(0, 32).map(([host, policy]) => {
+    const row = policy && typeof policy === "object" && !Array.isArray(policy) ? policy : {};
+    return [boundedText(host, 160), {
+      enabled: row.enabled !== false,
+      channel: boundedText(row.channel, 80) || null,
+      actions: boundedArray(row.actions, 16),
+      allowedHosts: boundedArray(row.allowedHosts, 16),
+      reason: stripMarkup(row.reason, 240) || null
+    }];
+  }).filter(([host]) => Boolean(host)));
 }
 
 export function sha256(value) {
@@ -31,6 +51,20 @@ export function stableHash(value) {
     return `{${Object.keys(item).sort().map((key) => `${JSON.stringify(key)}:${stable(item[key])}`).join(",")}}`;
   };
   return sha256(stable(value));
+}
+
+export function listeningInputHash({ campaignId = null, urls = [], backend = "http", sourceRevision = null, extractorRevision = EXTRACTOR_REVISION, scope = {}, policies = {}, keywords = [], blockedKeywords = [] } = {}) {
+  return stableHash({
+    campaignId: boundedText(campaignId, 160) || null,
+    urls: [...new Set((Array.isArray(urls) ? urls : []).map(normalizePublicUrl))].sort(),
+    backend: normalizeBackend(backend),
+    sourceRevision: boundedText(sourceRevision, 180) || null,
+    extractorRevision: boundedText(extractorRevision, 180) || null,
+    scope: normalizeScope(scope),
+    policies: policies && typeof policies === "object" && !Array.isArray(policies) ? policies : {},
+    keywords: boundedArray(keywords, 64),
+    blockedKeywords: boundedArray(blockedKeywords, 64)
+  });
 }
 
 export function normalizePublicUrl(raw) {
@@ -52,8 +86,149 @@ export function normalizeScope(scope = {}) {
   return Object.fromEntries(["campaignId", "communityId", "platform", "channel", "purpose", "locale"].map((key) => [key, boundedText(scope[key], 160) || null]));
 }
 
-export function createListeningJobId({ campaignId, urls, backend, sourceRevision = FETCHER_REVISIONS[backend] } = {}) {
-  return `listening-${stableHash({ campaignId: boundedText(campaignId, 160), urls: (urls || []).map(normalizePublicUrl).sort(), backend, sourceRevision }).slice(0, 24)}-${randomUUID().slice(0, 8)}`;
+export function createListeningJobId({ campaignId, urls, backend, sourceRevision = FETCHER_REVISIONS[backend], extractorRevision = EXTRACTOR_REVISION, scope = {}, policies = {}, keywords = [], blockedKeywords = [] } = {}) {
+  return `listening-${listeningInputHash({ campaignId, urls, backend, sourceRevision, extractorRevision, scope, policies, keywords, blockedKeywords }).slice(0, 32)}`;
+}
+
+function safeProcessEvidence(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return {
+    workerPid: Number.isInteger(value.workerPid) ? value.workerPid : null,
+    browserPid: Number.isInteger(value.browserPid) ? value.browserPid : null,
+    processCountBefore: Number.isFinite(Number(value.processCountBefore)) ? Number(value.processCountBefore) : null,
+    processCountAfter: Number.isFinite(Number(value.processCountAfter)) ? Number(value.processCountAfter) : null,
+    peakRssKb: Number.isFinite(Number(value.peakRssKb)) ? Number(value.peakRssKb) : null,
+    rssKbAfter: Number.isFinite(Number(value.rssKbAfter)) ? Number(value.rssKbAfter) : null,
+    cleanup: boundedText(value.cleanup, 120) || null,
+    browserPids: Array.isArray(value.browserPids) ? value.browserPids.filter(Number.isInteger).slice(0, 32) : []
+  };
+}
+
+function safeFetchCheckpoint(value = {}) {
+  const extracted = value.extracted && typeof value.extracted === "object" ? value.extracted : null;
+  return {
+    sourceUrl: normalizePublicUrl(value.sourceUrl),
+    finalUrl: (() => { try { return normalizePublicUrl(value.finalUrl || value.sourceUrl); } catch { return normalizePublicUrl(value.sourceUrl); } })(),
+    backend: normalizeBackend(value.backend),
+    status: LISTENING_STATUSES.includes(String(value.status || "").toUpperCase()) ? String(value.status).toUpperCase() : "UNKNOWN",
+    reason: boundedText(value.reason, 300) || null,
+    observedHttpStatus: Number.isInteger(value.observedHttpStatus) ? value.observedHttpStatus : "UNKNOWN",
+    contentType: boundedText(value.contentType, 120).toLowerCase() || null,
+    capturedAt: boundedText(value.capturedAt, 80) || null,
+    contentHash: boundedText(value.contentHash, 128) || null,
+    extracted: extracted ? {
+      status: LISTENING_STATUSES.includes(String(extracted.status || "").toUpperCase()) ? String(extracted.status).toUpperCase() : "UNKNOWN",
+      reason: boundedText(extracted.reason, 300) || null,
+      extractedHash: boundedText(extracted.extractedHash, 128) || null,
+      recordCount: Math.max(0, Math.min(500, Number(extracted.recordCount) || 0)),
+      recordTypes: boundedArray(extracted.recordTypes, 16),
+      coverage: normalizeCoverage(extracted.coverage),
+      elapsedMs: Number.isFinite(Number(extracted.elapsedMs)) ? Math.max(0, Number(extracted.elapsedMs)) : null,
+      processEvidence: safeProcessEvidence(extracted.processEvidence)
+    } : null,
+    fetcherRevision: boundedText(value.fetcherRevision, 180) || null,
+    browserVersion: boundedText(value.browserVersion, 180) || null,
+    runtimeVersion: boundedText(value.runtimeVersion, 80) || null,
+    coverage: normalizeCoverage(value.coverage),
+    processEvidence: safeProcessEvidence(value.processEvidence)
+  };
+}
+
+function safeListeningRecord(value = {}) {
+  return {
+    schemaVersion: LISTENING_CONTRACT_VERSION,
+    recordId: boundedText(value.recordId, 240),
+    sourceId: boundedText(value.sourceId, 240) || null,
+    recordType: RECORD_TYPES.includes(String(value.recordType || "")) ? value.recordType : "item",
+    sourceUrl: normalizePublicUrl(value.sourceUrl),
+    url: (() => { try { return normalizePublicUrl(value.url || value.sourceUrl); } catch { return normalizePublicUrl(value.sourceUrl); } })(),
+    title: stripMarkup(value.title, 800),
+    text: stripMarkup(value.text, 8_000),
+    author: boundedText(value.author, 240) || null,
+    contentHash: boundedText(value.contentHash, 128) || null,
+    capturedAt: boundedText(value.capturedAt, 80) || null,
+    publishedAt: boundedText(value.publishedAt, 80) || null,
+    parentRecordId: boundedText(value.parentRecordId, 240) || null,
+    sourceRefs: boundedArray(value.sourceRefs, 16),
+    coverage: normalizeCoverage(value.coverage),
+    untrusted: value.untrusted === true
+  };
+}
+
+function safeProviderReceipt(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return {
+    schemaVersion: Number.isInteger(value.schemaVersion) ? value.schemaVersion : 1,
+    decisionId: boundedText(value.decisionId, 160) || null,
+    providerId: boundedText(value.providerId, 120) || null,
+    status: boundedText(value.status, 40).toUpperCase() || "UNKNOWN",
+    failure: boundedText(value.failure, 160) || null,
+    analysisInputDigest: boundedText(value.analysisInputDigest, 128) || null,
+    evidenceRefs: boundedArray(value.evidenceRefs, 64),
+    attempted: Array.isArray(value.attempted) ? value.attempted.slice(0, 16).map((item) => ({ providerId: boundedText(item?.providerId, 120) || null, status: boundedText(item?.status, 80) || null, reason: boundedText(item?.reason, 160) || null })) : [],
+    telemetry: value.telemetry && typeof value.telemetry === "object" && !Array.isArray(value.telemetry) ? {
+      capability: boundedText(value.telemetry.capability, 120) || null,
+      privacyClass: boundedText(value.telemetry.privacyClass, 40) || null,
+      reasoningClass: boundedText(value.telemetry.reasoningClass, 40) || null,
+      analysisInputDigest: boundedText(value.telemetry.analysisInputDigest, 128) || null,
+      evidenceRefs: boundedArray(value.telemetry.evidenceRefs, 64),
+      providerId: boundedText(value.telemetry.providerId, 120) || null
+    } : null,
+    persisted: value.persisted === true
+  };
+}
+
+export function normalizeListeningJob(input = {}, now = new Date()) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("listening job must be an object");
+  const sourceUrls = [...new Set((Array.isArray(input.sourceUrls) ? input.sourceUrls : []).slice(0, 20).map(normalizePublicUrl))];
+  if (!sourceUrls.length) throw new Error("listening job requires source URLs");
+  const backend = normalizeBackend(input.backend);
+  const sourceRevision = boundedText(input.sourceRevision, 180) || FETCHER_REVISIONS[backend];
+  const extractorRevision = boundedText(input.extractorRevision, 180) || EXTRACTOR_REVISION;
+  const sources = sourceUrls.map((url, index) => {
+    const value = Array.isArray(input.sources) ? input.sources[index] || {} : {};
+    const status = ["PENDING", ...LISTENING_STATUSES].includes(String(value.status || "").toUpperCase()) ? String(value.status).toUpperCase() : "PENDING";
+    return {
+      url,
+      status: status === "RUNNING" ? "RUNNING" : status,
+      reason: boundedText(value.reason, 300) || null,
+      fetch: value.fetch ? safeFetchCheckpoint(value.fetch) : null,
+      records: Array.isArray(value.records) ? value.records.slice(0, 500).map(safeListeningRecord) : []
+    };
+  });
+  const records = (Array.isArray(input.records) ? input.records : sources.flatMap((source) => source.records || []))
+    .slice(0, 500).map(safeListeningRecord);
+  const statuses = sources.map((source) => source.status === "PENDING" ? "RUNNING" : source.status);
+  const status = LISTENING_STATUSES.includes(String(input.status || "").toUpperCase()) ? String(input.status).toUpperCase() : "RUNNING";
+  return {
+    schemaVersion: LISTENING_JOB_SCHEMA_VERSION,
+    jobId: boundedText(input.jobId, 160),
+    inputHash: boundedText(input.inputHash, 128) || listeningInputHash({ campaignId: input.campaignId, urls: sourceUrls, backend, sourceRevision, extractorRevision, scope: input.scope, policies: input.policies, keywords: input.keywords, blockedKeywords: input.blockedKeywords }),
+    campaignId: boundedText(input.campaignId, 160) || null,
+    backend, sourceRevision, extractorRevision, sourceUrls,
+    scope: normalizeScope(input.scope),
+    policies: safePolicyMap(input.policies),
+    keywords: boundedArray(input.keywords, 64), blockedKeywords: boundedArray(input.blockedKeywords, 64),
+    sources, records, statuses, status,
+    analysisInput: input.analysisInput && typeof input.analysisInput === "object" ? {
+      schemaVersion: LISTENING_CONTRACT_VERSION,
+      scope: normalizeScope(input.analysisInput.scope || input.scope),
+      digest: boundedText(input.analysisInput.digest, 128) || null,
+      recordIds: boundedArray(input.analysisInput.records?.map?.((item) => item?.recordId), 500),
+      untrusted: input.analysisInput.untrusted === true
+    } : null,
+    providerReceipt: safeProviderReceipt(input.providerReceipt),
+    persistenceStatus: boundedText(input.persistenceStatus, 40).toUpperCase() || "PENDING",
+    persistedSummary: (() => {
+      if (!input.persistedSummary) return null;
+      const summary = publicRunSummary(input.persistedSummary);
+      summary.providerReceipt = safeProviderReceipt(summary.providerReceipt);
+      return summary;
+    })(),
+    startedAt: boundedText(input.startedAt, 80) || now.toISOString(),
+    updatedAt: boundedText(input.updatedAt, 80) || now.toISOString(),
+    completedAt: boundedText(input.completedAt, 80) || null
+  };
 }
 
 export function normalizeCoverage(value = {}) {

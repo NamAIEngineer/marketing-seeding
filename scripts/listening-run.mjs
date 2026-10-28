@@ -5,6 +5,7 @@ import { JsonStore } from "../src/store.mjs";
 import { SeedingService } from "../src/service.mjs";
 import { stateFile } from "../src/paths.mjs";
 import { runListeningExtraction, persistListeningRun } from "../src/listening-adapter.mjs";
+import { createListeningJobId, normalizeBackend } from "../src/listening-contract.mjs";
 import { loadConfiguredLocalProvider } from "../src/oi-browser-provider-adapters.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -18,18 +19,38 @@ const backend = arg("--backend", process.env.SEEDING_LISTENING_BACKEND || "http"
 const campaignId = arg("--campaign-id", null);
 const scope = arg("--scope-json") ? JSON.parse(await readFile(path.resolve(arg("--scope-json")), "utf8")) : {};
 const providerTask = has("--provider-analysis") ? { capability: "strategy-context", privacyClass: "local", reasoningClass: "general" } : null;
-const run = await runListeningExtraction({ urls, backend, campaignId, scope, providerTask, options: { python: process.env.SEEDING_LISTENING_PYTHON } });
-let summary = { run, persisted: null };
+let service = null;
+let existingJob = null;
 if (campaignId) {
   const store = new JsonStore(stateFile, { requireLease: true });
   await store.acquireWriterLease();
   try {
     const provider = await loadConfiguredLocalProvider(process.env, { timeoutMs: 5_000, inferTimeoutMs: 120_000 });
-    const service = new SeedingService(store, provider ? { oiBrowserProviders: [provider] } : {});
+    service = new SeedingService(store, provider ? { oiBrowserProviders: [provider] } : {});
     await service.init();
-    summary.persisted = await persistListeningRun(service, run, { providerTask: providerTask ? { ...providerTask, timeoutMs: 120_000 } : null });
-  } finally { await store.releaseWriterLease(); }
+    const normalizedBackend = normalizeBackend(backend);
+    const jobId = createListeningJobId({ campaignId, urls, backend: normalizedBackend, scope: { ...scope, campaignId: scope.campaignId || campaignId } });
+    existingJob = await service.getListeningJob(jobId);
+    const terminalReplay = existingJob && ["SUCCEEDED", "PARTIAL", "BLOCKED", "FAILED", "UNKNOWN"].includes(existingJob.status) && existingJob.persistenceStatus === "SUCCEEDED";
+    const run = await runListeningExtraction({ urls, backend: normalizedBackend, campaignId, scope, policies: {}, providerTask, resumeJob: existingJob, checkpoint: (job) => service.checkpointListeningJob(job), options: { python: process.env.SEEDING_LISTENING_PYTHON } });
+    let persisted = existingJob?.persistedSummary || null;
+    if (!terminalReplay) {
+      persisted = await persistListeningRun(service, run, { providerTask: providerTask ? { ...providerTask, timeoutMs: 120_000 } : null });
+      const latestJob = await service.getListeningJob(jobId);
+      await service.checkpointListeningJob({ ...latestJob, status: run.status, providerReceipt: persisted.providerReceipt, persistedSummary: persisted, persistenceStatus: "SUCCEEDED", completedAt: run.completedAt, updatedAt: new Date().toISOString() });
+    }
+    const summary = { run, persisted };
+    await store.releaseWriterLease();
+    globalThis.__listeningSummary = summary;
+  } catch (error) {
+    await store.releaseWriterLease();
+    throw error;
+  }
+} else {
+  const run = await runListeningExtraction({ urls, backend, campaignId, scope, providerTask, options: { python: process.env.SEEDING_LISTENING_PYTHON } });
+  globalThis.__listeningSummary = { run, persisted: null };
 }
+let summary = globalThis.__listeningSummary;
 const evidence = arg("--evidence");
 if (evidence) {
   await mkdir(path.dirname(path.resolve(evidence)), { recursive: true });

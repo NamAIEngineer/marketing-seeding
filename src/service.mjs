@@ -40,6 +40,7 @@ import { projectGpmSessionCapability } from "./gpm-session-capability-projection
 import { accountExecutionBinding, accountTargetBindingMatches, bindingMatches, canonicalIdentityUrl, canonicalProvider, canonicalTargetUrl, destinationBindingMatches, executionProfileKey, targetExecutionBinding } from "./execution-binding.mjs";
 import { applyMemoryConsolidation, createBrowserExecutionIntent, createBrowserSnapshot, executeBrowserIntent, normalizeBrowserSnapshot, projectOiBrowserIntegration, recordMemoryObservation, retrieveBoundedMemory, retractMemoryEvidence, routeAgentTask, sanitizeBrowserExecutionResult } from "./oi-browser-integration.mjs";
 import { projectAccountAgentMissionControl } from "./account-agent-registry.mjs";
+import { normalizeListeningJob } from "./listening-contract.mjs";
 
 export async function pollConfiguredDiscoveries(service, { actor = "scheduled-discovery-observer", shuttingDown = false } = {}) {
   const state = await service.snapshot();
@@ -2154,6 +2155,54 @@ export class SeedingService {
       return safe;
     });
     return { ...result, output: undefined, persisted: persisted.result, externalSideEffects: false };
+  }
+
+  /** Persist one bounded Listening checkpoint in the canonical state store. */
+  async checkpointListeningJob(input = {}, actor = "listening-checkpoint") {
+    const result = await this.store.mutate(actor, "listening_job_checkpointed", (state) => {
+      state.listeningJobs ||= [];
+      const incoming = normalizeListeningJob(input);
+      const index = state.listeningJobs.findIndex((item) => item.jobId === incoming.jobId);
+      if (index < 0) {
+        state.listeningJobs.push(incoming);
+        state.listeningJobs = state.listeningJobs.slice(-200);
+        return incoming;
+      }
+      const current = state.listeningJobs[index];
+      const currentRank = { PENDING: 0, RUNNING: 1, UNKNOWN: 2, FAILED: 2, BLOCKED: 2, PARTIAL: 3, SUCCEEDED: 4 };
+      const currentStatus = String(current.status || "RUNNING").toUpperCase();
+      const incomingStatus = String(incoming.status || "RUNNING").toUpperCase();
+      // UNKNOWN is an immutable quarantine. A later caller cannot promote a
+      // source or whole job without an explicit, separately verified
+      // reconciliation path. This prevents a retry or stale checkpoint from
+      // turning uncertain public-read evidence into success.
+      if (currentStatus === "UNKNOWN" && incomingStatus !== "UNKNOWN") return current;
+      const protectedSources = (current.sources || []).map((source, sourceIndex) => {
+        const candidate = incoming.sources?.[sourceIndex];
+        return String(source.status || "").toUpperCase() === "UNKNOWN" && String(candidate?.status || "").toUpperCase() !== "UNKNOWN"
+          ? source
+          : (candidate || source);
+      });
+      const protectedUnknown = protectedSources.some((source) => String(source.status || "").toUpperCase() === "UNKNOWN");
+      if (protectedUnknown) {
+        incoming.sources = protectedSources;
+        incoming.statuses = protectedSources.map((source) => source.status);
+        const statuses = incoming.statuses.map((status) => String(status || "UNKNOWN").toUpperCase());
+        const pending = statuses.some((status) => ["PENDING", "RUNNING"].includes(status));
+        incoming.status = incomingStatus === "RUNNING" && pending
+          ? "RUNNING"
+          : (statuses.some((status) => status === "SUCCEEDED") ? "PARTIAL" : "UNKNOWN");
+      }
+      if ((currentRank[incoming.status] ?? 0) < (currentRank[currentStatus] ?? 0)) return current;
+      state.listeningJobs[index] = incoming;
+      return incoming;
+    });
+    return result.result;
+  }
+
+  async getListeningJob(jobId) {
+    const state = await this.store.read();
+    return (state.listeningJobs || []).find((item) => item.jobId === String(jobId || "")) || null;
   }
 
   async createBrowserIntent(input = {}) {
@@ -7463,6 +7512,25 @@ export class SeedingService {
       integrations: integrationReadiness(),
       recentConversions: newest(state.conversions, "occurredAt"),
       recentCollectorRuns: newest(state.collectorRuns, "at"),
+      listening: {
+        jobs: (state.listeningJobs || []).slice(-24).map((job) => ({
+          schemaVersion: job.schemaVersion,
+          jobId: job.jobId,
+          campaignId: job.campaignId,
+          backend: job.backend,
+          status: job.status,
+          sourceUrls: job.sourceUrls,
+          sourceCount: job.sourceUrls?.length || 0,
+          completedSources: (job.sources || []).filter((source) => ["SUCCEEDED", "PARTIAL", "BLOCKED", "FAILED", "UNKNOWN"].includes(source.status)).length,
+          records: job.records?.length || 0,
+          inputHash: job.inputHash,
+          providerReceipt: job.providerReceipt ? { providerId: job.providerReceipt.providerId, status: job.providerReceipt.status, decisionId: job.providerReceipt.decisionId } : null,
+          persistenceStatus: job.persistenceStatus,
+          startedAt: job.startedAt,
+          updatedAt: job.updatedAt,
+          completedAt: job.completedAt
+        }))
+      },
       recentArtifacts: newest(state.artifacts, "createdAt"),
       recentStories: newest(state.stories, "createdAt"),
       recentProductFactoryRuns: newest(state.campaigns.flatMap((campaign) => (campaign.productFactoryRuns || []).map((run) => ({ ...run, campaignId: campaign.id }))), "completedAt"),
