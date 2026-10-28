@@ -75,3 +75,9 @@
 - `routeAgentTask` now accepts a caller `AbortSignal`, aborts the active provider, stops fallback, and reports cancellation as failure. The post-race guard closes the invalid-result cancellation race.
 - Focused oi-browser/provider/live bridge `34/34`; coordinator/native `17/17`; full suite `813/811/0/2`; independent verifier PASS. Evidence: `plans/oi-browser-integration/regression-final-35cc224.json`.
 - Queue task `ad044fdf-fbbf-4a99-a4eb-9165dc35987e` remains ambiguous after one reconciliation; no retry. A/B dirty/owner state remains untouched. Status remains `PARTIAL`.
+
+## Service cancellation wiring handoff 2026-10-29
+
+- Commit `fa3ebda996041498e44800e181507bd494ee4b72` passes caller `AbortSignal` through `SeedingService.routeOiAgentTask`.
+- Focused `35/35`, coordinator/native `17/17`, full `814/812/0/2`; independent verifier PASS. Evidence: `plans/oi-browser-integration/regression-final-service-signal.json`.
+- Internal callers can cancel; JSON HTTP input cannot carry a live signal. A/B worktrees and runtime `4318` remain untouched. Status remains `PARTIAL`.

@@ -81,3 +81,9 @@
 - A post-race `signal.aborted` check prevents an adapter that returns an invalid result after cancellation from triggering fallback. Regression covers both pending cancellation and the invalid-result race.
 - Focused oi-browser/provider/live bridge: `34/34`; coordinator/native: `17/17`; full `npm test`: `813 total, 811 pass, 0 fail, 2 skipped`. Exact output hashes are in `plans/oi-browser-integration/regression-final-35cc224.json`.
 - Independent verifier PASS on committed `35cc224`; no A/B worktree or runtime mutation. Classification: source `IMPLEMENTED`, tests `FIXTURE_VERIFIED`, C supervisor evidence remains `NATIVE_RESUME_VERIFIED`, no `LIVE_VERIFIED` external action.
+
+## C service cancellation wiring 2026-10-29
+
+- Commit `fa3ebda996041498e44800e181507bd494ee4b72` passes `input.signal` through `SeedingService.routeOiAgentTask` to the canonical router.
+- Service regression proves persisted `FAILED/cancelled`, active provider abort, and no fallback. Focused oi-browser/provider/live bridge `35/35`; coordinator/native `17/17`; full `npm test` `814 total, 812 pass, 0 fail, 2 skipped`.
+- Independent verifier PASS. Source `IMPLEMENTED`; tests `FIXTURE_VERIFIED`; no A/B/runtime mutation or live side effect. Evidence: `plans/oi-browser-integration/regression-final-service-signal.json`.

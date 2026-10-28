@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "fa3ebda996041498e44800e181507bd494ee4b72",
+  "baseRevision": "60043031307c08dda95b5624671f6b4ec37a0263",
+  "branch": "integration/session-c-reconciled",
+  "capturedAt": "2026-10-29T00:50:00+07:00",
+  "checks": [
+    {
+      "command": "node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs test/oi-browser-live-bridge.test.mjs",
+      "classification": "FIXTURE_VERIFIED",
+      "tests": 35,
+      "pass": 35,
+      "fail": 0,
+      "skipped": 0,
+      "result": "PASS",
+      "outputSha256": "f3454045369a7c011b7dc576b6b7e40143eeb6234f03cc05c1fabf26de6675f4"
+    },
+    {
+      "command": "npm test",
+      "classification": "FIXTURE_VERIFIED",
+      "tests": 814,
+      "pass": 812,
+      "fail": 0,
+      "skipped": 2,
+      "result": "PASS",
+      "outputSha256": "daf9f9205342293c5b38d242c85d8dd73f1b88a585838b2a279f56111c51bb38"
+    },
+    {
+      "command": "node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs",
+      "classification": "FIXTURE_VERIFIED",
+      "tests": 17,
+      "pass": 17,
+      "fail": 0,
+      "skipped": 0,
+      "result": "PASS",
+      "outputSha256": "e48543896d44bf8dc385e0771b562ae8cb89ccf0fcf37bd90780dc537858b45d"
+    },
+    {
+      "command": "node --check src/service.mjs && git diff --check",
+      "classification": "IMPLEMENTED",
+      "result": "PASS"
+    }
+  ],
+  "change": "SeedingService.routeOiAgentTask forwards the caller AbortSignal into canonical routeAgentTask; service-level regression verifies persisted FAILED/cancelled decision and fallback suppression.",
+  "independentReview": {
+    "status": "PASS",
+    "reviewer": "independent-verifier",
+    "scope": "read-only service boundary review",
+    "focusedTests": "35/35",
+    "findings": 0,
+    "aOrBMutation": false
+  },
+  "liveEligible": false,
+  "externalSideEffects": false,
+  "unknownRetryAllowed": false
+}

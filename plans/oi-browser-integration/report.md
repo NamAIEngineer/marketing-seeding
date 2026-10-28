@@ -2,7 +2,7 @@
 
 ## Status
 
-`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; final C source/test checkpoint: `35cc224febb5eb9c8368cf88f5f28b6a119b6be3`; prior integration evidence checkpoint: `7f2b74a`; continuation implementation began at `3d1c380`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; final C source/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`; prior integration evidence checkpoint: `7f2b74a`; continuation implementation began at `3d1c380`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
 ## Baseline, ownership, integration
 
@@ -41,7 +41,7 @@ Standing authorization guards remain canonical. Candidate tests cover scope coll
 
 Artifact: [fixture-run-7378f8c.json](fixture-run-7378f8c.json). Controlled Product X developer-awareness campaign: Community A has technical/educational evidence; Community B prohibits direct promotion while allowing educational context. `SeedingService.runCampaignControlCycle` chose a candidate before consolidation. Two distinct verified fixture observations consolidated into one `LEARNING` with `sampleSupport=2`, `verifiedCount=2`, and evidence `fixture:fixture-publication-a` / `fixture:fixture-publication-b`. The next production strategy entrypoint selected a different candidate and included `memory:learning-1adbd95424b288d5e6db412b`. Browser semantic CLICK crossed `BrowserInteractionFixture`, verified `CONTROL_ACTIVATED`, replay clicked once, and restart retained memory, learning, snapshot, execution, and provider decisions. Evidence: `FIXTURE_VERIFIED`; no external side effect.
 
-Final C source/test checkpoint: `35cc224febb5eb9c8368cf88f5f28b6a119b6be3`; metadata/evidence commits follow this checkpoint on the candidate branch.
+Final C source/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`; metadata/evidence commits follow this checkpoint on the candidate branch.
 
 ## Runtime proof — isolated candidate
 
@@ -100,3 +100,9 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 - A post-race abort check closes the case where the provider returns an invalid result after cancellation. Regressions cover pending cancellation and this invalid-result race.
 - Evidence: [regression-final-35cc224.json](regression-final-35cc224.json), focused oi-browser/provider/live bridge `34/34`, coordinator/native `17/17`, full `npm test` `813/811/0/2`, independent verifier PASS.
 - Classification: source change `IMPLEMENTED`; tests `FIXTURE_VERIFIED`; C supervisor remains `NATIVE_RESUME_VERIFIED`; no live provider, publication, authority, or external side effect.
+
+## C follow-up: service cancellation wiring (2026-10-29)
+
+- Revision `fa3ebda996041498e44800e181507bd494ee4b72` forwards `input.signal` through `SeedingService.routeOiAgentTask` into the canonical provider router. The service-level regression verifies active-provider abort, fallback suppression, and persisted `FAILED/cancelled` decision state.
+- Evidence: [regression-final-service-signal.json](regression-final-service-signal.json), focused oi-browser/provider/live bridge `35/35`, coordinator/native `17/17`, full `npm test` `814/812/0/2`, independent verifier PASS.
+- Classification: source change `IMPLEMENTED`; tests `FIXTURE_VERIFIED`; no external side effect. The JSON HTTP endpoint cannot carry a live `AbortSignal`; internal service callers can.
