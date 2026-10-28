@@ -467,7 +467,8 @@ export class ProjectCoordinator {
       inFlightSince: null,
       lastAttemptAt: null,
       epoch: recovery.epoch + 1,
-      manualRecoveryCount: recovery.manualRecoveryCount + 1
+      manualRecoveryCount: recovery.manualRecoveryCount + 1,
+      invalidNextAttemptAt: false
     };
     task.native.reconciliation = "WAITING_CHATGPT";
     delete task.native.reconciliationBlockedAt;

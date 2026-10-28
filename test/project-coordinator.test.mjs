@@ -246,6 +246,41 @@ test("malformed native recovery timestamp fails closed on restart", async () => 
   assert.equal(task.error, "COORDINATOR_NATIVE_RECOVERY_TIMESTAMP_INVALID");
 });
 
+test("manual native recovery clears a malformed timestamp fence before retrying the exact request", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-coordinator-native-manual-recovery-"));
+  const stateFile = path.join(root, "state.json");
+  const calls = [];
+  const worker = async (task) => {
+    calls.push(task.native.requestId);
+    return { status: "WAITING_CHATGPT", native: { requestId: task.native.requestId } };
+  };
+  const coordinator = new ProjectCoordinator({ stateFile, worker, intervalMs: 25 });
+  await coordinator.init();
+  await coordinator.registerTask({
+    taskId: "native-manual-recovery",
+    owner: "session-c",
+    scope: "native-recovery",
+    replaySafe: true,
+    workerKind: "ORCA_NATIVE",
+    native: { requestId: "request-manual-safe", terminal: "term_fixture", prompt: "safe" }
+  });
+  await coordinator.runOnce();
+  const persisted = JSON.parse(await readFile(stateFile, "utf8"));
+  persisted.tasks[0].status = "WAITING_CHATGPT";
+  persisted.tasks[0].nativeRecovery.nextAttemptAt = "not-a-date";
+  await writeFile(stateFile, JSON.stringify(persisted));
+  const restarted = new ProjectCoordinator({ stateFile, worker });
+  await restarted.init();
+  assert.equal(restarted.snapshot().tasks[0].status, "BLOCKED_HUMAN_INPUT");
+  await restarted.recoverTask({ taskId: "native-manual-recovery", reason: "operator reconciles malformed local metadata" });
+  const recovered = restarted.snapshot().tasks[0];
+  assert.equal(recovered.nativeRecovery.invalidNextAttemptAt, false);
+  assert.equal(recovered.nativeRecovery.manualRecoveryCount, 1);
+  assert.equal(recovered.native.requestId, "request-manual-safe");
+  await restarted.runOnce();
+  assert.deepEqual(calls, ["request-manual-safe", "request-manual-safe"]);
+});
+
 test("native receipt callback is durable without replaying completed work", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-coordinator-native-"));
   const calls = [];
