@@ -1,0 +1,59 @@
+# Session D Crawl4AI Listening Report
+
+Status: READY_FOR_C_REVIEW_WITH_VERIFICATION_GAP
+
+Base: `dd814bf1df82a0371171ce0ca3674d16a1009368`
+Branch: `integration/session-d-crawl4ai-listening`
+
+## Outcome
+
+Implemented a product entrypoint for public market/community Listening. Node owns the bounded job and canonical `SeedingService` writes. A dedicated Python nodriver worker owns a temporary unauthenticated Chrome profile; Crawl4AI parses only the returned HTML snapshot. The existing local provider route receives bounded extracted content plus digest/evidence refs for analysis.
+
+Entrypoint:
+
+```bash
+node scripts/listening-run.mjs --urls <url,url,...> --backend http|nodriver [--campaign-id <id>] [--provider-analysis] [--evidence <file>]
+```
+
+`http` is the rollback/default baseline. `nodriver` is explicit per job or `SEEDING_LISTENING_BACKEND=nodriver`.
+
+## Pins/runtime
+
+- Crawl4AI `v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586`, Apache-2.0.
+- nodriver `0233da5bfbe98dc58341f0863526b6315a97e646`, AGPL-3.0; use/distribution obligations remain subject to the deployment model.
+- Python `3.12.15`, `.venv-crawl4ai`, Chrome `156.0.8078.48`, nodriver runtime `0.50.6`.
+- Source/license/API details: [source-audit.md](source-audit.md).
+- Dependency snapshot: [python-dependencies.lock](python-dependencies.lock); license summary: [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+## Real evidence
+
+`real-run-final.json` is redacted metadata only. Real run used:
+
+- `https://example.com/` — HTTP 200; source hash `fa87188765e603e821d515a49cb8af3316da43767fdfc53a012d37824efc8de5`; extracted hash `0a080719be9fbb82a86a45b80dc8c2a430fbe17dc93d23758debac092864d00f`; page record.
+- `https://www.python.org/community/` — HTTP 200; source hash `77e0893ed4ec285bd3743fa5e31200ccc0ee4ce87f0a31dfe6b338217e0d1519`; extraction `PARTIAL` because the returned public snapshot contained only head content; no invented records.
+- `https://news.ycombinator.com/item?id=50276792` — HTTP 200; source hash `011a575489f27f329acf6cd38595ea3eae2a022097dfe36bbf4e6ea32f823172`; extracted hash `37f14c5d516352de4ecf8c78e7d446820b7718d44661cabd510889e5a523067f`; 1 post + 99 comments, stable source IDs and parent post ID.
+
+Job: `listening-63f184855b1d7a2c3011e26d-7bf9b72c`; status `PARTIAL`; 3 requested, 2 succeeded, 1 partial; 101 records; the same-state rerun path yielded deduplicated records (latest receipt: `newRecords=10`, `deduplicatedRecords=91`; earlier exact rerun: `newRecords=0`, `deduplicatedRecords=101`). Memory IDs are in the persisted run receipt (`memoryIdCount=101`). Provider receipt: `local-qwen`, `SUCCEEDED`, analysis digest `6b9c9145b17dd388f343e728432f0eae51c0912fad87aa4375e1fd7f247a9661`; provider decision is persisted in canonical `providerDecisions` with bounded evidence refs.
+
+A separate two-URL provider run (`real-run-provider.json`) also returned `local-qwen/SUCCEEDED` with digest `5dd7e19a0a05b6c5326b4c23cf497744bdf28beab08591490ac532359f003013`.
+
+Latest direct nodriver smoke (`real-run-smoke-20261029-r4.json`) used the same three public URLs through `scripts/listening-run.mjs` and produced job `listening-dc798c34873d53af27cc18cc-63aebe21`. Statuses were `SUCCEEDED`, `PARTIAL`, `SUCCEEDED`; 101 redacted records were observed, including one page, one post, and 99 comments. Source hashes were `fa87188765e603e821d515a49cb8af3316da43767fdfc53a012d37824efc8de5`, `77e0893ed4ec285bd3743fa5e31200ccc0ee4ce87f0a31dfe6b338217e0d1519`, and `40fa22fd67bcb2c7ebbcae79370cf391e70b81d5c91d82718f81ea14e15d9652`; extracted hashes were `0a080719be9fbb82a86a45b80dc8c2a430fbe17dc93d23758debac092864d00f`, `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`, and `e553329746a12810ff87c0c996528e91e065332cd519a073ef816a9530b9e7fb`. Receipts observed Chrome `Chrome/156.0.8078.48`, nodriver `0.50.6`, `processCountAfter=0`, and `browser_process_exited;profile_removed` for every fetch; extraction workers reported `worker_exited` and zero remaining processes.
+
+## Benchmark
+
+[benchmark-runtime-20261029.json](benchmark-runtime-20261029.json) records two bounded rounds on the same two URLs. HTTP completed both rounds in about 6 seconds. Nodriver completed one round in about 9.7 seconds with peak aggregate process RSS about 1.34 GB; the second round was `PARTIAL` after one transient fetch failure. Cleanup receipts report `browser_process_exited;profile_removed`. The sample supports choosing nodriver for explicit JS/public-read coverage; it does not support a speed or memory superiority claim.
+
+## Verification
+
+Focused checks pass: 29 tests covering contract bounds/hash failure, relative URL/provenance, extraction persistence/dedupe, provider content forwarding, observer safety, and deadlines. Full project regression passed with 812 tests passing, 2 skipped, and 0 failures. Syntax checks pass for Node/Python workers; `git diff --cached --check` passes. Direct nodriver smoke passed with no remaining browser process. Extraction worker is HTML-only and no browser/network/model call is made after IPC.
+
+The requested independent verifier dispatch was attempted once as task `session-d-crawl4ai-independent-verifier-20261029-r1` through the live provider registry. It returned `REFUSED / NO_PROVIDER` after three local-Qwen preflight attempts, so `V6` remains open. `verifier-report.md` is implementation-side evidence and is not counted as an independent verifier result.
+
+## Limitations / handoff
+
+- Python community page returned incomplete HTML in this environment; status remains `PARTIAL`.
+- Public channel policy defaults may classify unconfigured hosts as `UNSUPPORTED`; this is preserved in canonical discovery state.
+- nodriver peak RSS is high in the measured sample; keep concurrency at 1 until a larger controlled sample exists.
+- C must review and integrate this branch into the target runtime. C's current observed HEAD is `da0301dc5cc91e9db91bb9e23aaf12a4f8eea3ff`; no A/B/C worktree was modified. Overlap files are left for C's serial integration because C owns the provider, discovery, and integration contracts. No authenticated account or publication lane was touched.
+
+Overlap handoff details are in [c-overlap-handoff.md](c-overlap-handoff.md). The committed checkpoint below contains only D-owned scripts, listening modules, tests, evidence, and docs; the working tree retains the C-overlap edits unstaged for serial merge.

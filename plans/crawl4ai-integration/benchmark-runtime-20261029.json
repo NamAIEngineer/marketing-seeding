@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "urlSet": [
+    "https://example.com/",
+    "https://news.ycombinator.com/item?id=50276792"
+  ],
+  "limits": {
+    "concurrency": 1,
+    "timeoutMs": 30000,
+    "maxHtmlBytes": 2000000
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "backend": "http",
+      "status": "SUCCEEDED",
+      "requested": 2,
+      "succeeded": 2,
+      "partial": 0,
+      "records": 101,
+      "elapsedMs": 6061,
+      "processCountBefore": 0,
+      "processCountAfter": 0,
+      "peakRssKb": 0,
+      "cleanup": []
+    },
+    {
+      "round": 1,
+      "backend": "nodriver",
+      "status": "SUCCEEDED",
+      "requested": 2,
+      "succeeded": 2,
+      "partial": 0,
+      "records": 101,
+      "elapsedMs": 9693,
+      "processCountBefore": 1,
+      "processCountAfter": 1,
+      "peakRssKb": 1342736,
+      "cleanup": [
+        "browser_process_exited;profile_removed"
+      ]
+    },
+    {
+      "round": 2,
+      "backend": "http",
+      "status": "SUCCEEDED",
+      "requested": 2,
+      "succeeded": 2,
+      "partial": 0,
+      "records": 101,
+      "elapsedMs": 6279,
+      "processCountBefore": 0,
+      "processCountAfter": 0,
+      "peakRssKb": 0,
+      "cleanup": []
+    },
+    {
+      "round": 2,
+      "backend": "nodriver",
+      "status": "PARTIAL",
+      "requested": 2,
+      "succeeded": 1,
+      "partial": 0,
+      "records": 1,
+      "elapsedMs": 10304,
+      "processCountBefore": 1,
+      "processCountAfter": 1,
+      "peakRssKb": 1285008,
+      "cleanup": [
+        "browser_process_exited;profile_removed",
+        "not_started;profile_removed"
+      ]
+    }
+  ],
+  "decision": "Retain http as default; nodriver explicit for JS/public pages. Sample supports coverage/use case comparison, not a speed or memory superiority claim.",
+  "notes": "Two rounds on the same URL set, concurrency 1. Round 2 nodriver was PARTIAL because one public fetch was transiently unavailable; retained as observed evidence. RSS is aggregate process-tree resident size at peak; HTTP has no worker process. No speed/memory superiority claim."
+}
