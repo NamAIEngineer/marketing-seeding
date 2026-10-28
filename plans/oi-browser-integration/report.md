@@ -85,3 +85,11 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 - C LaunchAgent restart is `NATIVE_RESUME_VERIFIED`: schema v2/revision 26 migrated to schema v3/revision 27, retained all three completed results and attempt counts, and replayed no completed task. Evidence: [coordinator-runtime-restart-20261028.json](coordinator-runtime-restart-20261028.json). Scope was the C coordinator only; A runtime 4318 and B worktree were untouched.
 - Product closed-loop remains `FIXTURE_VERIFIED`; port `4337` remains `RUNTIME_VERIFIED`. No `LIVE_VERIFIED` publication, metric, or conversion.
 - A owner checkpoint request completed natively: request `8ec39d22-ec26-48a9-94b9-1717cf75af60`, artifact hash `94aa53a52b514b198375774fb2ba2cdfd1bebe8731110e3324d00dd0af0803c7`, HEAD `1ed5771`, 12 tracked dirty files, 567 untracked paths. A reports that clean checkpointing requires ownership reconciliation and fresh tests; C did not stage or alter those files.
+
+## C follow-up: immutable browser intent binding (2026-10-29)
+
+- Revision `dd814bf1df82a0371171ce0ca3674d16a1009368` adds fail-closed binding checks in `src/oi-browser-integration.mjs`: immutable intent ID, action/element/snapshot binding, semantic target identity, frame, and action-to-role compatibility are validated before transport input.
+- Regression test `browser executor rejects forged action, frame, and semantic identity bindings` covers mutations of action, frame, semantic identity, and intent ID. No browser provider call occurs for these rejected bindings.
+- Focused oi-browser/Camoufox command: 32/32 pass. Coordinator/native command: 17/17 pass. Full `npm test`: 811 total, 809 pass, 0 fail, 2 skipped. Full output SHA-256: `f1f09a5901ab4852adcebeb9459fa6f297d585c95f0100a5af2bf0ee8ef273ab`.
+- Classification: source change `IMPLEMENTED`; fixture checks `FIXTURE_VERIFIED`; prior C LaunchAgent follow-up and restart checks remain `NATIVE_RESUME_VERIFIED`. No `LIVE_VERIFIED` publication or external side effect.
+- Final branch head is pushed and matches `origin/integration/session-c-reconciled`; draft PR #2 remains open. A/B worktrees and runtime `4318` were not changed.

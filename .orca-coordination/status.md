@@ -66,3 +66,11 @@
 - `NATIVE_RESUME_VERIFIED`: C launchd follow-up #2 request `4f19fde8-0f31-4f8d-8b40-0d36de8dd45a`, artifact hash `4b3e51dad6b2d8aaf63377f416a8a30ecc9f25041986dd19aa21b1f29b0f4770`, one attempt after exact request replay/recovery. Launchd restart retained two results and did not replay.
 - A/B native follow-up artifacts also exist: A request `536fa680-2dd7-4330-8573-67566db016cb`, hash `2903df5db1800124fa59515c8042e966a1e9498a528122d75309deace9291f22`; B request `b705ab7f-a863-44b7-bf54-8f57a05d269f`, hash `97799c6641a26e9b0967240331c6c370aba39f3041c4c9f453f9e79e07ff7441`.
 - All artifacts are local rehearsals: `rehearsal=true`, `liveEligible=false`, `externalSideEffects=false`, `unknownRetryAllowed=false`.
+
+## C follow-up 2026-10-29
+
+- Final C source revision: `dd814bf1df82a0371171ce0ca3674d16a1009368`; remote `origin/integration/session-c-reconciled` matches.
+- C patch binds browser intents to immutable action/element/snapshot identity, semantic target identity, frame, and role. Focused oi-browser/Camoufox tests: 32/32. Coordinator/native tests: 17/17. Full suite: 811 total, 809 pass, 0 fail, 2 skipped; output SHA-256 `f1f09a5901ab4852adcebeb9459fa6f297d585c95f0100a5af2bf0ee8ef273ab`.
+- Evidence: `plans/oi-browser-integration/regression-final-dd814bf.json`; source change is `IMPLEMENTED`, test result `FIXTURE_VERIFIED`, existing C launchd follow-up/restart remains `NATIVE_RESUME_VERIFIED`.
+- Queue task `ad044fdf-fbbf-4a99-a4eb-9165dc35987e` reconciled once as `UNKNOWN / QUEUE_RECEIPT_AMBIGUOUS`; no retry. Direct C implementation is the code evidence.
+- A read-only checkpoint remains dirty and not integration-ready; B terminal remains orphaned with continuous follow-up unproven. Live Camoufox, publication/metrics/conversion, and Auto-GTM generation/media blockers remain open.

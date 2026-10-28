@@ -61,3 +61,10 @@
 - `FIXTURE_VERIFIED`: coordinator/native focused tests cover backoff, missing request IDs, crash-interrupted recovery, malformed timestamps, duplicate dependency/restart replay and exact request preservation. Current focused result after this change: 17/17 pass.
 - No A/B files, runtime 4318, credentials, authority, publication, UNKNOWN records or production state were modified.
 - Durable evidence: `plans/oi-browser-integration/coordinator-recovery-v3-20261028.json` at source revision `1589518ec77424d186906b0ba10ba201c763cfe6`.
+
+## Final C patch handoff 2026-10-29
+
+- `dd814bf1df82a0371171ce0ca3674d16a1009368` is the pushed candidate head. It changes only C-owned browser integration and its regression test.
+- `regression-final-dd814bf.json` records focused 32/32, coordinator/native 17/17, full 811/809/0/2, exact output hash, and no live eligibility.
+- Intent binding now rejects forged action, frame, semantic target, or intent ID before transport input. A/B files, A runtime `4318`, credentials, authority, publication, and UNKNOWN records were untouched.
+- Status remains `PARTIAL`: A lacks a clean owner checkpoint; B continuous follow-up is unproven; live authenticated Camoufox/publication/metrics and Auto-GTM generation/media remain blocked.
