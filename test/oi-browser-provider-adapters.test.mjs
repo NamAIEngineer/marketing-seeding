@@ -50,6 +50,35 @@ test("provider adapter classifies timeout, nonzero, and empty inference without 
   assert.equal(empty.failure, "nonzero");
 });
 
+test("provider model probe deadline covers a response body that never resolves", async () => {
+  let aborted = false;
+  const fetchImpl = async (_url, init) => {
+    init.signal.addEventListener("abort", () => { aborted = true; });
+    return { ok: true, status: 200, async json() { return new Promise(() => {}); } };
+  };
+  const started = Date.now();
+  const result = await probeOpenAiCompatibleProvider({ baseUrl: "http://127.0.0.1:8767/v1", model: "qwen", fetchImpl, timeoutMs: 100 });
+  const elapsed = Date.now() - started;
+  assert.equal(result.state, "UNKNOWN");
+  assert.equal(result.reason, "provider timeout");
+  assert.equal(aborted, true);
+  assert.ok(elapsed < 500, `deadline exceeded: ${elapsed}ms`);
+});
+
+test("provider adapter rejects an already-aborted caller signal without waiting for deadline", async () => {
+  const signal = AbortSignal.abort();
+  const started = Date.now();
+  const result = await probeOpenAiCompatibleProvider({
+    baseUrl: "http://127.0.0.1:8767/v1",
+    model: "qwen",
+    fetchImpl: async () => ({ ok: true, status: 200, async json() { return { data: [{ id: "qwen" }] }; } }),
+    timeoutMs: 5000,
+    signal
+  });
+  assert.equal(result.state, "UNKNOWN");
+  assert.ok(Date.now() - started < 500, "aborted caller must fail fast");
+});
+
 test("configured provider remains unavailable when model-list health is not proven", async () => {
   const provider = await loadConfiguredLocalProvider({ SEEDING_OI_PROVIDER_ID: "qwen", SEEDING_OI_PROVIDER_BASE_URL: "http://127.0.0.1:8767/v1", SEEDING_OI_PROVIDER_MODEL: "missing" }, { fetchImpl: async () => response(200, { data: [{ id: "other" }] }) });
   assert.equal(provider.healthy, false);

@@ -124,6 +124,28 @@ test("memory observation deduplicates duplicate polls, consolidates distinct pub
   assert.equal(retrieveBoundedMemory(state, { scope: { campaignId: "campaign-x", communityId: "community-b" } }).length, 0);
 });
 
+test("memory evidence does not count caller ID changes as independent samples", () => {
+  const state = { memoryItems: [], fixtureAutomationRuns: [
+    { id: "fixture-canonical", campaignId: "campaign-independent", communityId: "community-a", e2eStatus: "e2e_verified_readonly", fixturePublicationUrl: "https://fixture.local/posts/canonical", externalSideEffects: false }
+  ] };
+  const base = {
+    kind: "OBSERVATION",
+    scope: { campaignId: "campaign-independent", communityId: "community-a" },
+    content: "technical educational content accepted",
+    source: "fixture-community",
+    evidenceRefs: ["fixture:fixture-canonical"],
+    evidenceStatus: "VERIFIED",
+    decisionHint: "educational"
+  };
+  const first = recordMemoryObservation(state, { ...base, publicationId: "caller-publication-a" }, { now: "2026-10-27T00:00:00.000Z" });
+  const second = recordMemoryObservation(state, { ...base, publicationId: "caller-publication-b" }, { now: "2026-10-27T00:01:00.000Z" });
+  assert.equal(first.deduplicated, false);
+  assert.equal(second.deduplicated, true);
+  assert.deepEqual(state.memoryItems[0].sampleIds, ["fixture:fixture-canonical"]);
+  assert.equal(state.memoryItems[0].supportCount, 1);
+  assert.equal(consolidateMemory(state, { scope: base.scope, now: new Date("2026-10-27T00:01:00.000Z") }).length, 0);
+});
+
 test("caller supplied VERIFIED status cannot create learning without canonical evidence", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "oi-browser-memory-boundary-"));
   const service = new SeedingService(new JsonStore(path.join(root, "state.json")));

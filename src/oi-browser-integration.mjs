@@ -513,11 +513,17 @@ export function normalizeMemoryItem(input = {}, { now = new Date().toISOString()
   ], 64);
   const evidenceRefs = rawEvidenceRefs.filter(isCanonicalMemoryEvidenceRef);
   const observationRefs = rawEvidenceRefs.filter((ref) => !isCanonicalMemoryEvidenceRef(ref));
+  // Canonical evidence is the only independent-sample identity when it is
+  // present. Caller-controlled publication/sample IDs are aliases and must
+  // not turn one observed publication into multiple samples. Distinct
+  // canonical evidence references still remain distinct samples, preserving
+  // consolidation support while polling the same evidence deduplicates.
   const publicationSample = input.postId || input.publicationId ? [`publication:${input.publicationId || input.postId}`] : [];
-  const sampleIds = boundedArray(publicationSample.length ? publicationSample : [
+  const suppliedSampleIds = [
     ...(Array.isArray(input.sampleIds) ? input.sampleIds : []), ...(input.sampleId ? [input.sampleId] : []),
-    ...((!input.sampleIds && !input.sampleId) ? evidenceRefs.map((ref) => /^(?:post|publication|execution):/.test(ref) ? ref.replace(/^execution:/, "publication:") : ref) : [])
-  ], 64);
+    ...((!input.sampleIds && !input.sampleId) ? publicationSample : [])
+  ];
+  const sampleIds = boundedArray(evidenceRefs.length ? evidenceRefs : suppliedSampleIds, 64);
   const content = redacted(input.content || input.summary || input.text, 2_000);
   if (!content) throw new Error("memory content is required");
   const fingerprint = text(input.fingerprint, 64) || digest({ kind, scope, entityRef, content, source }, 64);
@@ -665,7 +671,12 @@ export function recordMemoryObservation(state, input, { now = new Date().toISOSt
   const existing = state.memoryItems.find((candidate) => candidate.fingerprint === item.fingerprint && candidate.kind === item.kind && stable(candidate.scope) === stable(item.scope));
   if (existing) {
     const priorEvidenceRefs = Array.isArray(existing.evidenceRefs) ? existing.evidenceRefs : [];
-    existing.sampleIds = boundedArray([...(existing.sampleIds || []), ...(item.sampleIds || [])], 64);
+    // Once canonical evidence exists, only canonical refs may add support.
+    // Publication/sample aliases are not independent observations and are
+    // ignored during merge (including duplicate polling with changed IDs).
+    const priorSamples = priorEvidenceRefs.length ? priorEvidenceRefs : (item.evidenceRefs?.length ? [] : (existing.sampleIds || []));
+    const incomingSamples = item.evidenceRefs?.length ? item.evidenceRefs : (priorEvidenceRefs.length ? [] : (item.sampleIds || []));
+    existing.sampleIds = boundedArray([...priorSamples, ...incomingSamples], 64);
     existing.supportCount = Math.max(1, existing.sampleIds.length);
     existing.updatedAt = item.updatedAt;
     existing.observedAt = item.observedAt > existing.observedAt ? item.observedAt : existing.observedAt;

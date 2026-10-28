@@ -26,16 +26,34 @@ function abortError(message = "provider timeout") {
   return Object.assign(new Error(message), { name: "AbortError" });
 }
 
-async function fetchWithDeadline(fetchImpl, url, init = {}, timeoutMs = 2_000) {
+async function fetchWithDeadline(fetchImpl, url, init = {}, timeoutMs = 2_000, consume = async (response) => response) {
   const controller = new AbortController();
   const callerSignal = init.signal;
-  const onCallerAbort = () => controller.abort();
-  if (callerSignal?.aborted) controller.abort();
+  let rejectCaller;
+  const callerAbort = new Promise((_, reject) => { rejectCaller = reject; });
+  const onCallerAbort = () => {
+    controller.abort();
+    rejectCaller(abortError("provider request aborted"));
+  };
+  if (callerSignal?.aborted) onCallerAbort();
   else callerSignal?.addEventListener?.("abort", onCallerAbort, { once: true });
   const timeout = Math.max(100, Math.min(120_000, Number(timeoutMs) || 2_000));
-  const timer = setTimeout(() => controller.abort(), timeout);
+  let timer;
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(abortError());
+    }, timeout);
+  });
   try {
-    return await fetchImpl(url, { ...init, signal: controller.signal });
+    const operation = (async () => {
+      const response = await fetchImpl(url, { ...init, signal: controller.signal });
+      return consume(response, controller.signal);
+    })();
+    // Keep the deadline alive through response body reads and JSON parsing.
+    // A stalled `response.json()` must reject even when the mock/runtime does
+    // not observe AbortSignal itself.
+    return await Promise.race([operation, deadline, callerAbort]);
   } catch (error) {
     if (error?.name === "AbortError") throw abortError();
     throw error;
@@ -108,32 +126,37 @@ export function createOpenAiCompatibleProvider({
           temperature: 0,
           max_tokens: 256
         });
-        const response = await fetchWithDeadline(fetchImpl, chatUrl, {
+        const result = await fetchWithDeadline(fetchImpl, chatUrl, {
           method: "POST",
           headers: { "content-type": "application/json" },
           body,
           ...(signal ? { signal } : {})
-        }, timeoutMs);
+        }, timeoutMs, async (response) => {
+          if (!response?.ok) return { response, payload: null };
+          try { return { response, payload: await response.json() }; } catch { return { response, payload: null }; }
+        });
+        const response = result.response;
         if (!response?.ok) return { ok: false, exitCode: Number(response?.status) || 1 };
-        let payload;
-        try { payload = await response.json(); } catch { return { ok: false, exitCode: 1 }; }
-        const output = extractOutput(payload);
+        const output = extractOutput(result.payload);
         return output ? { ok: true, output } : { ok: false, exitCode: 1 };
       }
     }
   };
 }
 
-export async function probeOpenAiCompatibleProvider({ baseUrl, model, fetchImpl = globalThis.fetch, timeoutMs = 2_000 } = {}) {
+export async function probeOpenAiCompatibleProvider({ baseUrl, model, fetchImpl = globalThis.fetch, timeoutMs = 2_000, signal } = {}) {
   const modelsUrl = endpoint(baseUrl, "/models");
   const normalizedModel = text(model, 240);
   if (!modelsUrl || !normalizedModel || typeof fetchImpl !== "function") return { state: "UNAVAILABLE", reason: "CONFIG_INVALID" };
   try {
-    const response = await fetchWithDeadline(fetchImpl, modelsUrl, {}, timeoutMs);
+    const result = await fetchWithDeadline(fetchImpl, modelsUrl, signal ? { signal } : {}, timeoutMs, async (response) => {
+      if (!response?.ok) return { response, payload: null };
+      try { return { response, payload: await response.json() }; } catch { return { response, payload: null }; }
+    });
+    const response = result.response;
     if (!response?.ok) return { state: "UNAVAILABLE", reason: `HTTP_${Number(response.status) || "UNKNOWN"}` };
-    let payload;
-    try { payload = await response.json(); } catch { return { state: "UNKNOWN", reason: "MODEL_LIST_INVALID" }; }
-    const models = modelList(payload);
+    if (!result.payload) return { state: "UNKNOWN", reason: "MODEL_LIST_INVALID" };
+    const models = modelList(result.payload);
     return models.includes(normalizedModel)
       ? { state: "READY", reason: "MODEL_LIST_OBSERVED", model: normalizedModel }
       : { state: "UNAVAILABLE", reason: "MODEL_NOT_LISTED", model: normalizedModel };
