@@ -14,7 +14,7 @@
 - `plans/oi-browser-integration/fixture-run-7378f8c.json`: `FIXTURE_VERIFIED`, controlled Product X / Community A+B, learning-driven before/after candidate change, static browser intent activation, idempotent replay, restart persistence.
 - `plans/oi-browser-integration/server-smoke-7378f8c.json`: `RUNTIME_VERIFIED`, exact source SHA, isolated port `4337`, auth/memory/static snapshot/restart persistence, explicit local-Qwen route success, `feed_not_generated`.
 - Current tests: focused oi-browser memory/provider `22/22`; native/coordinator/LinkedIn verifier focused `69/69`; historical integration/authority slices `106/106`; current full `805 total, 803 pass, 0 fail, 2 skipped`; baseline `576/574/0/2`; Auto-GTM `160/160`, `pip check` clean. Historical full `794/792/0/2` remains tied to `7f2b74a`; pre-regression candidate `802/800/0/2` remains tied to `10ce868`.
-- Durable regression artifact: `plans/oi-browser-integration/regression-final-9875db3.json`, source `9875db3`, final output SHA recorded; prior `regression-final-10ce868.json`, `regression-final-ac2f7df.json`, and historical `regression-final-7f2b74a.json` remain unchanged.
+- Durable regression artifact: `plans/oi-browser-integration/regression-final-9875db3.json`, source `9875db3`, remains historical. Current recovery evidence is `plans/oi-browser-integration/regression-final-1589518.json`; prior `regression-final-10ce868.json`, `regression-final-ac2f7df.json`, and historical `regression-final-7f2b74a.json` remain unchanged.
 
 ## Native session evidence
 

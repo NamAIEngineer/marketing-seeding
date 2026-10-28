@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "1589518ec77424d186906b0ba10ba201c763cfe6",
+  "branch": "integration/session-c-reconciled",
+  "workspace": "/Users/nam/Documents/marketing-seeding-session-c-reconciled",
+  "capturedAt": "2026-10-28T15:29:37Z",
+  "baselineRevision": "79985bb411afc141f0edf10ae635fb91824d8bc9",
+  "checks": [
+    {
+      "command": "node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs",
+      "classification": "FIXTURE_VERIFIED",
+      "tests": 16,
+      "pass": 16,
+      "fail": 0,
+      "skipped": 0,
+      "result": "PASS"
+    },
+    {
+      "command": "node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs",
+      "classification": "FIXTURE_VERIFIED",
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "skipped": 0,
+      "result": "PASS"
+    },
+    {
+      "command": "node --test test/*.test.mjs",
+      "classification": "FIXTURE_VERIFIED",
+      "tests": 807,
+      "pass": 805,
+      "fail": 0,
+      "skipped": 2,
+      "result": "PASS"
+    },
+    {
+      "command": "git diff --check HEAD",
+      "classification": "IMPLEMENTED",
+      "result": "PASS"
+    }
+  ],
+  "changes": [
+    "Canonical evidenceRefs define independent memory samples; caller publicationId/sampleId changes do not inflate support.",
+    "Provider deadline covers fetch, response body consumption, and JSON parsing; timeout remains UNKNOWN/failure.",
+    "Already-aborted provider probe signals fail fast.",
+    "Coordinator schema v3 adds durable native recovery metadata with 5s/10s/20s backoff and a three-attempt reconciliation bound.",
+    "Restart consumes an interrupted in-flight native recovery attempt; malformed recovery timestamps and missing request IDs fail closed.",
+    "Exact accepted Orca request IDs remain immutable across recovery; no fresh request is submitted."
+  ],
+  "independentReview": {
+    "status": "PASS",
+    "capturedAt": "2026-10-28T15:26:44Z",
+    "reviewer": "independent-verifier",
+    "scope": "read-only source/test review of coordinator recovery hardening",
+    "highOrMediumFindings": 0,
+    "aOrBMutation": false,
+    "secretFindings": 0
+  },
+  "queueAttempt": {
+    "taskId": "ms-session-c-memory-evidence-20261028",
+    "attempt": 1,
+    "status": "FAILED",
+    "reason": "local no-progress guard stopped worker before edit",
+    "resubmitted": false
+  },
+  "liveEligible": false,
+  "externalSideEffects": false,
+  "unknownRetryAllowed": false
+}
