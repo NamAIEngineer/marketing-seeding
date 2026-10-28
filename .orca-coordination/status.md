@@ -7,7 +7,7 @@
 - Code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
-- C-owned evidence is committed in `a453fbe`; source/test tree is unchanged after `7378f8c`.
+- C-owned evidence is committed through `93dd290`; source/test tree is unchanged after `7378f8c`.
 
 ## A/B/C connectivity and ownership
 

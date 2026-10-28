@@ -2,7 +2,8 @@
 
 - Final review captured: `2026-10-28T05:44:28Z` (UTC)
 - Candidate: `integration/session-c-reconciled`
-- Final HEAD: `d4e8ee059644f6fa1abc37a888dcfefb5d4f3d07`
+- Verifier checkpoint: `d4e8ee059644f6fa1abc37a888dcfefb5d4f3d07`
+- Final docs HEAD: `93dd290c4101c0d805873826de724b45b3a7167a` (docs-only after verifier checkpoint)
 - Code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`
 - Reviewer: independent read-only verifier (`/root/independent_verifier`)
 - Result: `PASS` for current source/evidence metadata and ownership boundaries

@@ -2,7 +2,7 @@
 
 ## Status
 
-`PARTIAL`. Candidate code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`. Final documentation/evidence is committed through `d4e8ee0`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+`PARTIAL`. Candidate code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`. Final documentation/evidence is committed through `93dd290` (docs-only after verifier checkpoint `d4e8ee0`). Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
 ## Baseline, ownership, integration
 
