@@ -11,11 +11,12 @@
 
 ## A/B/C connectivity and ownership
 
-- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed5771`; current 3 tracked dirty + 475 untracked entries; owns `127.0.0.1:4318` PID `38672`; current health `sourceCommit=unknown`, schema 8; no restart by C.
-- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, checkpoint `b675a98`; tracked scope clean, untracked artifacts excluded.
+- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed5771`; current 8 tracked dirty + 509 untracked entries; owns `127.0.0.1:4318`; current health HTTP 200 with schema 8, 6 UNKNOWN and 0 verified; no restart by C.
+- SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, checkpoint `b675a98`; 0 tracked dirty + 23 untracked artifacts excluded.
 - SESSION C: candidate above; integration/docs/evidence owner.
 - Orca native handshake marker `SESSION-C-HANDSHAKE-20261028T1210Z`: A and B both returned `turn_started`, exact ACK markers, HEAD/branch/dirty counts, ownership, and native terminal references.
 - No A/B file was edited, staged, reset, stashed, cleaned, or committed by C.
+- Current marker handshake: A and B both returned `turn_started`/real read-only result with marker `ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`; A reported receiver READY, B reported orphaned terminal and follow-up capability unconfirmed.
 
 ## Verified candidate evidence
 
@@ -30,3 +31,10 @@
 ## State
 
 `PARTIAL`. Communication is proven. Native A/B handshakes are acknowledged. Live Camoufox readiness/publication/metrics, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+
+## Supervisor evidence
+
+- Existing System Agentic service: `8879`, local-only, health/doctor PASS, but prior GoalRuns v60–v63 failed in worker/artifact or ChatGPT approval/reply paths.
+- Added `src/project-coordinator.mjs` as a project-scoped, bounded integration coordinator. It persists task/dependency/wake/result state, uses a process lock, deduplicates event IDs, wakes only satisfied dependencies, rejects non replay-safe recovery, and accepts artifacts only after reading and hashing the declared file.
+- Rehearsal: `plans/oi-browser-integration/coordination-rehearsal-20261028.json`, `FIXTURE_VERIFIED`. Event `dependency-a-event` from A checkpoint woke `wake-proof`; one worker attempt completed; restart retained one result and replay executed false. No external side effect.
+- This proves the local coordinator loop, not automatic Orca agent resume after this chat ends. Native A is follow-up capable; B follow-up capability remains unconfirmed.

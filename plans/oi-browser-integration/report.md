@@ -2,7 +2,7 @@
 
 ## Status
 
-`PARTIAL`. Candidate code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`. Final documentation/evidence is committed through `93dd290` (docs-only after verifier checkpoint `d4e8ee0`). Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+`PARTIAL`. Candidate code/test checkpoint: `7378f8cac202ce8efc0c5c66cb789e67f504f32e`; final candidate docs plus coordinator changes are now on the working tree after `21da258`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
 ## Baseline, ownership, integration
 
@@ -61,3 +61,10 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 - Fresh authenticated Camoufox readiness, valid live standing authority, publication ID/permalink, live metrics/conversion remain blocked.
 - Auto-GTM generation/media unavailable; only lead-feed capability proven.
 - A runtime `/health` has `sourceCommit=unknown`; candidate local inference smoke is isolated.
+
+## Current coordination and continuation evidence
+
+- Exact ChatGPT thread was matched from a fresh Chrome AX tree by marker `ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01` and URL conversation `6ae09d26-12c4-83ec-bd1f-d53553e707cc`. Fresh bounded bridge receipt `xchg-50bacbd9c3064aa2a7e0` correlated the nonce and marker in a completed assistant turn.
+- Current A/B handshakes were delivered through Orca request IDs `461d4128-4075-41ea-b07f-291c421385bb` and `7cdca6e2-c446-4d8c-b4d6-686e061e9da8`; A returned receiver READY, B returned a real read-only result but follow-up capability unconfirmed.
+- `src/project-coordinator.mjs` provides durable project-scoped dependency state and bounded wake/replay. Focused tests pass 3/3. Rehearsal artifact: `coordination-rehearsal-20261028.json` (`FIXTURE_VERIFIED`, one worker attempt, accepted artifact hash, restart result retained, replay false).
+- Existing orchestrator remains healthy at `8879`, but GoalRuns v60–v63 remain failed for concrete provider/artifact/approval/reply reasons; this coordinator proof does not upgrade those historical runs or prove automatic agent resume after chat termination.

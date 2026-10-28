@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "rehearsal": true,
+  "liveEligible": false,
+  "externalSideEffects": false,
+  "unknownRetryAllowed": false,
+  "stateFileHash": "718f5d3ec28337fbd1efbabf86b75ba1b7b76a13a10d7ceeb57b5c41242ceca8",
+  "task": {
+    "taskId": "wake-proof",
+    "finalStatus": "COMPLETE",
+    "attemptCount": 1,
+    "wakeState": "DEPENDENCY_SATISFIED"
+  },
+  "dependency": {
+    "eventId": "dependency-a-event",
+    "owner": "session-a",
+    "checkpoint": "A-CHECKPOINT-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01"
+  },
+  "workerInvocations": [
+    {
+      "taskId": "wake-proof",
+      "attemptId": "wake-proof:attempt:1",
+      "idempotencyKey": "coord:wake-proof"
+    }
+  ],
+  "restart": {
+    "resultCount": 1,
+    "taskStatus": "COMPLETE",
+    "replayExecuted": false
+  },
+  "provenance": {
+    "coordinator": "src/project-coordinator.mjs",
+    "script": "scripts/coordination-rehearsal.mjs",
+    "capturedAt": "2026-10-28T07:48:00.436Z"
+  }
+}

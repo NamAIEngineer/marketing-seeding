@@ -19,6 +19,17 @@
 
 - A: `SESSION-A-ACK-20261028T1210Z`, Orca terminal `term_58af59e8-f5dd-4968-a724-78b48a04cf3c`, HEAD `1ed5771`, dirty scope preserved.
 - B: `SESSION-B-ACK-20261028T1210Z`, Orca terminal `term_41a5601e-887e-4ac0-a8d7-35112fedb375`, HEAD `b675a98`, tracked scope clean.
+- Current marker handshake: A request `461d4128-4075-41ea-b07f-291c421385bb` returned `SESSION-A-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`, HEAD `1ed5771`, 8 tracked + 509 untracked, receiver READY. B request `7cdca6e2-c446-4d8c-b4d6-686e061e9da8` returned `SESSION-B-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`, HEAD `b675a98`, 0 tracked + 23 untracked; terminal still reports orphaned/follow-up unconfirmed.
+
+## ChatGPT bridge evidence
+
+- Fresh AX inspection matched marker and exact URL `https://chatgpt.com/g/g-p-6adf80888a748191a92fa5dabc7a0a4a-module-markting-seeding-os/c/6ae09d26-12c4-83ec-bd1f-d53553e707cc` in the same snapshot.
+- Harmless request `chatgpt-master-handshake-92d4a305829cfa67` / nonce `c-handshake-d98b40e2a85191a0` completed as `xchg-50bacbd9c3064aa2a7e0`, source `chatgpt-web`, same conversation URL, bounded response with matching requestId/marker/nonce. `message_id` is null by transport design.
+
+## Project coordinator evidence
+
+- `src/project-coordinator.mjs`, `test/project-coordinator.test.mjs`, and `scripts/coordination-rehearsal.mjs` add a local-only development control plane. It does not select providers/accounts/campaigns and cannot publish.
+- Rehearsal artifact: `plans/oi-browser-integration/coordination-rehearsal-20261028.json`; dependency → wake → worker → accepted artifact → restart/replay check passed, one invocation only.
 
 ## Runtime boundary
 
