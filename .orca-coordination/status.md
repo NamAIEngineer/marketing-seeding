@@ -4,11 +4,11 @@
 
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
-- Final candidate source/evidence revision: `fa376f9bd2eddc11e41bcc21099eb229d214954d`; code/test revision remains `9875db34c3f068c1510b3e92e8c72e4134e641a9`.
-- Code/test checkpoint: `9875db34c3f068c1510b3e92e8c72e4134e641a9`
+- Final candidate source/evidence revision: `1589518ec77424d186906b0ba10ba201c763cfe6`; prior code/test revision `9875db34c3f068c1510b3e92e8c72e4134e641a9` remains recorded in historical evidence.
+- Code/test checkpoint: `1589518ec77424d186906b0ba10ba201c763cfe6`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
-- C-owned coordinator source/tests are committed through `9875db3`; docs/evidence are committed through `fa376f9`; `7f2b74a` remains the prior integration evidence checkpoint.
+- C-owned coordinator source/tests are committed through `1589518`; docs/evidence before recovery hardening are committed through `fa376f9`; `7f2b74a` remains the prior integration evidence checkpoint.
 
 ## A/B/C connectivity and ownership
 
@@ -24,19 +24,19 @@
 
 - Baseline `79985bb411afc141f0edf10ae635fb91824d8bc9`: `npm test` → 576 total, 574 pass, 0 fail, 2 skipped.
 - Focused current slices: authority/bootstrap/delegation `47/47`; oi-browser/browser/provider/transport `59/59`; combined `106/106`.
-- Historical coordinator focused: `node --test test/project-coordinator.test.mjs` → 4 total, 4 pass, 0 fail; current native/coordinator/LinkedIn verifier suite is 69/69.
-- Historical candidate `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped. Pre-regression candidate `10ce868`: `node --test test/*.test.mjs` → 802 total, 800 pass, 0 fail, 2 skipped. Current `9875db3`/`5f6f08d`: `npm test` → 805 total, 803 pass, 0 fail, 2 skipped.
+- Current coordinator/native focused: `node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs` → 16 total, 16 pass, 0 fail; prior native/coordinator/LinkedIn verifier suite is 69/69.
+- Historical candidate `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped. Pre-regression candidate `10ce868`: `node --test test/*.test.mjs` → 802 total, 800 pass, 0 fail, 2 skipped. Current `1589518`: `node --test test/*.test.mjs` → 807 total, 805 pass, 0 fail, 2 skipped.
 - Durable current regression artifact is `plans/oi-browser-integration/regression-final-9875db3.json`; prior `regression-final-10ce868.json`, `regression-final-ac2f7df.json`, and historical `regression-final-7f2b74a.json` retained.
 - Auxiliary queue verifier task `0e9f9242-0019-4f11-9453-9d155a419221` failed closed at provider authorization validation; no retry or artifact. Direct independent verifier PASS remains authoritative.
 - Auto-GTM owner checkout: `/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests` → 160 total, 160 pass, 0 fail; `pip check` clean. The owner worktree remains dirty; C did not modify it.
 - Controlled fixture: `plans/oi-browser-integration/fixture-run-7378f8c.json`, `FIXTURE_VERIFIED`; learning support 2, verified 2; before/after candidate changed; restart and browser replay passed; external side effects false.
 - Isolated runtime: `plans/oi-browser-integration/server-smoke-7378f8c.json`, `RUNTIME_VERIFIED`; port `4337`, exact SHA, auth boundary, memory/static snapshot persistence, restart persistence, explicit local-Qwen route success; Auto-GTM remains unavailable (`feed_not_generated`).
 - Current syntax checks and `git diff --check` passed. Fresh independent verifier reviewed historical `7f2b74a` at `2026-10-28T07:49:24Z`; current native/coordinator/verifier focused checks are 69/69. Secret scan found no credential-like values in coordinator files; matches elsewhere are test redaction fixtures/generated UI text.
-- Regression fix at `9875db3`: canonical evidence refs define independent memory samples; caller publication/sample ID changes cannot inflate support; stalled provider response bodies and JSON parsing remain under the same deadline; already-aborted caller signals fail fast. Focused oi-browser tests `22/22`; full `npm test` `805 total, 803 pass, 0 fail, 2 skipped`; output SHA-256 `e00abd1cf8304e832361bb81643520267d2845939ba31554aecc86b869beae08`. Independent read-only review PASS at `2026-10-28T13:42:57Z`; no A/B/runtime mutation.
+- Regression fix at `9875db3`: canonical evidence refs define independent memory samples; caller publication/sample ID changes cannot inflate support; stalled provider response bodies and JSON parsing remain under the same deadline; already-aborted caller signals fail fast. Recovery hardening at `1589518` adds bounded exact-request reconciliation and crash-safe restart accounting. Focused oi-browser tests `22/22`; coordinator/native tests `16/16`; full candidate suite `807 total, 805 pass, 0 fail, 2 skipped`; evidence: `plans/oi-browser-integration/regression-final-9875db3.json`; no A/B/runtime mutation.
 
 ## State
 
-`PARTIAL`. Communication is proven. Native A/B handshakes are acknowledged. Live Camoufox readiness/publication/metrics, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+`PARTIAL`. Communication is proven. Native A/B follow-up artifacts are fixture/native-terminal rehearsals, while C native resume is verified. C coordinator recovery now uses schema v3 with durable backoff, crash-interrupted attempt accounting, exact request-ID preservation, and a bounded three-attempt limit. Live Camoufox readiness/publication/metrics, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
 ## Supervisor evidence
 
@@ -46,7 +46,7 @@
 
 ## Native resume continuation (2026-10-28)
 
-- `IMPLEMENTED`: coordinator schema v2 additive migration, durable native request/attempt/result state, exact-request recovery, process lock, restart dedupe, raw terminal-output scrubbing.
+- `IMPLEMENTED`: coordinator schema v3 additive migration, durable native request/attempt/result state, exact-request recovery, process lock, restart dedupe, raw terminal-output scrubbing, bounded backoff and crash-interrupted attempt accounting.
 - `IMPLEMENTED`: Orca adapter uses observed CLI protocol: `terminal send --wait-submit`, exact `--retry-request`, `terminal wait --for tui-idle`, `terminal read`; verifies marker and agent-created safe artifact.
 - `IMPLEMENTED`: project-scoped supervisor and macOS LaunchAgent `ai.marketing-seeding.project-coordinator`, configured `RunAtLoad` + `KeepAlive`.
 - `NATIVE_RESUME_VERIFIED`: C launchd follow-up #1 request `fc821d69-2281-4757-b5c2-8d1f5628a63b`, artifact hash `a6cf8a3201799ff1aaf0ff5aaba1a5ff7b5e727ba848a8caa162d7bc1b9e1960`, one attempt.

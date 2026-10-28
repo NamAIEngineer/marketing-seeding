@@ -1,11 +1,20 @@
 {
   "schemaVersion": 1,
-  "sourceRevision": "9875db34c3f068c1510b3e92e8c72e4134e641a9",
+  "sourceRevision": "1589518ec77424d186906b0ba10ba201c763cfe6",
   "branch": "integration/session-c-reconciled",
   "workspace": "/Users/nam/Documents/marketing-seeding-session-c-reconciled",
-  "capturedAt": "2026-10-28T14:00:11Z",
+  "capturedAt": "2026-10-28T15:29:37Z",
   "baselineRevision": "79985bb411afc141f0edf10ae635fb91824d8bc9",
   "checks": [
+    {
+      "command": "node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs",
+      "classification": "FIXTURE_VERIFIED",
+      "tests": 16,
+      "pass": 16,
+      "fail": 0,
+      "skipped": 0,
+      "result": "PASS"
+    },
     {
       "command": "node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs",
       "classification": "FIXTURE_VERIFIED",
@@ -16,14 +25,13 @@
       "result": "PASS"
     },
     {
-      "command": "npm test",
+      "command": "node --test test/*.test.mjs",
       "classification": "FIXTURE_VERIFIED",
-      "tests": 805,
-      "pass": 803,
+      "tests": 807,
+      "pass": 805,
       "fail": 0,
       "skipped": 2,
-      "result": "PASS",
-      "outputSha256": "e00abd1cf8304e832361bb81643520267d2845939ba31554aecc86b869beae08"
+      "result": "PASS"
     },
     {
       "command": "git diff --check HEAD",
@@ -34,13 +42,16 @@
   "changes": [
     "Canonical evidenceRefs define independent memory samples; caller publicationId/sampleId changes do not inflate support.",
     "Provider deadline covers fetch, response body consumption, and JSON parsing; timeout remains UNKNOWN/failure.",
-    "Already-aborted provider probe signals fail fast."
+    "Already-aborted provider probe signals fail fast.",
+    "Coordinator schema v3 adds durable native recovery metadata with 5s/10s/20s backoff and a three-attempt reconciliation bound.",
+    "Restart consumes an interrupted in-flight native recovery attempt; malformed recovery timestamps and missing request IDs fail closed.",
+    "Exact accepted Orca request IDs remain immutable across recovery; no fresh request is submitted."
   ],
   "independentReview": {
     "status": "PASS",
-    "capturedAt": "2026-10-28T13:58:13Z",
+    "capturedAt": "2026-10-28T15:26:44Z",
     "reviewer": "independent-verifier",
-    "scope": "read-only source/test review",
+    "scope": "read-only source/test review of coordinator recovery hardening",
     "highOrMediumFindings": 0,
     "aOrBMutation": false,
     "secretFindings": 0

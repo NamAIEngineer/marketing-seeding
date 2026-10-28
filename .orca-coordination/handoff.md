@@ -47,8 +47,16 @@
 
 ## Continuation supervisor evidence
 
-- C-owned continuation changes are committed on branch `integration/session-c-reconciled` above `6bb0eee`; A/B worktrees remain untouched.
+- C-owned continuation changes are committed on branch `integration/session-c-reconciled` through `1589518`; A/B worktrees remain untouched.
 - LaunchAgent `ai.marketing-seeding.project-coordinator` runs `/Users/nam/Documents/marketing-seeding-session-c-reconciled/scripts/project-coordinator-supervisor.mjs`; rollback: `launchctl bootout gui/$(id -u) "$HOME/Library/LaunchAgents/ai.marketing-seeding.project-coordinator.plist"`.
 - C follow-ups #1/#2 native requests, markers, artifacts, and hashes are recorded in `plans/oi-browser-integration/native-resume-evidence-20261028.json`.
 - Durable coordinator state contains structured receipts/hashes/markers/request IDs; raw `outputExcerpt` is removed on read and not persisted again.
 - A checkpoint artifact `artifacts/session-a-checkpoint-20261028.json` completed natively with hash `94aa53a52b514b198375774fb2ba2cdfd1bebe8731110e3324d00dd0af0803c7`; A reports clean checkpointing is blocked until shared ownership and fresh overlay tests are reconciled.
+
+## Native recovery hardening (2026-10-28)
+
+- `IMPLEMENTED` in the current C working tree: `src/project-coordinator.mjs` schema v3 preserves v1/v2 state additively and persists native recovery metadata (`attempts`, `inFlightAttempt`, `nextAttemptAt`, epoch and manual recovery count).
+- `IMPLEMENTED`: `WAITING_CHATGPT` uses bounded exponential backoff (5s, 10s, 20s; maximum 3 reconciliation attempts), preserves the exact accepted Orca request ID, and transitions to `BLOCKED_HUMAN_INPUT` after the limit or when the request ID/timestamp is invalid.
+- `IMPLEMENTED`: restart treats a persisted in-flight native attempt as consumed before scheduling the next exact-request reconciliation; crash-loop retries cannot bypass the limit.
+- `FIXTURE_VERIFIED`: coordinator/native focused tests cover backoff, missing request IDs, crash-interrupted recovery, malformed timestamps, duplicate dependency/restart replay and exact request preservation. Current focused result after this change: 16/16 pass.
+- No A/B files, runtime 4318, credentials, authority, publication, UNKNOWN records or production state were modified.
