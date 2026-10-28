@@ -4,7 +4,7 @@
 
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
-- Code/test checkpoint: `7f2b74acab39987318d0720361f1cefdac0e6b51`
+- Code/test checkpoint: `3d1c38064a788c42b64ac7cd745bda7eb8e60513`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
 - C-owned evidence and coordinator source/tests are committed through `7f2b74a`.
@@ -51,6 +51,7 @@
 - `NATIVE_RESUME_VERIFIED`: C launchd follow-up #2 request `4f19fde8-0f31-4f8d-8b40-0d36de8dd45a`, artifact hash `4b3e51dad6b2d8aaf63377f416a8a30ecc9f25041986dd19aa21b1f29b0f4770`, one attempt after exact request replay/recovery. Launchd restart retained two results and did not replay.
 - A/B native follow-up artifacts also exist: A request `536fa680-2dd7-4330-8573-67566db016cb`, hash `2903df5db1800124fa59515c8042e966a1e9498a528122d75309deace9291f22`; B request `b705ab7f-a863-44b7-bf54-8f57a05d269f`, hash `97799c6641a26e9b0967240331c6c370aba39f3041c4c9f453f9e79e07ff7441`.
 - All artifacts are local rehearsals: `rehearsal=true`, `liveEligible=false`, `externalSideEffects=false`, `unknownRetryAllowed=false`.
+- A native checkpoint request completed: request `8ec39d22-ec26-48a9-94b9-1717cf75af60`, artifact hash `94aa53a52b514b198375774fb2ba2cdfd1bebe8731110e3324d00dd0af0803c7`, HEAD `1ed5771`, 12 tracked dirty files and 567 untracked paths. A reports shared server/service/UI ownership must be reconciled before a clean checkpoint; C preserved the overlay.
 
 
 ## Native resume continuation (2026-10-28)

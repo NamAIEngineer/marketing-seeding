@@ -2,7 +2,7 @@
 
 | ID | Status | Evidence | Impact | Minimum resolution |
 |---|---|---|---|---|
-| A-DIRTY-OVERLAY | OPEN / PRESERVED | A ACK `SESSION-A-ACK-20261028T1210Z`; latest compact status shows HEAD `1ed5771`, 9 tracked dirty entries + 80 untracked entries (518 files when expanded); runtime `4318` remains A-owned | A's latest overlay is not in candidate | A owner creates a clean reviewed checkpoint; C reconciles serially |
+| A-DIRTY-OVERLAY | OPEN / PRESERVED | Native A checkpoint request `8ec39d22-ec26-48a9-94b9-1717cf75af60`, artifact hash `94aa53a52b514b198375774fb2ba2cdfd1bebe8731110e3324d00dd0af0803c7`: HEAD `1ed5771`, 12 tracked dirty files, 567 untracked paths; A reports shared server/service/UI ownership and stale test evidence | A's latest overlay is not in candidate | A owner reconciles shared hunks, runs fresh tests, then creates a clean reviewed checkpoint; C must not stage A files |
 | B-CHECKPOINT-PROVENANCE | ADAPTED / CLOSED FOR CURRENT CANDIDATE | B ACK `SESSION-B-ACK-20261028T1210Z`; `b675a98` tracked clean; behavior confirmed by candidate tests/history; commit is not ancestor | Exact B commit remains separate; obsolete diff must not be imported | Re-review only if B supplies behavior absent from candidate |
 | CAMOUFOX-LIVE-AUTH | OPEN | No fresh authenticated Camoufox identity/readiness evidence | No live publish proof | Authorized fresh account/profile lane with canonical readiness and independent publication verification |
 | LIVE-PUBLICATION-METRICS | OPEN | No live post ID/permalink/metrics/conversion | Closed loop live acceptance incomplete | Valid standing authority plus certified transport and independent verification |

@@ -2,7 +2,7 @@
 
 ## Status
 
-`PARTIAL`. Candidate base revision: `7f2b74acab39987318d0720361f1cefdac0e6b51`; current C continuation changes remain uncommitted pending final checks. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+`PARTIAL`. Candidate base revision: `7f2b74acab39987318d0720361f1cefdac0e6b51`; final C continuation revision: `3d1c38064a788c42b64ac7cd745bda7eb8e60513`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
 ## Baseline, ownership, integration
 
@@ -78,3 +78,4 @@ Artifact: [server-smoke-7378f8c.json](server-smoke-7378f8c.json). Port `4337`, t
 - A/B native follow-up artifacts/hashes are in the evidence file. A's dirty scope remained untouched. A later Orca listing marked B orphaned; this does not invalidate its earlier completed native request/artifact but leaves continuous receiver availability unproven.
 - Launchd restart kept two results and `attemptCount=1` for both; no replay. Artifacts are rehearsal only (`liveEligible=false`, no external effects, no UNKNOWN retry).
 - Product closed-loop remains `FIXTURE_VERIFIED`; port `4337` remains `RUNTIME_VERIFIED`. No `LIVE_VERIFIED` publication, metric, or conversion.
+- A owner checkpoint request completed natively: request `8ec39d22-ec26-48a9-94b9-1717cf75af60`, artifact hash `94aa53a52b514b198375774fb2ba2cdfd1bebe8731110e3324d00dd0af0803c7`, HEAD `1ed5771`, 12 tracked dirty files, 567 untracked paths. A reports that clean checkpointing requires ownership reconciliation and fresh tests; C did not stage or alter those files.
