@@ -103,11 +103,147 @@ test("schema v1 state migrates additively and preserves completed history", asyn
   }));
   const coordinator = new ProjectCoordinator({ stateFile, worker: async () => { throw new Error("must not replay"); } });
   const state = await coordinator.init();
-  assert.equal(state.schemaVersion, 2);
+  assert.equal(state.schemaVersion, 3);
   assert.equal(state.tasks[0].status, "COMPLETE");
   assert.equal(state.results.length, 1);
   assert.equal(state.tasks[0].workerKind, "CALLBACK");
-  assert.equal(JSON.parse(await readFile(stateFile, "utf8")).schemaVersion, 2);
+  assert.equal(JSON.parse(await readFile(stateFile, "utf8")).schemaVersion, 3);
+});
+
+test("native WAITING_CHATGPT recovery backs off, preserves the exact request, and blocks after a durable limit", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-coordinator-native-limit-"));
+  const calls = [];
+  const worker = async (task) => {
+    calls.push({ attemptId: task.attemptId, requestId: task.native?.requestId });
+    return { status: "WAITING_CHATGPT", native: { requestId: task.native.requestId, reconciliation: "WAITING_CHATGPT" } };
+  };
+  const stateFile = path.join(root, "state.json");
+  const coordinator = new ProjectCoordinator({ stateFile, worker, intervalMs: 25 });
+  await coordinator.init();
+  await coordinator.registerTask({
+    taskId: "native-limit",
+    owner: "session-c",
+    scope: "native-recovery",
+    replaySafe: true,
+    workerKind: "ORCA_NATIVE",
+    native: { requestId: "request-fixed", terminal: "term_fixture", prompt: "safe" }
+  });
+
+  assert.equal((await coordinator.runOnce()).status, "IDLE");
+  let persisted = JSON.parse(await readFile(stateFile, "utf8"));
+  assert.equal(persisted.tasks[0].status, "WAITING_CHATGPT");
+  assert.equal(persisted.tasks[0].nativeRecovery.attempts, 0);
+  assert.match(persisted.tasks[0].nativeRecovery.nextAttemptAt, /^20/);
+
+  for (let i = 0; i < 3; i += 1) {
+    persisted = JSON.parse(await readFile(stateFile, "utf8"));
+    persisted.tasks[0].nativeRecovery.nextAttemptAt = "2000-01-01T00:00:00.000Z";
+    await writeFile(stateFile, JSON.stringify(persisted));
+    await coordinator.runOnce();
+  }
+
+  persisted = JSON.parse(await readFile(stateFile, "utf8"));
+  persisted.tasks[0].nativeRecovery.nextAttemptAt = "2000-01-01T00:00:00.000Z";
+  await writeFile(stateFile, JSON.stringify(persisted));
+  await coordinator.runOnce();
+
+  const task = coordinator.snapshot().tasks[0];
+  assert.equal(task.status, "BLOCKED_HUMAN_INPUT");
+  assert.equal(task.error, "COORDINATOR_NATIVE_RECOVERY_LIMIT_REACHED");
+  assert.equal(task.native.reconciliation, "BLOCKED_RETRY_LIMIT");
+  assert.equal(task.native.requestId, "request-fixed");
+  assert.equal(task.nativeRecovery.attempts, 3);
+  assert.equal(calls.length, 4);
+  assert.deepEqual([...new Set(calls.map((call) => call.requestId))], ["request-fixed"]);
+  assert.ok(coordinator.snapshot().wakeEvents.some((event) => event.type === "NATIVE_RECOVERY_BLOCKED"));
+});
+
+test("native WAITING_CHATGPT without a request ID fails closed", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-coordinator-native-no-request-"));
+  const coordinator = new ProjectCoordinator({
+    stateFile: path.join(root, "state.json"),
+    worker: async () => ({ status: "WAITING_CHATGPT", native: { terminal: "term_fixture" } })
+  });
+  await coordinator.init();
+  await coordinator.registerTask({
+    taskId: "native-missing-request",
+    owner: "session-c",
+    scope: "native-recovery",
+    replaySafe: true,
+    workerKind: "ORCA_NATIVE",
+    native: { terminal: "term_fixture" }
+  });
+  await coordinator.runOnce();
+  const persisted = JSON.parse(await readFile(coordinator.stateFile, "utf8"));
+  const recovered = persisted.tasks.find((item) => item.taskId === "native-missing-request");
+  assert.equal(recovered.status, "BLOCKED_HUMAN_INPUT");
+  assert.equal(recovered.error, "COORDINATOR_NATIVE_RECOVERY_REQUIRES_REQUEST_ID");
+});
+
+test("restart consumes an interrupted native recovery lease instead of replaying it indefinitely", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-coordinator-native-crash-"));
+  const stateFile = path.join(root, "state.json");
+  const worker = async () => ({ status: "WAITING_CHATGPT", native: { requestId: "request-crash-safe" } });
+  const seed = new ProjectCoordinator({ stateFile, worker });
+  await seed.init();
+  await seed.registerTask({
+    taskId: "native-crash-safe",
+    owner: "session-c",
+    scope: "native-recovery",
+    replaySafe: true,
+    workerKind: "ORCA_NATIVE",
+    native: { requestId: "request-crash-safe", terminal: "term_fixture", prompt: "safe" }
+  });
+
+  for (let interruptedAttempt = 1; interruptedAttempt <= 3; interruptedAttempt += 1) {
+    const persisted = JSON.parse(await readFile(stateFile, "utf8"));
+    const task = persisted.tasks[0];
+    task.status = "WAITING_CHATGPT";
+    task.nativeRecovery = {
+      ...task.nativeRecovery,
+      attempts: interruptedAttempt - 1,
+      inFlightAttempt: interruptedAttempt,
+      inFlightSince: new Date().toISOString(),
+      nextAttemptAt: null
+    };
+    await writeFile(stateFile, JSON.stringify(persisted));
+    const restarted = new ProjectCoordinator({ stateFile, worker });
+    const state = await restarted.init();
+    const recovered = state.tasks[0];
+    assert.equal(recovered.nativeRecovery.attempts, interruptedAttempt);
+    assert.equal(recovered.nativeRecovery.inFlightAttempt, null);
+    if (interruptedAttempt < 3) {
+      assert.equal(recovered.status, "WAITING_CHATGPT");
+      assert.ok(Date.parse(recovered.nativeRecovery.nextAttemptAt) > Date.now());
+    } else {
+      assert.equal(recovered.status, "BLOCKED_HUMAN_INPUT");
+      assert.equal(recovered.error, "COORDINATOR_NATIVE_RECOVERY_LIMIT_REACHED");
+    }
+  }
+});
+
+test("malformed native recovery timestamp fails closed on restart", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-coordinator-native-time-"));
+  const stateFile = path.join(root, "state.json");
+  const coordinator = new ProjectCoordinator({ stateFile, worker: async () => ({ status: "WAITING_CHATGPT", native: { requestId: "request-time-safe" } }) });
+  await coordinator.init();
+  await coordinator.registerTask({
+    taskId: "native-invalid-time",
+    owner: "session-c",
+    scope: "native-recovery",
+    replaySafe: true,
+    workerKind: "ORCA_NATIVE",
+    native: { requestId: "request-time-safe", terminal: "term_fixture", prompt: "safe" }
+  });
+  const persisted = JSON.parse(await readFile(stateFile, "utf8"));
+  persisted.tasks[0].status = "WAITING_CHATGPT";
+  persisted.tasks[0].nativeRecovery.nextAttemptAt = "not-a-date";
+  await writeFile(stateFile, JSON.stringify(persisted));
+  const restarted = new ProjectCoordinator({ stateFile, worker: coordinator.worker });
+  await restarted.init();
+  const task = restarted.snapshot().tasks[0];
+  assert.equal(task.status, "BLOCKED_HUMAN_INPUT");
+  assert.equal(task.error, "COORDINATOR_NATIVE_RECOVERY_TIMESTAMP_INVALID");
 });
 
 test("native receipt callback is durable without replaying completed work", async () => {

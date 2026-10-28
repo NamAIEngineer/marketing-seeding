@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdir, open, readFile, realpath, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 const TASK_STATES = new Set([
   "RUNNING",
   "WAITING_DEPENDENCY",
@@ -15,6 +15,9 @@ const SAFE_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/;
 const MAX_TASKS = 256;
 const MAX_EVENTS = 512;
 const MAX_ERROR = 240;
+const NATIVE_RECOVERY_MAX_ATTEMPTS = 3;
+const NATIVE_RECOVERY_BASE_DELAY_MS = 5_000;
+const NATIVE_RECOVERY_MAX_DELAY_MS = 60_000;
 
 function iso(now = new Date()) {
   const value = now instanceof Date ? now : new Date(now);
@@ -68,19 +71,71 @@ function initialState() {
   };
 }
 
+function initialNativeRecovery() {
+  return {
+    attempts: 0,
+    maxAttempts: NATIVE_RECOVERY_MAX_ATTEMPTS,
+    baseDelayMs: NATIVE_RECOVERY_BASE_DELAY_MS,
+    maxDelayMs: NATIVE_RECOVERY_MAX_DELAY_MS,
+    nextAttemptAt: null,
+    inFlightAttempt: null,
+    inFlightSince: null,
+    lastAttemptAt: null,
+    epoch: 0,
+    manualRecoveryCount: 0
+  };
+}
+
+function normalizeNativeRecovery(value) {
+  const defaults = initialNativeRecovery();
+  const input = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const rawNextAttemptAt = input.nextAttemptAt;
+  const hasInvalidNextAttemptAt = rawNextAttemptAt !== null && rawNextAttemptAt !== undefined &&
+    (typeof rawNextAttemptAt !== "string" || !Number.isFinite(Date.parse(rawNextAttemptAt)));
+  return {
+    ...defaults,
+    attempts: Number.isSafeInteger(input.attempts) ? Math.max(0, Math.min(defaults.maxAttempts, input.attempts)) : 0,
+    nextAttemptAt: hasInvalidNextAttemptAt ? null : (typeof rawNextAttemptAt === "string" ? rawNextAttemptAt : null),
+    invalidNextAttemptAt: hasInvalidNextAttemptAt || input.invalidNextAttemptAt === true,
+    inFlightAttempt: Number.isSafeInteger(input.inFlightAttempt) && input.inFlightAttempt > 0 && input.inFlightAttempt <= defaults.maxAttempts ? input.inFlightAttempt : null,
+    inFlightSince: typeof input.inFlightSince === "string" ? input.inFlightSince : null,
+    lastAttemptAt: typeof input.lastAttemptAt === "string" ? input.lastAttemptAt : null,
+    epoch: Number.isSafeInteger(input.epoch) && input.epoch >= 0 ? input.epoch : 0,
+    manualRecoveryCount: Number.isSafeInteger(input.manualRecoveryCount) && input.manualRecoveryCount >= 0 ? input.manualRecoveryCount : 0
+  };
+}
+
+function nativeRecoveryDelay(recovery, attempt) {
+  return Math.min(recovery.maxDelayMs, recovery.baseDelayMs * (2 ** Math.max(0, attempt - 1)));
+}
+
+function blockNativeRecovery(task, reason, at) {
+  task.status = "BLOCKED_HUMAN_INPUT";
+  task.error = reason;
+  task.failedAt = at;
+  task.wakeState = "NATIVE_RECOVERY_LIMIT_REACHED";
+  if (task.native && typeof task.native === "object") {
+    task.native.reconciliation = "BLOCKED_RETRY_LIMIT";
+    task.native.reconciliationBlockedAt = at;
+  }
+}
+
 function normalizeState(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("coordinator state must be an object");
-  if (value.schemaVersion === 1) {
-    // Schema v2 is additive. Existing task/result history remains authoritative;
-    // native follow-up receipts are optional fields on the same records.
+  if (value.schemaVersion === 1 || value.schemaVersion === 2) {
+    const from = value.schemaVersion;
+    // Schema v2/v3 migrations are additive. Existing task/result history remains
+    // authoritative; native follow-up and bounded recovery metadata are optional.
     value.schemaVersion = SCHEMA_VERSION;
-    value.migration = { from: 1, migratedAt: iso() };
-    for (const task of Array.isArray(value.tasks) ? value.tasks : []) {
-      if (!Object.hasOwn(task, "workerKind")) task.workerKind = "CALLBACK";
-      if (!Object.hasOwn(task, "native")) task.native = null;
-    }
-    for (const result of Array.isArray(value.results) ? value.results : []) {
-      if (!Object.hasOwn(result, "native")) result.native = null;
+    value.migration ||= { from, migratedAt: iso() };
+    if (from === 1) {
+      for (const task of Array.isArray(value.tasks) ? value.tasks : []) {
+        if (!Object.hasOwn(task, "workerKind")) task.workerKind = "CALLBACK";
+        if (!Object.hasOwn(task, "native")) task.native = null;
+      }
+      for (const result of Array.isArray(value.results) ? value.results : []) {
+        if (!Object.hasOwn(result, "native")) result.native = null;
+      }
     }
   }
   if (value.schemaVersion !== SCHEMA_VERSION) throw new Error(`Unsupported coordinator schema version: ${String(value.schemaVersion)}`);
@@ -88,7 +143,10 @@ function normalizeState(value) {
     if (!Array.isArray(value[key])) value[key] = [];
   }
   value.revision = Number.isSafeInteger(value.revision) && value.revision >= 0 ? value.revision : 0;
-  for (const task of value.tasks) if (task.native) task.native = sanitizeNative(task.native);
+  for (const task of value.tasks) {
+    if (task.native) task.native = sanitizeNative(task.native);
+    if (task.workerKind === "ORCA_NATIVE") task.nativeRecovery = normalizeNativeRecovery(task.nativeRecovery);
+  }
   for (const result of value.results) if (result.native) result.native = sanitizeNative(result.native);
   const resultByTask = new Map(value.results.map((result) => [result.taskId, result]));
   for (const task of value.tasks) {
@@ -231,8 +289,19 @@ export class ProjectCoordinator {
     for (const task of this.state.tasks) {
       if (task.status === "RUNNING" && !this.state.results.some((result) => result.taskId === task.taskId)) {
         if (task.replaySafe === true) {
-          task.status = task.native?.requestId ? "WAITING_CHATGPT" : (task.dependsOn.length ? "WAITING_DEPENDENCY" : "RUNNING");
-          if (task.native?.requestId) task.wakeState = "NATIVE_REQUEST_RECONCILIATION";
+          if (task.native?.requestId && task.workerKind === "ORCA_NATIVE" && (task.attemptCount > 0 || task.startedAt)) {
+            const recovery = normalizeNativeRecovery(task.nativeRecovery);
+            if (recovery.inFlightAttempt === null) {
+              recovery.inFlightAttempt = Math.max(1, recovery.attempts + 1);
+              recovery.inFlightSince = task.startedAt || this.now();
+            }
+            task.nativeRecovery = recovery;
+            task.status = "WAITING_CHATGPT";
+            task.wakeState = "NATIVE_REQUEST_RECONCILIATION";
+          } else {
+            task.status = task.native?.requestId ? "WAITING_CHATGPT" : (task.dependsOn.length ? "WAITING_DEPENDENCY" : "RUNNING");
+            if (task.native?.requestId) task.wakeState = "NATIVE_REQUEST_RECONCILIATION";
+          }
           task.recoveredAt = this.now();
           recovered.push(task.taskId);
           changed = true;
@@ -241,6 +310,42 @@ export class ProjectCoordinator {
           task.error = "COORDINATOR_RECOVERY_REQUIRES_REPLAY_SAFE_TASK";
           task.failedAt = this.now();
           failed.push(task.taskId);
+          changed = true;
+        }
+      }
+      if (task.status === "WAITING_CHATGPT" && task.workerKind === "ORCA_NATIVE" && !this.state.results.some((result) => result.taskId === task.taskId)) {
+        const recovery = normalizeNativeRecovery(task.nativeRecovery);
+        let recoveryChanged = recovery.invalidNextAttemptAt;
+        if (recovery.invalidNextAttemptAt) {
+          blockNativeRecovery(task, "COORDINATOR_NATIVE_RECOVERY_TIMESTAMP_INVALID", this.now());
+          failed.push(task.taskId);
+          task.nativeRecovery = recovery;
+          task.recoveredAt = this.now();
+          recovered.push(task.taskId);
+          changed = true;
+          continue;
+        }
+        if (recovery.inFlightAttempt !== null) {
+          // A supervisor crash after the lease was persisted consumed that
+          // reconciliation attempt. Never replay an interrupted attempt under
+          // the same counter after restart.
+          recovery.attempts = Math.max(recovery.attempts, recovery.inFlightAttempt);
+          recovery.inFlightAttempt = null;
+          recovery.inFlightSince = null;
+          recovery.nextAttemptAt = new Date(Date.parse(this.now()) + nativeRecoveryDelay(recovery, Math.max(1, recovery.attempts))).toISOString();
+          recoveryChanged = true;
+          task.wakeState = "NATIVE_RECOVERY_CRASH_RECONCILED";
+          task.native = sanitizeNative({ ...(task.native || {}), reconciliation: "CRASH_RECONCILED" });
+        }
+        if (recovery.attempts >= recovery.maxAttempts) {
+          blockNativeRecovery(task, "COORDINATOR_NATIVE_RECOVERY_LIMIT_REACHED", this.now());
+          failed.push(task.taskId);
+          recoveryChanged = true;
+        }
+        task.nativeRecovery = recovery;
+        if (recoveryChanged) {
+          task.recoveredAt = this.now();
+          recovered.push(task.taskId);
           changed = true;
         }
       }
@@ -294,6 +399,7 @@ export class ProjectCoordinator {
       replaySafe: replaySafe === true,
       workerKind: normalizedWorkerKind,
       native: native ? sanitizeNative(native) : null,
+      nativeRecovery: normalizedWorkerKind === "ORCA_NATIVE" ? initialNativeRecovery() : null,
       artifactPath: artifactPath ? String(artifactPath) : `artifacts/${normalizedId}.json`,
       idempotencyKey: `coord:${normalizedId}`,
       status,
@@ -347,11 +453,24 @@ export class ProjectCoordinator {
     if (task.replaySafe !== true || task.workerKind !== "ORCA_NATIVE" || !task.native?.requestId) {
       throw new Error("COORDINATOR_NATIVE_RECOVERY_REQUIRES_REQUEST_ID");
     }
-    if (!["FAILED", "WAITING_CHATGPT", "RUNNING"].includes(task.status)) throw new Error("COORDINATOR_TASK_NOT_RECOVERABLE");
+    if (!["FAILED", "WAITING_CHATGPT", "RUNNING", "BLOCKED_HUMAN_INPUT"].includes(task.status)) throw new Error("COORDINATOR_TASK_NOT_RECOVERABLE");
     task.status = task.native?.requestId ? "WAITING_CHATGPT" : (task.dependsOn.length ? "WAITING_DEPENDENCY" : "RUNNING");
     task.error = null;
     task.wakeState = "NATIVE_REQUEST_RECONCILIATION";
     task.recoveredAt = this.now();
+    const recovery = normalizeNativeRecovery(task.nativeRecovery);
+    task.nativeRecovery = {
+      ...recovery,
+      attempts: 0,
+      nextAttemptAt: null,
+      inFlightAttempt: null,
+      inFlightSince: null,
+      lastAttemptAt: null,
+      epoch: recovery.epoch + 1,
+      manualRecoveryCount: recovery.manualRecoveryCount + 1
+    };
+    task.native.reconciliation = "WAITING_CHATGPT";
+    delete task.native.reconciliationBlockedAt;
     this.state.wakeEvents.push({ type: "NATIVE_REQUEST_RECONCILIATION", taskId: normalizedId, requestId: task.native.requestId, reason: text(reason, "reason", 200), at: task.recoveredAt });
     await this.persist();
     return structuredClone(task);
@@ -385,11 +504,43 @@ export class ProjectCoordinator {
           await this.persist();
         }
         if (!(task.status === "RUNNING" || task.status === "WAITING_CHATGPT") || this.state.results.some((result) => result.taskId === task.taskId)) continue;
+        let recoveryAttempt = null;
         if (task.status === "RUNNING") {
           task.attemptCount += 1;
           task.attemptId = `${task.taskId}:attempt:${task.attemptCount}`;
           task.startedAt = this.now();
           await this.persist();
+        } else if (task.workerKind === "ORCA_NATIVE") {
+          task.nativeRecovery = normalizeNativeRecovery(task.nativeRecovery);
+          if (!task.native?.requestId) {
+            blockNativeRecovery(task, "COORDINATOR_NATIVE_RECOVERY_REQUIRES_REQUEST_ID", this.now());
+            this.state.wakeEvents.push({ type: "NATIVE_RECOVERY_BLOCKED", taskId: task.taskId, reason: task.error, at: task.failedAt });
+            await this.persist();
+            continue;
+          }
+          const recovery = task.nativeRecovery;
+          if (recovery.inFlightAttempt === null) {
+            if (recovery.nextAttemptAt && Date.parse(recovery.nextAttemptAt) > Date.parse(this.now())) continue;
+            if (recovery.attempts >= recovery.maxAttempts) {
+              blockNativeRecovery(task, "COORDINATOR_NATIVE_RECOVERY_LIMIT_REACHED", this.now());
+              this.state.wakeEvents.push({ type: "NATIVE_RECOVERY_BLOCKED", taskId: task.taskId, requestId: task.native.requestId, attempts: recovery.attempts, at: task.failedAt });
+              await this.persist();
+              continue;
+            }
+            recovery.inFlightAttempt = recovery.attempts + 1;
+            recovery.inFlightSince = this.now();
+            recovery.lastAttemptAt = recovery.inFlightSince;
+          }
+          recoveryAttempt = recovery.inFlightAttempt;
+          task.attemptId = `${task.taskId}:native-recovery:${recovery.epoch}:${recoveryAttempt}`;
+          await this.persist();
+        } else {
+          task.status = "BLOCKED_HUMAN_INPUT";
+          task.error = "COORDINATOR_CHATGPT_WAIT_REQUIRES_NATIVE_RECOVERY_PROTOCOL";
+          task.failedAt = this.now();
+          task.wakeState = "CHATGPT_RECOVERY_UNSUPPORTED";
+          await this.persist();
+          continue;
         }
         try {
           const result = await this.worker(structuredClone(task), {
@@ -401,16 +552,42 @@ export class ProjectCoordinator {
               const current = this.state.tasks.find((item) => item.taskId === task.taskId);
               if (!current) throw new Error("COORDINATOR_TASK_NOT_FOUND");
               if (!patch || typeof patch !== "object" || Array.isArray(patch)) throw new Error("native receipt patch must be an object");
+              if (current.native?.requestId && patch.requestId && current.native.requestId !== patch.requestId) throw new Error("COORDINATOR_NATIVE_REQUEST_ID_CONFLICT");
               current.native = sanitizeNative({ ...(current.native || {}), ...structuredClone(patch) });
               await this.persist();
             }
           });
           if (!result || typeof result !== "object") throw new Error("COORDINATOR_WORKER_RESULT_INVALID");
           if (result.status === "WAITING_CHATGPT") {
-            task.status = "WAITING_CHATGPT";
-            task.wakeState = "WAITING_CHATGPT";
             if (result.native && (typeof result.native !== "object" || Array.isArray(result.native))) throw new Error("native worker result must be an object");
+            if (task.native?.requestId && result.native?.requestId && task.native.requestId !== result.native.requestId) throw new Error("COORDINATOR_NATIVE_REQUEST_ID_CONFLICT");
             if (result.native) task.native = sanitizeNative({ ...(task.native || {}), ...structuredClone(result.native) });
+            if (task.workerKind !== "ORCA_NATIVE" || !task.native?.requestId) {
+              task.status = "BLOCKED_HUMAN_INPUT";
+              task.error = "COORDINATOR_NATIVE_RECOVERY_REQUIRES_REQUEST_ID";
+              task.failedAt = this.now();
+              task.wakeState = "NATIVE_RECOVERY_REQUEST_ID_MISSING";
+              await this.persist();
+              continue;
+            }
+            const recovery = normalizeNativeRecovery(task.nativeRecovery);
+            if (recoveryAttempt !== null) {
+              recovery.attempts = recoveryAttempt;
+              recovery.inFlightAttempt = null;
+              recovery.inFlightSince = null;
+            }
+            if (recovery.attempts >= recovery.maxAttempts) {
+              task.nativeRecovery = recovery;
+              blockNativeRecovery(task, "COORDINATOR_NATIVE_RECOVERY_LIMIT_REACHED", this.now());
+              this.state.wakeEvents.push({ type: "NATIVE_RECOVERY_BLOCKED", taskId: task.taskId, requestId: task.native.requestId, attempts: recovery.attempts, at: task.failedAt });
+              await this.persist();
+              continue;
+            }
+            recovery.nextAttemptAt = new Date(Date.parse(this.now()) + nativeRecoveryDelay(recovery, Math.max(1, recovery.attempts))).toISOString();
+            task.nativeRecovery = recovery;
+            task.status = "WAITING_CHATGPT";
+            task.wakeState = "WAITING_CHATGPT_BACKOFF";
+            task.error = null;
             await this.persist();
             continue;
           }
@@ -424,6 +601,7 @@ export class ProjectCoordinator {
           const stateRootReal = await realpath(this.stateRoot);
           task.artifactPath = path.relative(stateRootReal, artifactFile);
           if (result.native && (typeof result.native !== "object" || Array.isArray(result.native))) throw new Error("native worker result must be an object");
+          if (task.native?.requestId && result.native?.requestId && task.native.requestId !== result.native.requestId) throw new Error("COORDINATOR_NATIVE_REQUEST_ID_CONFLICT");
           if (result.native) {
             const nativeReceipt = { ...(task.native || {}), ...structuredClone(result.native) };
             if (task.workerKind === "ORCA_NATIVE") {
@@ -431,6 +609,11 @@ export class ProjectCoordinator {
               nativeReceipt.reconciledAt = task.completedAt;
             }
             task.native = sanitizeNative(nativeReceipt);
+          }
+          if (task.nativeRecovery) {
+            task.nativeRecovery.inFlightAttempt = null;
+            task.nativeRecovery.inFlightSince = null;
+            task.nativeRecovery.nextAttemptAt = null;
           }
           task.wakeState = result.workerStatus === "NATIVE_RESUME_VERIFIED" ? "NATIVE_COMPLETED" : "COMPLETED";
           const accepted = { taskId: task.taskId, attemptId: task.attemptId, status: "COMPLETED", artifactPath: task.artifactPath, artifactHash, acceptedAt: task.completedAt, workerStatus: result.workerStatus || "EXECUTED", native: task.native ? sanitizeNative(task.native) : null };
@@ -477,4 +660,10 @@ export class ProjectCoordinator {
   }
 }
 
-export { TASK_STATES, SCHEMA_VERSION };
+export {
+  NATIVE_RECOVERY_BASE_DELAY_MS,
+  NATIVE_RECOVERY_MAX_ATTEMPTS,
+  NATIVE_RECOVERY_MAX_DELAY_MS,
+  SCHEMA_VERSION,
+  TASK_STATES
+};
