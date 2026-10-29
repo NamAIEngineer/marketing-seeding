@@ -2291,6 +2291,17 @@ export class SeedingService {
       current.updatedAt = nowIso();
       return current.fanoutPlan;
     });
+    // The planner remains a truthful selector by default. When the operator
+    // explicitly chooses autonomous execution, hand the exact READY target
+    // set to the existing campaign queue. Materialization, readiness,
+    // standing authority, one-time windows, grants and UNKNOWN quarantine
+    // stay in their canonical guarded paths; no per-post approval is added.
+    if (input.execute === true && plan.ready > 0) {
+      const targetIds = [...new Set(plan.rows.filter((row) => row.eligible && row.targetId).map((row) => row.targetId))];
+      const materialization = await this.materializeAuthorizedContentCandidates(campaignId, actor, { targetIds });
+      const decisions = await this.queueAuthorizedCampaignJobs(campaignId, actor, { targetIds });
+      return { ...plan, execution: { targetIds, materialization, decisions } };
+    }
     return plan;
   }
 
@@ -5187,7 +5198,7 @@ export class SeedingService {
    * queue owns authority side effects and reuses the existing materialization,
    * readiness, request, window and grant contracts.
    */
-  async materializeAuthorizedContentCandidates(campaignId, actor = "campaign-queue-scheduler") {
+  async materializeAuthorizedContentCandidates(campaignId, actor = "campaign-queue-scheduler", { targetIds = null } = {}) {
     let snapshot = await this.store.read();
     let campaign = requireItem(snapshot.campaigns, campaignId, "Campaign");
     const activeAuthorizations = (snapshot.campaignAuthorizations || [])
@@ -5278,7 +5289,12 @@ export class SeedingService {
       campaign = requireItem(snapshot.campaigns, campaignId, "Campaign");
     }
     const results = [];
-    const draftCandidates = (campaign.contentCandidates || []).filter((item) => item.status === "draft");
+    const targetFilter = targetIds instanceof Set
+      ? targetIds
+      : Array.isArray(targetIds)
+        ? new Set(targetIds.map(String).filter(Boolean))
+        : null;
+    const draftCandidates = (campaign.contentCandidates || []).filter((item) => item.status === "draft" && (!targetFilter || targetFilter.has(String(item.targetId))));
     // Approved-copy authorizations are an exact content boundary. A campaign
     // can retain draft candidates from an earlier authorization (or from a
     // previous strategy pass); attempting to materialize those candidates only
@@ -5316,8 +5332,13 @@ export class SeedingService {
     return { campaignId, materialized: results.filter((item) => item.postId), results };
   }
 
-  async queueAuthorizedCampaignJobs(campaignId, actor = "scheduler") {
+  async queueAuthorizedCampaignJobs(campaignId, actor = "scheduler", { targetIds = null } = {}) {
     const snapshot = await this.store.read();
+    const targetFilter = targetIds instanceof Set
+      ? targetIds
+      : Array.isArray(targetIds)
+        ? new Set(targetIds.map(String).filter(Boolean))
+        : null;
     // A REQUEST_READY row can survive a bootstrap/transport interruption
     // before ensureStandingExecutionGrant persists its grant reference. Keep
     // that exact pending row eligible for the next queue tick so recovery can
@@ -5326,6 +5347,7 @@ export class SeedingService {
     const forceNewExecutionPostIds = new Set();
     const candidates = snapshot.posts.filter((post) => {
       if (post.campaignId !== campaignId || !post.campaignAuthorizationId) return false;
+      if (targetFilter && !targetFilter.has(String(post.targetId))) return false;
       if (["blocked", "draft"].includes(post.status)) return true;
       if (post.status !== "queued") return false;
       const authorization = snapshot.campaignAuthorizations?.find((item) => item.id === post.campaignAuthorizationId);

@@ -14,6 +14,11 @@ import { CamoufoxLinkedInReadinessProvider } from "./camoufox-linkedin-readiness
 import { configuredReadinessTtlMs } from "./readiness.mjs";
 import { LinkedInAdapter } from "./linkedin-adapter.mjs";
 import { THREADS_ADAPTER, REDDIT_ADAPTER } from "./threads-reddit-publication-adapters.mjs";
+import {
+  FACEBOOK_GROUP_ADAPTER,
+  PRODUCT_HUNT_ADAPTER,
+  INDIE_HACKERS_ADAPTER
+} from "./facebook-producthunt-indiehackers-publication-adapters.mjs";
 import { OrcaAccessibilityTransport, OrcaPointerTransport } from "./browser-interaction-transport.mjs";
 import { JevExecutionWorker } from "./jev-execution-worker.mjs";
 import { PlatformAdapterRegistry, ReadinessProviderRegistry } from "./platform-registries.mjs";
@@ -214,6 +219,9 @@ platformAdapterRegistry.register("linkedin", new LinkedInAdapter(orcaBrowser, {
 // and platform readiness checks.
 platformAdapterRegistry.register("threads", THREADS_ADAPTER);
 platformAdapterRegistry.register("reddit", REDDIT_ADAPTER);
+platformAdapterRegistry.register("facebook_group", FACEBOOK_GROUP_ADAPTER);
+platformAdapterRegistry.register("product_hunt", PRODUCT_HUNT_ADAPTER);
+platformAdapterRegistry.register("indie_hackers", INDIE_HACKERS_ADAPTER);
 const jevWorker = new JevExecutionWorker({
   service, adapterRegistry: platformAdapterRegistry,
   executionSessionResolver: configuredExecutionSessionResolver || autoCamoufoxExecutionResolver,

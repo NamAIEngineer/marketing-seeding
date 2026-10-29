@@ -40,3 +40,30 @@ test("All Social fan-out isolates ready and blocked Camoufox account agents", as
   assert.equal(dashboard.fanoutPlans[0].rows.length, 2);
 });
 
+test("All Social execute delegates only READY targets to the guarded queue", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "campaign-fanout-execute-"));
+  const repo = path.join(root, "repo"); await mkdir(repo); await writeFile(path.join(repo, "README.md"), "fixture\n");
+  const service = new SeedingService(new JsonStore(path.join(root, "state.json")));
+  await service.init();
+  const campaign = await service.createCampaign({ name: "Fanout execute", objective: "fixture", productRepo: repo });
+  const identity = "https://www.linkedin.com/in/fanout-execute";
+  await service.registerExecutionAccount({ platform: "linkedin", accountId: "execute", provider: "camoufox", providerProfileId: "profile-execute", profileId: "profile-execute", identityReference: identity, status: "enabled", health: "healthy" });
+  const checkedAt = new Date().toISOString();
+  const target = await service.createTarget({ channel: "linkedin", name: "Execute", url: "https://www.linkedin.com/company/execute", accountId: "execute", profileId: "profile-execute", provider: "camoufox", providerProfileId: "profile-execute", identityReference: identity, status: "active", readiness: { state: "ready", checkedAt, expiresAt: new Date(Date.now() + 60_000).toISOString(), checks: { sessionValid: true, composerCapable: true, platformAvailable: true } } });
+  await service.store.mutate("fixture", "set_execute_authority", (state) => {
+    const account = state.executionAccounts.find((item) => item.accountId === "execute");
+    Object.assign(account, { agentStatus: "READY", loginStatus: "READY" });
+    state.campaignAuthorizations = [{ id: "auth-execute", campaignId: campaign.id, status: "active", executionMode: "standing_autonomous", allowLiveExecution: true, destinations: [{ platform: "linkedin", accountId: "execute", targetId: target.id, profileId: "profile-execute", provider: "camoufox", providerProfileId: "profile-execute", identityReference: identity }] }];
+    return state;
+  });
+  const calls = [];
+  service.materializeAuthorizedContentCandidates = async (...args) => { calls.push(["materialize", args]); return { materialized: [{ postId: "post-execute" }] }; };
+  service.queueAuthorizedCampaignJobs = async (...args) => { calls.push(["queue", args]); return [{ postId: "post-execute", status: "queued" }]; };
+  const plan = await service.planCampaignFanout(campaign.id, { allSocial: true, execute: true }, "local-human-operator");
+  assert.equal(plan.ready, 1);
+  assert.deepEqual(plan.execution.targetIds, [target.id]);
+  assert.deepEqual(calls.map(([name]) => name), ["materialize", "queue"]);
+  assert.deepEqual(calls[0][1][2], { targetIds: [target.id] });
+  assert.deepEqual(calls[1][1][2], { targetIds: [target.id] });
+});
+
