@@ -36,6 +36,35 @@ test("updater rejects an unrelated app bundle before swap", async () => {
   await assert.rejects(execFileAsync("sh", [path.join(root, "desktop/update-macos.sh"), app], { env: { ...process.env, SEEDING_UPDATE_VALIDATE_TEST: "1" } }), /bundle identifier mismatch/);
 });
 
+test("updater requires an explicit signer gate for a valid-shaped candidate", async () => {
+  const fixture = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-signer-gate-"));
+  const app = path.join(fixture, "Marketing Seeding OS.app");
+  await mkdir(path.join(app, "Contents", "MacOS"), { recursive: true });
+  await mkdir(path.join(app, "Contents", "Resources", "app"), { recursive: true });
+  await writeFile(path.join(app, "Contents", "Info.plist"), `<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>CFBundleIdentifier</key><string>ai.marketing-seeding.local</string><key>CFBundleExecutable</key><string>launch</string></dict></plist>`);
+  await writeFile(path.join(app, "Contents", "MacOS", "launch"), "#!/bin/sh\n");
+  await execFileAsync("chmod", ["+x", path.join(app, "Contents", "MacOS", "launch")]);
+  await writeFile(path.join(app, "Contents", "Resources", "app", "source-commit.txt"), "fixture\n");
+  await writeFile(path.join(app, "Contents", "Resources", "app", "update-macos.sh"), "#!/bin/sh\n");
+  await writeFile(path.join(app, "Contents", "Resources", "app", "package.json"), "{}\n");
+  await assert.rejects(execFileAsync("sh", [path.join(root, "desktop/update-macos.sh"), app], { env: { ...process.env, SEEDING_UPDATE_VALIDATE_TEST: "1" } }), /expected signer Team ID is not configured/);
+});
+
+test("updater rejects an archive containing multiple app bundles", async () => {
+  const fixture = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-multiple-apps-"));
+  await mkdir(path.join(fixture, "Marketing Seeding OS.app"), { recursive: true });
+  await mkdir(path.join(fixture, "Other.app"), { recursive: true });
+  await assert.rejects(execFileAsync("sh", [path.join(root, "desktop/update-macos.sh"), fixture], { env: { ...process.env, SEEDING_UPDATE_ARCHIVE_SELECT_TEST: "1" } }), /exactly one app bundle/);
+});
+
+test("packaged service preserves typed 9Router provisioning failures", async () => {
+  const build = await readFile(path.join(root, "desktop/build-macos.sh"), "utf8");
+  assert.match(build, /9router-provision-status/);
+  assert.match(build, /UNAVAILABLE:/);
+  assert.match(build, /grep -q '\^UNAVAILABLE:'/);
+  assert.doesNotMatch(build, /printf '%s\\n' "provision_failed"/);
+});
+
 test("launcher health probe rejects a foreign service collision on the fixed port", async (context) => {
   const server = http.createServer((_request, response) => {
     response.writeHead(200, { "content-type": "application/json" });

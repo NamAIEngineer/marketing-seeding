@@ -144,8 +144,11 @@ export SEEDING_9ROUTER_ENDPOINT="${SEEDING_9ROUTER_ENDPOINT:-http://127.0.0.1:20
 export SEEDING_CONTENT_AUTO_PROVISION="${SEEDING_CONTENT_AUTO_PROVISION:-true}"
 export SEEDING_CONTENT_MODE="${SEEDING_CONTENT_MODE:-PRODUCTION}"
 if [ -x "$APP_ROOT/provision-9router.sh" ]; then
+  : >"$DATA_ROOT/9router-provision-status"
   if ! "$APP_ROOT/provision-9router.sh" "$DATA_ROOT" >"$DATA_ROOT/9router-provision-command" 2>"$DATA_ROOT/9router-provision-error"; then
-    printf '%s\n' "provision_failed" >"$DATA_ROOT/9router-provision-status"
+    if ! /usr/bin/grep -q '^UNAVAILABLE:' "$DATA_ROOT/9router-provision-status" 2>/dev/null; then
+      printf '%s\n' "UNAVAILABLE:provision_failed" >"$DATA_ROOT/9router-provision-status"
+    fi
   else
     printf '%s\n' "ready" >"$DATA_ROOT/9router-provision-status"
   fi

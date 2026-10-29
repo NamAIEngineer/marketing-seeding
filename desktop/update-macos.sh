@@ -21,12 +21,36 @@ validate_app_bundle() {
     "$CANDIDATE/Contents/Resources/app/package.json"; do
     [ -f "$MARKER" ] || { echo "candidate resource marker missing: $MARKER" >&2; return 1; }
   done
+  EXPECTED_TEAM_ID=${SEEDING_UPDATE_EXPECTED_SIGNER_TEAM_ID:-}
+  EXPECTED_REQUIREMENT=${SEEDING_UPDATE_EXPECTED_SIGNER_REQUIREMENT:-}
+  [ -n "$EXPECTED_TEAM_ID" ] || { echo "expected signer Team ID is not configured" >&2; return 1; }
+  [ -n "$EXPECTED_REQUIREMENT" ] || { echo "expected signer requirement is not configured" >&2; return 1; }
+  SIGNER_DETAILS=$(/usr/bin/codesign --display --verbose=4 "$CANDIDATE" 2>&1) || { echo "candidate signer metadata unavailable" >&2; return 1; }
+  ACTUAL_TEAM_ID=$(printf '%s\n' "$SIGNER_DETAILS" | awk -F= '/^TeamIdentifier=/{print $2; exit}')
+  [ "$ACTUAL_TEAM_ID" = "$EXPECTED_TEAM_ID" ] || { echo "candidate signer Team ID mismatch" >&2; return 1; }
+  /usr/bin/codesign --verify --deep --strict -R="$EXPECTED_REQUIREMENT" "$CANDIDATE" >/dev/null 2>&1 || { echo "candidate signer requirement mismatch" >&2; return 1; }
+}
+
+find_release_app() {
+  UNPACKED=${1:?unpacked release directory required}
+  APP_COUNT=$(find "$UNPACKED" -maxdepth 2 -type d -name '*.app' -print | wc -l | tr -d ' ')
+  [ "$APP_COUNT" = "1" ] || { echo "release archive must contain exactly one app bundle (found $APP_COUNT)" >&2; return 1; }
+  APP_PATH=$(find "$UNPACKED" -maxdepth 2 -type d -name '*.app' -print -quit)
+  [ "$(basename "$APP_PATH")" = "Marketing Seeding OS.app" ] || { echo "release archive app bundle name mismatch" >&2; return 1; }
+  printf '%s\n' "$APP_PATH"
 }
 
 # Offline fixture hook used by focused tests.  It validates only the supplied
 # bundle and never downloads, verifies signatures, launches, or swaps files.
 if [ "${SEEDING_UPDATE_VALIDATE_TEST:-0}" = "1" ]; then
   validate_app_bundle "$1"
+  exit $?
+fi
+
+# Offline fixture hook used by focused tests. It enumerates only the extracted
+# archive and never validates, downloads, launches, or swaps an app.
+if [ "${SEEDING_UPDATE_ARCHIVE_SELECT_TEST:-0}" = "1" ]; then
+  find_release_app "$1"
   exit $?
 fi
 
@@ -87,10 +111,8 @@ mkdir -p "$BACKUP"
 ACTUAL_SHA256=$(/usr/bin/shasum -a 256 "$ARCHIVE" | awk '{print $1}')
 [ "$ACTUAL_SHA256" = "$EXPECTED_SHA256" ] || { echo "release checksum mismatch" >&2; exit 1; }
 /usr/bin/ditto -x -k "$ARCHIVE" "$TMP_DIR/unpacked"
-NEW_APP=$(find "$TMP_DIR/unpacked" -maxdepth 2 -name '*.app' -print -quit)
-[ -n "$NEW_APP" ] || { echo "release app bundle missing" >&2; exit 1; }
+NEW_APP=$(find_release_app "$TMP_DIR/unpacked")
 validate_app_bundle "$NEW_APP"
-/usr/bin/codesign --verify --deep --strict "$NEW_APP"
 /usr/bin/ditto "$APP" "$BACKUP/previous.app"
 [ -f "$DATA_ROOT/state.json" ] && /usr/bin/cp "$DATA_ROOT/state.json" "$BACKUP/state.json"
 TARGET_DIR=$(dirname "$APP")
