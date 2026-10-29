@@ -67,8 +67,17 @@ function httpsUrl(value, hosts = null) {
 
 function identityUrl(platform, value) {
   const rule = DESCRIPTORS[String(platform || "").toLowerCase()];
-  const parsed = rule ? httpsUrl(value, rule.hosts) : null;
-  if (!parsed || !rule?.identityPath.test(parsed.pathname)) return null;
+  if (!rule) return null;
+  let parsed;
+  try {
+    parsed = new URL(String(value));
+    parsed.hostname = parsed.hostname.toLowerCase().replace(/^www\./, "");
+    if (parsed.protocol !== "https:" || !rule.hosts.includes(parsed.hostname)) return null;
+    parsed.hash = "";
+    parsed.pathname = parsed.pathname.replace(/\/{2,}/g, "/").replace(/\/$/, "") || "/";
+  } catch { return null; }
+  if (!rule.identityPath.test(parsed.pathname) || (rule.identityValidator && !rule.identityValidator(parsed))) return null;
+  if (typeof rule.identityCanonicalizer === "function") return rule.identityCanonicalizer(parsed);
   return canonicalIdentityUrl(parsed.toString());
 }
 
@@ -82,8 +91,12 @@ function profileOf(tab) {
   return typeof tab?.profile === "string" ? tab.profile : tab?.profile?.id || tab?.profile?.profileId || tab?.profileId || "";
 }
 function pageOf(tab) { return tab?.browserPageId || tab?.pageId || tab?.id || null; }
-function stableId(value) {
-  try { return new URL(String(value)).pathname.split("/").filter(Boolean).pop()?.replace(/^@/, "").toLowerCase() || null; } catch { return null; }
+function stableId(value, platform = "") {
+  try {
+    const url = new URL(String(value));
+    if (String(platform).toLowerCase() === "facebook_group" && url.pathname.toLowerCase() === "/profile.php") return url.searchParams.get("id")?.toLowerCase() || null;
+    return url.pathname.split("/").filter(Boolean).pop()?.replace(/^@/, "").toLowerCase() || null;
+  } catch { return null; }
 }
 function safeTimestamp(value) { return Number.isFinite(Date.parse(value || "")) ? new Date(value).toISOString() : null; }
 function challengeObserved(value) {
@@ -107,25 +120,76 @@ const DESCRIPTORS = Object.freeze({
     identityPath: /^\/user\/[a-z0-9_-]{3,50}$/i,
     targetPath: (pathname) => /^\/r\/[a-z0-9_+-]{2,80}(?:\/.*)?$/i.test(pathname) || /^\/user\/[a-z0-9_-]{3,50}(?:\/.*)?$/i.test(pathname),
     publicationPath: /\/comments\/|\/post\//i, submitLabel: /^(?:post|submit|publish|comment|send)$/i
+  }),
+  facebook_group: Object.freeze({
+    platform: "facebook_group", hosts: Object.freeze(["facebook.com"]),
+    identitySource: "facebook-owner-profile-surface", rightsSource: "facebook-group-composer",
+    identityPath: /^\/(?:profile\.php|[a-z0-9][a-z0-9._-]{2,99})$/i,
+    identityValidator: (url) => url.pathname.toLowerCase() !== "/profile.php" || /^\d{3,80}$/.test(url.searchParams.get("id") || ""),
+    identityCanonicalizer: (url) => url.pathname.toLowerCase() === "/profile.php"
+      ? `https://facebook.com/profile.php?id=${url.searchParams.get("id")}`
+      : `https://facebook.com/${url.pathname.slice(1).toLowerCase()}`,
+    identityParser: "facebook",
+    targetPath: (pathname) => /^\/groups\/[a-z0-9._-]{2,100}(?:\/.*)?$/i.test(pathname),
+    publicationPath: /\/groups\/[^/]+\/(?:posts?|permalink)(?:\/|\.php(?:$|\?))/i,
+    strictTarget: true,
+    submitLabel: /^(?:post|publish|share|send)$/i,
+    requireRulesEvidence: true
+  }),
+  product_hunt: Object.freeze({
+    platform: "product_hunt", hosts: Object.freeze(["producthunt.com"]),
+    identitySource: "product-hunt-owner-profile-surface", rightsSource: "product-hunt-composer",
+    identityPath: /^\/@[a-z0-9][a-z0-9._-]{0,79}$/i,
+    identityParser: "at_handle",
+    targetPath: (pathname) => /^\/(?:posts?|products?|topics?)\/[a-z0-9][a-z0-9._-]*(?:\/.*)?$/i.test(pathname),
+    publicationPath: /\/(?:posts?|products?|comments?)\/[a-z0-9][a-z0-9._-]*(?:\/|$)/i,
+    strictTarget: true,
+    submitLabel: /^(?:post|publish|share|comment|send)$/i,
+    requireRulesEvidence: true
+  }),
+  indie_hackers: Object.freeze({
+    platform: "indie_hackers", hosts: Object.freeze(["indiehackers.com"]),
+    identitySource: "indie-hackers-owner-profile-surface", rightsSource: "indie-hackers-community-composer",
+    identityPath: /^\/u\/[a-z0-9][a-z0-9._-]{0,79}$/i,
+    identityParser: "indie_handle",
+    targetPath: (pathname) => /^\/(?:u|groups?|posts?|products?)\/[a-z0-9][a-z0-9._-]*(?:\/.*)?$/i.test(pathname),
+    publicationPath: /\/(?:u|groups?|posts?|products?)\/[^/]+\/(?:posts?|comments?|replies?)(?:\/|$)|\/posts?\/[a-z0-9][a-z0-9._-]*(?:\/|$)/i,
+    strictTarget: true,
+    submitLabel: /^(?:post|publish|share|comment|reply|send)$/i,
+    requireRulesEvidence: true
   })
 });
 
+export const CAMOUFOX_PUBLICATION_PLATFORM_DESCRIPTORS = Object.freeze(Object.fromEntries(Object.entries(DESCRIPTORS).map(([key, rule]) => [key, Object.freeze({
+  platform: rule.platform, hosts: [...rule.hosts], identitySource: rule.identitySource, rightsSource: rule.rightsSource,
+  targetPath: rule.targetPath, publicationPath: rule.publicationPath, strictTarget: rule.strictTarget === true, submitLabel: rule.submitLabel, requireRulesEvidence: rule.requireRulesEvidence === true
+})])));
+
 function descriptor(platform) {
   const rule = DESCRIPTORS[String(platform || "").toLowerCase()];
-  if (!rule) throw failure("PLATFORM_UNSUPPORTED", "only Threads and Reddit are supported");
+  if (!rule) throw failure("PLATFORM_UNSUPPORTED", "platform publication adapter is not registered");
   return rule;
 }
 
-function expressionFor(rule, kind, target = "", content = "") {
+
+function expressionFor(rule, kind, target = "", content = "", identity = target) {
   const hosts = JSON.stringify(rule.hosts);
   const targetLiteral = JSON.stringify(target);
+  const identityLiteral = JSON.stringify(identity || target);
   const contentLiteral = JSON.stringify(String(content || ""));
   if (kind === "identity") return [
     "/* ", rule.platform, "_owner_identity */ (() => {",
     "const hosts=", hosts, "; const visible=n=>Boolean(n&&n.getClientRects&&n.getClientRects().length);",
     "const parse=v=>{try{const u=new URL(v,location.href);const h=u.hostname.toLowerCase().replace(/^www\\./,'');const p=(u.pathname.replace(/\\/{2,}/g,'/').replace(/\\/$/,'')||'/').toLowerCase();if(!hosts.includes(h))return null;",
-    "const m=h==='reddit.com'?p.match(/^\\/user\\/([a-z0-9_-]{3,50})$/i):p.match(/^\\/@([a-z0-9][a-z0-9._-]{0,49})$/i);",
-    "return m?{reference:(h==='reddit.com'?'https://reddit.com/user/':'https://threads.net/@')+m[1].toLowerCase(),stableId:m[1].toLowerCase()}:null}catch{return null}};",
+    "let identity=null;",
+    rule.identityParser === "facebook"
+      ? "if(h==='facebook.com'){const id=p==='/profile.php'?u.searchParams.get('id'):null;const m=p.match(/^\\/([a-z0-9][a-z0-9._-]{2,99})$/i);if(p==='/profile.php'&&/^\\d{3,80}$/.test(id||''))identity={reference:'https://facebook.com/profile.php?id='+id,stableId:id.toLowerCase()};else if(m&&!['home','groups','pages','watch','marketplace','login','settings','friends','notifications','messages','share','search','photo','reel','events','gaming'].includes(m[1].toLowerCase()))identity={reference:'https://facebook.com/'+m[1].toLowerCase(),stableId:m[1].toLowerCase()};}"
+      : rule.identityParser === "indie_handle"
+        ? "if(h==='indiehackers.com'){const m=p.match(/^\\/u\\/([a-z0-9][a-z0-9._-]{0,79})$/i);if(m)identity={reference:'https://indiehackers.com/u/'+m[1].toLowerCase(),stableId:m[1].toLowerCase()};}"
+        : rule.identityParser === "at_handle"
+          ? "if(h==='producthunt.com'){const m=p.match(/^\\/@([a-z0-9][a-z0-9._-]{0,79})$/i);if(m)identity={reference:'https://producthunt.com/@'+m[1].toLowerCase(),stableId:m[1].toLowerCase()};}"
+          : "const m=h==='reddit.com'?p.match(/^\\/user\\/([a-z0-9_-]{3,50})$/i):p.match(/^\\/@([a-z0-9][a-z0-9._-]{0,49})$/i);if(m)identity={reference:(h==='reddit.com'?'https://reddit.com/user/':'https://threads.net/@')+m[1].toLowerCase(),stableId:m[1].toLowerCase()};",
+    "return identity}catch{return null}};",
     "const candidates=[...document.querySelectorAll('a[href]')].filter(visible).map(n=>{const i=parse(n.href);return i&&n.closest('nav,header,[role=\"navigation\"],[data-testid*=\"profile\"],[data-testid*=\"account\"]')?i:null}).filter(Boolean);",
     "const unique=candidates.filter((x,i,a)=>a.findIndex(y=>y.reference===x.reference)===i);const one=unique.length===1?unique[0]:null;",
     "const challenge=/(?:checkpoint|challenge|captcha|security[-_]check|login)/i.test(location.pathname);",
@@ -140,8 +204,9 @@ function expressionFor(rule, kind, target = "", content = "") {
     "const controls=[...document.querySelectorAll('button,[role=\"button\"]')].filter(n=>n.getClientRects().length);const label=n=>(n.getAttribute('aria-label')||n.innerText||n.textContent||'').trim();",
     "const submit=controls.find(n=>", rule.submitLabel.toString(), ".test(label(n)));const can=explicit?.getAttribute('data-can-post');",
     "const membership=(explicit?.getAttribute('data-membership-status')||'').toLowerCase();const posting=(explicit?.getAttribute('data-posting-status')||'').toLowerCase();",
+    "const rules=document.querySelector('[data-rules-status],[data-community-rules],[data-group-rules]');const rulesStatus=(rules?.getAttribute('data-rules-status')||rules?.getAttribute('data-community-rules')||rules?.getAttribute('data-group-rules')||'').toLowerCase();const rulesEvidenceAccepted=['reviewed','accepted','acknowledged','available','visible'].includes(rulesStatus);",
     "const challenge=Boolean(document.querySelector('[data-auth-state=\"challenge\"],[data-security-challenge],[data-rate-limited]'));",
-    "return{targetMatched,canPost:can==='true'||(editors.length===1&&Boolean(submit)&&submit.disabled!==true&&submit.getAttribute('aria-disabled')!=='true'),authenticatedSurface:Boolean(explicit||editors.length||submit),rightsDeclared:can==='true'||can==='false'||Boolean(membership||posting),membershipRequired:membership==='required'||membership==='not_member'||posting==='blocked',membershipStatus:membership||null,postingStatus:posting||null,source:\"", rule.rightsSource, "\",composerVisible:editors.length===1,submitControlVisible:Boolean(submit),submitControlEnabled:Boolean(submit&&submit.disabled!==true&&submit.getAttribute('aria-disabled')!=='true'),challengeDetected:challenge};})()"
+    "return{targetMatched,canPost:can==='true'||(editors.length===1&&Boolean(submit)&&submit.disabled!==true&&submit.getAttribute('aria-disabled')!=='true'),authenticatedSurface:Boolean(explicit||editors.length||submit),rightsDeclared:can==='true'||can==='false'||Boolean(membership||posting),membershipRequired:membership==='required'||membership==='not_member'||posting==='blocked',membershipStatus:membership||null,postingStatus:posting||null,rulesStatus:rulesStatus||null,rulesEvidencePresent:Boolean(rulesStatus),rulesEvidenceAccepted,source:\"", rule.rightsSource, "\",composerVisible:editors.length===1,submitControlVisible:Boolean(submit),submitControlEnabled:Boolean(submit&&submit.disabled!==true&&submit.getAttribute('aria-disabled')!=='true'),challengeDetected:challenge};})()"
   ].join("");
   if (kind === "composer") return [
     "/* ", rule.platform, "_composer_state */ (() => {const visible=n=>Boolean(n&&n.getClientRects&&n.getClientRects().length);",
@@ -153,9 +218,9 @@ function expressionFor(rule, kind, target = "", content = "") {
   return [
     "/* ", rule.platform, "_publication_candidates */ (() => {const expected=", contentLiteral, ";const cards=[...document.querySelectorAll('article,[data-post-id],[data-testid*=\"post\"],[data-testid*=\"comment\"]')];",
     "return cards.map(card=>{const cardText=String(card.innerText||card.textContent||'');const links=[...card.querySelectorAll('a[href]')].map(a=>{try{return new URL(a.href,location.href)}catch{return null}}).filter(Boolean);",
-    "const permalink=links.find(u=>u.hostname.toLowerCase().replace(/^www\\./,'')==='reddit.com'&&/\\/comments\\/|\\/post\\//i.test(u.pathname))||links.find(u=>u.hostname.toLowerCase().replace(/^www\\./,'')==='threads.net'&&/\\/@[^/]+\\/post\\//i.test(u.pathname));",
-    "const author=links.find(u=>u.pathname.replace(/\\/$/,'').toLowerCase()===new URL(", targetLiteral, ",location.href).pathname.replace(/\\/$/,'').toLowerCase());const time=card.querySelector('time[datetime],[data-timestamp]');",
-    "return{contentMatched:cardText.includes(expected),authorMatched:Boolean(author),authorPath:author?.pathname.replace(/\\/$/,'').toLowerCase()||null,targetMatched:Boolean(permalink),permalink:permalink?.toString()||null,postId:card.getAttribute('data-post-id')||card.getAttribute('data-id')||null,timestamp:time?.getAttribute('datetime')||time?.getAttribute('data-timestamp')||null,mediaPresent:Boolean(card.querySelector('video,img[src]')),mediaType:card.querySelector('video')?'video':card.querySelector('img[src]')?'image':null};}).filter(x=>x.permalink||x.postId);})()"
+    "const publicationPattern=", rule.publicationPath.toString(), ";const permalink=links.find(u=>", JSON.stringify(rule.hosts), ".includes(u.hostname.toLowerCase().replace(/^www\\./,''))&&publicationPattern.test(u.pathname));",
+    "const expectedTarget=new URL(", targetLiteral, ",location.href);const targetPath=expectedTarget.pathname.replace(/\\/$/,'').toLowerCase();const expectedIdentity=new URL(", identityLiteral, ",location.href);const author=links.find(u=>u.pathname.replace(/\\/$/,'').toLowerCase()===expectedIdentity.pathname.replace(/\\/$/,'').toLowerCase());const authorStableId=author?.pathname.toLowerCase()==='/profile.php'?author.searchParams.get('id')?.toLowerCase()||null:author?.pathname.split('/').filter(Boolean).pop()?.replace(/^@/,'').toLowerCase()||null;const targetMatched=Boolean(permalink&&(!", String(Boolean(rule.strictTarget)), "||permalink.pathname.toLowerCase()===targetPath||permalink.pathname.toLowerCase().startsWith(targetPath+'/')));const time=card.querySelector('time[datetime],[data-timestamp]');",
+    "return{contentMatched:cardText.includes(expected),authorMatched:Boolean(author),authorPath:author?.pathname.replace(/\\/$/,'').toLowerCase()||null,targetMatched,targetMatchedExplicit:targetMatched,authorStableId,permalink:permalink?.toString()||null,postId:card.getAttribute('data-post-id')||card.getAttribute('data-id')||null,timestamp:time?.getAttribute('datetime')||time?.getAttribute('data-timestamp')||null,mediaPresent:Boolean(card.querySelector('video,img[src]')),mediaType:card.querySelector('video')?'video':card.querySelector('img[src]')?'image':null};}).filter(x=>x.permalink||x.postId);})()"
   ].join("");
 }
 
@@ -188,6 +253,7 @@ function candidateOf(value) {
     permalink: permalink?.toString() || null,
     authorMatched: value.authorMatched === true || value.accountMatched === true,
     authorPath: text(value.authorPath || value.observedAuthorPath || value.authorIdentity?.observedPath, 240).toLowerCase() || null,
+    authorStableId: text(value.authorStableId || value.observedAuthorStableId || value.authorIdentity?.stableId || value.authorId, 240).toLowerCase() || null,
     targetMatched: value.targetMatched === true,
     contentMatched: value.contentMatched === true,
     timestamp: safeTimestamp(value.timestamp || value.candidateTimestamp),
@@ -216,8 +282,12 @@ export function verifyThreadsRedditPublicationEvidence(expected = {}, observed =
   const timeMatched = Number.isFinite(submittedAt) && Number.isFinite(observedAt) && Number.isFinite(candidateAt) && candidateAt >= submittedAt && candidateAt <= observedAt;
   const permalink = candidate?.permalink ? httpsUrl(candidate.permalink, rule.hosts) : null;
   const permalinkMatched = Boolean(permalink && rule.publicationPath.test(permalink.pathname));
-  const identityMatched = Boolean(identity && candidate?.authorMatched === true && candidate.authorPath === new URL(identity).pathname.replace(/\/$/, "").toLowerCase());
-  const targetMatched = candidate?.targetMatched === true || Boolean(permalink && target && permalink.pathname.toLowerCase().startsWith(new URL(target).pathname.toLowerCase()));
+  const identityPath = identity ? new URL(identity).pathname.replace(/\/$/, "").toLowerCase() : "";
+  const identityStableId = identity ? stableId(identity, platform) : null;
+  const identityMatched = Boolean(identity && candidate?.authorMatched === true && (identityPath === "/profile.php" ? candidate.authorStableId === identityStableId : candidate.authorPath === identityPath));
+  const targetPath = target ? new URL(target).pathname.replace(/\/$/, "").toLowerCase() : "";
+  const targetPathMatched = Boolean(permalink && target && (permalink.pathname.toLowerCase().startsWith(targetPath + "/") || permalink.pathname.toLowerCase() === targetPath));
+  const targetMatched = rule.strictTarget ? targetPathMatched : candidate?.targetMatched === true || targetPathMatched;
   const contentMatched = candidate?.contentMatched === true && String(observed.contentHash || expected.contentHash || "") === String(expected.contentHash || "");
   const media = expected.media || null;
   const mediaStatus = candidate?.mediaHashStatus || "NOT_VERIFIABLE";
@@ -263,7 +333,7 @@ export class ThreadsRedditPublicationAdapter {
     this.identityExpression = expressionFor(this.rule, "identity");
     this.composerExpression = expressionFor(this.rule, "composer");
     this.targetExpression = (value) => expressionFor(this.rule, "target", value);
-    this.verificationExpression = (target, content) => expressionFor(this.rule, "verify", target, content);
+    this.verificationExpression = (target, content, identity = target) => expressionFor(this.rule, "verify", target, content, identity);
   }
 
   async _surface(options) {
@@ -290,7 +360,7 @@ export class ThreadsRedditPublicationAdapter {
     const observed = await browser.evaluate(pageId, this.identityExpression);
     if (challengeObserved(observed)) throw failure("SECURITY_CHALLENGE", "identity surface reports a challenge or blocked state");
     const seen = identityUrl(this.platform, observed?.identityReference);
-    const proven = observed?.authenticated === true && observed?.authenticatedSurface === true && observed?.ownerSurface === true && observed?.ambiguous !== true && Number(observed?.candidateCount ?? 1) === 1 && observed?.source === this.rule.identitySource && seen === expected && stableId(seen) === stableId(expected);
+    const proven = observed?.authenticated === true && observed?.authenticatedSurface === true && observed?.ownerSurface === true && observed?.ambiguous !== true && Number(observed?.candidateCount ?? 1) === 1 && observed?.source === this.rule.identitySource && seen === expected && stableId(seen, this.platform) === stableId(expected, this.platform);
     if (!proven) throw failure(seen && seen !== expected ? "IDENTITY_MISMATCH" : "IDENTITY_PROOF_INSUFFICIENT", "exact owner identity was not independently proven");
     return { expected, observed };
   }
@@ -302,7 +372,7 @@ export class ThreadsRedditPublicationAdapter {
     const observed = await browser.evaluate(pageId, this.targetExpression(target));
     if (challengeObserved(observed)) throw failure("SECURITY_CHALLENGE", "target surface reports a challenge or blocked state");
     if (observed?.targetMatched !== true) throw failure("TARGET_MISMATCH", "browser target differs from approved target");
-    if (observed?.canPost !== true || observed?.authenticatedSurface !== true || observed?.submitControlEnabled !== true) throw failure(observed?.membershipRequired || observed?.postingStatus === "blocked" ? "TARGET_POSTING_BLOCKED" : "TARGET_POSTING_RIGHTS_UNVERIFIED", "target posting rights were not explicitly proven");
+    if (observed?.canPost !== true || observed?.authenticatedSurface !== true || observed?.submitControlEnabled !== true || (this.rule.requireRulesEvidence && observed?.rulesEvidenceAccepted !== true)) throw failure(observed?.membershipRequired || observed?.postingStatus === "blocked" ? "TARGET_POSTING_BLOCKED" : this.rule.requireRulesEvidence && observed?.rulesEvidenceAccepted !== true ? "TARGET_RULES_UNVERIFIED" : "TARGET_POSTING_RIGHTS_UNVERIFIED", "target posting rights and community rules were not explicitly proven");
     return { target, observed };
   }
 
@@ -412,7 +482,7 @@ export class ThreadsRedditPublicationAdapter {
     let observed;
     if (this.verifier && typeof this.verifier.verify === "function") observed = await this.verifier.verify(request, pageId, { expected, submittedAt, preSubmitMediaIntegrity: media.preSubmitMediaIntegrity || null });
     else {
-      const raw = await browser.evaluate(pageId, this.verificationExpression(request.target.url, request.content.payload));
+      const raw = await browser.evaluate(pageId, this.verificationExpression(request.target.url, request.content.payload, request.identityReference));
       observed = Array.isArray(raw) ? { candidate: raw.find((item) => item?.contentMatched) || raw[0] || null, observedAt: nowIso(), contentHash: request.content.sha256 } : { ...(raw || {}), observedAt: raw?.observedAt || nowIso(), contentHash: request.content.sha256 };
     }
     const candidate = observed?.candidate || observed?.verificationEvidence?.verificationDetails?.candidate || observed?.publicationEvidence?.verificationDetails?.candidate || observed;
@@ -491,7 +561,14 @@ export const THREADS_ADAPTER = new ThreadsPublicationAdapter();
 export const REDDIT_ADAPTER = new RedditPublicationAdapter();
 export const THREADS_REDDIT_ADAPTERS = Object.freeze({ threads: THREADS_ADAPTER, reddit: REDDIT_ADAPTER });
 export function getThreadsRedditAdapter(platform) { return THREADS_REDDIT_ADAPTERS[String(platform || "").toLowerCase()] || null; }
-export function createThreadsRedditAdapter(platform, options = {}) { return String(platform || "").toLowerCase() === "threads" ? new ThreadsPublicationAdapter(options) : new RedditPublicationAdapter(options); }
+export function createThreadsRedditAdapter(platform, options = {}) {
+  const key = String(platform || "").toLowerCase();
+  if (key === "threads") return new ThreadsPublicationAdapter(options);
+  if (key === "reddit") return new RedditPublicationAdapter(options);
+  throw failure("PLATFORM_UNSUPPORTED", "Threads/Reddit factory only accepts threads or reddit");
+}
+export function createCamoufoxPublicationAdapter(platform, options = {}) { return new ThreadsRedditPublicationAdapter(platform, options); }
+export const verifyCamoufoxPublicationEvidence = verifyThreadsRedditPublicationEvidence;
 export const THREADS_REDDIT_EXPRESSIONS = Object.freeze({ threads: Object.freeze({ identity: THREADS_ADAPTER.identityExpression, composer: THREADS_ADAPTER.composerExpression }), reddit: Object.freeze({ identity: REDDIT_ADAPTER.identityExpression, composer: REDDIT_ADAPTER.composerExpression }) });
 export const THREADS_REDDIT_PLATFORM_DESCRIPTORS = Object.freeze({
   threads: Object.freeze({ platform: "threads", hosts: [...descriptor("threads").hosts], identitySource: descriptor("threads").identitySource, rightsSource: descriptor("threads").rightsSource }),
