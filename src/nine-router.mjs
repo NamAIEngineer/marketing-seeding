@@ -7,8 +7,9 @@ import { dataDir } from "./paths.mjs";
 const execFileAsync = promisify(execFile);
 export const NINE_ROUTER_VERSION = "0.5.109";
 export const NINE_ROUTER_DEFAULT_ENDPOINT = "http://127.0.0.1:20128/v1";
+export const NINE_ROUTER_KEYCHAIN_SERVICE = "ai.marketing-seeding.9router-api-key";
 const keyFile = path.join(dataDir, "9router-api-key");
-const state = { catalog: null, checkedAt: null, failures: new Map(), selection: null };
+const state = { catalog: null, checkedAt: null, failures: new Map(), selection: null, usage: new Map(), lastRequest: null };
 let statusCache = null;
 let statusCacheAt = 0;
 
@@ -27,16 +28,34 @@ function classifyFailure(status, body = "") {
 }
 
 async function readApiKey() {
-  if (String(process.env.SEEDING_9ROUTER_API_KEY || "").trim()) return String(process.env.SEEDING_9ROUTER_API_KEY).trim();
-  try { return (await readFile(keyFile, "utf8")).trim(); } catch (error) { if (error.code === "ENOENT") return ""; throw error; }
+  const envKey = String(process.env.SEEDING_9ROUTER_API_KEY || "").trim();
+  if (envKey) return { value: envKey, storage: "environment" };
+  if (process.platform === "darwin") {
+    try {
+      const result = await execFileAsync("security", ["find-generic-password", "-w", "-a", String(process.env.USER || process.env.LOGNAME || "marketing-seeding"), "-s", NINE_ROUTER_KEYCHAIN_SERVICE], { timeout: 5_000, windowsHide: true });
+      const keychain = String(result.stdout || "").trim();
+      if (keychain) return { value: keychain, storage: "macOS Keychain" };
+    } catch {}
+  }
+  try { return { value: (await readFile(keyFile, "utf8")).trim(), storage: "protected runtime storage" }; } catch (error) { if (error.code === "ENOENT") return { value: "", storage: null }; throw error; }
 }
 
 async function writeApiKey(value) {
   const key = String(value || "").trim();
-  if (!key || key.length > 512 || /[\r\n]/.test(key)) throw new Error("9Router API key is invalid");
+  if (!key || key.length > 512 || /[\r\n\u0000]/.test(key)) throw new Error("9Router API key is invalid");
+  if (process.platform === "darwin") {
+    try {
+      await new Promise((resolve, reject) => {
+        const child = execFile("security", ["add-generic-password", "-U", "-a", String(process.env.USER || process.env.LOGNAME || "marketing-seeding"), "-s", NINE_ROUTER_KEYCHAIN_SERVICE, "-w"], { windowsHide: true }, (error, stdout, stderr) => error ? reject(new Error(String(stderr || error.message).trim() || "Keychain write failed")) : resolve());
+        child.stdin.end(`${key}\n${key}\n`);
+      });
+      return { storage: "macOS Keychain", keyStored: true };
+    } catch {}
+  }
   await mkdir(dataDir, { recursive: true, mode: 0o700 });
   await writeFile(keyFile, `${key}\n`, { mode: 0o600 });
   await chmod(keyFile, 0o600);
+  return { storage: "protected runtime storage", keyStored: true };
 }
 
 async function discoverBinary() {
@@ -68,7 +87,30 @@ async function requestModels(base, apiKey) {
     if (!response.ok) return { ok: false, failure: classifyFailure(response.status, body), status: response.status };
     let parsed;
     try { parsed = JSON.parse(body); } catch { return { ok: false, failure: { kind: "INVALID_RESPONSE", retryable: false, reason: "9Router /v1/models returned invalid JSON" } }; }
-    const models = Array.isArray(parsed?.data) ? parsed.data.map((item) => ({ id: String(item?.id || "").trim(), ownedBy: String(item?.owned_by || item?.ownedBy || "").trim() || null })).filter((item) => item.id).slice(0, 500) : [];
+    const models = Array.isArray(parsed?.data) ? parsed.data.map((item) => {
+      const rawCapabilities = item?.capabilities ?? item?.supported_capabilities ?? item?.capability ?? [];
+      // 9Router currently returns a capability object (for example
+      // `{vision:true, reasoning:true, tools:true}`), while OpenAI-compatible
+      // gateways may return an array or whitespace-delimited string. Preserve
+      // only bounded, truthy capability names; never infer a capability from
+      // the model name or provider label.
+      const capabilityValues = Array.isArray(rawCapabilities)
+        ? rawCapabilities
+        : typeof rawCapabilities === "string"
+          ? rawCapabilities.split(/[\s,]+/)
+          : rawCapabilities && typeof rawCapabilities === "object"
+            ? Object.entries(rawCapabilities).filter(([, enabled]) => enabled === true || enabled === 1).map(([name]) => name)
+            : [];
+      const capabilities = capabilityValues
+        .map((value) => String(value || "").trim().toLowerCase()).filter(Boolean).slice(0, 32);
+      return {
+        id: String(item?.id || "").trim(),
+        ownedBy: String(item?.owned_by || item?.ownedBy || "").trim() || null,
+        capabilities: [...new Set(capabilities)],
+        contextWindow: Number.isSafeInteger(item?.context_length) ? item.context_length : Number.isSafeInteger(item?.contextWindow) ? item.contextWindow : null,
+        metadata: item?.metadata && typeof item.metadata === "object" && !Array.isArray(item.metadata) ? Object.fromEntries(Object.entries(item.metadata).slice(0, 16)) : null
+      };
+    }).filter((item) => item.id).slice(0, 500) : [];
     return { ok: true, models };
   } catch (error) {
     return { ok: false, failure: { kind: error?.name === "AbortError" ? "TIMEOUT" : "UNAVAILABLE", retryable: true, reason: error?.name === "AbortError" ? "9Router model catalog timed out" : "9Router is not reachable" } };
@@ -81,72 +123,113 @@ export async function nineRouterStatus({ refresh = true } = {}) {
   const binary = await discoverBinary();
   const apiKey = await readApiKey();
   let result = state.catalog;
-  if (refresh || !result) result = await requestModels(configuredEndpoint, apiKey);
+  if (refresh || !result) result = await requestModels(configuredEndpoint, apiKey.value);
   state.catalog = result; state.checkedAt = new Date().toISOString();
-  const models = result.ok && apiKey ? result.models : [];
+  const models = result.ok && apiKey.value ? result.models : [];
   const cooldowns = [...state.failures.entries()].map(([model, failure]) => ({ model, ...failure })).filter((item) => item.until > Date.now());
+  const usage = [...state.usage.entries()].map(([model, value]) => ({ model, ...value })).slice(-100);
   const output = {
     provider: "9router", endpoint: configuredEndpoint, binary: { command: binary.command, version: binary.version, verified: binary.verified },
-    expectedVersion: NINE_ROUTER_VERSION, installed: Boolean(binary.command), authenticated: Boolean(apiKey) && result.ok,
-    connectRequired: !apiKey || result.failure?.kind === "AUTH_OR_ENTITLEMENT", catalogStatus: result.ok && apiKey ? "READY" : (!apiKey ? "CONNECT_REQUIRED" : (result.failure?.kind || "UNKNOWN")),
-    quotaStatus: "UNVERIFIED",
-    catalogCheckedAt: state.checkedAt, models, cooldowns, selection: state.selection,
+    expectedVersion: NINE_ROUTER_VERSION, installed: Boolean(binary.command), authenticated: Boolean(apiKey.value) && result.ok,
+    connectRequired: !apiKey.value || result.failure?.kind === "AUTH_OR_ENTITLEMENT", catalogStatus: result.ok && apiKey.value ? "READY" : (!apiKey.value ? "CONNECT_REQUIRED" : (result.failure?.kind || "UNKNOWN")),
+    quotaStatus: state.lastRequest?.quotaStatus || "UNVERIFIED",
+    catalogCheckedAt: state.checkedAt, models, cooldowns, usage, lastRequest: state.lastRequest, selection: state.selection,
     failure: result.failure || null,
-    security: { keyStored: Boolean(apiKey), keyPath: "local protected runtime storage", providerCredentialsImported: false, accountCredentialsStoredInKeychain: true }
+    security: { keyStored: Boolean(apiKey.value), keyStorage: apiKey.storage, keyPath: apiKey.storage === "macOS Keychain" ? "macOS Keychain" : "local protected runtime storage", providerCredentialsImported: false, accountCredentialsStoredInKeychain: true }
   };
   statusCache = output; statusCacheAt = Date.now();
   return structuredClone(output);
 }
 
 export async function connectNineRouter({ endpoint: requestedEndpoint, apiKey }) {
-  await writeApiKey(apiKey);
+  const stored = await writeApiKey(apiKey);
   process.env.SEEDING_9ROUTER_ENDPOINT = endpoint(requestedEndpoint || NINE_ROUTER_DEFAULT_ENDPOINT);
   state.catalog = null;
   statusCache = null;
-  return nineRouterStatus({ refresh: true });
+  const result = await nineRouterStatus({ refresh: true });
+  return { ...result, security: { ...result.security, keyStorage: stored.storage, keyStored: stored.keyStored } };
 }
 
-export async function selectNineRouterModel({ task = "default", preferredModel = null } = {}) {
+function taskRequirements(task) {
+  const value = String(task || "default").toLowerCase();
+  return [
+    /vision|image|media|video/.test(value) ? "vision" : null,
+    /code|coding|program/.test(value) ? "code" : null,
+    /reason|research|strategy|analysis/.test(value) ? "reasoning" : null
+  ].filter(Boolean);
+}
+
+function modelSupportsTask(model, task) {
+  const required = taskRequirements(task);
+  if (!required.length || !model.capabilities?.length) return true;
+  return required.every((item) => model.capabilities.includes(item) || model.capabilities.includes(`supports_${item}`));
+}
+
+export async function selectNineRouterModel({ task = "default", preferredModel = null, excludeModels = [] } = {}) {
   const status = await nineRouterStatus({ refresh: true });
   if (!status.authenticated) {
     state.selection = { task: String(task).slice(0, 120), model: null, reason: "9Router connection required; live model catalog is not authenticated", at: new Date().toISOString() };
     return { ...state.selection, status };
   }
-  const available = new Set(status.models.map((model) => model.id));
-  const candidates = [preferredModel, process.env.SEEDING_9ROUTER_DEFAULT_MODEL, ...status.models.map((model) => model.id)].filter(Boolean);
-  const selected = candidates.find((model) => available.has(model) && !state.failures.get(model)?.until || false);
-  const fallbackReason = selected === preferredModel ? "preferred model available in live catalog" : selected ? "preferred model unavailable; selected compatible live catalog fallback" : "no model passed live catalog and quota/error checks";
-  state.selection = { task: String(task).slice(0, 120), model: selected || null, reason: fallbackReason, at: new Date().toISOString() };
-  return { ...state.selection, status };
+  const excluded = new Set([...excludeModels.map(String), ...[...state.failures.entries()].filter(([, failure]) => failure.until > Date.now()).map(([model]) => model)]);
+  const models = status.models.filter((model) => !excluded.has(model.id) && modelSupportsTask(model, task));
+  const preferred = String(preferredModel || process.env.SEEDING_9ROUTER_DEFAULT_MODEL || "").trim();
+  const selected = models.find((model) => model.id === preferred) || models[0] || null;
+  const fallbackReason = selected
+    ? (selected.id === preferred ? "preferred model available in authenticated live catalog" : preferred ? "preferred model unavailable or cooling down; selected compatible live catalog fallback" : "selected first compatible live catalog model")
+    : (status.models.length ? "all live catalog models are incompatible or cooling down" : "authenticated live model catalog is empty");
+  state.selection = { task: String(task).slice(0, 120), model: selected?.id || null, modelCapabilities: selected?.capabilities || [], reason: fallbackReason, at: new Date().toISOString() };
+  return { ...state.selection, status: await nineRouterStatus({ refresh: false }) };
 }
 
 export async function completeNineRouter({ task = "default", preferredModel = null, messages = [], temperature } = {}) {
-  const selected = await selectNineRouterModel({ task, preferredModel });
-  if (!selected.model) return { ok: false, error: "model_selection_unavailable", selection: selected };
-  const apiKey = await readApiKey();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 30_000);
-  try {
-    const response = await fetch(`${selected.status.endpoint}/chat/completions`, {
-      method: "POST", signal: controller.signal,
-      headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({ model: selected.model, messages, ...(Number.isFinite(temperature) ? { temperature } : {}) })
-    });
-    const body = await response.text();
-    if (!response.ok) {
-      recordNineRouterFailure({ model: selected.model, status: response.status, body });
-      return { ok: false, error: "model_request_failed", failure: classifyFailure(response.status, body), selection: { ...selected, reason: `${selected.reason}; request failed` } };
-    }
-    let payload; try { payload = JSON.parse(body); } catch { return { ok: false, error: "invalid_model_response", selection: selected }; }
-    return { ok: true, model: selected.model, selection: selected, usage: payload.usage || null, response: payload };
-  } catch (error) {
-    recordNineRouterFailure({ model: selected.model, status: 503, body: error?.message });
-    return { ok: false, error: "model_request_unavailable", failure: { kind: "UNAVAILABLE", reason: "9Router model request unavailable", retryable: true }, selection: selected };
-  } finally { clearTimeout(timer); }
+  const attempted = [];
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const selected = await selectNineRouterModel({ task, preferredModel, excludeModels: attempted });
+    if (!selected.model) return { ok: false, error: "model_selection_unavailable", selection: selected, attempted };
+    const apiKey = await readApiKey();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 30_000);
+    try {
+      const response = await fetch(`${selected.status.endpoint}/chat/completions`, {
+        method: "POST", signal: controller.signal,
+        headers: { "content-type": "application/json", authorization: `Bearer ${apiKey.value}` },
+        body: JSON.stringify({ model: selected.model, messages, ...(Number.isFinite(temperature) ? { temperature } : {}) })
+      });
+      const body = await response.text();
+      if (!response.ok) {
+        const failure = recordNineRouterFailure({ model: selected.model, status: response.status, body });
+        attempted.push(selected.model);
+        state.lastRequest = { model: selected.model, status: "FAILED", failure, at: new Date().toISOString(), quotaStatus: failure.kind === "RATE_LIMIT" ? "RATE_LIMITED" : failure.kind === "AUTH_OR_ENTITLEMENT" ? "ENTITLEMENT_BLOCKED" : "UNVERIFIED" };
+        statusCache = null;
+        if (!failure.retryable || attempt >= 1) return { ok: false, error: "model_request_failed", failure, selection: { ...selected, reason: `${selected.reason}; request failed; model cooling down` }, attempted };
+        preferredModel = null;
+        continue;
+      }
+      let payload; try { payload = JSON.parse(body); } catch { return { ok: false, error: "invalid_model_response", selection: selected }; }
+      const usage = payload.usage || null;
+      const previous = state.usage.get(selected.model) || { requests: 0, failures: 0 };
+      state.usage.set(selected.model, { ...previous, requests: previous.requests + 1, lastUsedAt: new Date().toISOString(), lastUsage: usage, quotaStatus: "OBSERVED_REQUEST_SUCCESS" });
+      state.lastRequest = { model: selected.model, status: "SUCCEEDED", usage, at: new Date().toISOString(), quotaStatus: "OBSERVED_REQUEST_SUCCESS" };
+      statusCache = null;
+      return { ok: true, model: selected.model, selection: selected, usage, response: payload, attempted };
+    } catch (error) {
+      const failure = recordNineRouterFailure({ model: selected.model, status: 503, body: error?.message });
+      attempted.push(selected.model);
+      state.lastRequest = { model: selected.model, status: "FAILED", failure, at: new Date().toISOString(), quotaStatus: "UNVERIFIED" };
+      if (attempt >= 1) return { ok: false, error: "model_request_unavailable", failure, selection: selected, attempted };
+      preferredModel = null;
+    } finally { clearTimeout(timer); }
+  }
+  return { ok: false, error: "model_selection_unavailable", attempted };
 }
 
 export function recordNineRouterFailure({ model, status, body } = {}) {
   const id = String(model || "").trim(); if (!id) return;
   const failure = classifyFailure(Number(status), body);
   state.failures.set(id, { kind: failure.kind, reason: failure.reason, until: Date.now() + (failure.kind === "RATE_LIMIT" ? 60_000 : failure.retryable ? 15_000 : 300_000) });
+  const previous = state.usage.get(id) || { requests: 0, failures: 0 };
+  state.usage.set(id, { ...previous, failures: previous.failures + 1, lastFailure: failure.kind, lastFailureAt: new Date().toISOString() });
+  statusCache = null;
+  return failure;
 }

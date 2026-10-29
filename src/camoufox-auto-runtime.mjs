@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { mkdir, access } from 'node:fs/promises';
+import { mkdir, access, readFile, writeFile, chmod } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { CamoufoxProfileCoordinator } from './camoufox-profile-coordinator.mjs';
@@ -14,13 +14,20 @@ const PINNED_PLAYWRIGHT = '1.62.0';
 const text = (v, n = 300) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, n);
 
 async function exists(file) { try { await access(file); return true; } catch { return false; } }
+async function writeProvisionStatus(file, status) {
+  try {
+    await mkdir(path.dirname(file), { recursive: true, mode: 0o700 });
+    await writeFile(file, `${JSON.stringify({ schemaVersion: 1, ...status, observedAt: new Date().toISOString() })}\n`, { mode: 0o600 });
+    await chmod(file, 0o600);
+  } catch { /* status is observational; provisioning result remains authoritative */ }
+}
 
 /** Lazy, local-first Camoufox provisioning. No credentials or provider keys are
  * touched. Package/browser downloads are integrity checked by npm/Camoufox. */
-export function createAutoCamoufoxAccountAgentRunner({ dataRoot, runtimeRoot, profileRoot, npmBin = '', headless = true } = {}) {
+export function createAutoCamoufoxAccountAgentRunner({ dataRoot, runtimeRoot, profileRoot, npmBin = '', headless = true, statusFile = '' } = {}) {
   const root = path.resolve(String(runtimeRoot || path.join(dataRoot || process.cwd(), 'camoufox-runtime')));
   const profiles = path.resolve(String(profileRoot || path.join(dataRoot || process.cwd(), 'camoufox-profiles')));
-  const provision = createAutoCamoufoxProvisioner({ root, profiles, npmBin, headless });
+  const provision = createAutoCamoufoxProvisioner({ root, profiles, npmBin, headless, statusFile });
   const runner = async ({ account } = {}) => {
     try {
       const runtime = await provision();
@@ -33,15 +40,20 @@ export function createAutoCamoufoxAccountAgentRunner({ dataRoot, runtimeRoot, pr
   return runner;
 }
 
-export function createAutoCamoufoxProvisioner({ root, profiles, npmBin = '', headless = true } = {}) {
+export function createAutoCamoufoxProvisioner({ root, profiles, npmBin = '', headless = true, statusFile = '' } = {}) {
   let ready = null;
+  const statusPath = path.resolve(String(statusFile || path.join(root, 'provision-status.json')));
   return async function provision() {
     if (ready) return ready;
     ready = (async () => {
+      await writeProvisionStatus(statusPath, { status: 'PROVISIONING', packageVersion: PINNED_CAMOUFOX, playwrightVersion: PINNED_PLAYWRIGHT });
       await mkdir(root, { recursive: true, mode: 0o700 });
       await mkdir(profiles, { recursive: true, mode: 0o700 });
       const packageEntry = path.join(root, 'node_modules', 'camoufox', 'dist', 'index.js');
-      if (!await exists(packageEntry)) {
+      const packageManifest = path.join(root, 'node_modules', 'camoufox', 'package.json');
+      let packageVersion = '';
+      try { packageVersion = JSON.parse(await readFile(packageManifest, 'utf8')).version || ''; } catch {}
+      if (!await exists(packageEntry) || packageVersion !== PINNED_CAMOUFOX) {
         const npm = text(npmBin, 1_000) || process.env.SEEDING_NPM_BIN || 'npm';
         await execFileAsync(npm, ['install', '--prefix', root, '--no-save', '--ignore-scripts', `camoufox@${PINNED_CAMOUFOX}`, `playwright-core@${PINNED_PLAYWRIGHT}`], { timeout: 180_000, windowsHide: true });
       }
@@ -50,8 +62,13 @@ export function createAutoCamoufoxProvisioner({ root, profiles, npmBin = '', hea
       const executablePath = camoufox.launchPath(installedPath);
       if (!await exists(executablePath)) throw Object.assign(new Error('Camoufox executable was not installed'), { code: 'CAMOUFOX_EXECUTABLE_MISSING' });
       const coordinator = new CamoufoxProfileCoordinator({ profileRoot: profiles, runtimePath: root, executablePath, headless });
+      await writeProvisionStatus(statusPath, { status: 'READY', packageVersion: PINNED_CAMOUFOX, playwrightVersion: PINNED_PLAYWRIGHT, executablePath, browserPath: installedPath });
       return Object.freeze({ coordinator, executablePath, packageVersion: PINNED_CAMOUFOX, browserPath: installedPath });
-    })().catch((error) => { ready = null; throw error; });
+    })().catch(async (error) => {
+      await writeProvisionStatus(statusPath, { status: 'UNAVAILABLE', code: text(error?.code || 'CAMOUFOX_PROVISION_FAILED', 80), reason: text(error?.message || 'Camoufox provisioning failed') });
+      ready = null;
+      throw error;
+    });
     return ready;
   };
 }

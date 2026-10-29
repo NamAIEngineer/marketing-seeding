@@ -28,6 +28,10 @@ import { accountCredentialStatus, storeAccountCredentials } from "./account-cred
 import { runCamoufoxAccountAgent } from "./camoufox-account-agent.mjs";
 import { createAutoCamoufoxAccountAgentRunner, createAutoCamoufoxExecutionSessionResolver } from "./camoufox-auto-runtime.mjs";
 import { completeNineRouter, connectNineRouter, nineRouterStatus, selectNineRouterModel } from "./nine-router.mjs";
+import { runListeningExtraction, persistListeningRun } from "./listening-adapter.mjs";
+import { normalizeBackend, createListeningJobId } from "./listening-contract.mjs";
+import { discoverUpdate } from "./update-discovery.mjs";
+import { readDesktopProvisioningStatus } from "./desktop-provisioning.mjs";
 
 async function loadLocalEnv() {
   try {
@@ -108,6 +112,7 @@ const trafficPollMinutes = Number(process.env.SEEDING_TRAFFIC_POLL_MINUTES || 0)
 const controlCycleEnabled = process.env.SEEDING_CONTROL_CYCLE_ENABLED === "true";
 const controlCycleMinutes = Number(process.env.SEEDING_CONTROL_CYCLE_MINUTES || 0);
 const discoveryPollMinutes = Number(process.env.SEEDING_DISCOVERY_POLL_MINUTES || 0);
+const updatePollMinutes = Number(process.env.SEEDING_UPDATE_POLL_MINUTES || 60);
 const camoufoxSessionMetadataFile = String(process.env.SEEDING_CAMOUFOX_SESSION_METADATA_FILE || "").trim();
 const camoufoxExecutablePath = String(process.env.SEEDING_CAMOUFOX_EXECUTABLE_PATH || "").trim();
 const camoufoxRuntimeMetadataPath = String(process.env.SEEDING_CAMOUFOX_RUNTIME_METADATA_PATH || "").trim();
@@ -118,6 +123,7 @@ const autoCamoufoxRunner = createAutoCamoufoxAccountAgentRunner({
   runtimeRoot: String(process.env.SEEDING_CAMOUFOX_RUNTIME_ROOT || path.join(dataDir, "camoufox-runtime")),
   profileRoot: camoufoxProfileRoot || path.join(dataDir, "camoufox-profiles"),
   npmBin: String(process.env.SEEDING_NPM_BIN || "").trim(),
+  statusFile: path.join(dataDir, "camoufox-provision-status.json"),
   headless: process.env.SEEDING_CAMOUFOX_HEADLESS !== "false"
 });
 let serviceRef = null;
@@ -141,6 +147,9 @@ if (!Number.isFinite(trafficPollMinutes) || trafficPollMinutes < 0 || (trafficPo
 }
 if (!Number.isFinite(discoveryPollMinutes) || discoveryPollMinutes < 0 || (discoveryPollMinutes > 0 && discoveryPollMinutes < 15)) {
   throw new Error("SEEDING_DISCOVERY_POLL_MINUTES must be 0 (disabled) or at least 15");
+}
+if (!Number.isFinite(updatePollMinutes) || updatePollMinutes < 0 || (updatePollMinutes > 0 && updatePollMinutes < 15)) {
+  throw new Error("SEEDING_UPDATE_POLL_MINUTES must be 0 (disabled) or at least 15");
 }
 if (controlCycleEnabled && (!Number.isFinite(controlCycleMinutes) || controlCycleMinutes < 15)) {
   throw new Error("SEEDING_CONTROL_CYCLE_MINUTES must be at least 15 when enabled");
@@ -232,6 +241,8 @@ let discoveryTimer = null;
 let campaignQueueTimer = null;
 let jevExecutionTimer = null;
 let accountAgentRecoveryTimer = null;
+let updateDiscoveryTimer = null;
+const updateRuntime = { enabled: updatePollMinutes > 0, intervalMinutes: updatePollMinutes || null, running: false, lastStartedAt: null, lastCompletedAt: null, nextRunAt: null, result: null };
 let jevExecutionRunning = false;
 const jevExecutionStarted = new Set();
 let campaignQueueRunning = false;
@@ -370,6 +381,26 @@ function scheduleAccountAgentRecovery(delayMs = 60_000) {
     scheduleAccountAgentRecovery();
   }, Math.max(5_000, delayMs));
   accountAgentRecoveryTimer.unref();
+}
+
+function scheduleUpdateDiscovery(delayMs = updatePollMinutes * 60_000) {
+  if (!updateRuntime.enabled || shuttingDown) return;
+  if (updateDiscoveryTimer) clearTimeout(updateDiscoveryTimer);
+  const boundedDelay = Math.max(1_000, delayMs);
+  updateRuntime.nextRunAt = new Date(Date.now() + boundedDelay).toISOString();
+  updateDiscoveryTimer = setTimeout(async () => {
+    if (updateRuntime.running || shuttingDown) return scheduleUpdateDiscovery();
+    updateRuntime.running = true;
+    updateRuntime.lastStartedAt = new Date().toISOString();
+    try { updateRuntime.result = await discoverUpdate(); }
+    catch (error) { updateRuntime.result = { status: "UNAVAILABLE", updateAvailable: false, automaticUpdates: true, reason: String(error?.message || "update discovery failed").slice(0, 240) }; }
+    finally {
+      updateRuntime.running = false;
+      updateRuntime.lastCompletedAt = new Date().toISOString();
+      scheduleUpdateDiscovery();
+    }
+  }, boundedDelay);
+  updateDiscoveryTimer.unref();
 }
 
 function scheduleJevExecution(delayMs = 5_000) {
@@ -646,6 +677,7 @@ const server = http.createServer(async (request, response) => {
         dailyProduction: await readDailyProductionAutomation(),
         browserTracking: await readBrowserTrafficAutomation(),
         fixtureWorker: fixtureWorker.runtime()
+        ,updateDiscovery: updateRuntime
       });
     }
     if (request.method === "GET" && url.pathname === "/api/operator/session") {
@@ -733,6 +765,8 @@ const server = http.createServer(async (request, response) => {
         autoGtm,
         marketIntelligence: projectMarketDashboard(autoGtm),
         nineRouter: await nineRouterStatus({ refresh: false }),
+        update: updateRuntime.result || await discoverUpdate(),
+        provisioning: await readDesktopProvisioningStatus(dataDir),
         automation: {
           trafficCollector: trafficRuntime,
           campaignQueue: campaignQueueRuntime,
@@ -748,6 +782,12 @@ const server = http.createServer(async (request, response) => {
     if (request.method === "GET" && url.pathname === "/api/9router/status") {
       return sendJson(response, 200, await nineRouterStatus({ refresh: true }));
     }
+    if (request.method === "GET" && url.pathname === "/api/update/status") {
+      const result = await discoverUpdate();
+      updateRuntime.result = result;
+      updateRuntime.lastCompletedAt = new Date().toISOString();
+      return sendJson(response, 200, result);
+    }
     if (request.method === "POST" && url.pathname === "/api/9router/connect") {
       if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
       return sendJson(response, 200, await connectNineRouter(await readJson(request)));
@@ -759,6 +799,26 @@ const server = http.createServer(async (request, response) => {
     if (request.method === "POST" && url.pathname === "/api/9router/chat") {
       if (role !== "operator" && role !== "automation") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
       return sendJson(response, 200, await completeNineRouter(await readJson(request)));
+    }
+    if (request.method === "POST" && url.pathname === "/api/listening/run") {
+      if (!role) return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      const input = await readJson(request);
+      const urls = Array.isArray(input.urls) ? input.urls : String(input.urls || "").split(",").map((value) => value.trim()).filter(Boolean);
+      const backend = normalizeBackend(input.backend || process.env.SEEDING_LISTENING_BACKEND || "http");
+      const campaignId = String(input.campaignId || "").trim() || null;
+      const scope = input.scope && typeof input.scope === "object" ? input.scope : {};
+      const jobId = createListeningJobId({ campaignId, urls, backend, scope: { ...scope, campaignId: scope.campaignId || campaignId } });
+      const existingJob = await service.getListeningJob(jobId);
+      const run = await runListeningExtraction({ urls, backend, campaignId, scope, policies: input.policies || {}, keywords: input.keywords || [], blockedKeywords: input.blockedKeywords || [], jobId, resumeJob: existingJob, checkpoint: (job) => service.checkpointListeningJob(job), options: { python: process.env.SEEDING_LISTENING_PYTHON } });
+      const persisted = await persistListeningRun(service, run, { actor: `${actor}:listening` });
+      const latest = await service.getListeningJob(jobId);
+      await service.checkpointListeningJob({ ...latest, status: run.status, providerReceipt: persisted.providerReceipt, persistedSummary: persisted, persistenceStatus: "SUCCEEDED", completedAt: run.completedAt, updatedAt: new Date().toISOString() }, `${actor}:listening-finalize`);
+      return sendJson(response, 200, { run: { jobId: run.jobId, campaignId: run.campaignId, backend: run.backend, status: run.status, sourceUrls: run.sourceUrls, statuses: run.statuses, records: run.records.length, sourceHashes: run.sourceHashes, extractedHashes: run.extractedHashes }, persisted });
+    }
+    let fanoutMatch = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/fanout-plan$/);
+    if (request.method === "POST" && fanoutMatch) {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 200, await service.planCampaignFanout(fanoutMatch[1], await readJson(request), actor));
     }
     if (request.method === "POST" && url.pathname === "/api/account-credentials") {
       if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
@@ -1054,6 +1114,7 @@ server.listen(port, host, () => {
   fixtureWorker.start();
   scheduleCampaignQueueEvaluation();
   scheduleAccountAgentRecovery(10_000);
+  scheduleUpdateDiscovery(1_000);
   scheduleJevExecution();
   scheduleControlCycle();
   scheduleDiscoveryCollection();
@@ -1075,6 +1136,7 @@ function shutdown() {
   if (campaignQueueTimer) clearTimeout(campaignQueueTimer);
   if (jevExecutionTimer) clearTimeout(jevExecutionTimer);
   if (accountAgentRecoveryTimer) clearTimeout(accountAgentRecoveryTimer);
+  if (updateDiscoveryTimer) clearTimeout(updateDiscoveryTimer);
   fixtureWorker.stop();
   server.close(() => {
     void (async () => {

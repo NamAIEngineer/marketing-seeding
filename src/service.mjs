@@ -2225,6 +2225,60 @@ export class SeedingService {
     return (state.listeningJobs || []).find((item) => item.jobId === String(jobId || "")) || null;
   }
 
+  /**
+   * Resolve an explicit campaign fan-out against the live canonical state.
+   * `allSocial` is a selector only: it never broadens authority. Every row
+   * remains bound to one target/account and carries its own failure reason.
+   */
+  async planCampaignFanout(campaignId, input = {}, actor = "operator") {
+    const snapshot = await this.store.read();
+    const campaign = requireItem(snapshot.campaigns, campaignId, "Campaign");
+    const socialChannels = Object.keys(CHANNELS).filter((channel) => channel !== "email");
+    const channels = [...new Set((Array.isArray(input.channels) ? input.channels : input.allSocial === true ? socialChannels : [input.channel]).map((value) => String(value || "").trim().toLowerCase()).filter(Boolean))];
+    if (!channels.length || channels.some((channel) => !CHANNELS[channel])) throw new Error("Fan-out requires supported channels");
+    const requestedAccounts = new Set((Array.isArray(input.accountIds) ? input.accountIds : []).map(String).filter(Boolean));
+    const authorizations = (snapshot.campaignAuthorizations || []).filter((item) => item.campaignId === campaignId && item.status === "active");
+    const authorization = authorizations.length === 1 ? authorizations[0] : null;
+    const destinations = authorization?.destinations || [];
+    const rows = [];
+    for (const channel of channels) {
+      const targets = (snapshot.targets || []).filter((target) => target.channel === channel && target.status !== "disabled" && (!requestedAccounts.size || requestedAccounts.has(target.accountId)));
+      const accountIds = [...new Set([
+        ...targets.map((target) => target.accountId),
+        ...requestedAccounts,
+        ...(input.allSocial === true
+          ? (snapshot.executionAccounts || []).filter((item) => item.platform === channel && item.provider === "camoufox" && item.status !== "disabled").map((item) => item.accountId)
+          : [])
+      ])];
+      for (const accountId of accountIds) {
+        const target = targets.find((item) => item.accountId === accountId);
+        const account = (snapshot.executionAccounts || []).find((item) => item.id === executionAccountKey(channel, accountId));
+        const destination = destinations.find((item) => item.platform === channel && item.accountId === accountId && item.targetId === target?.id);
+        const reasons = [];
+        if (!authorization) reasons.push("campaign_authorization_not_uniquely_active");
+        if (!account) reasons.push("account_missing");
+        if (account && account.status !== "enabled") reasons.push("account_disabled");
+        if (account && account.provider !== "camoufox") reasons.push("account_agent_unavailable");
+        if (account && String(account.loginStatus || account.agentStatus || "UNKNOWN").toUpperCase() !== "READY") reasons.push(`account_session_${String(account.loginStatus || account.agentStatus || "UNKNOWN").toLowerCase()}`);
+        if (!account?.identityReference && !account?.expectedIdentityUrl) reasons.push("account_identity_unverified");
+        if (!target) reasons.push("target_missing");
+        if (target && target.status !== "active") reasons.push("target_not_active");
+        if (target && target.readiness?.state !== "ready") reasons.push("target_not_ready");
+        if (!destination) reasons.push("standing_authority_missing");
+        if (destination && (authorization.executionMode !== "standing_autonomous" || authorization.allowLiveExecution !== true)) reasons.push("standing_autonomous_authority_required");
+        rows.push({ campaignId, allSocial: input.allSocial === true, channel, accountId, targetId: target?.id || null, agentId: account ? `account-agent:${channel}:${accountId}` : null, status: reasons.length ? "BLOCKED" : "READY", eligible: reasons.length === 0, reasons, authority: destination ? { authorizationId: authorization.id, targetId: destination.targetId, standing: authorization.executionMode === "standing_autonomous" && authorization.allowLiveExecution === true } : null });
+      }
+    }
+    const plan = { schemaVersion: 1, campaignId, mode: input.allSocial === true ? "ALL_SOCIAL_FAN_OUT" : "SELECTED_CHANNELS", channels, requestedAccountIds: [...requestedAccounts], rows, ready: rows.filter((row) => row.eligible).length, blocked: rows.filter((row) => !row.eligible).length, generatedAt: nowIso() };
+    await this.store.mutate(actor, "campaign_fanout_planned", (state) => {
+      const current = requireItem(state.campaigns, campaignId, "Campaign");
+      current.fanoutPlan = structuredClone(plan);
+      current.updatedAt = nowIso();
+      return current.fanoutPlan;
+    });
+    return plan;
+  }
+
   async createBrowserIntent(input = {}) {
     const state = await this.store.read();
     const snapshot = (state.browserSnapshots || []).find((item) => item.fingerprint === input.snapshotFingerprint || item.fingerprint === input.snapshot?.fingerprint);
@@ -6340,7 +6394,10 @@ export class SeedingService {
     const profileId = String(input.profileId || input.providerProfileId || `camoufox-${platform}-${accountId}`).trim();
     const account = await this.registerExecutionAccount({
       platform, accountId, provider: "camoufox", providerProfileId: profileId,
-      profileId, ...(String(input.identityReference || input.expectedIdentityUrl || "").trim() ? { identityReference: input.identityReference || input.expectedIdentityUrl } : {}),
+      profileId,
+      // The onboarding caller does not establish identity. Camoufox must
+      // derive and verify the exact identity from the authenticated browser
+      // surface before this account can become READY or enter authority.
       status: "enabled", health: "unknown"
     }, actor);
     const credential = await input.storeCredentials({ platform, accountId, username: input.username, password: input.password });
@@ -7616,6 +7673,20 @@ export class SeedingService {
           completedAt: job.completedAt
         }))
       },
+      fanoutPlans: state.campaigns.filter((campaign) => campaign.fanoutPlan).map((campaign) => ({
+        campaignId: campaign.id,
+        mode: campaign.fanoutPlan.mode,
+        channels: campaign.fanoutPlan.channels,
+        ready: campaign.fanoutPlan.ready,
+        blocked: campaign.fanoutPlan.blocked,
+        generatedAt: campaign.fanoutPlan.generatedAt,
+        rows: (campaign.fanoutPlan.rows || []).map((row) => ({
+          campaignId: row.campaignId, allSocial: row.allSocial === true, channel: row.channel,
+          accountId: row.accountId, targetId: row.targetId, agentId: row.agentId,
+          status: row.status, eligible: row.eligible === true, reasons: row.reasons,
+          authority: row.authority || null
+        }))
+      })),
       recentArtifacts: newest(state.artifacts, "createdAt"),
       recentStories: newest(state.stories, "createdAt"),
       recentProductFactoryRuns: newest(state.campaigns.flatMap((campaign) => (campaign.productFactoryRuns || []).map((run) => ({ ...run, campaignId: campaign.id }))), "completedAt"),

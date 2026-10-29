@@ -1170,6 +1170,9 @@ function MissionControlPanel({ data }: { data: R }) {
   const sessionRows = Array.isArray(sessionReadiness?.rows) ? sessionReadiness.rows.slice(0, 12) : []
   const camoufoxSession = data?.camoufoxSession && typeof data.camoufoxSession === "object" ? data.camoufoxSession : null
   const camoufoxSessionRows = Array.isArray(camoufoxSession?.sessions) ? camoufoxSession.sessions.slice(0, 12) : []
+  const nineRouter = data?.nineRouter && typeof data.nineRouter === "object" ? data.nineRouter : null
+  const provisioning = data?.provisioning && typeof data.provisioning === "object" ? data.provisioning : null
+  const fanoutPlans = Array.isArray(data?.fanoutPlans) ? data.fanoutPlans : []
   const unsupportedClaimCount = productIntelligence.reduce((total: number, item: R) => {
     const document = item?.document && typeof item.document === "object" ? item.document : {}
     return total + (Array.isArray(document.CLAIMS_WE_CANNOT_MAKE) ? document.CLAIMS_WE_CANNOT_MAKE.length : 0)
@@ -1328,6 +1331,20 @@ function MissionControlPanel({ data }: { data: R }) {
             })}
           </div>
         ) : <div className="empty-state">Chưa có account agent projection.</div>}
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head">
+          <div><span className="mission-eyebrow">9Router model gateway</span><small>Live authenticated catalog · quota inferred only from observed requests</small></div>
+          <span className={nineRouter?.authenticated ? "status completed" : "status draft"}>{compactText(nineRouter?.catalogStatus, "CONNECT_REQUIRED", 32)}</span>
+        </div>
+        <div className="mission-account-list">
+          <article><div className="mission-account-title"><strong>{compactText(nineRouter?.selection?.model, "UNKNOWN", 100)}</strong><span className="status">{compactText(nineRouter?.quotaStatus, "UNVERIFIED", 32)}</span></div><small>{compactText(nineRouter?.selection?.reason, "No model selected", 180)}</small><small>{Array.isArray(nineRouter?.models) ? nineRouter.models.length : 0} models · binary {compactText(nineRouter?.binary?.version, "UNKNOWN", 24)} · key {nineRouter?.security?.keyStored ? compactText(nineRouter?.security?.keyStorage, "stored", 40) : "CONNECT_REQUIRED"}</small></article>
+          <article><div className="mission-account-title"><strong>Provisioning</strong><span className="status">{compactText(provisioning?.nineRouter?.status, "UNKNOWN", 32)}</span></div><small>Camoufox {compactText(provisioning?.camoufox?.status, "UNKNOWN", 32)} · pinned {compactText(provisioning?.camoufox?.expectedVersion, "UNKNOWN", 20)}</small><small>Provider login remains user-owned in 9Router; no provider credentials imported.</small></article>
+        </div>
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head"><div><span className="mission-eyebrow">Campaign fan-out</span><small>All Social expands only to eligible social Account Agents; each row remains isolated.</small></div><span className="status">{fanoutPlans.reduce((count: number, plan: R) => count + Number(plan?.ready || 0), 0)} READY</span></div>
+        {fanoutPlans.length ? <div className="mission-account-list">{fanoutPlans.slice(0, 4).map((plan: R) => <article key={String(plan.campaignId)}><div className="mission-account-title"><strong>{compactText(plan.campaignId, "UNKNOWN", 70)}</strong><span className="status">{compactText(plan.mode, "UNKNOWN", 32)}</span></div><small>{Array.isArray(plan.channels) ? plan.channels.join(" · ") : "UNKNOWN"} · {Number(plan.ready || 0)} ready · {Number(plan.blocked || 0)} blocked</small>{(plan.rows || []).slice(0, 8).map((row: R) => <small key={`${row.channel}:${row.accountId}`}>{row.channel}/{row.accountId}: {row.status} · {Array.isArray(row.reasons) && row.reasons.length ? row.reasons.join(" · ") : "eligible"}</small>)}</article>)}</div> : <div className="empty-state">Chưa có fan-out plan.</div>}
       </div>
       <div className="mission-account-runtime">
         <div className="mission-account-head">
@@ -2244,23 +2261,67 @@ function DashboardScopeBar({
   )
 }
 
+function OperatorSessionPanel({ refresh }: { refresh: () => void }) {
+  const [token, setToken] = useState(() => { try { return sessionStorage.getItem("seedingOperatorToken") || "" } catch { return "" } })
+  const [status, setStatus] = useState("")
+  const connect = async (event: React.FormEvent) => {
+    event.preventDefault(); setStatus("Đang kiểm tra token…")
+    try {
+      const response = await fetch("/api/operator/session", { headers: { authorization: `Bearer ${token.trim()}` } })
+      if (!response.ok) throw new Error("Token không hợp lệ")
+      sessionStorage.setItem("seedingOperatorToken", token.trim()); setToken(""); setStatus("Đã kết nối phiên vận hành cục bộ"); refresh()
+    } catch (error) { setStatus(error instanceof Error ? error.message : "Không thể kết nối token") }
+  }
+  return <section className="panel full-span"><div className="panel-head"><div><h2>Phiên vận hành cục bộ</h2><p>Token chỉ nằm trong sessionStorage của cửa sổ này; không lưu vào state hoặc repo.</p></div></div><form onSubmit={connect} className="scope-selects"><input required type="password" value={token} onChange={event => setToken(event.target.value)} placeholder="operator token" autoComplete="off" /><button className="primary-button" type="submit">Kết nối</button><button type="button" className="secondary-button" onClick={() => { sessionStorage.removeItem("seedingOperatorToken"); setStatus("Đã ngắt phiên"); refresh() }}>Ngắt</button></form>{status ? <small>{status}</small> : null}</section>
+}
+
+function NineRouterPanel({ data, refresh }: { data: R, refresh: () => void }) {
+  const router = data?.nineRouter && typeof data.nineRouter === "object" ? data.nineRouter : {}
+  const [task, setTask] = useState("research")
+  const [preferredModel, setPreferredModel] = useState("")
+  const [status, setStatus] = useState("")
+  const choose = async (event: React.FormEvent) => {
+    event.preventDefault(); const token = sessionStorage.getItem("seedingOperatorToken") || ""; if (!token) { setStatus("Kết nối token vận hành trước"); return }
+    try { const response = await fetch("/api/9router/select-model", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}` }, body: JSON.stringify({ task, preferredModel: preferredModel || null }) }); const body = await response.json(); if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`); setStatus(`${body.model || "UNKNOWN"}: ${body.reason || "UNKNOWN"}`); refresh() } catch (error) { setStatus(error instanceof Error ? error.message : "Không thể chọn model") }
+  }
+  const models = Array.isArray(router.models) ? router.models : []
+  return <section className="panel full-span"><div className="panel-head"><div><h2>9Router model gateway</h2><p>Catalog authenticated từ 9Router /v1/models; quota chỉ được đánh dấu sau request thực tế.</p></div><span className="status">{String(router.catalogStatus || "CONNECT_REQUIRED")}</span></div><form onSubmit={choose} className="scope-selects"><select value={task} onChange={event => setTask(event.target.value)}><option value="research">Research</option><option value="content">Content</option><option value="media">Media / vision</option><option value="code">Code</option></select><select value={preferredModel} onChange={event => setPreferredModel(event.target.value)}><option value="">Auto compatible fallback</option>{models.map((model: R) => <option key={String(model.id)} value={String(model.id)}>{String(model.id)}</option>)}</select><button className="primary-button" type="submit">Chọn model</button></form><small>Selected: {String(router.selection?.model || "UNKNOWN")} · {String(router.selection?.reason || "chưa chọn")} · {models.length} model · quota {String(router.quotaStatus || "UNVERIFIED")}</small>{status ? <small>{status}</small> : null}</section>
+}
+
+function FanoutPlannerPanel({ data, refresh }: { data: R, refresh: () => void }) {
+  const campaigns = Array.isArray(data?.campaigns) ? data.campaigns : []
+  const accounts = Array.isArray(data?.executionAccounts) ? data.executionAccounts.filter((item: R) => item?.provider === "camoufox") : []
+  const channels = Array.isArray(data?.channels) ? data.channels.filter((item: R) => item?.id !== "email") : []
+  const [campaignId, setCampaignId] = useState("")
+  const [selectedChannels, setSelectedChannels] = useState<string[]>([])
+  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([])
+  const [allSocial, setAllSocial] = useState(false)
+  const [status, setStatus] = useState("")
+  const plan = async (event: React.FormEvent) => {
+    event.preventDefault(); const token = sessionStorage.getItem("seedingOperatorToken") || ""; if (!token || !campaignId) { setStatus("Kết nối token và chọn campaign trước"); return }
+    try { const response = await fetch(`/api/campaigns/${encodeURIComponent(campaignId)}/fanout-plan`, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}` }, body: JSON.stringify({ allSocial, channels: allSocial ? undefined : selectedChannels, accountIds: selectedAccounts }) }); const body = await response.json(); if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`); setStatus(`${body.ready || 0} READY · ${body.blocked || 0} BLOCKED`); refresh() } catch (error) { setStatus(error instanceof Error ? error.message : "Không thể tạo fan-out plan") }
+  }
+  return <section className="panel full-span"><div className="panel-head"><div><h2>Campaign fan-out</h2><p>All Social chỉ fan-out đến các Account Agent có session, identity, target readiness và standing authority.</p></div></div><form onSubmit={plan} className="scope-selects"><select required value={campaignId} onChange={event => setCampaignId(event.target.value)}><option value="">Chọn campaign</option>{campaigns.map((campaign: R) => <option key={String(campaign.id)} value={String(campaign.id)}>{String(campaign.name || campaign.id)}</option>)}</select><label><input type="checkbox" checked={allSocial} onChange={event => setAllSocial(event.target.checked)} /> All Social</label>{!allSocial && channels.map((channel: R) => <label key={String(channel.id)}><input type="checkbox" checked={selectedChannels.includes(String(channel.id))} onChange={event => setSelectedChannels(current => event.target.checked ? [...new Set([...current, String(channel.id)])] : current.filter(item => item !== String(channel.id)))} /> {String(channel.label || channel.id)}</label>)}<button className="primary-button" type="submit">Lập kế hoạch fan-out</button></form>{accounts.length ? <small>Accounts: {accounts.map((account: R) => `${account.platform}/${account.accountId}`).join(" · ")}</small> : null}{status ? <small>{status}</small> : null}</section>
+}
+
 function AccountOnboardingPanel({ refresh }: { refresh: () => void }) {
   const [platform, setPlatform] = useState("linkedin")
   const [accountId, setAccountId] = useState("")
   const [profileId, setProfileId] = useState("")
-  const [identityReference, setIdentityReference] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [status, setStatus] = useState("")
   const submit = async (event: React.FormEvent) => {
     event.preventDefault(); setStatus("Đang lưu Keychain và chạy Account Agent…")
     try {
-      const response = await fetch("/api/account-credentials", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ platform, accountId, profileId, identityReference, username, password }) })
+      const token = sessionStorage.getItem("seedingOperatorToken") || ""
+      if (!token) throw new Error("Kết nối token vận hành trước khi thêm account")
+      const response = await fetch("/api/account-credentials", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}`, "x-agentic-actor": "dashboard-operator" }, body: JSON.stringify({ platform, accountId, profileId, username, password }) })
       const body = await response.json(); if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`)
       setStatus(`Agent ${body?.login?.status || "UNKNOWN"}: ${body?.login?.reason || "đã ghi nhận"}`); setPassword(""); refresh()
     } catch (error) { setStatus(error instanceof Error ? error.message : "Không thể onboard account") }
   }
-  return <section className="panel full-span"><div className="panel-head"><div><h2>Thêm social account</h2><p>Credential lưu macOS Keychain; Account Agent tự mở Camoufox, đăng nhập, rồi lấy identity trực tiếp từ trang đã xác thực.</p></div></div><form onSubmit={submit} className="scope-selects"><input required value={platform} onChange={event => setPlatform(event.target.value)} placeholder="platform" /><input required value={accountId} onChange={event => setAccountId(event.target.value)} placeholder="account ID" /><input required value={profileId} onChange={event => setProfileId(event.target.value)} placeholder="Camoufox profile" /><input value={identityReference} onChange={event => setIdentityReference(event.target.value)} placeholder="identity URL (optional; discovered after login)" /><input required value={username} onChange={event => setUsername(event.target.value)} placeholder="username" autoComplete="username" /><input required type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="password" autoComplete="current-password" /><button className="primary-button" type="submit">Lưu và chạy Agent</button></form>{status ? <small>{status}</small> : null}</section>
+  return <section className="panel full-span"><div className="panel-head"><div><h2>Thêm social account</h2><p>Credential lưu macOS Keychain; Account Agent tự mở Camoufox, đăng nhập, rồi lấy identity trực tiếp từ trang đã xác thực. Identity URL không cần nhập.</p></div></div><form onSubmit={submit} className="scope-selects"><input required value={platform} onChange={event => setPlatform(event.target.value)} placeholder="platform" /><input required value={accountId} onChange={event => setAccountId(event.target.value)} placeholder="account ID" /><input required value={profileId} onChange={event => setProfileId(event.target.value)} placeholder="Camoufox profile" /><input required value={username} onChange={event => setUsername(event.target.value)} placeholder="username" autoComplete="username" /><input required type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="password" autoComplete="current-password" /><button className="primary-button" type="submit">Lưu và chạy Agent</button></form>{status ? <small>{status}</small> : null}</section>
 }
 function savedScope(key: string, fallback: string) {
   try {
@@ -2485,7 +2546,10 @@ export default function App() {
         }
       />
       <main className="main">
+        <OperatorSessionPanel refresh={load} />
         <AccountOnboardingPanel refresh={load} />
+        <NineRouterPanel data={data} refresh={load} />
+        <FanoutPlannerPanel data={data} refresh={load} />
         {Object.keys(data).length > 0 && !error ? (
           <DashboardScopeBar
             data={scopedData}

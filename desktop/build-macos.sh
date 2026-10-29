@@ -16,7 +16,7 @@ test -f "$NODE_BIN"
 test -f "$SWIFT_BIN"
 "$NODE_BIN" -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 22 ? 0 : 1)'
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/app" "$APP/Contents/Resources/bin"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/app" "$APP/Contents/Resources/bin" "$APP/Contents/Resources/lib/node_modules"
 ditto "$SOURCE/src" "$APP/Contents/Resources/app/src"
 ditto "$SOURCE/public" "$APP/Contents/Resources/app/public"
 ditto "$SOURCE/scripts" "$APP/Contents/Resources/app/scripts"
@@ -24,8 +24,22 @@ ditto "$SOURCE/desktop/provision-9router.sh" "$APP/Contents/Resources/app/provis
 ditto "$SOURCE/desktop/provision-camoufox.sh" "$APP/Contents/Resources/app/provision-camoufox.sh"
 ditto "$SOURCE/desktop/update-macos.sh" "$APP/Contents/Resources/app/update-macos.sh"
 cp "$NODE_BIN" "$APP/Contents/Resources/bin/node"
-if [ -n "$NPM_BIN" ]; then cp "$NPM_BIN" "$APP/Contents/Resources/bin/npm"; fi
-if [ -n "$NPM_ROOT" ] && [ -d "$NPM_ROOT/npm" ]; then ditto "$NPM_ROOT/npm" "$APP/Contents/Resources/lib/node_modules/npm"; fi
+if [ -n "$NPM_BIN" ] && [ -n "$NPM_ROOT" ] && [ -d "$NPM_ROOT/npm" ]; then
+  ditto "$NPM_ROOT/npm" "$APP/Contents/Resources/lib/node_modules/npm"
+  # The host npm executable is a symlink/script whose relative require path
+  # breaks once copied into the app bundle. Keep npm's own package intact and
+  # invoke its CLI with the bundled Node binary instead.
+  cat > "$APP/Contents/Resources/bin/npm" <<'NPM'
+#!/bin/sh
+set -eu
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+exec "$HERE/bin/node" "$HERE/lib/node_modules/npm/bin/npm-cli.js" "$@"
+NPM
+  chmod 755 "$APP/Contents/Resources/bin/npm"
+  printf '%s\n' 'bundled' > "$APP/Contents/Resources/app/npm-provision-status.txt"
+else
+  printf '%s\n' 'unavailable:npm_missing_at_build_time' > "$APP/Contents/Resources/app/npm-provision-status.txt"
+fi
 cp "$SOURCE/package.json" "$APP/Contents/Resources/app/package.json"
 git -C "$SOURCE" rev-parse HEAD > "$APP/Contents/Resources/app/source-commit.txt"
 "$SWIFT_BIN" "$SOURCE/desktop/MarketingSeedingApp.swift" -o "$APP/Contents/MacOS/webview" -framework Cocoa -framework WebKit
@@ -121,7 +135,9 @@ if [ -x "$APP_ROOT/provision-9router.sh" ]; then
   fi
 fi
 if [ -x "$APP_ROOT/provision-camoufox.sh" ]; then
-  "$APP_ROOT/provision-camoufox.sh" "$DATA_ROOT" >"$DATA_ROOT/camoufox-provision-command" 2>"$DATA_ROOT/camoufox-provision-error" || true
+  if ! "$APP_ROOT/provision-camoufox.sh" "$DATA_ROOT" >"$DATA_ROOT/camoufox-provision-command" 2>"$DATA_ROOT/camoufox-provision-error"; then
+    printf '%s\n' 'unavailable:provision_script_failed' >"$DATA_ROOT/camoufox-provision-status"
+  fi
 fi
 cd "$APP_ROOT"
 exec "$NODE" src/server.mjs
