@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { mutationExpressionHash, normalizeMutationHash, isMutationOperation } from "./browser-mutation-policy.mjs";
 import { linkedInReadinessExpressions } from "./linkedin-readiness.mjs";
 import { canonicalIdentityUrl } from "./execution-binding.mjs";
-import { getCamoufoxPlatformLoginAdapter } from "./camoufox-platform-login-adapters.mjs";
+import { getCamoufoxPlatformLoginAdapter, normalizeCamoufoxIdentityReference } from "./camoufox-platform-login-adapters.mjs";
 
 const text = (value, limit = 240) => String(value ?? "").replace(/\s+/g, " ").trim().slice(0, limit);
 // Keep readiness expressions such as `sessionAuthenticated` usable while
@@ -115,6 +115,20 @@ function assertSafeExpression(source) {
 function safePageId(value) { return /^[A-Za-z0-9._:-]{1,120}$/.test(String(value || "")) ? String(value) : null; }
 function safeUrl(value) { try { const url = new URL(String(value)); return /^https?:$/.test(url.protocol) || url.protocol === "about:" ? url.toString() : null; } catch { return null; } }
 
+function canonicalCamoufoxIdentity(platform, value) {
+  const normalized = normalizeCamoufoxIdentityReference(platform, value);
+  return normalized || canonicalIdentityUrl(value);
+}
+
+function stableIdentityId(platform, value) {
+  try {
+    const url = new URL(String(value));
+    const key = String(platform || "").toLowerCase();
+    if (key === "facebook_group" && url.pathname.toLowerCase() === "/profile.php") return url.searchParams.get("id") || null;
+    return url.pathname.split("/").filter(Boolean).pop()?.replace(/^@/, "") || null;
+  } catch { return null; }
+}
+
 // Read the identity from the rendered LinkedIn surface itself. This expression
 // intentionally does not receive the expected profile path: the caller must
 // compare the observed result with the bound identity after evaluation. A nav
@@ -195,13 +209,13 @@ export class CamoufoxPlaywrightProtocolClient {
     if (platform !== "linkedin" && adapter) {
       try {
         const observed = await page.evaluate(adapter.identityExpression);
-        const expectedIdentity = canonicalIdentityUrl(this.#expectedIdentity.identityReference || this.#expectedIdentity.expectedIdentityUrl);
-        const observedIdentity = canonicalIdentityUrl(observed?.identityReference);
-        const expectedStableId = expectedIdentity ? expectedIdentity.split("/").filter(Boolean).pop()?.replace(/^@/, "") || null : null;
+        const expectedIdentity = canonicalCamoufoxIdentity(platform, this.#expectedIdentity.identityReference || this.#expectedIdentity.expectedIdentityUrl);
+        const observedIdentity = canonicalCamoufoxIdentity(platform, observed?.identityReference);
+        const expectedStableId = stableIdentityId(platform, expectedIdentity);
         const independentIdentityVerified = Boolean(observed?.authenticated && observedIdentity && !observed?.ambiguous && observed?.stableId && (!expectedIdentity || observedIdentity === expectedIdentity) && (!expectedStableId || observed.stableId === expectedStableId));
         const sessionState = observed?.challengeDetected ? "CHALLENGED" : independentIdentityVerified ? "READY" : "UNKNOWN";
         return { state: sessionState, provider: "camoufox", platform, accountId: text(this.#expectedIdentity.accountId), providerProfileId: this.#profileReference, profileReference: this.#profileReference, identityReference: observedIdentity || null, expectedIdentityReference: expectedIdentity || null, stableIdentityId: observed?.stableId || null, evidence: { sessionAuthenticated: observed?.authenticated === true, identityVerified: independentIdentityVerified, stableIdentityId: observed?.stableId || null, stableIdentityIdVerified: Boolean(observed?.stableId && expectedStableId && observed.stableId === expectedStableId), identitySource: observed?.source || null, identityConfidence: observed?.confidence || 0, identityAmbiguous: observed?.ambiguous === true, candidateCount: Array.isArray(observed?.candidates) ? observed.candidates.length : 0 } };
-      } catch { return { state: "UNKNOWN", provider: "camoufox", platform, accountId: text(this.#expectedIdentity.accountId), providerProfileId: this.#profileReference, profileReference: this.#profileReference, identityReference: null, expectedIdentityReference: canonicalIdentityUrl(this.#expectedIdentity.identityReference || this.#expectedIdentity.expectedIdentityUrl), evidence: { sessionAuthenticated: false, identityVerified: false, identitySource: null, identityConfidence: 0, identityAmbiguous: false, candidateCount: 0 } }; }
+      } catch { return { state: "UNKNOWN", provider: "camoufox", platform, accountId: text(this.#expectedIdentity.accountId), providerProfileId: this.#profileReference, profileReference: this.#profileReference, identityReference: null, expectedIdentityReference: canonicalCamoufoxIdentity(platform, this.#expectedIdentity.identityReference || this.#expectedIdentity.expectedIdentityUrl), evidence: { sessionAuthenticated: false, identityVerified: false, identitySource: null, identityConfidence: 0, identityAmbiguous: false, candidateCount: 0 } }; }
     }
     const expectedPath = text(this.#expectedIdentity.identityReference || this.#expectedIdentity.expectedIdentityUrl, 400);
     let state = { loginRequired: false, securityChallenge: false, sessionAuthenticated: false, identityVerified: false };

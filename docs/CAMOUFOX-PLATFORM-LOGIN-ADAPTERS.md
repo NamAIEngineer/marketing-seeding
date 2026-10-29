@@ -38,7 +38,7 @@ Every result is bounded and secret-free:
 
 - `status`: `READY`, `BLOCKED`, or `UNKNOWN`.
 - `identityVerified`: true only after an exact platform identity URL matches the expected identity, the observed candidate is unambiguous, and the evidence comes from the descriptor's owner profile surface.
-- `postingRights.status`: `READY`, `BLOCKED`, `UNKNOWN`, or `NOT_CHECKED`; account login readiness never implies target/community rights.
+- `postingRights.status`: `READY`, `BLOCKED`, `UNKNOWN`, or `NOT_CHECKED`; account login readiness never implies target/community rights. For `facebook_group`, `reddit`, `product_hunt`, and `indie_hackers`, `READY` additionally requires explicit accepted rules evidence from the target surface. The sanitized evidence includes `rulesStatus`, `rulesEvidencePresent`, `rulesEvidenceAccepted`, and `rulesEvidenceDenied`; absent or ambiguous rules remain `UNKNOWN`, while denied, pending, or membership-required rules are `BLOCKED`. Threads does not require community-rules evidence because its descriptor is not a group/community target.
 - `externalSideEffects: false`, `published: false`, and `publicationReference: null` are always returned.
 - `evidence` contains only sanitized source, confidence, candidate-count, owner-surface, challenge, and composer/target markers.
 

@@ -113,13 +113,14 @@ const DESCRIPTORS = Object.freeze({
     identityPath: /^\/@[a-z0-9][a-z0-9._-]{0,49}$/i,
     targetPath: (pathname) => /^\/@[a-z0-9][a-z0-9._-]{0,49}(?:\/.*)?$/i.test(pathname) || /^\/post\/[a-z0-9_-]+$/i.test(pathname),
     publicationPath: /\/@[^/]+\/post\//i, submitLabel: /^(?:post|share|publish|send)$/i
+    ,strictTarget: true
   }),
   reddit: Object.freeze({
     platform: "reddit", hosts: Object.freeze(["reddit.com"]),
     identitySource: "reddit-owner-profile-surface", rightsSource: "reddit-community-composer",
     identityPath: /^\/user\/[a-z0-9_-]{3,50}$/i,
     targetPath: (pathname) => /^\/r\/[a-z0-9_+-]{2,80}(?:\/.*)?$/i.test(pathname) || /^\/user\/[a-z0-9_-]{3,50}(?:\/.*)?$/i.test(pathname),
-    publicationPath: /\/comments\/|\/post\//i, submitLabel: /^(?:post|submit|publish|comment|send)$/i
+    publicationPath: /\/comments\/|\/post\//i, submitLabel: /^(?:post|submit|publish|comment|send)$/i, strictTarget: true
   }),
   facebook_group: Object.freeze({
     platform: "facebook_group", hosts: Object.freeze(["facebook.com"]),
@@ -287,6 +288,8 @@ export function verifyThreadsRedditPublicationEvidence(expected = {}, observed =
   const identityMatched = Boolean(identity && candidate?.authorMatched === true && (identityPath === "/profile.php" ? candidate.authorStableId === identityStableId : candidate.authorPath === identityPath));
   const targetPath = target ? new URL(target).pathname.replace(/\/$/, "").toLowerCase() : "";
   const targetPathMatched = Boolean(permalink && target && (permalink.pathname.toLowerCase().startsWith(targetPath + "/") || permalink.pathname.toLowerCase() === targetPath));
+  // A caller supplied targetMatched flag is advisory only. Strict descriptors
+  // require the observed permalink path itself to bind to the exact target.
   const targetMatched = rule.strictTarget ? targetPathMatched : candidate?.targetMatched === true || targetPathMatched;
   const contentMatched = candidate?.contentMatched === true && String(observed.contentHash || expected.contentHash || "") === String(expected.contentHash || "");
   const media = expected.media || null;

@@ -92,6 +92,10 @@ export async function runCamoufoxAccountAgent({ account, resolver, coordinator: 
           rightsDeclared: result.postingRights.evidence.rightsDeclared === true,
           membershipStatus: text(result.postingRights.evidence.membershipStatus, 80) || null,
           postingStatus: text(result.postingRights.evidence.postingStatus, 80) || null,
+          rulesStatus: text(result.postingRights.evidence.rulesStatus, 80) || null,
+          rulesEvidencePresent: result.postingRights.evidence.rulesEvidencePresent === true,
+          rulesEvidenceAccepted: result.postingRights.evidence.rulesEvidenceAccepted === true,
+          rulesEvidenceDenied: result.postingRights.evidence.rulesEvidenceDenied === true,
           composerVisible: result.postingRights.evidence.composerVisible === true,
           submitControlVisible: result.postingRights.evidence.submitControlVisible === true,
           submitControlEnabled: result.postingRights.evidence.submitControlEnabled === true

@@ -11,6 +11,7 @@ import { readAutoGtmFeed } from "./auto-gtm-feed.mjs";
 import { OrcaCliClient } from "./orca-browser-client.mjs";
 import { LinkedInReadinessProvider } from "./linkedin-readiness.mjs";
 import { CamoufoxLinkedInReadinessProvider } from "./camoufox-linkedin-readiness-provider.mjs";
+import { registerCamoufoxReadinessProviders } from "./camoufox-readiness-provider.mjs";
 import { configuredReadinessTtlMs } from "./readiness.mjs";
 import { LinkedInAdapter } from "./linkedin-adapter.mjs";
 import { THREADS_ADAPTER, REDDIT_ADAPTER } from "./threads-reddit-publication-adapters.mjs";
@@ -176,6 +177,13 @@ readinessProviderRegistry.register("linkedin", new CamoufoxLinkedInReadinessProv
   fallbackProvider: legacyLinkedInReadiness,
   ttlMs: readinessTtlMs
 }));
+// Every Camoufox publication channel gets the same provider-bound readiness
+// gate. Publication adapters are registered below, but execution must first
+// prove exact identity, target rights, community rules, and composer state.
+registerCamoufoxReadinessProviders(readinessProviderRegistry, {
+  resolver: configuredExecutionSessionResolver || autoCamoufoxExecutionResolver,
+  ttlMs: readinessTtlMs
+});
 const service = new SeedingService(store, {
   readinessTtlMs,
   readinessProviderRegistry,
