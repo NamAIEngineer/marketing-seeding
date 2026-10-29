@@ -19,9 +19,10 @@
 
 ## A/B/C connectivity and ownership
 
-- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed5771`; latest read-only status: 13 tracked dirty + 90 untracked entries (A-owned overlay); owns `127.0.0.1:4318`; current health HTTP 200 with schema 8, 6 UNKNOWN and 0 verified; no restart by C.
+- SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed5771`; historical read-only status was 13 tracked dirty + 90 untracked entries. Fresh read-only status at `2026-10-29T00:27:42Z`: 22 tracked dirty + 100 untracked; owns `127.0.0.1:4318`, PID `57977`; the bounded health request timed out after 15s, so current health/provider state is UNKNOWN. No restart by C.
 - SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, checkpoint `b675a98`; 0 tracked dirty + 16 untracked artifacts excluded.
 - SESSION C: candidate above; integration/docs/evidence and acceptance-aware continuation owner.
+- SESSION D: `/Users/nam/Documents/marketing-seeding-session-d-crawl4ai`, branch `integration/session-d-crawl4ai-listening`, HEAD `f13c48a`; read-only recheck found 8 tracked dirty files. Orca inventory at `2026-10-29T00:27:42Z` exposed only `/Users/nam/orca/workspaces/marketing-seeding/session-d-independent-verifier`, not a live D owner receiver; no D task was sent.
 - Orca native handshake marker `SESSION-C-HANDSHAKE-20261028T1210Z`: A and B both returned `turn_started`, exact ACK markers, HEAD/branch/dirty counts, ownership, and native terminal references.
 - No A/B file was edited, staged, reset, stashed, cleaned, or committed by C.
 
@@ -37,6 +38,7 @@
 - The Listening V5 slice is closed on C; the overall candidate remains `PARTIAL` while A's dirty runtime overlay, authenticated Camoufox/publication/metrics, and Auto-GTM generation/media remain open.
 - Current marker handshake: A and B both returned `turn_started`/real read-only result with marker `ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`; A reported receiver READY, B reported orphaned terminal and follow-up capability unconfirmed.
 - Latest read-only A runtime recheck at `2026-10-28T12:04:21Z`: `127.0.0.1:4318` HTTP 200, PID `79925`, `sourceCommit=1ed5771`, `sourceDirty=true`, schema 8, `UNKNOWN=6`, verified 0, publication unverified 150; Camoufox session metadata is `STALE` and readiness is `UNKNOWN`. C did not restart or mutate A.
+- Fresh A runtime health attempt at `2026-10-29T00:27:42Z` timed out after 15s; C did not restart or mutate A. This is `UNKNOWN`, not logout or failure proof.
 
 ## Historical and current candidate evidence
 
