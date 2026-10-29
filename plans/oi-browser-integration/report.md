@@ -65,7 +65,7 @@ Standing authorization guards remain canonical. Candidate tests cover scope coll
 
 Artifact: [fixture-run-7378f8c.json](fixture-run-7378f8c.json). Controlled Product X developer-awareness campaign: Community A has technical/educational evidence; Community B prohibits direct promotion while allowing educational context. `SeedingService.runCampaignControlCycle` chose a candidate before consolidation. Two distinct verified fixture observations consolidated into one `LEARNING` with `sampleSupport=2`, `verifiedCount=2`, and evidence `fixture:fixture-publication-a` / `fixture:fixture-publication-b`. The next production strategy entrypoint selected a different candidate and included `memory:learning-1adbd95424b288d5e6db412b`. Browser semantic CLICK crossed `BrowserInteractionFixture`, verified `CONTROL_ACTIVATED`, replay clicked once, and restart retained memory, learning, snapshot, execution, and provider decisions. Evidence: `FIXTURE_VERIFIED`; no external side effect.
 
-Final C source/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`; metadata/evidence commits follow this checkpoint on the candidate branch.
+Historical C source/test checkpoint: `fa3ebda996041498e44800e181507bd494ee4b72`; current candidate source/test checkpoint is pinned at the top of this report to `85913e984a4c45c2278be2fe644055426a1455c4`.
 
 ## Runtime proof — isolated candidate
 

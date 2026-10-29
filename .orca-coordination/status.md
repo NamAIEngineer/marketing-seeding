@@ -20,7 +20,7 @@
 
 - SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed5771`; latest read-only status: 13 tracked dirty + 90 untracked entries (A-owned overlay); owns `127.0.0.1:4318`; current health HTTP 200 with schema 8, 6 UNKNOWN and 0 verified; no restart by C.
 - SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, checkpoint `b675a98`; 0 tracked dirty + 16 untracked artifacts excluded.
-- SESSION C: candidate above; integration/docs/evidence owner.
+- SESSION C: candidate above; integration/docs/evidence and acceptance-aware continuation owner.
 - Orca native handshake marker `SESSION-C-HANDSHAKE-20261028T1210Z`: A and B both returned `turn_started`, exact ACK markers, HEAD/branch/dirty counts, ownership, and native terminal references.
 - No A/B file was edited, staged, reset, stashed, cleaned, or committed by C.
 
@@ -43,7 +43,7 @@
 - Historical focused slices: authority/bootstrap/delegation `47/47`; oi-browser/browser/provider/transport `59/59`; combined `106/106`.
 - Current coordinator/native focused: `node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs` → 17 total, 17 pass, 0 fail; prior native/coordinator/LinkedIn verifier suite is 69/69.
 - Historical candidate `7f2b74a`: `node --test test/*.test.mjs` → 794 total, 792 pass, 0 fail, 2 skipped. Pre-regression candidate `10ce868`: `node --test test/*.test.mjs` → 802 total, 800 pass, 0 fail, 2 skipped. Historical recovery checkpoint `1589518`: `node --test test/*.test.mjs` → 807 total, 805 pass, 0 fail, 2 skipped.
-- Durable memory/provider regression artifact is `plans/oi-browser-integration/regression-final-9875db3.json` at source `9875db3`; current candidate regression evidence is `plans/oi-browser-integration/regression-final-service-signal.json` at source/test revision `fa3ebda`. Prior evidence artifacts remain retained.
+- Durable memory/provider regression artifact is `plans/oi-browser-integration/regression-final-9875db3.json` at source `9875db3`; historical service cancellation evidence is `plans/oi-browser-integration/regression-final-service-signal.json` at source/test revision `fa3ebda`; current candidate coordinator evidence is `plans/oi-browser-integration/regression-coordinator-85913e9.json`. Prior evidence artifacts remain retained.
 - Auxiliary queue verifier task `0e9f9242-0019-4f11-9453-9d155a419221` failed closed at provider authorization validation; no retry or artifact. Direct independent verifier PASS remains authoritative.
 - Auto-GTM owner checkout: `/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests` → 160 total, 160 pass, 0 fail; `pip check` clean. The owner worktree remains dirty; C did not modify it.
 - Controlled fixture: `plans/oi-browser-integration/fixture-run-7378f8c.json`, `FIXTURE_VERIFIED`; learning support 2, verified 2; before/after candidate changed; restart and browser replay passed; external side effects false.
@@ -87,7 +87,7 @@
 
 ## C follow-up 2026-10-29
 
-- Final C source revision: `fa3ebda996041498e44800e181507bd494ee4b72`; remote now matches after the service wiring push.
+- Historical C source revision: `fa3ebda996041498e44800e181507bd494ee4b72`; current candidate source/test revision is `85913e984a4c45c2278be2fe644055426a1455c4`.
 - C patch binds browser intents to immutable action/element/snapshot identity, adds provider cancellation/fallback suppression, and wires cancellation through `SeedingService`. Focused oi-browser/provider/live bridge tests: 35/35. Coordinator/native tests: 17/17. Full suite: 814 total, 812 pass, 0 fail, 2 skipped; output SHA-256 `daf9f9205342293c5b38d242c85d8dd73f1b88a585838b2a279f56111c51bb38`.
 - Evidence: `plans/oi-browser-integration/regression-final-service-signal.json`; source changes are `IMPLEMENTED`, test results `FIXTURE_VERIFIED`, existing C launchd follow-up/restart remains `NATIVE_RESUME_VERIFIED`.
 - Queue task `ad044fdf-fbbf-4a99-a4eb-9165dc35987e` reconciled once as `UNKNOWN / QUEUE_RECEIPT_AMBIGUOUS`; no retry. Direct C implementation is the code evidence.

@@ -14,7 +14,7 @@
 
 - SESSION A: `/Users/nam/Documents/marketing-seeding-wave-13-bridge`, branch `wave/distribution-os-runtime-wave-13-bridge`, checkpoint `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; latest read-only status is 13 tracked dirty files plus 90 untracked entries. A owns runtime `127.0.0.1:4318`, PID `79925`.
 - SESSION B: `/Users/nam/Documents/marketing-seeding-integration`, branch `integration/autonomous-build`, checkpoint `b675a98e6dd2da3c12133dff715eddea616c91f5`; tracked scope clean, 16 untracked reports/artifacts excluded.
-- SESSION C: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`, source/test candidate `fa3ebda`; metadata/evidence HEAD follows.
+- SESSION C: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`, source/test candidate `85913e9`; metadata/evidence HEAD follows.
 - Native handshake `SESSION-C-HANDSHAKE-20261028T1210Z` delivered through Orca terminal handles. A returned `SESSION-A-ACK-20261028T1210Z`; B returned `SESSION-B-ACK-20261028T1210Z`; both showed `turn_started`, exact ownership, and no edits by C.
 
 ## Tasks
@@ -34,6 +34,7 @@
 | C-011 | C | Provider caller cancellation and fallback race regression | C-009 | historical predecessor commit `35cc224`; focused `34/34`; full `813/811/0/2`; independent verifier PASS | COMPLETED |
 | C-012 | C | Wire caller cancellation through SeedingService production entrypoint | C-011 | commit `fa3ebda`; service regression; focused `35/35`; coordinator/native `17/17`; full `814/812/0/2`; independent verifier PASS | COMPLETED |
 | C-013 | C | Listening V5 durable job persistence, restart resume, terminal replay and UNKNOWN quarantine | D overlap seam / canonical JsonStore | commit `3d3d0b0`; focused `20/20`; full `825/823/0/2`; independent verifier PASS; campaign-scoped public rehearsal and state-preserving terminal replay | COMPLETED |
+| C-014 | C | Acceptance-aware continuation: source/evidence fences, dependency gating, bounded repair/next tasks, atomic scheduling and restart dedupe | existing project coordinator | commit `85913e9`; coordinator/native `20/20`; combined Listening/store focused `40/40`; full `828/826/0/2`; independent verifier PASS | COMPLETED |
 | A/B-001 | A/B | Native receiver handshake and checkpoint ACK | existing live sessions | `SESSION-A/B-ACK-20261028T1210Z`, native terminal evidence | ACKNOWLEDGED |
 | LIVE-001 | authorized runtime owner | fresh Camoufox identity/readiness and publication | standing authority + account | separate live evidence | BLOCKED |
 | GTM-001 | Auto-GTM owner | generated feed/content/media artifact | configured source/provider | capability-specific evidence | BLOCKED |
