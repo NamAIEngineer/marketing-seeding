@@ -3084,7 +3084,7 @@ function IntegrationsPage({ data }: { data: R }) {
           <Mark name="Dashboard API" />
           <div>
             <h2>Dashboard API</h2>
-            <p>http://127.0.0.1:4318/api/dashboard</p>
+            <p>/api/dashboard</p>
           </div>
           <span className="status connected">Đã kết nối</span>
           <button
