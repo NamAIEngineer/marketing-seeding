@@ -1544,8 +1544,20 @@ function projectDashboardAccountAgents(state = {}) {
       risk: account.risk || (account.status === "enabled" ? "normal" : "disabled"),
       health: account.health,
       capabilities: account.capabilities
+      ,agentStatus: account.agentStatus || "UNKNOWN"
+      ,loginStatus: account.loginStatus || "UNKNOWN"
+      ,loginAttemptAt: account.loginAttemptAt || null
+      ,lastLoginAt: account.lastLoginAt || null
+      ,lastFailureCode: account.lastFailureCode || null
+      ,lastFailureReason: account.lastFailureReason || null
+      ,sessionRecoveryStatus: account.sessionRecoveryStatus || "UNKNOWN"
     }));
   return projectAccountAgentMissionControl(accounts, { now: observedAt });
+}
+
+function projectOnboardedAccount(account = {}) {
+  const allowed = ["id", "platform", "accountId", "provider", "providerProfileId", "profileId", "identityReference", "status", "health", "agentStatus", "loginStatus", "loginAttemptAt", "lastLoginAt", "lastFailureCode", "lastFailureReason", "sessionHealth", "loginEvidenceAt", "credentialStored", "updatedAt"];
+  return Object.fromEntries(allowed.filter((key) => account[key] !== undefined).map((key) => [key, account[key]]));
 }
 
 const AUTHORIZED_ACCOUNT_CANDIDATE_MAX = 128;
@@ -1974,6 +1986,9 @@ export class SeedingService {
     // Optional read-only composed-session capability observation. This is
     // resolved on dashboard reads only; it never acquires or starts a session.
     this.gpmSessionCapabilityObservation = options.gpmSessionCapabilityObservation ?? null;
+    // Optional credential-backed runtime hook. The hook owns Camoufox profile
+    // acquisition and returns only a bounded result (never credentials).
+    this.accountAgentRunner = typeof options.accountAgentRunner === "function" ? options.accountAgentRunner : null;
     const explicitProductRoots = options.productRepoRoots !== undefined || Boolean(String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").trim());
     this.productRepoRoots = (options.productRepoRoots || String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").split(path.delimiter))
       .map((value) => String(value || "").trim())
@@ -6308,6 +6323,42 @@ export class SeedingService {
       return account;
     });
     return result.result;
+  }
+
+  /** Store a credential reference, register one isolated account agent, then
+   * run a bounded login attempt when a Camoufox runtime hook is configured. */
+  async onboardExecutionAccount(input = {}, actor = "operator") {
+    const platform = String(input.platform || "").trim().toLowerCase();
+    const accountId = String(input.accountId || "").trim();
+    if (!platform || !accountId) throw new Error("platform and accountId are required");
+    if (!String(input.username || "") || !String(input.password || "")) throw new Error("username and password are required");
+    if (!String(input.identityReference || input.expectedIdentityUrl || "").trim()) throw new Error("identityReference is required for exact login verification");
+    const profileId = String(input.profileId || input.providerProfileId || `camoufox-${platform}-${accountId}`).trim();
+    const account = await this.registerExecutionAccount({
+      platform, accountId, provider: "camoufox", providerProfileId: profileId,
+      profileId, identityReference: input.identityReference || input.expectedIdentityUrl || null,
+      status: "enabled", health: "unknown"
+    }, actor);
+    const credential = await input.storeCredentials({ platform, accountId, username: input.username, password: input.password });
+    const startedAt = nowIso();
+    const baseline = await this.store.mutate(actor, "account_agent_login_started", (state) => {
+      const row = state.executionAccounts.find((item) => item.id === account.id);
+      Object.assign(row, { agentStatus: "RUNNING", loginStatus: "UNKNOWN", loginAttemptAt: startedAt, lastFailureCode: null, lastFailureReason: null, credentialStored: credential?.credentialStored === true, updatedAt: startedAt });
+      return row;
+    });
+    let result = { status: "UNKNOWN", code: "ACCOUNT_AGENT_UNAVAILABLE", reason: "Camoufox account agent runtime is not configured" };
+    if (this.accountAgentRunner) {
+      try { result = await this.accountAgentRunner({ account: baseline.result, platform, accountId }); }
+      catch (error) { result = { status: "UNKNOWN", code: String(error?.code || "ACCOUNT_AGENT_ERROR"), reason: String(error?.message || "account agent failed") }; }
+    }
+    const finishedAt = nowIso();
+    const final = await this.store.mutate(actor, "account_agent_login_finished", (state) => {
+      const row = state.executionAccounts.find((item) => item.id === account.id);
+      const status = ["READY", "BLOCKED", "UNKNOWN"].includes(result?.status) ? result.status : "UNKNOWN";
+      Object.assign(row, { agentStatus: status === "READY" ? "READY" : status === "BLOCKED" ? "BLOCKED" : "UNKNOWN", loginStatus: status, sessionHealth: status === "READY" ? "ready" : status === "BLOCKED" ? "blocked" : "unknown", health: status === "READY" ? "healthy" : status === "BLOCKED" ? "human_required" : "unknown", lastLoginAt: status === "READY" ? finishedAt : row.lastLoginAt || null, lastFailureCode: status === "READY" ? null : String(result?.code || "UNKNOWN").slice(0, 80), lastFailureReason: status === "READY" ? null : String(result?.reason || "UNKNOWN").replace(/\s+/g, " ").slice(0, 300), loginEvidenceAt: finishedAt, updatedAt: finishedAt });
+      return row;
+    });
+    return { account: projectOnboardedAccount(final.result), login: { status: result.status, code: result.code, reason: result.reason } };
   }
 
   async createSchedule(campaignId, input, actor = "operator") {

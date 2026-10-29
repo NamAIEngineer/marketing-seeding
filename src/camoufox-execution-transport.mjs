@@ -6,7 +6,7 @@ import { persistCamoufoxSessionMetadata } from "./camoufox-session-observer.mjs"
 const METHODS = ["navigate", "snapshot", "resolve", "type", "click", "observeTransition", "verifyActivation", "detach"];
 const SURFACE_METHODS = [
   "listTabs", "showTab", "navigate", "waitForUrl", "waitForFeed", "waitForExpression",
-  "evaluate", "evaluateMutation", "snapshot", "fill", "upload", "uploadSelector", "browserCommandCount"
+  "evaluate", "evaluateMutation", "snapshot", "resolve", "fill", "click", "upload", "uploadSelector", "browserCommandCount", "observeIdentity"
 ];
 const SECRET_KEY = /(cookie|password|token|secret|credential|authorization|sessionstorage|localstorage|rawsession|privatekey|accesskey)/i;
 const text = (value, limit = 240) => typeof value === "string" ? value.trim().slice(0, limit) : "";

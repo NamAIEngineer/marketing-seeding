@@ -2243,6 +2243,25 @@ function DashboardScopeBar({
     </section>
   )
 }
+
+function AccountOnboardingPanel({ refresh }: { refresh: () => void }) {
+  const [platform, setPlatform] = useState("linkedin")
+  const [accountId, setAccountId] = useState("")
+  const [profileId, setProfileId] = useState("")
+  const [identityReference, setIdentityReference] = useState("")
+  const [username, setUsername] = useState("")
+  const [password, setPassword] = useState("")
+  const [status, setStatus] = useState("")
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault(); setStatus("Đang lưu Keychain và chạy Account Agent…")
+    try {
+      const response = await fetch("/api/account-credentials", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ platform, accountId, profileId, identityReference, username, password }) })
+      const body = await response.json(); if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`)
+      setStatus(`Agent ${body?.login?.status || "UNKNOWN"}: ${body?.login?.reason || "đã ghi nhận"}`); setPassword(""); refresh()
+    } catch (error) { setStatus(error instanceof Error ? error.message : "Không thể onboard account") }
+  }
+  return <section className="panel full-span"><div className="panel-head"><div><h2>Thêm social account</h2><p>Credential lưu macOS Keychain; Account Agent tự mở Camoufox, đăng nhập, kiểm tra identity chính xác.</p></div></div><form onSubmit={submit} className="scope-selects"><input required value={platform} onChange={event => setPlatform(event.target.value)} placeholder="platform" /><input required value={accountId} onChange={event => setAccountId(event.target.value)} placeholder="account ID" /><input required value={profileId} onChange={event => setProfileId(event.target.value)} placeholder="Camoufox profile" /><input required value={identityReference} onChange={event => setIdentityReference(event.target.value)} placeholder="https://www.linkedin.com/in/..." /><input required value={username} onChange={event => setUsername(event.target.value)} placeholder="username" autoComplete="username" /><input required type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="password" autoComplete="current-password" /><button className="primary-button" type="submit">Lưu và chạy Agent</button></form>{status ? <small>{status}</small> : null}</section>
+}
 function savedScope(key: string, fallback: string) {
   try {
     return window.localStorage.getItem(`growth-dashboard-${key}`) || fallback
@@ -2466,6 +2485,7 @@ export default function App() {
         }
       />
       <main className="main">
+        <AccountOnboardingPanel refresh={load} />
         {Object.keys(data).length > 0 && !error ? (
           <DashboardScopeBar
             data={scopedData}

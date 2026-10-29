@@ -25,6 +25,7 @@ import { observeCamoufoxSessionMetadata } from "./camoufox-session-observer.mjs"
 import { probeCamoufoxRuntime } from "./camoufox-runtime-probe.mjs";
 import { readCoordinatorProjection } from "./project-coordinator-projection.mjs";
 import { accountCredentialStatus, storeAccountCredentials } from "./account-credentials.mjs";
+import { runCamoufoxAccountAgent } from "./camoufox-account-agent.mjs";
 import { completeNineRouter, connectNineRouter, nineRouterStatus, selectNineRouterModel } from "./nine-router.mjs";
 
 async function loadLocalEnv() {
@@ -161,6 +162,9 @@ const service = new SeedingService(store, {
   }),
   sessionReadinessObservation: () => observeCamoufoxSessionMetadata(camoufoxSessionMetadataFile),
   ...(configuredOiBrowserProvider ? { oiBrowserProviders: [configuredOiBrowserProvider] } : {})
+  ,accountAgentRunner: configuredExecutionSessionResolver
+    ? ({ account }) => runCamoufoxAccountAgent({ account, resolver: configuredExecutionSessionResolver })
+    : null
 });
 const platformAdapterRegistry = new PlatformAdapterRegistry();
 // The production lane is fail-closed until an explicit, platform/runtime
@@ -729,7 +733,11 @@ const server = http.createServer(async (request, response) => {
     }
     if (request.method === "POST" && url.pathname === "/api/account-credentials") {
       if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
-      return sendJson(response, 201, await storeAccountCredentials(await readJson(request)));
+      const input = await readJson(request);
+      const { platform, accountId, username, password, ...metadata } = input || {};
+      const credential = await storeAccountCredentials({ platform, accountId, username, password });
+      const result = await service.onboardExecutionAccount({ ...metadata, platform, accountId, username, password, storeCredentials: async () => credential }, actor);
+      return sendJson(response, 201, result);
     }
     const credentialMatch = url.pathname.match(/^\/api\/account-credentials\/([^/]+)\/([^/]+)$/);
     if (request.method === "GET" && credentialMatch) {

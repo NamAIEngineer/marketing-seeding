@@ -17,9 +17,10 @@ test("Camoufox login uses Keychain credentials and returns bounded success witho
     async snapshot() { return submitted ? "Home Feed Profile Sign out" : "Sign in Password Email"; },
     async resolve(page, query) { const text = String(query); return text.includes("password") ? "pw" : text.includes("sign") ? "submit" : "user"; },
     async fill(page, ref, value) { calls.push(["fill", ref, value]); },
-    async click(target) { submitted = true; calls.push(["click", target.ref]); }
+    async click(target) { submitted = true; calls.push(["click", target.ref]); },
+    async observeIdentity() { return { identityReference: "https://www.linkedin.com/in/camoufox-login-test", ambiguous: false }; }
   };
-  const result = await loginAccountWithCamoufox({ platform: "linkedin", accountId: "camoufox-login-test", protocol, pageId: "page" });
+  const result = await loginAccountWithCamoufox({ platform: "linkedin", accountId: "camoufox-login-test", protocol, pageId: "page", expectedIdentity: "https://www.linkedin.com/in/camoufox-login-test" });
   assert.equal(result.status, "READY");
   assert.equal(JSON.stringify(result).includes("password"), false);
 });
