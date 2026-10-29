@@ -2,11 +2,11 @@
 
 ## Status
 
-`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; current C candidate source/test checkpoint: `85913e984a4c45c2278be2fe644055426a1455c4`; current documentation/evidence HEAD before this update: `358b7ce20eb8be5e61a2d1e2601eb86c185434b3`; current Listening V5 artifact: `v5-restart-evidence-20261029.json`; prior integration evidence checkpoint: `7f2b74a`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
+`PARTIAL`. Integration base: `79985bb411afc141f0edf10ae635fb91824d8bc9`; current C candidate source/test checkpoint: `85913e984a4c45c2278be2fe644055426a1455c4`; current documentation/evidence HEAD: `335232f89bbe85adefb94afb7739a91efb429f85`; current Listening V5 artifact: `v5-restart-evidence-20261029.json`; prior integration evidence checkpoint: `7f2b74a`. Live publication, live metrics/conversion, authenticated Camoufox readiness, Auto-GTM generation/media, and A's dirty overlay reconciliation remain unproven.
 
 ### Current candidate source of truth (2026-10-29)
 
-- C branch: `integration/session-c-reconciled`; remote matches documentation HEAD `358b7ce20eb8be5e61a2d1e2601eb86c185434b3`.
+- C branch: `integration/session-c-reconciled`; remote matches documentation HEAD `335232f89bbe85adefb94afb7739a91efb429f85`.
 - Product source/test evidence is pinned to `85913e984a4c45c2278be2fe644055426a1455c4`; documentation commits after that revision do not change product behavior.
 - Coordinator acceptance/recovery slice is `IMPLEMENTED`: versioned acceptance checks, source/evidence fences, bounded attempt/runtime limits, durable repair/next-task scheduling, and restart/idempotent replay are in `src/project-coordinator.mjs`.
 - Coordinator/native focused checks at this source revision: `node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs` → `20/20 pass`.
