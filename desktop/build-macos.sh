@@ -7,6 +7,8 @@ OUTPUT="$ROOT/desktop/dist"
 APP="$OUTPUT/Marketing Seeding OS.app"
 NODE_BIN=$(command -v node)
 SWIFT_BIN=$(command -v swiftc)
+NPM_BIN=$(command -v npm || true)
+NPM_ROOT=$(npm root -g 2>/dev/null || true)
 
 test -f "$SOURCE/src/server.mjs"
 test -d "$SOURCE/public"
@@ -21,6 +23,8 @@ ditto "$SOURCE/scripts" "$APP/Contents/Resources/app/scripts"
 ditto "$SOURCE/desktop/provision-9router.sh" "$APP/Contents/Resources/app/provision-9router.sh"
 ditto "$SOURCE/desktop/update-macos.sh" "$APP/Contents/Resources/app/update-macos.sh"
 cp "$NODE_BIN" "$APP/Contents/Resources/bin/node"
+if [ -n "$NPM_BIN" ]; then cp "$NPM_BIN" "$APP/Contents/Resources/bin/npm"; fi
+if [ -n "$NPM_ROOT" ] && [ -d "$NPM_ROOT/npm" ]; then ditto "$NPM_ROOT/npm" "$APP/Contents/Resources/lib/node_modules/npm"; fi
 cp "$SOURCE/package.json" "$APP/Contents/Resources/app/package.json"
 git -C "$SOURCE" rev-parse HEAD > "$APP/Contents/Resources/app/source-commit.txt"
 "$SWIFT_BIN" "$SOURCE/desktop/MarketingSeedingApp.swift" -o "$APP/Contents/MacOS/webview" -framework Cocoa -framework WebKit
@@ -102,11 +106,18 @@ export SEEDING_AUTOMATION_TOKEN=$(cat "$DATA_ROOT/automation-token")
 export SEEDING_HOST=127.0.0.1
 export SEEDING_PORT=4321
 export SEEDING_9ROUTER_ENDPOINT="${SEEDING_9ROUTER_ENDPOINT:-http://127.0.0.1:20128/v1}"
+export SEEDING_NODE_BIN="$APP_ROOT/../bin/node"
+export SEEDING_NPM_BIN="$APP_ROOT/../bin/npm"
+export PATH="$APP_ROOT/../bin:$APP_ROOT/../lib/node_modules/npm/bin:$PATH"
 export SEEDING_BUILD_COMMIT=$(cat "$APP_ROOT/source-commit.txt")
 export SEEDING_BUILD_DIRTY=false
 export SEEDING_9ROUTER_ENDPOINT="${SEEDING_9ROUTER_ENDPOINT:-http://127.0.0.1:20128/v1}"
 if [ -x "$APP_ROOT/provision-9router.sh" ]; then
-  "$APP_ROOT/provision-9router.sh" "$DATA_ROOT" >/dev/null 2>&1 || true
+  if ! "$APP_ROOT/provision-9router.sh" "$DATA_ROOT" >"$DATA_ROOT/9router-provision-command" 2>"$DATA_ROOT/9router-provision-error"; then
+    printf '%s\n' "provision_failed" >"$DATA_ROOT/9router-provision-status"
+  else
+    printf '%s\n' "ready" >"$DATA_ROOT/9router-provision-status"
+  fi
 fi
 cd "$APP_ROOT"
 exec "$NODE" src/server.mjs

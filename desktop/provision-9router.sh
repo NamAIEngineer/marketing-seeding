@@ -13,9 +13,13 @@ if [ -n "$COMMAND" ]; then
   [ "$VERSION" = "$PINNED_VERSION" ] || COMMAND=""
 fi
 if [ -z "$COMMAND" ]; then
+  if [ ! -x "${SEEDING_NPM_BIN:-}" ]; then
+    echo "9Router provisioning unavailable: bundled npm missing" >&2
+    exit 2
+  fi
   mkdir -p "$RUNTIME"
   if [ ! -x "$RUNTIME/node_modules/.bin/9router" ]; then
-    npm install --prefix "$RUNTIME" --no-save --ignore-scripts "9router@$PINNED_VERSION"
+    PATH="$(dirname "$SEEDING_NPM_BIN"):${PATH:-}" "$SEEDING_NPM_BIN" install --prefix "$RUNTIME" --no-save --ignore-scripts "9router@$PINNED_VERSION"
   fi
   COMMAND="$RUNTIME/node_modules/.bin/9router"
 fi

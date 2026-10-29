@@ -24,6 +24,7 @@ import { projectMarketDashboard, projectMarketOpportunities } from "./market-int
 import { observeCamoufoxSessionMetadata } from "./camoufox-session-observer.mjs";
 import { probeCamoufoxRuntime } from "./camoufox-runtime-probe.mjs";
 import { readCoordinatorProjection } from "./project-coordinator-projection.mjs";
+import { accountCredentialStatus, storeAccountCredentials } from "./account-credentials.mjs";
 import { completeNineRouter, connectNineRouter, nineRouterStatus, selectNineRouterModel } from "./nine-router.mjs";
 
 async function loadLocalEnv() {
@@ -725,6 +726,15 @@ const server = http.createServer(async (request, response) => {
     if (request.method === "POST" && url.pathname === "/api/9router/chat") {
       if (role !== "operator" && role !== "automation") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
       return sendJson(response, 200, await completeNineRouter(await readJson(request)));
+    }
+    if (request.method === "POST" && url.pathname === "/api/account-credentials") {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 201, await storeAccountCredentials(await readJson(request)));
+    }
+    const credentialMatch = url.pathname.match(/^\/api\/account-credentials\/([^/]+)\/([^/]+)$/);
+    if (request.method === "GET" && credentialMatch) {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 200, await accountCredentialStatus({ platform: credentialMatch[1], accountId: credentialMatch[2] }));
     }
     let handoffMatch = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/distribution-handoffs$/);
     if (request.method === "GET" && handoffMatch) {
