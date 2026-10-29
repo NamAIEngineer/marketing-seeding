@@ -83,7 +83,7 @@ export SEEDING_OPERATOR_TOKEN=$(cat "$DATA_ROOT/operator-token")
 export SEEDING_AUTOMATION_TOKEN=$(cat "$DATA_ROOT/automation-token")
 export SEEDING_HOST=127.0.0.1
 export SEEDING_PORT=$PORT
-if ! /usr/bin/curl -fsS --max-time 2 "http://127.0.0.1:$PORT/health/live" >/dev/null 2>&1; then
+if ! /usr/bin/curl -fsS --max-time 2 "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then
   LABEL=ai.marketing-seeding.packaged
   PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
   mkdir -p "$HOME/Library/LaunchAgents"
@@ -103,7 +103,7 @@ EOF
   /bin/launchctl bootstrap "gui/$(id -u)" "$PLIST"
   READY=0
   for ATTEMPT in 1 2 3 4 5 6 7 8 9 10; do
-    if /usr/bin/curl -fsS --max-time 2 "http://127.0.0.1:$PORT/health/live" >/dev/null 2>&1; then READY=1; break; fi
+    if /usr/bin/curl -fsS --max-time 2 "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then READY=1; break; fi
     sleep 1
   done
   if [ "$READY" -ne 1 ]; then

@@ -27,6 +27,7 @@ test("update discovery verifies an Ed25519 manifest when a release key is config
   const priorUrl = process.env.SEEDING_RELEASE_MANIFEST_URL;
   const priorVersion = process.env.SEEDING_BUILD_VERSION;
   const priorKey = process.env.SEEDING_UPDATE_PUBLIC_KEY;
+  const priorInstaller = process.env.SEEDING_UPDATE_INSTALLER_ENABLED;
   const { generateKeyPairSync, sign } = await import("node:crypto");
   const { publicKey, privateKey } = generateKeyPairSync("ed25519");
   const publicPem = publicKey.export({ type: "spki", format: "pem" });
@@ -35,14 +36,45 @@ test("update discovery verifies an Ed25519 manifest when a release key is config
   process.env.SEEDING_RELEASE_MANIFEST_URL = "https://updates.example.test/manifest.json";
   process.env.SEEDING_BUILD_VERSION = "0.3.0";
   process.env.SEEDING_UPDATE_PUBLIC_KEY = publicPem;
+  delete process.env.SEEDING_UPDATE_INSTALLER_ENABLED;
   try {
     const result = await discoverUpdate({ fetchImpl: async () => ({ ok: true, status: 200, async text() { return JSON.stringify({ ...fields, signature }); } }) });
     assert.equal(result.signatureVerified, true);
+    assert.equal(result.automaticUpdates, false);
+    assert.equal(result.installEligible, false);
+    assert.match(result.reason, /installer is not configured/i);
+  } finally {
+    if (priorUrl === undefined) delete process.env.SEEDING_RELEASE_MANIFEST_URL; else process.env.SEEDING_RELEASE_MANIFEST_URL = priorUrl;
+    if (priorVersion === undefined) delete process.env.SEEDING_BUILD_VERSION; else process.env.SEEDING_BUILD_VERSION = priorVersion;
+    if (priorKey === undefined) delete process.env.SEEDING_UPDATE_PUBLIC_KEY; else process.env.SEEDING_UPDATE_PUBLIC_KEY = priorKey;
+    if (priorInstaller === undefined) delete process.env.SEEDING_UPDATE_INSTALLER_ENABLED; else process.env.SEEDING_UPDATE_INSTALLER_ENABLED = priorInstaller;
+  }
+});
+
+test("update discovery marks a signed release installable only with an explicit installer", async () => {
+  const priorUrl = process.env.SEEDING_RELEASE_MANIFEST_URL;
+  const priorVersion = process.env.SEEDING_BUILD_VERSION;
+  const priorKey = process.env.SEEDING_UPDATE_PUBLIC_KEY;
+  const priorInstaller = process.env.SEEDING_UPDATE_INSTALLER_ENABLED;
+  const { generateKeyPairSync, sign } = await import("node:crypto");
+  const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+  const publicPem = publicKey.export({ type: "spki", format: "pem" });
+  const fields = { version: "0.4.0", downloadUrl: "https://updates.example.test/app.zip", sha256: "c".repeat(64) };
+  const signature = sign(null, Buffer.from(JSON.stringify(fields)), privateKey).toString("base64");
+  process.env.SEEDING_RELEASE_MANIFEST_URL = "https://updates.example.test/manifest.json";
+  process.env.SEEDING_BUILD_VERSION = "0.3.0";
+  process.env.SEEDING_UPDATE_PUBLIC_KEY = publicPem;
+  process.env.SEEDING_UPDATE_INSTALLER_ENABLED = "true";
+  try {
+    const result = await discoverUpdate({ fetchImpl: async () => ({ ok: true, status: 200, async text() { return JSON.stringify({ ...fields, signature }); } }) });
+    assert.equal(result.signatureVerified, true);
+    assert.equal(result.automaticUpdates, true);
     assert.equal(result.installEligible, true);
   } finally {
     if (priorUrl === undefined) delete process.env.SEEDING_RELEASE_MANIFEST_URL; else process.env.SEEDING_RELEASE_MANIFEST_URL = priorUrl;
     if (priorVersion === undefined) delete process.env.SEEDING_BUILD_VERSION; else process.env.SEEDING_BUILD_VERSION = priorVersion;
     if (priorKey === undefined) delete process.env.SEEDING_UPDATE_PUBLIC_KEY; else process.env.SEEDING_UPDATE_PUBLIC_KEY = priorKey;
+    if (priorInstaller === undefined) delete process.env.SEEDING_UPDATE_INSTALLER_ENABLED; else process.env.SEEDING_UPDATE_INSTALLER_ENABLED = priorInstaller;
   }
 });
 

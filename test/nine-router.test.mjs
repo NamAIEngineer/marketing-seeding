@@ -51,3 +51,12 @@ test("9Router cooldown removes a failing model from automatic selection", async 
   assert.equal(selected.status.lastRequest, null);
 });
 
+test("9Router rejects unknown capabilities for specialized tasks", async () => {
+  process.env.SEEDING_9ROUTER_API_KEY = "fixture-key";
+  process.env.SEEDING_9ROUTER_ENDPOINT = "http://fixture-9router.test/v1";
+  globalThis.fetch = async () => response({ data: [{ id: "fixture-unknown" }] });
+  const selected = await selectNineRouterModel({ task: "media", preferredModel: "fixture-unknown" });
+  assert.equal(selected.model, null);
+  assert.match(selected.reason, /incompatible|empty/i);
+});
+

@@ -20,7 +20,15 @@ NEW_APP=$(find "$TMP_DIR/unpacked" -maxdepth 2 -name '*.app' -print -quit)
 [ -f "$DATA_ROOT/state.json" ] && /usr/bin/cp "$DATA_ROOT/state.json" "$BACKUP/state.json"
 TARGET_DIR=$(dirname "$APP")
 STAGED="$TARGET_DIR/.Marketing-Seeding-OS.new.app"
+OLD="$TARGET_DIR/.Marketing-Seeding-OS.previous.app"
 rm -rf "$STAGED"
+rm -rf "$OLD"
 /usr/bin/ditto "$NEW_APP" "$STAGED"
-/usr/bin/mv "$STAGED" "$APP"
+/usr/bin/mv "$APP" "$OLD"
+if ! /usr/bin/mv "$STAGED" "$APP"; then
+  /usr/bin/mv "$OLD" "$APP" || true
+  echo "update swap failed; previous app restored" >&2
+  exit 1
+fi
+rm -rf "$OLD"
 echo "updated; durable state backup: $BACKUP"

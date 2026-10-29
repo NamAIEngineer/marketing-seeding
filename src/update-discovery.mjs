@@ -7,6 +7,13 @@ function currentVersion() {
   return text(process.env.SEEDING_BUILD_VERSION || "0.3.0", 80);
 }
 
+function automaticInstallerEnabled() {
+  // Discovery is safe by default. Installing an app bundle requires an
+  // explicitly configured, operator-owned installer seam; a signed manifest
+  // alone must never claim that the running app can self-update.
+  return String(process.env.SEEDING_UPDATE_INSTALLER_ENABLED || "").trim().toLowerCase() === "true";
+}
+
 function compareVersions(left, right) {
   const a = String(left || "0").split(".").map((value) => Number.parseInt(value, 10) || 0);
   const b = String(right || "0").split(".").map((value) => Number.parseInt(value, 10) || 0);
@@ -61,13 +68,14 @@ export async function discoverUpdate({ fetchImpl = globalThis.fetch, timeoutMs =
   try {
     const response = await fetchImpl(url, { signal: controller.signal, headers: { accept: "application/json" } });
     const body = await response.text();
-    if (!response.ok) return { status: "UNAVAILABLE", currentVersion: current, checkedAt: new Date().toISOString(), manifest: null, updateAvailable: false, automaticUpdates: true, reason: `release manifest HTTP ${response.status}` };
+    if (!response.ok) return { status: "UNAVAILABLE", currentVersion: current, checkedAt: new Date().toISOString(), manifest: null, updateAvailable: false, automaticUpdates: false, installEligible: false, reason: `release manifest HTTP ${response.status}` };
     const manifest = normalizeManifest(JSON.parse(body), url);
     const signature = verifyManifestSignature(manifest);
     const updateAvailable = compareVersions(manifest.version, current) > 0;
-    return { status: "READY", currentVersion: current, checkedAt: new Date().toISOString(), manifest, updateAvailable, automaticUpdates: true, signatureVerified: signature.verified, signatureConfigured: signature.configured, reason: signature.reason, installEligible: updateAvailable && signature.verified };
+    const installerEnabled = automaticInstallerEnabled();
+    return { status: "READY", currentVersion: current, checkedAt: new Date().toISOString(), manifest, updateAvailable, automaticUpdates: installerEnabled && signature.verified, signatureVerified: signature.verified, signatureConfigured: signature.configured, reason: installerEnabled && signature.verified ? signature.reason : `${signature.reason}; automatic installer is not configured`, installEligible: updateAvailable && signature.verified && installerEnabled };
   } catch (error) {
-    return { status: error?.name === "AbortError" ? "TIMEOUT" : "UNAVAILABLE", currentVersion: current, checkedAt: new Date().toISOString(), manifest: null, updateAvailable: false, automaticUpdates: true, reason: text(error?.message || "release manifest unavailable") };
+    return { status: error?.name === "AbortError" ? "TIMEOUT" : "UNAVAILABLE", currentVersion: current, checkedAt: new Date().toISOString(), manifest: null, updateAvailable: false, automaticUpdates: false, installEligible: false, reason: text(error?.message || "release manifest unavailable") };
   } finally { clearTimeout(timer); }
 }
 

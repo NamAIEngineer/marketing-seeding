@@ -161,7 +161,11 @@ function taskRequirements(task) {
 
 function modelSupportsTask(model, task) {
   const required = taskRequirements(task);
-  if (!required.length || !model.capabilities?.length) return true;
+  // A specialized task requires explicit capability evidence from the live
+  // authenticated catalog. Unknown/omitted capabilities are not proof of
+  // compatibility and must stay out of automatic selection.
+  if (!required.length) return true;
+  if (!Array.isArray(model.capabilities) || !model.capabilities.length) return false;
   return required.every((item) => model.capabilities.includes(item) || model.capabilities.includes(`supports_${item}`));
 }
 
