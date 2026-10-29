@@ -1,0 +1,102 @@
+name: macOS desktop CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    name: Node 22 / desktop package
+    runs-on: macos-14
+    env:
+      # These are optional release-environment inputs. Normal CI deliberately
+      # builds unsigned and reports that state instead of implying Gatekeeper
+      # or notarization proof.
+      SEEDING_CODESIGN_IDENTITY: ${{ secrets.SEEDING_CODESIGN_IDENTITY }}
+      SEEDING_NOTARY_PROFILE: ${{ secrets.SEEDING_NOTARY_PROFILE }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install npm metadata without optional native packages
+        run: npm install --omit=optional --ignore-scripts --no-audit --no-fund --package-lock=false
+
+      - name: Verify Node.js runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --version
+          npm --version
+          node -e 'if (Number(process.versions.node.split(".")[0]) < 22) process.exit(1)'
+
+      - name: Run full test suite
+        run: npm test
+
+      - name: Validate shell scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' script; do
+            echo "sh -n $script"
+            sh -n "$script"
+          done < <(find desktop -type f -name '*.sh' -print0)
+
+      - name: Build macOS desktop app
+        run: sh desktop/build-macos.sh
+
+      - name: Verify bundle source stamp and identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          app='desktop/dist/Marketing Seeding OS.app'
+          expected_commit="$(git rev-parse HEAD)"
+          test "$(cat "$app/Contents/Resources/app/source-commit.txt")" = "$expected_commit"
+          test "$(/usr/bin/plutil -extract CFBundleIdentifier raw -o - "$app/Contents/Info.plist")" = 'ai.marketing-seeding.local'
+          test "$(/usr/bin/plutil -extract CFBundleExecutable raw -o - "$app/Contents/Info.plist")" = 'launch'
+          test -x "$app/Contents/MacOS/launch"
+          test -x "$app/Contents/MacOS/service"
+          test -f "$app/Contents/Resources/app/9router-provenance.json"
+          test -x "$app/Contents/Resources/app/provision-9router.sh"
+          test -x "$app/Contents/Resources/app/update-macos.sh"
+
+      - name: Report unsigned CI build
+        if: env.SEEDING_CODESIGN_IDENTITY == ''
+        run: |
+          test "$(cat 'desktop/dist/Marketing Seeding OS.app/Contents/Resources/app/signing-status.txt')" = 'unsigned:no_codesign_identity_configured'
+          echo 'Unsigned CI artifact: Apple signing identity and notarization credentials are not configured.'
+          echo 'Gatekeeper acceptance is not claimed.'
+
+      - name: Verify configured signed build
+        if: env.SEEDING_CODESIGN_IDENTITY != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          app='desktop/dist/Marketing Seeding OS.app'
+          grep -q '^signed:' "$app/Contents/Resources/app/signing-status.txt"
+          /usr/bin/codesign --verify --deep --strict "$app"
+
+      - name: Upload macOS desktop artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: marketing-seeding-macos-${{ github.sha }}
+          path: |
+            desktop/dist/Marketing-Seeding-OS-macOS.zip
+            desktop/dist/Marketing Seeding OS.app
+          if-no-files-found: error
+          retention-days: 14
