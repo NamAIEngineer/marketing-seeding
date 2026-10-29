@@ -133,6 +133,17 @@ test("account identity READY does not imply community posting rights", async () 
   assert.equal(result.postingRights.reason, "target_membership_or_rules_required");
 });
 
+test("Facebook numeric profile.php identity preserves the query id", () => {
+  assert.equal(
+    normalizeCamoufoxIdentityReference("facebook_group", "https://www.facebook.com/profile.php?id=123456789"),
+    "https://facebook.com/profile.php?id=123456789"
+  );
+  assert.equal(
+    normalizeCamoufoxIdentityReference("facebook_group", "https://facebook.com/profile.php?id=123456789&utm_source=fixture"),
+    "https://facebook.com/profile.php?id=123456789"
+  );
+});
+
 for (const platform of ["facebook_group", "reddit", "product_hunt", "indie_hackers"]) {
   test(`${platform} requires accepted rules evidence before posting-rights READY`, async () => {
     const adapter = getCamoufoxPlatformLoginAdapter(platform);

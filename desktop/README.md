@@ -44,12 +44,13 @@ evidence.
 
 `update-macos.sh` is the reversible update seam: HTTPS release download,
 SHA-256 pin, strict code-signature verification, previous app/state backup and
-atomic staged swap with rollback on rename failure. Discovery remains
-read-only unless the operator explicitly configures a signed installer; set
-`SEEDING_UPDATE_INSTALLER_ENABLED=true` only alongside a release process that
-invokes the updater and verifies the target bundle. The app reports
-`automaticUpdates=false` and `installEligible=false` by default because this
-checkout has no installer or Apple signing identity.
+atomic staged swap with rollback on rename failure. Overview displays discovery,
+signature, checksum and installer eligibility. After the operator connects the
+local session, the install action invokes the bundled updater only when all
+gates pass; malformed manifests fail closed and a successful swap shuts down
+the service for relaunch. Discovery remains read-only by default because this
+checkout has no signed release manifest, installer configuration or Apple
+signing identity.
 
 For release builds, set `SEEDING_CODESIGN_IDENTITY` to a Developer ID
 Application identity before running `build-macos.sh`; the script then signs the

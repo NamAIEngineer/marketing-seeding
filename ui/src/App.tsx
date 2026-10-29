@@ -2321,6 +2321,53 @@ function OperatorSessionPanel({ refresh }: { refresh: () => void }) {
   return <section className="panel full-span"><div className="panel-head"><div><h2>Phiên vận hành cục bộ</h2><p>Token chỉ nằm trong sessionStorage của cửa sổ này; không lưu vào state hoặc repo.</p></div></div><form onSubmit={connect} className="scope-selects"><input required type="password" value={token} onChange={event => setToken(event.target.value)} placeholder="operator token" autoComplete="off" /><button className="primary-button" type="submit">Kết nối</button><button type="button" className="secondary-button" onClick={() => { sessionStorage.removeItem("seedingOperatorToken"); setStatus("Đã ngắt phiên"); refresh() }}>Ngắt</button></form>{status ? <small>{status}</small> : null}</section>
 }
 
+function UpdatePanel({ data, refresh }: { data: R, refresh: () => void }) {
+  const update = data?.update && typeof data.update === "object" ? data.update : {}
+  const [status, setStatus] = useState("")
+  const [busy, setBusy] = useState(false)
+  const token = () => {
+    try { return sessionStorage.getItem("seedingOperatorToken") || "" } catch { return "" }
+  }
+  const check = async () => {
+    setBusy(true)
+    try {
+      const response = await fetch("/api/update/status", { cache: "no-store" })
+      const body = await response.json()
+      if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`)
+      setStatus(`${body.status || "UNKNOWN"}: ${body.reason || "đã kiểm tra"}`)
+      refresh()
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Không thể kiểm tra cập nhật")
+    } finally { setBusy(false) }
+  }
+  const install = async () => {
+    const operatorToken = token()
+    if (!operatorToken) { setStatus("Kết nối token vận hành trước"); return }
+    setBusy(true)
+    setStatus("Đang xác minh manifest, checksum và chữ ký…")
+    try {
+      const response = await fetch("/api/update/install", {
+        method: "POST",
+        headers: { authorization: `Bearer ${operatorToken}` },
+      })
+      const body = await response.json()
+      if (!response.ok && response.status !== 202) throw new Error(body?.error || body?.installation?.reason || `HTTP ${response.status}`)
+      setStatus(body?.installation?.reason || "Cập nhật đã được cài; ứng dụng cần khởi động lại")
+      refresh()
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Không thể cài cập nhật")
+    } finally { setBusy(false) }
+  }
+  const eligible = update.installEligible === true && update.automaticUpdates === true && update.signatureVerified === true
+  const installStatus = update.installation?.status
+  return <section className="panel full-span" aria-label="Cập nhật ứng dụng">
+    <div className="panel-head"><div><h2>Cập nhật ứng dụng</h2><p>Manifest HTTPS, SHA-256, chữ ký Ed25519 và updater macOS phải được xác minh trước khi cài. Tài khoản, campaign, lịch và lịch sử vẫn nằm ngoài app bundle.</p></div><span className={`status ${eligible ? "ready" : "pending"}`}>{String(update.status || "NOT_CONFIGURED")}</span></div>
+    <div className="scope-summary"><span>Phiên bản hiện tại: {String(update.currentVersion || "UNKNOWN")}</span><span>{update.updateAvailable ? `Bản mới: ${String(update.manifest?.version || "UNKNOWN")}` : "Không có bản mới đã xác minh"}</span><span>Chữ ký: {update.signatureVerified ? "VERIFIED" : "UNVERIFIED"}</span><span>Installer: {update.installEligible ? "ELIGIBLE" : "BLOCKED"}</span></div>
+    <div className="scope-selects"><button type="button" className="secondary-button" onClick={check} disabled={busy}>{busy ? "Đang kiểm tra…" : "Kiểm tra cập nhật"}</button><button type="button" className="primary-button" onClick={install} disabled={busy || !eligible}>Cài bản cập nhật đã xác minh</button>{installStatus ? <span>{String(installStatus)}</span> : null}</div>
+    <small>{String(update.reason || "Release manifest chưa cấu hình")} {status ? `· ${status}` : ""}</small>
+  </section>
+}
+
 function NineRouterPanel({ data, refresh }: { data: R, refresh: () => void }) {
   const router = data?.nineRouter && typeof data.nineRouter === "object" ? data.nineRouter : {}
   const [task, setTask] = useState("research")
@@ -2601,6 +2648,7 @@ export default function App() {
         <OperatorSessionPanel refresh={load} />
         <AccountOnboardingPanel refresh={load} />
         <NineRouterPanel data={data} refresh={load} />
+        <UpdatePanel data={data} refresh={load} />
         <FanoutPlannerPanel data={data} refresh={load} />
         {Object.keys(data).length > 0 && !error ? (
           <DashboardScopeBar

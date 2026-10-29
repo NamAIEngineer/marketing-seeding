@@ -79,4 +79,23 @@ export async function discoverUpdate({ fetchImpl = globalThis.fetch, timeoutMs =
   } finally { clearTimeout(timer); }
 }
 
+/**
+ * Bounded result used by scheduled discovery callers. A transport/parser
+ * failure must never inherit an optimistic automaticUpdates value from a
+ * previous result or caller default.
+ */
+export function unavailableUpdateResult(error, { current = currentVersion() } = {}) {
+  return {
+    status: "UNAVAILABLE",
+    currentVersion: text(current, 80),
+    checkedAt: new Date().toISOString(),
+    manifest: null,
+    updateAvailable: false,
+    automaticUpdates: false,
+    installEligible: false,
+    signatureVerified: false,
+    reason: text(error?.message || error || "update discovery failed")
+  };
+}
+
 export { compareVersions };

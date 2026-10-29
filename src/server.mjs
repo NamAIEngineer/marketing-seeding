@@ -37,7 +37,8 @@ import { createAutoCamoufoxAccountAgentRunner, createAutoCamoufoxExecutionSessio
 import { completeNineRouter, connectNineRouter, nineRouterStatus, selectNineRouterModel } from "./nine-router.mjs";
 import { runListeningExtraction, persistListeningRun } from "./listening-adapter.mjs";
 import { normalizeBackend, createListeningJobId } from "./listening-contract.mjs";
-import { discoverUpdate } from "./update-discovery.mjs";
+import { discoverUpdate, unavailableUpdateResult } from "./update-discovery.mjs";
+import { installDiscoveredUpdate } from "./update-installer.mjs";
 import { readDesktopProvisioningStatus } from "./desktop-provisioning.mjs";
 import { ensureContentRuntime } from "./product-content-runtime.mjs";
 
@@ -270,6 +271,11 @@ const updateRuntime = { enabled: updatePollMinutes > 0, intervalMinutes: updateP
 let contentRuntimeCache = null;
 let contentRuntimeCacheAt = 0;
 const contentRuntimeAutoProvision = process.env.SEEDING_CONTENT_AUTO_PROVISION === "true";
+
+async function safeDiscoverUpdate() {
+  try { return await discoverUpdate(); }
+  catch (error) { return unavailableUpdateResult(error); }
+}
 const contentRuntimeProvision = { enabled: contentRuntimeAutoProvision, attempted: false, running: false, startedAt: null, completedAt: null, error: null };
 function projectContentRuntime(runtime) {
   return {
@@ -477,8 +483,8 @@ function scheduleUpdateDiscovery(delayMs = updatePollMinutes * 60_000) {
     if (updateRuntime.running || shuttingDown) return scheduleUpdateDiscovery();
     updateRuntime.running = true;
     updateRuntime.lastStartedAt = new Date().toISOString();
-    try { updateRuntime.result = await discoverUpdate(); }
-    catch (error) { updateRuntime.result = { status: "UNAVAILABLE", updateAvailable: false, automaticUpdates: true, reason: String(error?.message || "update discovery failed").slice(0, 240) }; }
+    try { updateRuntime.result = await safeDiscoverUpdate(); }
+    catch (error) { updateRuntime.result = unavailableUpdateResult(error); }
     finally {
       updateRuntime.running = false;
       updateRuntime.lastCompletedAt = new Date().toISOString();
@@ -852,7 +858,7 @@ const server = http.createServer(async (request, response) => {
         autoGtm,
         marketIntelligence: projectMarketDashboard(autoGtm),
         nineRouter: await nineRouterStatus({ refresh: false }),
-        update: updateRuntime.result || await discoverUpdate(),
+        update: updateRuntime.result || await safeDiscoverUpdate(),
         contentRuntime: await readContentRuntimeStatus(),
         provisioning: await readDesktopProvisioningStatus(dataDir),
         automation: {
@@ -871,10 +877,19 @@ const server = http.createServer(async (request, response) => {
       return sendJson(response, 200, await nineRouterStatus({ refresh: true }));
     }
     if (request.method === "GET" && url.pathname === "/api/update/status") {
-      const result = await discoverUpdate();
+      const result = await safeDiscoverUpdate();
       updateRuntime.result = result;
       updateRuntime.lastCompletedAt = new Date().toISOString();
       return sendJson(response, 200, result);
+    }
+    if (request.method === "POST" && url.pathname === "/api/update/install") {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      const discovered = await safeDiscoverUpdate();
+      const installation = await installDiscoveredUpdate(discovered);
+      updateRuntime.result = { ...discovered, installation };
+      updateRuntime.lastCompletedAt = new Date().toISOString();
+      if (installation.status === "INSTALLED") setImmediate(shutdown);
+      return sendJson(response, installation.status === "INSTALLED" ? 202 : 200, updateRuntime.result);
     }
     if (request.method === "GET" && url.pathname === "/api/content-runtime/status") {
       return sendJson(response, 200, await readContentRuntimeStatus({ refresh: true }));

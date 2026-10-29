@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, writeFile, mkdir, access } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
@@ -15,6 +15,54 @@ test("packaged launcher probes the server's /health route", async () => {
   assert.equal(launcher.includes("/health/live"), false);
   assert.ok((launcher.match(/\/health/g) || []).length >= 2);
   assert.match(server, /url\.pathname === ["']\/health["']/);
+});
+
+test("malformed update manifest is fail-closed through the server route", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-update-server-"));
+  const token = "o".repeat(64);
+  const automationToken = "a".repeat(64);
+  const child = spawn(process.execPath, ["src/server.mjs"], {
+    cwd: root,
+    env: {
+      ...process.env,
+      SEEDING_DATA_DIR: dataDir,
+      SEEDING_HOST: "127.0.0.1",
+      SEEDING_PORT: "0",
+      SEEDING_OPERATOR_TOKEN: token,
+      SEEDING_AUTOMATION_TOKEN: automationToken,
+      SEEDING_RELEASE_MANIFEST_URL: "not-a-url",
+      SEEDING_UPDATE_POLL_MINUTES: "0",
+      SEEDING_TRAFFIC_POLL_MINUTES: "0",
+      SEEDING_DISCOVERY_POLL_MINUTES: "0",
+      SEEDING_JEV_WORKER_ENABLED: "false",
+      SEEDING_CONTENT_AUTO_PROVISION: "false"
+    },
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  let output = "";
+  const ready = new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`server did not start: ${output}`)), 10_000);
+    child.stdout.on("data", (chunk) => {
+      output += String(chunk);
+      const match = output.match(/dashboard: http:\/\/127\.0\.0\.1:(\d+)/);
+      if (match) { clearTimeout(timer); resolve(Number(match[1])); }
+    });
+    child.once("error", (error) => { clearTimeout(timer); reject(error); });
+    child.stderr.on("data", (chunk) => { output += String(chunk); });
+  });
+  try {
+    const port = await ready;
+    const response = await fetch(`http://127.0.0.1:${port}/api/update/status`);
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.status, "UNAVAILABLE");
+    assert.equal(body.automaticUpdates, false);
+    assert.equal(body.installEligible, false);
+    assert.equal(body.updateAvailable, false);
+  } finally {
+    child.kill("SIGTERM");
+    await new Promise((resolve) => child.once("close", resolve));
+  }
 });
 
 test("update swap installs a new app at exact path and preserves external state", async () => {

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { compareVersions, discoverUpdate } from "../src/update-discovery.mjs";
+import { compareVersions, discoverUpdate, unavailableUpdateResult } from "../src/update-discovery.mjs";
 
 test("update discovery validates HTTPS manifest and reports unsigned verification truthfully", async () => {
   const prior = process.env.SEEDING_RELEASE_MANIFEST_URL;
@@ -82,5 +82,15 @@ test("version comparison is numeric and bounded", () => {
   assert.equal(compareVersions("0.10.0", "0.9.9"), 1);
   assert.equal(compareVersions("1.0.0", "1.0.0"), 0);
   assert.equal(compareVersions("0.2", "0.3"), -1);
+});
+
+test("scheduled discovery fallback is fail-closed on malformed manifests", () => {
+  const result = unavailableUpdateResult(new Error("release manifest JSON is malformed"));
+  assert.equal(result.status, "UNAVAILABLE");
+  assert.equal(result.updateAvailable, false);
+  assert.equal(result.automaticUpdates, false);
+  assert.equal(result.installEligible, false);
+  assert.equal(result.signatureVerified, false);
+  assert.match(result.reason, /malformed/i);
 });
 
