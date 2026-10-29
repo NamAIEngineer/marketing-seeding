@@ -41,6 +41,7 @@ import { accountExecutionBinding, accountTargetBindingMatches, bindingMatches, c
 import { applyMemoryConsolidation, createBrowserExecutionIntent, createBrowserSnapshot, executeBrowserIntent, normalizeBrowserSnapshot, projectOiBrowserIntegration, recordMemoryObservation, retrieveBoundedMemory, retractMemoryEvidence, routeAgentTask, sanitizeBrowserExecutionResult } from "./oi-browser-integration.mjs";
 import { projectAccountAgentMissionControl } from "./account-agent-registry.mjs";
 import { normalizeListeningJob } from "./listening-contract.mjs";
+import { runProductContentPipeline as executeProductContentPipeline } from "./product-content-pipeline.mjs";
 
 export async function pollConfiguredDiscoveries(service, { actor = "scheduled-discovery-observer", shuttingDown = false } = {}) {
   const state = await service.snapshot();
@@ -2452,6 +2453,97 @@ export class SeedingService {
       return run;
     });
     return { ...result.result, persisted: true };
+  }
+
+  /**
+   * Run the grounded product/content/media pipeline against one campaign's
+   * canonical repository. The pipeline itself never publishes; this method
+   * only persists bounded evidence and typed failure state for Overview.
+   */
+  async runProductContentPipeline(campaignId, input = {}, actor = "automation") {
+    const state = await this.store.read();
+    const campaign = requireItem(state.campaigns, campaignId, "Campaign");
+    const productRepo = await requireProductRepo(campaign.productRepo);
+    const runId = String(input.runId || `content-${randomUUID()}`).trim().slice(0, 120);
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(runId)) throw new Error("Invalid content pipeline runId");
+    const outputDir = path.join(path.dirname(path.resolve(this.store.filePath)), "content-runs", campaignId, runId);
+    const productInput = {
+      mode: input.mode || "LOCAL",
+      runId,
+      outputDir,
+      product: {
+        id: String(input.product?.id || campaign.productId || campaign.id),
+        name: String(input.product?.name || campaign.name || campaign.id),
+        repositoryPath: productRepo
+      },
+      campaign: {
+        id: campaign.id,
+        name: campaign.name,
+        callToAction: input.campaign?.callToAction || input.callToAction || campaign.callToAction || "Inspect the evidence."
+      },
+      sources: input.sources,
+      assets: input.assets,
+      targets: input.targets
+    };
+    const result = await executeProductContentPipeline(productInput, {
+      pythonPath: input.pythonPath,
+      ffmpegPath: input.ffmpegPath,
+      durationSeconds: input.durationSeconds,
+      mediaTimeoutMs: input.mediaTimeoutMs,
+      waitSeconds: input.waitSeconds,
+      localBackend: input.localBackend
+    });
+    const boundedEvidence = Array.isArray(result.evidence)
+      ? result.evidence.slice(0, 8).map((item) => ({
+        sourceId: item.sourceId,
+        evidenceId: item.evidenceId,
+        locator: item.locator,
+        relativePath: item.relativePath,
+        sourceType: item.sourceType,
+        title: item.title,
+        sha256: item.sha256,
+        evidenceHash: item.evidenceHash,
+        observedHttpStatus: item.observedHttpStatus ?? null,
+        extractorRevision: item.extractorRevision ?? null
+      }))
+      : [];
+    const persistedRun = {
+      version: Number(result.version) || 1,
+      runId,
+      campaignId,
+      actor: String(actor || "automation").slice(0, 120),
+      mode: productInput.mode,
+      status: result.status === "SUCCEEDED" ? "SUCCEEDED" : "FAILED",
+      reportPath: result.reportPath || null,
+      copyPaths: Array.isArray(result.copyPaths) ? result.copyPaths.slice(0, 16) : [],
+      mp4Path: result.mp4Path || null,
+      evidence: boundedEvidence,
+      media: result.media ? {
+        path: result.media.path || null,
+        bytes: Number.isSafeInteger(result.media.bytes) ? result.media.bytes : null,
+        sha256: result.media.sha256 || null,
+        durationSeconds: Number.isFinite(result.media.durationSeconds) ? result.media.durationSeconds : null,
+        renderer: result.media.renderer || null
+      } : null,
+      failure: result.failure ? {
+        code: String(result.failure.code || "INVALID_INPUT").slice(0, 80),
+        stage: String(result.failure.stage || "pipeline").slice(0, 80),
+        message: String(result.failure.message || "Pipeline failed").slice(0, 500),
+        details: result.failure.details || null
+      } : null,
+      // The pipeline is explicitly side-effect free; failures also do not
+      // publish or mutate external systems.
+      externalSideEffects: false,
+      startedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString()
+    };
+    const persisted = await this.store.mutate(actor, "product_content_pipeline_run_recorded", (nextState) => {
+      const current = requireItem(nextState.campaigns, campaignId, "Campaign");
+      current.contentPipelineRuns = [...(current.contentPipelineRuns || []).filter((item) => item.runId !== runId), persistedRun].slice(-24);
+      current.updatedAt = nowIso();
+      return persistedRun;
+    });
+    return { ...result, ...persisted.result, persisted: true };
   }
 
   /** Inspect the registered repository, build grounded understanding, and persist its handoff. */
@@ -7691,6 +7783,12 @@ export class SeedingService {
       recentStories: newest(state.stories, "createdAt"),
       recentProductFactoryRuns: newest(state.campaigns.flatMap((campaign) => (campaign.productFactoryRuns || []).map((run) => ({ ...run, campaignId: campaign.id }))), "completedAt"),
       productFactoryEvidence: projectFactoryRunEvidence(state.campaigns.flatMap((campaign) => (campaign.productFactoryRuns || []).map((run) => ({ ...run, campaignId: campaign.id })))),
+      recentContentPipelineRuns: newest(state.campaigns.flatMap((campaign) => (campaign.contentPipelineRuns || []).map((run) => ({
+        ...run,
+        campaignId: campaign.id,
+        evidence: Array.isArray(run.evidence) ? run.evidence.slice(0, 8) : [],
+        failure: run.failure || null
+      }))), "completedAt"),
       recentPublicationAttempts: newest(state.publicationAttempts, "preparedAt"),
       fixtureAutomation: {
         mode: "local-fixture",

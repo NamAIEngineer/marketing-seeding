@@ -1924,6 +1924,41 @@ function ProductEvidencePanel({ data }: { data: R }) {
   )
 }
 
+function ContentPipelinePanel({ data }: { data: R }) {
+  const runs = Array.isArray(data?.recentContentPipelineRuns)
+    ? data.recentContentPipelineRuns.slice(0, 6)
+    : []
+  const succeeded = runs.filter((run: R) => run?.status === "SUCCEEDED")
+  const failed = runs.filter((run: R) => run?.status === "FAILED")
+  return (
+    <section className="panel mission-execution-panel full-span" aria-label="Content media pipeline">
+      <div className="panel-head">
+        <div>
+          <h2>Content, report and media</h2>
+          <p>Live pipeline lineage from canonical campaign state. Evidence, copy, MP4 and typed failures stay visible.</p>
+        </div>
+        <span className={`status ${failed.length ? "failed" : succeeded.length ? "completed" : "draft"}`}>
+          {runs.length ? `${succeeded.length} succeeded · ${failed.length} failed` : "No runs"}
+        </span>
+      </div>
+      {!runs.length ? (
+        <div className="empty-state">No content pipeline run has been recorded.</div>
+      ) : (
+        <div className="mission-execution-grid">
+          {runs.map((run: R) => (
+            <article key={`${String(run?.campaignId)}-${String(run?.runId)}`}>
+              <span className="mission-eyebrow">{String(run?.campaignId || "UNKNOWN")}</span>
+              <strong>{String(run?.status || "UNKNOWN")}</strong>
+              <small>{String(run?.mode || "UNKNOWN")} · {Number(run?.evidence?.length || 0)} evidence · {run?.media?.sha256 ? "MP4 verified" : "No MP4"}</small>
+              {run?.failure ? <small>{String(run.failure.code || "FAILED")} · {String(run.failure.message || "")}</small> : null}
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
 function Overview({
   data,
   select,
@@ -1948,6 +1983,7 @@ function Overview({
         <ExecutionEvidencePanel data={data} />
         <ProductFactorySafetyPanel data={data} />
         <ProductEvidencePanel data={data} />
+        <ContentPipelinePanel data={data} />
         <TrafficChart data={data} />
         <TrafficSourcesPanel data={data} />
         <ReadinessPanel data={data} />
