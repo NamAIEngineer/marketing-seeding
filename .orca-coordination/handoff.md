@@ -14,6 +14,7 @@
 - `plans/oi-browser-integration/fixture-run-7378f8c.json`: `FIXTURE_VERIFIED`, controlled Product X / Community A+B, learning-driven before/after candidate change, static browser intent activation, idempotent replay, restart persistence.
 - `plans/oi-browser-integration/server-smoke-7378f8c.json`: `RUNTIME_VERIFIED`, exact source SHA, isolated port `4337`, auth/memory/static snapshot/restart persistence, explicit local-Qwen route success, `feed_not_generated`.
 - Current HEAD evidence: focused browser/provider/service/coordinator/native `52/52`; full `npm test` `814 total, 812 pass, 0 fail, 2 skipped`; Auto-GTM `160/160`, `pip check` clean. Artifact: `plans/oi-browser-integration/regression-final-616377f.json`; output hashes are recorded there. Baseline remains `576/574/0/2`; earlier evidence remains tied to its exact revision.
+- Focused recheck at docs revision `65606a5` against unchanged source/test `85913e9`: `49/49 pass, 0 fail, 0 skipped`; artifact `plans/oi-browser-integration/regression-focused-65606a5.json`, output SHA-256 `de11261bb35be32814d29d41aa1bac04978d7be4adcb89a326ecacb221a05d6f`, artifact SHA-256 `5607d13055af6895199b916e7ec290900f290bc49adb775582b405575b4e24f7`.
 - Durable regression artifact: `plans/oi-browser-integration/regression-final-9875db3.json`, source `9875db3`, remains historical. Service cancellation evidence at `fa3ebda` is historical; current coordinator acceptance evidence is `plans/oi-browser-integration/regression-coordinator-85913e9.json`.
 
 ## Native session evidence

@@ -11,6 +11,7 @@
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
 - Candidate source/test revision: `85913e984a4c45c2278be2fe644055426a1455c4`; current Listening V5 regression run and coordinator acceptance checks are pinned to this revision; prior code/test revisions remain recorded in historical evidence.
+- Focused recheck at docs revision `65606a5bcbc2a5b7b7d23299d81ed76f0a8182b8` against unchanged source/test `85913e9`: `49/49 pass, 0 fail, 0 skipped`; artifact `plans/oi-browser-integration/regression-focused-65606a5.json`, output SHA-256 `de11261bb35be32814d29d41aa1bac04978d7be4adcb89a326ecacb221a05d6f`, artifact SHA-256 `5607d13055af6895199b916e7ec290900f290bc49adb775582b405575b4e24f7`.
 - Code/test checkpoint: `85913e984a4c45c2278be2fe644055426a1455c4`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
