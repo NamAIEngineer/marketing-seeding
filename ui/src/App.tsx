@@ -1928,6 +1928,7 @@ function ContentPipelinePanel({ data }: { data: R }) {
   const runs = Array.isArray(data?.recentContentPipelineRuns)
     ? data.recentContentPipelineRuns.slice(0, 6)
     : []
+  const runtime = data?.contentRuntime && typeof data.contentRuntime === "object" ? data.contentRuntime : null
   const succeeded = runs.filter((run: R) => run?.status === "SUCCEEDED")
   const failed = runs.filter((run: R) => run?.status === "FAILED")
   return (
@@ -1937,14 +1938,22 @@ function ContentPipelinePanel({ data }: { data: R }) {
           <h2>Content, report and media</h2>
           <p>Live pipeline lineage from canonical campaign state. Evidence, copy, MP4 and typed failures stay visible.</p>
         </div>
-        <span className={`status ${failed.length ? "failed" : succeeded.length ? "completed" : "draft"}`}>
-          {runs.length ? `${succeeded.length} succeeded · ${failed.length} failed` : "No runs"}
+        <span className={`status ${runtime?.ready === true ? "completed" : runtime?.status === "UNAVAILABLE" ? "failed" : "draft"}`}>
+          {runtime ? `${String(runtime.status || "UNKNOWN")} · ${runs.length ? `${succeeded.length} succeeded · ${failed.length} failed` : "No runs"}` : "Runtime unknown"}
         </span>
       </div>
       {!runs.length ? (
         <div className="empty-state">No content pipeline run has been recorded.</div>
       ) : (
         <div className="mission-execution-grid">
+          {runtime ? (
+            <article>
+              <span className="mission-eyebrow">Research/media runtime</span>
+              <strong>{String(runtime.status || "UNKNOWN")}</strong>
+              <small>{String(runtime.mode || "LOCAL")} · Python {String(runtime.python?.status || "UNKNOWN")} · ffmpeg {String(runtime.ffmpeg?.status || "UNKNOWN")}</small>
+              <small>{runtime.failure ? String(runtime.failure.code || "RUNTIME_UNAVAILABLE") : "Preflight verified"}</small>
+            </article>
+          ) : null}
           {runs.map((run: R) => (
             <article key={`${String(run?.campaignId)}-${String(run?.runId)}`}>
               <span className="mission-eyebrow">{String(run?.campaignId || "UNKNOWN")}</span>

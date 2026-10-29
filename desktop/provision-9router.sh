@@ -23,8 +23,28 @@ if [ -z "$COMMAND" ]; then
   fi
   COMMAND="$RUNTIME/node_modules/.bin/9router"
 fi
-if [ "${SEEDING_9ROUTER_START:-true}" = "true" ] && ! /usr/bin/curl -fsS --max-time 1 "${SEEDING_9ROUTER_ENDPOINT:-http://127.0.0.1:20128/v1}/models" >/dev/null 2>&1; then
+ENDPOINT="${SEEDING_9ROUTER_ENDPOINT:-http://127.0.0.1:20128/v1}"
+http_ready() {
+  # A running gateway may correctly return 401/403 before the user connects
+  # an API key. Treat those responses as liveness, while rejecting transport
+  # errors and other HTTP failures.
+  CODE=$(/usr/bin/curl -sS --max-time 2 -o /dev/null -w '%{http_code}' "$ENDPOINT/models" || true)
+  case "$CODE" in
+    2??|401|403) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+if [ "${SEEDING_9ROUTER_START:-true}" = "true" ] && ! http_ready; then
   mkdir -p "$DATA_ROOT"
   nohup "$COMMAND" --host 127.0.0.1 --port 20128 --no-browser --skip-update >>"$DATA_ROOT/9router.log" 2>&1 &
+  READY=0
+  for ATTEMPT in 1 2 3 4 5 6 7 8 9 10; do
+    if http_ready; then READY=1; break; fi
+    sleep 1
+  done
+  if [ "$READY" -ne 1 ]; then
+    echo "9Router did not become reachable at $ENDPOINT" >&2
+    exit 3
+  fi
 fi
 printf '%s\n' "$COMMAND"

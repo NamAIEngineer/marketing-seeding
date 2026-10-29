@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { mkdir, readFile, readdir, realpath, stat } from "node:fs/promises";
+import { copyFile, mkdir, readFile, readdir, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { CHANNELS, nowIso } from "./constants.mjs";
 import { approvalFingerprint, assertReplyCanSend, assertTransition, evaluateQueue, killSwitchReasons } from "./guards.mjs";
@@ -42,6 +42,7 @@ import { applyMemoryConsolidation, createBrowserExecutionIntent, createBrowserSn
 import { projectAccountAgentMissionControl } from "./account-agent-registry.mjs";
 import { normalizeListeningJob } from "./listening-contract.mjs";
 import { runProductContentPipeline as executeProductContentPipeline } from "./product-content-pipeline.mjs";
+import { ensureContentRuntime } from "./product-content-runtime.mjs";
 
 export async function pollConfiguredDiscoveries(service, { actor = "scheduled-discovery-observer", shuttingDown = false } = {}) {
   const state = await service.snapshot();
@@ -2467,8 +2468,15 @@ export class SeedingService {
     const runId = String(input.runId || `content-${randomUUID()}`).trim().slice(0, 120);
     if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(runId)) throw new Error("Invalid content pipeline runId");
     const outputDir = path.join(path.dirname(path.resolve(this.store.filePath)), "content-runs", campaignId, runId);
+    const mode = String(input.mode || "LOCAL").toUpperCase();
+    const runtime = mode === "FIXTURE" ? null : await ensureContentRuntime({
+      mode,
+      storageRoot: path.join(path.dirname(path.resolve(this.store.filePath)), "content-runtime"),
+      resourcesDir: process.resourcesPath || appRoot,
+      repair: false
+    });
     const productInput = {
-      mode: input.mode || "LOCAL",
+      mode,
       runId,
       outputDir,
       product: {
@@ -2483,7 +2491,8 @@ export class SeedingService {
       },
       sources: input.sources,
       assets: input.assets,
-      targets: input.targets
+      targets: input.targets,
+      ...(runtime?.paths ? { contentRuntimePaths: runtime.paths } : {})
     };
     const result = await executeProductContentPipeline(productInput, {
       pythonPath: input.pythonPath,
@@ -2493,6 +2502,32 @@ export class SeedingService {
       waitSeconds: input.waitSeconds,
       localBackend: input.localBackend
     });
+    let materialization = { status: "SKIPPED", reason: "content_pipeline_failed", posts: [], artifact: null, story: null };
+    if (result.status === "SUCCEEDED") {
+      try {
+        materialization = await this.materializeProductContentOutputs(campaignId, {
+          runId,
+          productRepo,
+          result,
+          targets: Array.isArray(input.targets) ? input.targets : [],
+          actor,
+          audience: input.audience || campaign.audience || "",
+          language: input.language || "en",
+          callToAction: input.campaign?.callToAction || input.callToAction || campaign.callToAction || "Inspect the evidence."
+        });
+      } catch (error) {
+        materialization = { status: "BLOCKED", reason: "content_materialization_failed", detail: String(error?.message || "content materialization failed").replace(/\s+/g, " ").slice(0, 240), posts: [], artifact: null, story: null };
+      }
+    }
+    const runtimeProjection = runtime ? {
+      status: runtime.status,
+      ready: runtime.ready === true,
+      mode: runtime.mode,
+      failure: runtime.failure || null,
+      python: runtime.python ? { status: runtime.python.status, path: runtime.python.path || null, source: runtime.python.source || null } : null,
+      ffmpeg: runtime.ffmpeg ? { status: runtime.ffmpeg.status, path: runtime.ffmpeg.path || null, source: runtime.ffmpeg.source || null } : null,
+      chrome: runtime.chrome ? { status: runtime.chrome.status, path: runtime.chrome.path || null, source: runtime.chrome.source || null } : null
+    } : null;
     const boundedEvidence = Array.isArray(result.evidence)
       ? result.evidence.slice(0, 8).map((item) => ({
         sourceId: item.sourceId,
@@ -2513,6 +2548,8 @@ export class SeedingService {
       campaignId,
       actor: String(actor || "automation").slice(0, 120),
       mode: productInput.mode,
+      runtime: runtimeProjection,
+      materialization,
       status: result.status === "SUCCEEDED" ? "SUCCEEDED" : "FAILED",
       reportPath: result.reportPath || null,
       copyPaths: Array.isArray(result.copyPaths) ? result.copyPaths.slice(0, 16) : [],
@@ -2543,7 +2580,102 @@ export class SeedingService {
       current.updatedAt = nowIso();
       return persistedRun;
     });
-    return { ...result, ...persisted.result, persisted: true };
+    return { ...result, contentRuntime: runtimeProjection, ...persisted.result, persisted: true };
+  }
+
+  /**
+   * Bind grounded pipeline outputs to the canonical campaign queue. This path
+   * never creates live authority: generated media must already be listed in
+   * the active standing authorization and each copy hash must be in its exact
+   * approved boundary. Otherwise the run remains visible with a precise
+   * blocker and no post is created.
+   */
+  async materializeProductContentOutputs(campaignId, { runId, productRepo, result, targets, actor = "automation", audience = "", language = "en", callToAction = "Inspect the evidence." } = {}) {
+    const initial = await this.store.read();
+    const campaign = requireItem(initial.campaigns, campaignId, "Campaign");
+    const prior = (campaign.contentPipelineRuns || []).find((run) => run.runId === runId);
+    // A blocked projection is retryable after the operator activates or
+    // renews an exact standing authorization. Terminal queued/published
+    // projections remain idempotent and must not create duplicate posts.
+    if (prior?.materialization && prior.materialization.status !== "BLOCKED") return structuredClone(prior.materialization);
+    const evidence = (result.evidence || []).filter((item) => item && item.relativePath && /^[a-f0-9]{64}$/i.test(String(item.sha256 || "")));
+    const targetRows = (Array.isArray(targets) ? targets : []).map((item) => String(item?.id || "").trim()).filter(Boolean)
+      .map((id) => initial.targets.find((target) => target.id === id)).filter(Boolean);
+    if (!targetRows.length) return { status: "BLOCKED", reason: "campaign_targets_required", posts: [], artifact: null, story: null };
+    if (!result.mp4Path || !result.media?.sha256) return { status: "BLOCKED", reason: "media_output_missing", posts: [], artifact: null, story: null };
+    const relativeMediaPath = path.posix.join(".marketing-seeding", "generated-media", `${runId}.mp4`);
+    const absoluteMediaPath = path.resolve(productRepo, relativeMediaPath);
+    try {
+      await mkdir(path.dirname(absoluteMediaPath), { recursive: true, mode: 0o700 });
+      await copyFile(result.mp4Path, absoluteMediaPath);
+    } catch (error) {
+      return { status: "BLOCKED", reason: "generated_media_copy_failed", detail: String(error?.message || "media copy failed").slice(0, 180), posts: [], artifact: null, story: null };
+    }
+    let state = await this.store.read();
+    let artifact = (state.artifacts || []).find((item) => item.campaignId === campaignId && item.relativePath === relativeMediaPath && item.sha256 === result.media.sha256) || null;
+    if (!artifact) {
+      artifact = await this.registerArtifact(campaignId, {
+        path: relativeMediaPath,
+        name: `${campaign.name || campaignId} ${runId} MP4`,
+        mediaType: "video/mp4",
+        evidence: `Generated by grounded content pipeline run ${runId}`
+      }, actor);
+    }
+    state = await this.store.read();
+    const standing = (state.campaignAuthorizations || []).filter((item) => item.campaignId === campaignId && item.status === "active");
+    if (standing.length !== 1 || standing[0].executionMode !== "standing_autonomous" || standing[0].allowLiveExecution !== true) {
+      return { status: "BLOCKED", reason: "standing_authorization_required", posts: [], artifact: { id: artifact.id, sha256: artifact.sha256, relativePath: artifact.relativePath }, story: null };
+    }
+    const authorization = standing[0];
+    if (!authorization.approvedAssets?.some((item) => item.artifactId === artifact.id && item.sha256 === artifact.sha256)) {
+      return { status: "BLOCKED", reason: "media_artifact_not_in_standing_authorization", posts: [], artifact: { id: artifact.id, sha256: artifact.sha256, relativePath: artifact.relativePath }, story: null };
+    }
+    if (authorization.contentBoundary?.mode !== "approved_copy_set") {
+      return { status: "BLOCKED", reason: "content_boundary_not_approved_copy_set", posts: [], artifact: { id: artifact.id, sha256: artifact.sha256, relativePath: artifact.relativePath }, story: null };
+    }
+    const copies = Array.isArray(result.copies) ? result.copies : [];
+    const eligibleCopies = copies.filter((copy) => {
+      const target = targetRows.find((row) => row.id === copy.targetId);
+      return target && authorization.destinations?.some((destination) => destination.targetId === target.id) && authorization.contentBoundary.contentHashes?.includes(campaignContentHash(copy.content));
+    });
+    if (!eligibleCopies.length) {
+      return { status: "BLOCKED", reason: "generated_copy_outside_standing_authorization", posts: [], artifact: { id: artifact.id, sha256: artifact.sha256, relativePath: artifact.relativePath }, story: null };
+    }
+    let story = (state.stories || []).find((item) => item.campaignId === campaignId && item.contentPipelineRunId === runId) || null;
+    if (!story) {
+      story = await this.createStory(campaignId, {
+        artifactId: artifact.id,
+        title: `${campaign.name || campaignId} · ${runId}`,
+        angle: result.report?.claims?.[0]?.text || "Grounded product evidence",
+        audience: String(audience || campaign.audience || "").trim() || "product audience",
+        callToAction,
+        language,
+        disclosure: "Evidence-grounded content generated from verified repository evidence.",
+        groundingSources: evidence.map((item) => item.relativePath)
+      }, actor);
+      await this.store.mutate(actor, "content_pipeline_story_bound", (nextState) => {
+        const row = nextState.stories.find((item) => item.id === story.id);
+        if (row) { row.contentPipelineRunId = runId; row.updatedAt = nowIso(); }
+        return row || story;
+      });
+      state = await this.store.read();
+    }
+    const variants = eligibleCopies.map((copy) => ({
+      targetId: copy.targetId,
+      content: copy.content,
+      contentId: `content-${runId}-${copy.targetId}`,
+      claimIds: copy.claimIds,
+      contentSourceRefs: evidence.map((item) => ({ relativePath: item.relativePath, sha256: item.sha256 })),
+      audience: String(audience || campaign.audience || "").trim(),
+      language
+    }));
+    const posts = await this.createChannelDrafts(story.id, { variants }, actor);
+    const latest = await this.store.read();
+    const projected = posts.map((post) => {
+      const current = latest.posts.find((item) => item.id === post.id) || post;
+      return { postId: current.id, targetId: current.targetId, status: current.status, authorizationId: current.campaignAuthorizationId || null, readinessState: current.readinessState || null };
+    });
+    return { status: projected.some((post) => ["queued", "publishing", "processing", "published"].includes(post.status)) ? "QUEUED" : "BLOCKED", reason: null, posts: projected, artifact: { id: artifact.id, sha256: artifact.sha256, relativePath: artifact.relativePath }, story: { id: story.id } };
   }
 
   /** Inspect the registered repository, build grounded understanding, and persist its handoff. */
@@ -7787,7 +7919,8 @@ export class SeedingService {
         ...run,
         campaignId: campaign.id,
         evidence: Array.isArray(run.evidence) ? run.evidence.slice(0, 8) : [],
-        failure: run.failure || null
+        failure: run.failure || null,
+        materialization: run.materialization || null
       }))), "completedAt"),
       recentPublicationAttempts: newest(state.publicationAttempts, "preparedAt"),
       fixtureAutomation: {

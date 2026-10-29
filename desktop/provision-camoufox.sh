@@ -12,13 +12,13 @@ NPM="${SEEDING_NPM_BIN:-}"
 if [ -z "$NPM" ]; then NPM=$(command -v npm || true); fi
 if [ -z "$NPM" ] || [ ! -x "$NPM" ]; then
   printf '%s\n' 'unavailable:npm_missing' >"$STATUS"
-  exit 0
+  exit 2
 fi
 ENTRY="$RUNTIME/node_modules/camoufox/dist/index.js"
 if [ ! -f "$ENTRY" ]; then
   if ! "$NPM" install --prefix "$RUNTIME" --no-save --ignore-scripts "camoufox@$PINNED_CAMOUFOX" "playwright-core@$PINNED_PLAYWRIGHT" >"$DATA_ROOT/camoufox-provision.log" 2>&1; then
     printf '%s\n' 'unavailable:npm_install_failed' >"$STATUS"
-    exit 0
+    exit 3
   fi
 fi
 CONFIG="$DATA_ROOT/camoufox-runtime.json"
@@ -35,7 +35,7 @@ await writeFile(process.env.SEEDING_CAMOUFOX_CONFIG_FILE, `${JSON.stringify(payl
 process.stdout.write(JSON.stringify({ provider: payload.provider, packageVersion: payload.packageVersion, executableReady: true }));
 NODE
   printf '%s\n' 'unavailable:browser_install_failed' >"$STATUS"
-  exit 0
+  exit 4
 fi
 chmod 600 "$CONFIG"
 printf '%s\n' 'ready' >"$STATUS"

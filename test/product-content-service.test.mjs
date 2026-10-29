@@ -33,9 +33,13 @@ test("service content pipeline persists grounded report and real MP4 lineage", a
   assert.equal(result.externalSideEffects, false);
   assert.ok(result.reportPath);
   assert.ok(result.mp4Path);
-  const saved = (await service.snapshot()).campaigns.find((item) => item.id === campaign.id);
+  const snapshot = await service.snapshot();
+  const saved = snapshot.campaigns.find((item) => item.id === campaign.id);
   assert.equal(saved.contentPipelineRuns.length, 1);
   assert.equal(saved.contentPipelineRuns[0].status, "SUCCEEDED");
+  assert.equal(saved.contentPipelineRuns[0].materialization.status, "BLOCKED");
+  assert.equal(saved.contentPipelineRuns[0].materialization.reason, "campaign_targets_required");
+  assert.equal(snapshot.posts.length, 0);
   assert.equal(saved.contentPipelineRuns[0].evidence.length, 1);
   assert.equal(saved.contentPipelineRuns[0].media.sha256.length, 64);
 });

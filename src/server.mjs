@@ -32,6 +32,7 @@ import { runListeningExtraction, persistListeningRun } from "./listening-adapter
 import { normalizeBackend, createListeningJobId } from "./listening-contract.mjs";
 import { discoverUpdate } from "./update-discovery.mjs";
 import { readDesktopProvisioningStatus } from "./desktop-provisioning.mjs";
+import { ensureContentRuntime } from "./product-content-runtime.mjs";
 
 async function loadLocalEnv() {
   try {
@@ -243,6 +244,37 @@ let jevExecutionTimer = null;
 let accountAgentRecoveryTimer = null;
 let updateDiscoveryTimer = null;
 const updateRuntime = { enabled: updatePollMinutes > 0, intervalMinutes: updatePollMinutes || null, running: false, lastStartedAt: null, lastCompletedAt: null, nextRunAt: null, result: null };
+let contentRuntimeCache = null;
+let contentRuntimeCacheAt = 0;
+async function readContentRuntimeStatus({ refresh = false } = {}) {
+  if (!refresh && contentRuntimeCache && Date.now() - contentRuntimeCacheAt < 60_000) return structuredClone(contentRuntimeCache);
+  const runtime = await ensureContentRuntime({
+    mode: String(process.env.SEEDING_CONTENT_MODE || "LOCAL").toUpperCase(),
+    storageRoot: path.join(dataDir, "content-runtime"),
+    resourcesDir: process.resourcesPath || appRoot,
+    repair: false
+  });
+  const projection = {
+    status: runtime.status,
+    ready: runtime.ready === true,
+    mode: runtime.mode,
+    failure: runtime.failure || null,
+    paths: {
+      storageRoot: runtime.paths?.storageRoot || null,
+      pythonPath: runtime.python?.path || runtime.paths?.pythonPath || null,
+      ffmpegPath: runtime.ffmpeg?.path || runtime.paths?.ffmpegPath || null,
+      chromePath: runtime.chrome?.path || null
+    },
+    python: runtime.python ? { status: runtime.python.status, source: runtime.python.source || null } : null,
+    ffmpeg: runtime.ffmpeg ? { status: runtime.ffmpeg.status, source: runtime.ffmpeg.source || null } : null,
+    chrome: runtime.chrome ? { status: runtime.chrome.status, source: runtime.chrome.source || null } : null,
+    repair: runtime.repair ? { attempted: runtime.repair.attempted === true, actions: runtime.repair.actions || [] } : { attempted: false, actions: [] },
+    checkedAt: new Date().toISOString()
+  };
+  contentRuntimeCache = projection;
+  contentRuntimeCacheAt = Date.now();
+  return structuredClone(projection);
+}
 let jevExecutionRunning = false;
 const jevExecutionStarted = new Set();
 let campaignQueueRunning = false;
@@ -679,6 +711,7 @@ const server = http.createServer(async (request, response) => {
         browserTracking: await readBrowserTrafficAutomation(),
         fixtureWorker: fixtureWorker.runtime()
         ,updateDiscovery: updateRuntime
+        ,contentRuntime: await readContentRuntimeStatus()
       });
     }
     if (request.method === "GET" && url.pathname === "/api/operator/session") {
@@ -767,6 +800,7 @@ const server = http.createServer(async (request, response) => {
         marketIntelligence: projectMarketDashboard(autoGtm),
         nineRouter: await nineRouterStatus({ refresh: false }),
         update: updateRuntime.result || await discoverUpdate(),
+        contentRuntime: await readContentRuntimeStatus(),
         provisioning: await readDesktopProvisioningStatus(dataDir),
         automation: {
           trafficCollector: trafficRuntime,
@@ -788,6 +822,9 @@ const server = http.createServer(async (request, response) => {
       updateRuntime.result = result;
       updateRuntime.lastCompletedAt = new Date().toISOString();
       return sendJson(response, 200, result);
+    }
+    if (request.method === "GET" && url.pathname === "/api/content-runtime/status") {
+      return sendJson(response, 200, await readContentRuntimeStatus({ refresh: true }));
     }
     if (request.method === "POST" && url.pathname === "/api/9router/connect") {
       if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });

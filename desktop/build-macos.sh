@@ -20,6 +20,10 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/app" "$APP/Contents/Reso
 ditto "$SOURCE/src" "$APP/Contents/Resources/app/src"
 ditto "$SOURCE/public" "$APP/Contents/Resources/app/public"
 ditto "$SOURCE/scripts" "$APP/Contents/Resources/app/scripts"
+if [ -d "$SOURCE/plans/crawl4ai-integration" ]; then
+  mkdir -p "$APP/Contents/Resources/app/plans"
+  ditto "$SOURCE/plans/crawl4ai-integration" "$APP/Contents/Resources/app/plans/crawl4ai-integration"
+fi
 ditto "$SOURCE/desktop/provision-9router.sh" "$APP/Contents/Resources/app/provision-9router.sh"
 ditto "$SOURCE/desktop/provision-camoufox.sh" "$APP/Contents/Resources/app/provision-camoufox.sh"
 ditto "$SOURCE/desktop/update-macos.sh" "$APP/Contents/Resources/app/update-macos.sh"
