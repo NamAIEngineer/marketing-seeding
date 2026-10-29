@@ -55,4 +55,7 @@ For release builds, set `SEEDING_CODESIGN_IDENTITY` to a Developer ID
 Application identity before running `build-macos.sh`; the script then signs the
 bundle with hardened runtime and a timestamp. Notarization and stapling still
 require the owner's Apple Developer credentials and an external `notarytool`
-submission; no such credentials were available for this artifact.
+submission. If a stored notary profile is available, set
+`SEEDING_NOTARY_PROFILE` and the build submits, waits for approval, staples the
+bundle and regenerates the ZIP. No such credentials were available for this
+artifact.
