@@ -13,11 +13,16 @@ const root = path.resolve(new URL("..", import.meta.url).pathname);
 test("packaged launcher probes the server's /health route", async () => {
   const launcher = await readFile(path.join(root, "desktop/build-macos.sh"), "utf8");
   const server = await readFile(path.join(root, "src/server.mjs"), "utf8");
+  const provenance = JSON.parse(await readFile(path.join(root, "desktop/9router-provenance.json"), "utf8"));
   assert.equal(launcher.includes("/health/live"), false);
   assert.ok((launcher.match(/\/health/g) || []).length >= 2);
   assert.match(server, /url\.pathname === ["']\/health["']/);
   assert.match(launcher, /health-probe\.mjs/);
   assert.match(launcher, /health-nonce/);
+  assert.match(launcher, /9router-provenance\.json/);
+  assert.equal(provenance.package, "9router");
+  assert.equal(provenance.version, "0.5.109");
+  assert.match(provenance.tarball, /^https:\/\/registry\.npmjs\.org\/9router\/-\/9router-0\.5\.109\.tgz$/);
 });
 
 test("updater rejects an unrelated app bundle before swap", async () => {

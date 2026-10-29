@@ -25,6 +25,7 @@ if [ -d "$SOURCE/plans/crawl4ai-integration" ]; then
   ditto "$SOURCE/plans/crawl4ai-integration" "$APP/Contents/Resources/app/plans/crawl4ai-integration"
 fi
 ditto "$SOURCE/desktop/provision-9router.sh" "$APP/Contents/Resources/app/provision-9router.sh"
+ditto "$SOURCE/desktop/9router-provenance.json" "$APP/Contents/Resources/app/9router-provenance.json"
 ditto "$SOURCE/desktop/provision-camoufox.sh" "$APP/Contents/Resources/app/provision-camoufox.sh"
 ditto "$SOURCE/desktop/update-macos.sh" "$APP/Contents/Resources/app/update-macos.sh"
 ditto "$SOURCE/desktop/health-probe.mjs" "$APP/Contents/Resources/app/health-probe.mjs"
