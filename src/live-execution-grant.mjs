@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import path from "node:path";
-import { campaignContentHash, campaignAuthorizationFingerprint } from "./campaign-authorization.mjs";
+import { artifactAuthorizedForCampaign, campaignContentHash, campaignAuthorizationFingerprint } from "./campaign-authorization.mjs";
 import { contentSha256 } from "./execution-contracts.mjs";
 import { canonicalIdentityUrl, canonicalProvider } from "./execution-binding.mjs";
 
@@ -47,7 +47,7 @@ export function createLiveExecutionGrantV1({ post, target, account, authorizatio
   if ((post.assetPath || post.artifactId || post.assetSha256) && !artifact) throw new Error("Live grant requires a registered media artifact");
   if (artifact && (artifact.id !== post.artifactId || artifact.sha256 !== post.assetSha256 ||
       !post.assetPath || path.resolve(artifact.path) !== path.resolve(post.assetPath) ||
-      !authorization.approvedAssets?.some((item) => item.artifactId === artifact.id && item.sha256 === artifact.sha256))) {
+      !artifactAuthorizedForCampaign(authorization, artifact, post))) {
     throw new Error("Live grant media is outside campaign authorization");
   }
   const grant = {

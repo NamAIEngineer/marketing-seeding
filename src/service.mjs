@@ -1,12 +1,12 @@
 import { createHash, randomUUID } from "node:crypto";
-import { createReadStream } from "node:fs";
+import { constants as fsConstants, createReadStream } from "node:fs";
 import { copyFile, mkdir, readFile, readdir, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { CHANNELS, nowIso } from "./constants.mjs";
 import { approvalFingerprint, assertReplyCanSend, assertTransition, evaluateQueue, killSwitchReasons } from "./guards.mjs";
 import { collectOfficialMetrics, integrationReadiness } from "./integrations.mjs";
 import { buildMarketingFlowGraph } from "./flow-graph.mjs";
-import { campaignAuthorizationFingerprint, campaignContentHash, campaignScopeFingerprint, evaluateCampaignAuthorization, normalizeCampaignAuthorization, publicationIdentityKey, publicationIdentityKeysForPost } from "./campaign-authorization.mjs";
+import { artifactAuthorizedForCampaign, campaignAuthorizationFingerprint, campaignContentHash, campaignScopeFingerprint, evaluateCampaignAuthorization, normalizeCampaignAuthorization, publicationIdentityKey, publicationIdentityKeysForPost } from "./campaign-authorization.mjs";
 import { classifyReadinessError, configuredReadinessTtlMs, executionAccountIdentityReference, executionAccountKey, isCanonicalOrcaProfileId, isReadinessFresh, normalizeExecutionAccount, normalizeReadinessResult, readinessBinding, readinessContextForTarget, MAX_READINESS_ATTEMPTS } from "./readiness.mjs";
 import { contentSha256, createExecutionRequestV1, isPreSubmitMediaIntegrityProven, PUBLICATION_CANDIDATE_MAX_AGE_MS, validateExecutionReceiptV1, validateSubmitAcceptanceEvidence } from "./execution-contracts.mjs";
 import { assertWindowExecutionBinding, normalizeOneTimeExecutionWindow, oneTimeExecutionWindowFingerprint, oneTimeExecutionWindowInBounds, oneTimeExecutionWindowStatus } from "./one-time-execution-window.mjs";
@@ -878,6 +878,19 @@ async function readArtifactSource(productRepo, source) {
     stream.on("end", () => resolve(hash.digest("hex")));
   });
   return { path: resolved, relativePath: path.relative(productRepo, resolved), sha256, bytes: info.size };
+}
+
+async function hashFilePath(filePath) {
+  const info = await stat(filePath);
+  if (!info.isFile()) throw new Error("Media source is not a regular file");
+  const sha256 = await new Promise((resolve, reject) => {
+    const hash = createHash("sha256");
+    const stream = createReadStream(filePath);
+    stream.on("data", (chunk) => hash.update(chunk));
+    stream.on("error", reject);
+    stream.on("end", () => resolve(hash.digest("hex")));
+  });
+  return { sha256, bytes: info.size };
 }
 
 async function assertPostArtifactCurrent(post, state) {
@@ -2605,14 +2618,47 @@ export class SeedingService {
     if (!result.mp4Path || !result.media?.sha256) return { status: "BLOCKED", reason: "media_output_missing", posts: [], artifact: null, story: null };
     const relativeMediaPath = path.posix.join(".marketing-seeding", "generated-media", `${runId}.mp4`);
     const absoluteMediaPath = path.resolve(productRepo, relativeMediaPath);
+    const expectedMediaSha256 = String(result.media.sha256).toLowerCase();
+    const expectedMediaBytes = Number(result.media.bytes);
+    let sourceEvidence;
     try {
+      sourceEvidence = await hashFilePath(result.mp4Path);
+      if (sourceEvidence.sha256 !== expectedMediaSha256 || (Number.isSafeInteger(expectedMediaBytes) && sourceEvidence.bytes !== expectedMediaBytes)) {
+        return { status: "BLOCKED", reason: "generated_media_source_changed", posts: [], artifact: null, story: null };
+      }
       await mkdir(path.dirname(absoluteMediaPath), { recursive: true, mode: 0o700 });
-      await copyFile(result.mp4Path, absoluteMediaPath);
+      let destinationEvidence = null;
+      try { destinationEvidence = await hashFilePath(absoluteMediaPath); } catch (error) {
+        if (error?.code !== "ENOENT") throw error;
+      }
+      if (destinationEvidence) {
+        if (destinationEvidence.sha256 !== expectedMediaSha256 || (Number.isSafeInteger(expectedMediaBytes) && destinationEvidence.bytes !== expectedMediaBytes)) {
+          return { status: "BLOCKED", reason: "generated_media_destination_conflict", detail: "Registered/generated destination has different bytes; refusing overwrite", posts: [], artifact: null, story: null };
+        }
+      } else {
+        try {
+          await copyFile(result.mp4Path, absoluteMediaPath, fsConstants.COPYFILE_EXCL);
+        } catch (error) {
+          if (error?.code !== "EEXIST") throw error;
+          const racedDestination = await hashFilePath(absoluteMediaPath);
+          if (racedDestination.sha256 !== expectedMediaSha256 || (Number.isSafeInteger(expectedMediaBytes) && racedDestination.bytes !== expectedMediaBytes)) {
+            return { status: "BLOCKED", reason: "generated_media_destination_conflict", detail: "Destination appeared with different bytes; refusing overwrite", posts: [], artifact: null, story: null };
+          }
+        }
+        const copied = await hashFilePath(absoluteMediaPath);
+        if (copied.sha256 !== expectedMediaSha256 || (Number.isSafeInteger(expectedMediaBytes) && copied.bytes !== expectedMediaBytes)) {
+          return { status: "BLOCKED", reason: "generated_media_copy_verification_failed", posts: [], artifact: null, story: null };
+        }
+      }
     } catch (error) {
       return { status: "BLOCKED", reason: "generated_media_copy_failed", detail: String(error?.message || "media copy failed").slice(0, 180), posts: [], artifact: null, story: null };
     }
     let state = await this.store.read();
-    let artifact = (state.artifacts || []).find((item) => item.campaignId === campaignId && item.relativePath === relativeMediaPath && item.sha256 === result.media.sha256) || null;
+    const conflictingArtifact = (state.artifacts || []).find((item) => item.campaignId === campaignId && item.relativePath === relativeMediaPath && item.sha256 !== expectedMediaSha256);
+    if (conflictingArtifact) {
+      return { status: "BLOCKED", reason: "generated_media_artifact_conflict", detail: "Registered artifact has a conflicting hash for this path", posts: [], artifact: null, story: null };
+    }
+    let artifact = (state.artifacts || []).find((item) => item.campaignId === campaignId && item.relativePath === relativeMediaPath && item.sha256 === expectedMediaSha256) || null;
     if (!artifact) {
       artifact = await this.registerArtifact(campaignId, {
         path: relativeMediaPath,
@@ -2621,23 +2667,54 @@ export class SeedingService {
         evidence: `Generated by grounded content pipeline run ${runId}`
       }, actor);
     }
-    state = await this.store.read();
+    const generatedProvenance = {
+      kind: "grounded_pipeline_mp4",
+      runId,
+      renderer: String(result.media.renderer || "ffmpeg"),
+      bytes: sourceEvidence.bytes,
+      sha256: expectedMediaSha256
+    };
+    state = await this.store.mutate(actor, "content_pipeline_media_reconciled", (nextState) => {
+      const current = nextState.artifacts.find((item) => item.id === artifact.id);
+      if (!current || current.campaignId !== campaignId || current.relativePath !== relativeMediaPath || current.sha256 !== expectedMediaSha256) {
+        throw new Error("Generated media artifact identity changed during reconciliation");
+      }
+      if (current.provenance && JSON.stringify(current.provenance) !== JSON.stringify(generatedProvenance)) {
+        throw new Error("Generated media artifact provenance conflicts with the pipeline run");
+      }
+      current.provenance ||= generatedProvenance;
+      return current;
+    }).then((entry) => this.store.read());
+    artifact = state.artifacts.find((item) => item.id === artifact.id) || artifact;
     const standing = (state.campaignAuthorizations || []).filter((item) => item.campaignId === campaignId && item.status === "active");
     if (standing.length !== 1 || standing[0].executionMode !== "standing_autonomous" || standing[0].allowLiveExecution !== true) {
       return { status: "BLOCKED", reason: "standing_authorization_required", posts: [], artifact: { id: artifact.id, sha256: artifact.sha256, relativePath: artifact.relativePath }, story: null };
     }
     const authorization = standing[0];
-    if (!authorization.approvedAssets?.some((item) => item.artifactId === artifact.id && item.sha256 === artifact.sha256)) {
+    if (!artifactAuthorizedForCampaign(authorization, artifact)) {
       return { status: "BLOCKED", reason: "media_artifact_not_in_standing_authorization", posts: [], artifact: { id: artifact.id, sha256: artifact.sha256, relativePath: artifact.relativePath }, story: null };
     }
-    if (authorization.contentBoundary?.mode !== "approved_copy_set") {
-      return { status: "BLOCKED", reason: "content_boundary_not_approved_copy_set", posts: [], artifact: { id: artifact.id, sha256: artifact.sha256, relativePath: artifact.relativePath }, story: null };
-    }
     const copies = Array.isArray(result.copies) ? result.copies : [];
-    const eligibleCopies = copies.filter((copy) => {
+    const eligibleCopies = copies.map((copy) => {
       const target = targetRows.find((row) => row.id === copy.targetId);
-      return target && authorization.destinations?.some((destination) => destination.targetId === target.id) && authorization.contentBoundary.contentHashes?.includes(campaignContentHash(copy.content));
-    });
+      if (!target || !authorization.destinations?.some((destination) => destination.targetId === target.id)) return null;
+      if (authorization.contentBoundary?.mode === "approved_copy_set") {
+        return authorization.contentBoundary.contentHashes?.includes(campaignContentHash(copy.content)) ? { copy, target, templateId: null, contentSourceRefs: copy.evidenceRefs || [] } : null;
+      }
+      if (authorization.contentBoundary?.mode !== "approved_template_set") return null;
+      const template = (authorization.contentBoundary.templates || []).find((item) => item.platform === target.channel && item.id);
+      if (!template) return null;
+      const claims = new Map((authorization.contentBoundary.approvedClaims || []).map((claim) => [claim.id, claim]));
+      const claimIds = [...new Set((template.template.match(/\{\{claim:([a-zA-Z0-9_.-]+)\}\}/g) || []).map((token) => token.slice(8, -2)))];
+      if (!claimIds.length || claimIds.some((id) => !claims.has(id))) return null;
+      const expectedContent = renderApprovedTemplate({ template: template.template, approvedClaims: claimIds.map((id) => claims.get(id)), requiredDisclosures: authorization.contentBoundary.requiredDisclosures || [] });
+      if (copy.content !== expectedContent) return null;
+      if (JSON.stringify([...new Set(copy.claimIds || [])].sort()) !== JSON.stringify([...claimIds].sort())) return null;
+      const contentSourceRefs = [...new Map(claimIds.flatMap((id) => claims.get(id).sourceRefs || []).map((source) => [`${source.relativePath}\u0000${source.sha256}`, source])).values()];
+      const suppliedRefs = new Set((copy.evidenceRefs || []).map(String));
+      if (contentSourceRefs.some((source) => !suppliedRefs.has(`${source.relativePath}#${source.sha256}`))) return null;
+      return { copy, target, templateId: template.id, contentSourceRefs };
+    }).filter(Boolean);
     if (!eligibleCopies.length) {
       return { status: "BLOCKED", reason: "generated_copy_outside_standing_authorization", posts: [], artifact: { id: artifact.id, sha256: artifact.sha256, relativePath: artifact.relativePath }, story: null };
     }
@@ -2660,12 +2737,15 @@ export class SeedingService {
       });
       state = await this.store.read();
     }
-    const variants = eligibleCopies.map((copy) => ({
+    const variants = eligibleCopies.map(({ copy, templateId, contentSourceRefs }) => ({
       targetId: copy.targetId,
       content: copy.content,
       contentId: `content-${runId}-${copy.targetId}`,
+      templateId,
       claimIds: copy.claimIds,
-      contentSourceRefs: evidence.map((item) => ({ relativePath: item.relativePath, sha256: item.sha256 })),
+      contentSourceRefs: authorization.contentBoundary?.mode === "approved_template_set"
+        ? contentSourceRefs
+        : evidence.map((item) => ({ relativePath: item.relativePath, sha256: item.sha256 })),
       audience: String(audience || campaign.audience || "").trim(),
       language
     }));
@@ -6229,7 +6309,7 @@ export class SeedingService {
     if (request.audience !== post.audience || !authorization.audienceRules.allowedAudiences.includes(post.audience)) reject("AUDIENCE_MISMATCH", "audienceMatch", "Execution audience does not match authorized audience");
     if (request.publicationVisibility !== (post.publicationVisibility || "PUBLIC")) reject("TARGET_MISMATCH", "targetMatch", "Execution publication visibility changed");
     if (!(authorization.publicationVisibilityRules?.allowedVisibilities || ["PUBLIC"]).includes(request.publicationVisibility)) reject("TARGET_MISMATCH", "targetMatch", "Publication visibility is outside authorization");
-    if (artifact && (request.media.length !== 1 || request.media[0].artifactId !== artifact.id || request.media[0].reference !== artifact.path || request.media[0].sha256 !== artifact.sha256 || !authorization.approvedAssets.some((item) => item.artifactId === artifact.id && item.sha256 === artifact.sha256))) reject("ARTIFACT_INTEGRITY_FAILED", "mediaHashMatch", "Execution media identity is not the approved artifact");
+    if (artifact && (request.media.length !== 1 || request.media[0].artifactId !== artifact.id || request.media[0].reference !== artifact.path || request.media[0].sha256 !== artifact.sha256 || !artifactAuthorizedForCampaign(authorization, artifact, post))) reject("ARTIFACT_INTEGRITY_FAILED", "mediaHashMatch", "Execution media identity is not the approved artifact");
     if (!artifact && request.media.length !== 0) reject("ARTIFACT_INTEGRITY_FAILED", "mediaHashMatch", "Execution request contains unregistered media");
     if (!account || account.status !== "enabled" || account.health !== "healthy" || !exactProviderBinding(target, account, { requireTarget: true }) || request.accountId !== target.accountId || request.profileId !== target.profileId || !bindingMatches({ ...request, targetId: request.target?.targetId, targetUrl: request.target?.url }, targetExecutionBinding(target, account), { requireIdentity: true, requireTarget: true })) reject("IDENTITY_MISMATCH", "accountMatch", "Execution account/profile binding changed");
     if (!isReadinessFresh(target.readiness, readinessContextForTarget(target, account), new Date(), this.readinessTtlMs)) {
