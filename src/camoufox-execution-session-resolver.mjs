@@ -127,7 +127,7 @@ export class CamoufoxExecutionSessionResolver {
       attestation: this.#config.hostAttestation, createdAt: this.#config.clock().toISOString?.() || undefined
     });
     try {
-      await transport.attach(session);
+      await transport.attach(session, { allowUnauthenticated: request.allowLoginBootstrap === true });
       const browserSurface = transport.browserSurface;
       const entry = { coordinatorHandle: coordinated.handle, released: false };
       const handle = Object.freeze({ accountId, profileFingerprint: coordinated.handle.profileFingerprint, runtimeIdentity, transport, browserSurface, session, release: () => this.release(handle) });

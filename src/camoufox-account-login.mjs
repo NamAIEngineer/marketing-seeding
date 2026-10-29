@@ -11,11 +11,17 @@ function safeText(value, limit = 4000) { return String(value || "").replace(/[\r
  * this call, sent only to the injected browser protocol, then released.
  * No credential value is returned or persisted.
  */
-export async function loginAccountWithCamoufox({ platform, accountId, protocol, pageId, loginUrl = null, selectors = {}, expectedIdentity = null } = {}) {
+export async function loginAccountWithCamoufox({ platform, accountId, protocol, pageId, loginUrl = null, selectors = {}, expectedIdentity = null, credentials = null, readCredentials = null } = {}) {
   const channel = String(platform || "").trim().toLowerCase();
   if (!LOGIN_URLS[channel] && !loginUrl) return { status: "BLOCKED", code: "PLATFORM_LOGIN_UNSUPPORTED", reason: "no bounded Camoufox login flow is implemented for this platform" };
   if (!protocol || typeof protocol.navigate !== "function" || typeof protocol.snapshot !== "function" || typeof protocol.resolve !== "function" || typeof protocol.fill !== "function" || typeof protocol.click !== "function") return { status: "BLOCKED", code: "CAMOUFOX_PROTOCOL_INCOMPLETE", reason: "Camoufox protocol lacks login capabilities" };
-  const credentials = await readAccountCredentials({ accountId, platform: channel });
+  const credentialReader = typeof readCredentials === "function" ? readCredentials : readAccountCredentials;
+  const suppliedCredentials = credentials && typeof credentials === "object"
+    ? credentials
+    : await credentialReader({ accountId, platform: channel });
+  const username = String(suppliedCredentials?.username || suppliedCredentials?.email || suppliedCredentials?.login || "");
+  const password = String(suppliedCredentials?.password || "");
+  if (!username || !password) return { status: "BLOCKED", code: "CREDENTIALS_REQUIRED", reason: "caller-supplied in-memory credentials are required" };
   const target = loginUrl || LOGIN_URLS[channel];
   await protocol.navigate(pageId, target);
   let snapshot = safeText(await protocol.snapshot(pageId));
@@ -24,8 +30,8 @@ export async function loginAccountWithCamoufox({ platform, accountId, protocol, 
   const passwordRef = await protocol.resolve(pageId, selectors.password || /password/i);
   const submitRef = await protocol.resolve(pageId, selectors.submit || /sign in|log in|continue/i);
   if (!usernameRef || !passwordRef || !submitRef) return { status: "BLOCKED", code: "LOGIN_CONTROLS_NOT_FOUND", reason: "bounded login controls were not observed" };
-  await protocol.fill(pageId, usernameRef, credentials.username);
-  await protocol.fill(pageId, passwordRef, credentials.password);
+  await protocol.fill(pageId, usernameRef, username);
+  await protocol.fill(pageId, passwordRef, password);
   await protocol.click({ pageId, ref: submitRef });
   await new Promise((resolve) => setTimeout(resolve, 250));
   snapshot = safeText(await protocol.snapshot(pageId));

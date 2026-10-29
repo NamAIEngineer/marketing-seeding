@@ -108,7 +108,7 @@ export class CamoufoxExecutionTransport extends ExecutionTransport {
     return { state: "READY", ...this.transportIdentity, attestation: this.#attestation };
   }
 
-  async attach(session) {
+  async attach(session, { allowUnauthenticated = false } = {}) {
     if (!(session instanceof ExecutionSession)) throw fail("CAMOUFOX_SESSION_CONTRACT_REQUIRED", "ExecutionSession required");
     session.assertUsable();
     if (this.#detached) throw fail("CAMOUFOX_TRANSPORT_DETACHED", "Camoufox transport was detached");
@@ -134,15 +134,17 @@ export class CamoufoxExecutionTransport extends ExecutionTransport {
     try {
       if (METHODS.some((name) => typeof client[name] !== "function")) throw fail("CAMOUFOX_PROTOCOL_INCOMPLETE", "injected Camoufox protocol lacks required capabilities");
       if (typeof client.attach === "function") {
-        try { await client.attach(); } catch { throw fail("CAMOUFOX_PROTOCOL_ATTACH_FAILED", "Camoufox protocol target attach failed"); }
+        try { await client.attach({ allowUnauthenticated }); } catch { throw fail("CAMOUFOX_PROTOCOL_ATTACH_FAILED", "Camoufox protocol target attach failed"); }
       }
       let observed;
       try { observed = await client.observeIdentity?.(); } catch { throw fail("CAMOUFOX_IDENTITY_OBSERVATION_FAILED", "Camoufox identity observation failed"); }
       const identity = observedIdentity(observed);
       if (!identity) throw fail("CAMOUFOX_IDENTITY_UNKNOWN", "Camoufox identity was not observed");
-      if (["CHALLENGED", "CHALLENGE", "MFA", "SECURITY_CHALLENGE"].includes(identity.state)) throw fail("CAMOUFOX_SESSION_CHALLENGE", "Camoufox session has a security challenge");
-      if (["LOGIN_REQUIRED", "AUTH_REQUIRED"].includes(identity.state)) throw fail("CAMOUFOX_AUTH_REQUIRED", "Camoufox session requires authentication");
-      if (["STALE", "EXPIRED", "UNKNOWN", "UNAVAILABLE"].includes(identity.state)) throw fail("CAMOUFOX_IDENTITY_UNKNOWN", "Camoufox identity is not ready");
+      if (!allowUnauthenticated) {
+        if (["CHALLENGED", "CHALLENGE", "MFA", "SECURITY_CHALLENGE"].includes(identity.state)) throw fail("CAMOUFOX_SESSION_CHALLENGE", "Camoufox session has a security challenge");
+        if (["LOGIN_REQUIRED", "AUTH_REQUIRED"].includes(identity.state)) throw fail("CAMOUFOX_AUTH_REQUIRED", "Camoufox session requires authentication");
+        if (["STALE", "EXPIRED", "UNKNOWN", "UNAVAILABLE"].includes(identity.state)) throw fail("CAMOUFOX_IDENTITY_UNKNOWN", "Camoufox identity is not ready");
+      }
       if (identity.provider !== "camoufox" || identity.platform !== expected.platform || identity.accountId !== expected.accountId || identity.providerProfileId !== expected.providerProfileId || (expected.identityReference && identity.identityReference !== canonicalIdentityUrl(expected.identityReference))) {
         throw fail("CAMOUFOX_IDENTITY_MISMATCH", "observed account/profile/identity does not match session binding");
       }

@@ -454,7 +454,7 @@ function identityResult(adapter, { accountId, expectedIdentity, identity, loginE
       nextAction: "HUMAN_REQUIRED"
     });
   }
-  if (!expectedReference) {
+  if (!expectedReference && !identity?.identityReference) {
     return result("UNKNOWN", "EXPECTED_IDENTITY_REQUIRED", "exact platform identity URL is required before Camoufox login can be marked ready", {
       platform: adapter.platform, accountId, identityReference: null, identityVerified: false, authenticated: false,
       postingRights: { status: "UNKNOWN", targetId: null, reason: "identity_required", evidence: null }, evidence,
@@ -487,7 +487,7 @@ function identityResult(adapter, { accountId, expectedIdentity, identity, loginE
   const stableMatches = !observedStable || !expectedStable || observedStable === expectedStable;
   const sourceMatches = identity.source === adapter.rule.source || identity.source === adapter.rule.rightsSource;
   const proofReady = identity.authenticated && identity.ownerSurface && !identity.ambiguous && identity.candidateCount !== null ? identity.candidateCount === 1 : identity.authenticated && identity.ownerSurface && !identity.ambiguous;
-  if (identity.identityReference !== expectedReference || !stableMatches || !sourceMatches || !proofReady) {
+  if ((expectedReference && identity.identityReference !== expectedReference) || !stableMatches || !sourceMatches || !proofReady) {
     return result("UNKNOWN", identity.identityReference !== expectedReference || !stableMatches ? "LOGIN_IDENTITY_MISMATCH" : "LOGIN_IDENTITY_PROOF_INSUFFICIENT", "authenticated surface did not provide an unambiguous exact owner identity match", {
       platform: adapter.platform, accountId, identityReference: identity.identityReference, identityVerified: false, authenticated: identity.authenticated === true,
       postingRights: { status: "UNKNOWN", targetId: null, reason: "identity_not_ready", evidence: null }, evidence,
@@ -495,7 +495,7 @@ function identityResult(adapter, { accountId, expectedIdentity, identity, loginE
     });
   }
   return result("READY", "LOGIN_CONFIRMED", "Camoufox login and exact platform identity confirmed", {
-    platform: adapter.platform, accountId, identityReference: expectedReference, identityVerified: true, authenticated: true,
+    platform: adapter.platform, accountId, identityReference: identity.identityReference, identityVerified: true, authenticated: true,
     postingRights: { status: "NOT_CHECKED", targetId: null, reason: "target_not_supplied", evidence: null }, evidence,
     nextAction: "USE_AUTHENTICATED_SESSION"
   });
@@ -557,7 +557,8 @@ async function loginAdapter(adapter, input = {}) {
   const accountId = accountOf(input.accountId);
   const expectedIdentity = text(input.expectedIdentity || input.expectedIdentityUrl || input.identityReference, 600);
   if (!accountId) return result("BLOCKED", "ACCOUNT_BINDING_REQUIRED", "platform and accountId are required", { platform: adapter.platform, accountId: null, identityReference: null, identityVerified: false, authenticated: false, postingRights: { status: "UNKNOWN", targetId: null, reason: "account_required", evidence: null }, nextAction: "CONFIGURE_ACCOUNT" });
-  if (!expectedIdentity || !adapter.rule.identityReference(expectedIdentity)) return result("UNKNOWN", "EXPECTED_IDENTITY_REQUIRED", "a valid exact platform identity URL is required", { platform: adapter.platform, accountId, identityReference: null, identityVerified: false, authenticated: false, postingRights: { status: "UNKNOWN", targetId: null, reason: "identity_required", evidence: null }, nextAction: "CONFIGURE_EXPECTED_IDENTITY" });
+  if (!expectedIdentity && input.allowIdentityDiscovery !== true) return result("UNKNOWN", "EXPECTED_IDENTITY_REQUIRED", "a valid exact platform identity URL is required", { platform: adapter.platform, accountId, identityReference: null, identityVerified: false, authenticated: false, postingRights: { status: "UNKNOWN", targetId: null, reason: "identity_required", evidence: null }, nextAction: "CONFIGURE_EXPECTED_IDENTITY" });
+  if (expectedIdentity && !adapter.rule.identityReference(expectedIdentity)) return result("UNKNOWN", "EXPECTED_IDENTITY_INVALID", "the configured platform identity URL is invalid", { platform: adapter.platform, accountId, identityReference: null, identityVerified: false, authenticated: false, postingRights: { status: "UNKNOWN", targetId: null, reason: "identity_invalid", evidence: null }, nextAction: "CONFIGURE_EXPECTED_IDENTITY" });
   if (!protocol || ["navigate", "snapshot", "resolve", "fill", "click"].some((method) => typeof protocol[method] !== "function") || (typeof protocol.evaluate !== "function" && typeof protocol.observeIdentity !== "function")) {
     return result("BLOCKED", "CAMOUFOX_PROTOCOL_INCOMPLETE", "Camoufox protocol lacks bounded login and identity capabilities", { platform: adapter.platform, accountId, identityReference: null, identityVerified: false, authenticated: false, postingRights: { status: "UNKNOWN", targetId: null, reason: "protocol_unavailable", evidence: null }, nextAction: "REPAIR_PROTOCOL" });
   }
