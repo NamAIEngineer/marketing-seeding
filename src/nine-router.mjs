@@ -12,6 +12,47 @@ const state = { catalog: null, checkedAt: null, failures: new Map(), selection: 
 let statusCache = null;
 let statusCacheAt = 0;
 
+const CAPABILITY_ALIASES = new Map([
+  ["vision", "vision"], ["visual", "vision"], ["multimodal", "vision"], ["image", "vision"], ["video", "vision"],
+  ["code", "code"], ["coding", "code"], ["program", "code"], ["programming", "code"],
+  ["reason", "reasoning"], ["reasoning", "reasoning"], ["research", "reasoning"], ["strategy", "reasoning"], ["analysis", "reasoning"],
+]);
+
+function capabilityToken(value) {
+  const token = String(value || "").trim().toLowerCase().replace(/[_-]+/g, " ");
+  return CAPABILITY_ALIASES.get(token) || (token ? token : null);
+}
+
+/** Normalize only explicit model capability evidence; absence stays unknown. */
+export function normalizeNineRouterCapabilities(value) {
+  if (value === undefined || value === null) return { capabilities: null, evidence: "absent" };
+  if (Array.isArray(value)) {
+    const capabilities = [...new Set(value.flatMap((item) => String(item || "").split(/[\s,]+/)).map(capabilityToken).filter(Boolean))];
+    return { capabilities, evidence: capabilities.length ? "observed" : "empty" };
+  }
+  if (typeof value === "string") {
+    const capabilities = [...new Set(value.split(/[\s,]+/).map(capabilityToken).filter(Boolean))];
+    return { capabilities, evidence: capabilities.length ? "observed" : "empty" };
+  }
+  if (typeof value === "object") {
+    const entries = Object.entries(value);
+    if (!entries.length) return { capabilities: [], evidence: "empty" };
+    const booleanEntries = entries.filter(([, enabled]) => typeof enabled === "boolean");
+    if (!booleanEntries.length || booleanEntries.length !== entries.length) return { capabilities: null, evidence: "unknown" };
+    const capabilities = [...new Set(booleanEntries.filter(([, enabled]) => enabled).map(([name]) => capabilityToken(name)).filter(Boolean))];
+    return { capabilities, evidence: "observed" };
+  }
+  return { capabilities: null, evidence: "unknown" };
+}
+
+export function requiredNineRouterCapability(task) {
+  const value = String(task || "").trim().toLowerCase();
+  if (/(^|[^a-z])(media|vision|image|video)([^a-z]|$)/.test(value)) return "vision";
+  if (/(^|[^a-z])(code|coding|program|programming)([^a-z]|$)/.test(value)) return "code";
+  if (/(^|[^a-z])(reason|reasoning|research|strategy|analysis)([^a-z]|$)/.test(value)) return "reasoning";
+  return null;
+}
+
 function endpoint(value) {
   const raw = String(value || NINE_ROUTER_DEFAULT_ENDPOINT).trim().replace(/\/+$/, "");
   const parsed = new URL(raw);
@@ -68,7 +109,15 @@ async function requestModels(base, apiKey) {
     if (!response.ok) return { ok: false, failure: classifyFailure(response.status, body), status: response.status };
     let parsed;
     try { parsed = JSON.parse(body); } catch { return { ok: false, failure: { kind: "INVALID_RESPONSE", retryable: false, reason: "9Router /v1/models returned invalid JSON" } }; }
-    const models = Array.isArray(parsed?.data) ? parsed.data.map((item) => ({ id: String(item?.id || "").trim(), ownedBy: String(item?.owned_by || item?.ownedBy || "").trim() || null })).filter((item) => item.id).slice(0, 500) : [];
+    const models = Array.isArray(parsed?.data) ? parsed.data.map((item) => {
+      const capabilityInfo = normalizeNineRouterCapabilities(item?.capabilities ?? item?.metadata?.capabilities);
+      return {
+        id: String(item?.id || "").trim(),
+        ownedBy: String(item?.owned_by || item?.ownedBy || "").trim() || null,
+        capabilities: capabilityInfo.capabilities,
+        capabilityEvidence: capabilityInfo.evidence,
+      };
+    }).filter((item) => item.id).slice(0, 500) : [];
     return { ok: true, models };
   } catch (error) {
     return { ok: false, failure: { kind: error?.name === "AbortError" ? "TIMEOUT" : "UNAVAILABLE", retryable: true, reason: error?.name === "AbortError" ? "9Router model catalog timed out" : "9Router is not reachable" } };
@@ -108,15 +157,18 @@ export async function connectNineRouter({ endpoint: requestedEndpoint, apiKey })
 
 export async function selectNineRouterModel({ task = "default", preferredModel = null } = {}) {
   const status = await nineRouterStatus({ refresh: true });
+  const normalizedTask = String(task).slice(0, 120);
+  const requiredCapability = requiredNineRouterCapability(normalizedTask);
   if (!status.authenticated) {
-    state.selection = { task: String(task).slice(0, 120), model: null, reason: "9Router connection required; live model catalog is not authenticated", at: new Date().toISOString() };
+    state.selection = { task: normalizedTask, requiredCapability, model: null, reason: "9Router connection required; live model catalog is not authenticated", at: new Date().toISOString() };
     return { ...state.selection, status };
   }
-  const available = new Set(status.models.map((model) => model.id));
+  const compatibleModels = status.models.filter((model) => !requiredCapability || (model.capabilityEvidence === "observed" && Array.isArray(model.capabilities) && model.capabilities.includes(requiredCapability)));
+  const available = new Set(compatibleModels.map((model) => model.id));
   const candidates = [preferredModel, process.env.SEEDING_9ROUTER_DEFAULT_MODEL, ...status.models.map((model) => model.id)].filter(Boolean);
-  const selected = candidates.find((model) => available.has(model) && !state.failures.get(model)?.until || false);
-  const fallbackReason = selected === preferredModel ? "preferred model available in live catalog" : selected ? "preferred model unavailable; selected compatible live catalog fallback" : "no model passed live catalog and quota/error checks";
-  state.selection = { task: String(task).slice(0, 120), model: selected || null, reason: fallbackReason, at: new Date().toISOString() };
+  const selected = candidates.find((model) => available.has(model) && !(state.failures.get(model)?.until > Date.now()));
+  const fallbackReason = selected === preferredModel ? "preferred model available in live catalog" : selected ? "preferred model unavailable; selected compatible live catalog fallback" : requiredCapability ? `no live model has verified ${requiredCapability} capability evidence` : "no model passed live catalog and quota/error checks";
+  state.selection = { task: normalizedTask, requiredCapability, model: selected || null, reason: fallbackReason, at: new Date().toISOString() };
   return { ...state.selection, status };
 }
 
