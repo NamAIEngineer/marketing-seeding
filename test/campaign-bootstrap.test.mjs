@@ -6,6 +6,7 @@ import path from "node:path";
 import { JsonStore } from "../src/store.mjs";
 import { SeedingService } from "../src/service.mjs";
 import { contentSha256 } from "../src/execution-contracts.mjs";
+import { deriveBootstrapSchedule } from "../src/campaign-bootstrap.mjs";
 
 async function fixture(t, { accountCount = 1, freshReadiness = true, readinessProvider = false } = {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), "campaign-bootstrap-"));
@@ -108,6 +109,48 @@ test("zero-touch bootstrap derives exact authority and is idempotent", async (t)
   assert.equal(after.submissionUncertainties.length, before.submissionUncertainties.length);
 });
 
+test("standing reference cannot bootstrap a second campaign scope", async (t) => {
+  const { service, productRepo, now } = await fixture(t);
+  const first = await service.bootstrapAutonomousCampaign(brief(productRepo, now));
+  assert.equal(first.status, "READY_FOR_AUTONOMOUS_EXECUTION");
+  const before = await service.snapshot();
+
+  const second = await service.bootstrapAutonomousCampaign(brief(productRepo, new Date(now.getTime() + 60_000), {
+    objective: "A differently worded objective must not fork the standing authority"
+  }));
+
+  assert.equal(second.status, "BLOCKED");
+  assert.equal(second.code, "STANDING_AUTHORIZATION_REFERENCE_SCOPE_CONFLICT");
+  assert.equal(second.blockers[0].classification, "AUTHORIZATION_BLOCKER");
+  const after = await service.snapshot();
+  assert.equal(after.campaigns.length, before.campaigns.length);
+  assert.equal(after.campaignAuthorizations.length, before.campaignAuthorizations.length);
+  assert.equal(after.executionRequests.length, before.executionRequests.length);
+});
+
+test("zero-touch bootstrap derives a new content identity when high-level story policy changes", async (t) => {
+  const { service, productRepo, now } = await fixture(t);
+  const first = await service.bootstrapAutonomousCampaign(brief(productRepo, now, {
+    callToAction: "Review the verified repository evidence."
+  }));
+  assert.equal(first.status, "READY_FOR_AUTONOMOUS_EXECUTION");
+  const before = await service.snapshot();
+  const firstRequest = before.executionRequests.find((item) => item.executionId === first.executionId);
+
+  const second = await service.bootstrapAutonomousCampaign(brief(productRepo, new Date(now.getTime() + 60_000), {
+    callToAction: "Inspect the local design workflow evidence."
+  }));
+  assert.equal(second.status, "READY_FOR_AUTONOMOUS_EXECUTION");
+  assert.notEqual(second.authorizationId, first.authorizationId);
+  assert.notEqual(second.content.contentHash, first.content.contentHash);
+
+  const after = await service.snapshot();
+  assert.equal(after.executionRequests.find((item) => item.executionId === first.executionId).executionId, firstRequest.executionId);
+  assert.equal(after.stories.filter((item) => item.campaignId === first.campaignId).length, 2);
+  assert.equal(after.submissionUncertainties.length, 0);
+  assert.equal(after.executionRequests.filter((item) => item.jobId === second.postId && item.request?.dryRun !== true).length, 1);
+});
+
 test("zero-touch bootstrap resolves a product-only brief from a bounded repository root", async (t) => {
   const { service, productRepo, now } = await fixture(t);
   const result = await service.bootstrapAutonomousCampaign({
@@ -157,10 +200,38 @@ test("zero-touch bootstrap fails closed when account or target authority is miss
   assert.equal((await ambiguous.service.snapshot()).campaigns.length, 0);
 });
 
+test("bootstrap reports authorization quota blockers instead of readiness reason", async (t) => {
+  const { service, productRepo, now } = await fixture(t, { readinessProvider: true });
+  await service.store.mutate("quota-fixture", "install_same_day_account_activity", (state) => {
+    const target = state.targets.find((item) => item.channel === "linkedin");
+    state.posts.push({
+      id: "quota-fixture-post",
+      campaignId: "quota-fixture-campaign",
+      targetId: target.id,
+      status: "published",
+      publishedAt: now.toISOString(),
+      createdAt: now.toISOString()
+    });
+  });
+
+  const result = await service.bootstrapAutonomousCampaign(brief(productRepo, now));
+  assert.equal(result.status, "BLOCKED");
+  assert.equal(result.blockers[0].code, "account_daily_limit_reached");
+  assert.equal(result.blockers[0].classification, "AUTHORIZATION_BLOCKER");
+  assert.match(result.blockers[0].message, /account daily post quota/i);
+
+  const state = await service.snapshot();
+  const post = state.posts.find((item) => item.id === result.postId);
+  assert.ok(post);
+  assert.ok(post.authorizationDecision.reasons.includes("account_daily_limit_reached"));
+  assert.equal(state.posts.find((item) => item.id === "quota-fixture-post").status, "published");
+});
+
 test("stale readiness never produces live execution controls", async (t) => {
   const { service, productRepo, now } = await fixture(t, { freshReadiness: false });
   const result = await service.bootstrapAutonomousCampaign(brief(productRepo, now));
   assert.equal(result.status, "BLOCKED");
+  assert.equal(result.blockers[0].classification, "RUNTIME_BLOCKER");
   const state = await service.snapshot();
   assert.equal(state.executionRequests.length, 0);
   assert.equal(state.oneTimeExecutionWindows.length, 0);
@@ -196,6 +267,137 @@ test("expired bootstrap schedule renews exact authority without mutating histori
   assert.equal(campaign.autonomousBootstrap.schedule.identity, renewed.schedule.identity);
   assert.ok(Date.parse(campaign.autonomousBootstrap.schedule.validUntil) > now.getTime());
   assert.equal(after.executionRequests.filter((item) => item.jobId === renewed.postId && item.request?.dryRun !== true).length, 2);
+});
+
+test("scheduler renews persisted bootstrap policy without a per-post brief", async (t) => {
+  const { service, productRepo, now } = await fixture(t);
+  const first = await service.bootstrapAutonomousCampaign(brief(productRepo, now));
+  assert.equal(first.status, "READY_FOR_AUTONOMOUS_EXECUTION");
+  const before = await service.snapshot();
+  const oldAuthorization = structuredClone(before.campaignAuthorizations.find((item) => item.id === first.authorizationId));
+
+  // Model an expired pre-dispatch queue row. The historical authority remains
+  // terminal and all old controls are removed only because no submit intent
+  // ever existed; the scheduler must derive a new exact package from the
+  // persisted high-level bootstrap policy.
+  await service.store.mutate("test", "expire_pre_dispatch_bootstrap_policy", (state) => {
+    const campaign = state.campaigns.find((item) => item.id === first.campaignId);
+    const expiredSchedule = deriveBootstrapSchedule({ now: new Date(now.getTime() - 25 * 60 * 60_000), validityHours: 24, timezone: "UTC", quota: 1, concurrency: 1 });
+    campaign.autonomousBootstrap.schedule = expiredSchedule;
+    const authorization = state.campaignAuthorizations.find((item) => item.id === first.authorizationId);
+    authorization.status = "expired";
+    const post = state.posts.find((item) => item.id === first.postId);
+    post.status = "blocked";
+    post.executionState = null;
+    post.authorizationDecision = { evaluatedAt: now.toISOString(), allowed: false, reasons: ["campaign_authorization_expired"] };
+    state.executionRequests = state.executionRequests.filter((item) => item.jobId !== post.id);
+    state.executionLeases = state.executionLeases.filter((item) => item.jobId !== post.id);
+    state.oneTimeExecutionWindows = state.oneTimeExecutionWindows.filter((item) => item.jobId !== post.id);
+    state.liveExecutionGrants = state.liveExecutionGrants.filter((item) => item.jobId !== post.id);
+    state.executionReceipts = state.executionReceipts.filter((item) => item.jobId !== post.id);
+    state.publicationAttempts = state.publicationAttempts.filter((item) => item.postId !== post.id);
+    return state;
+  });
+
+  await service.queueDueCampaignJobs("campaign-queue-scheduler");
+  const after = await service.snapshot();
+  const renewed = after.campaigns.find((item) => item.id === first.campaignId).autonomousBootstrap.schedule;
+  const active = after.campaignAuthorizations.filter((item) => item.campaignId === first.campaignId && item.status === "active");
+  const post = after.posts.find((item) => item.id === first.postId);
+  // The fixture and scheduler tick can fall in the same UTC minute, so the
+  // deterministic schedule identity may remain stable while its expired
+  // validity is renewed. The authority identity still changes and the new
+  // bounded window must be in the future.
+  assert.ok(Date.parse(renewed.validUntil) > Date.now());
+  assert.equal(active.length, 1);
+  assert.notEqual(active[0].id, oldAuthorization.id);
+  assert.equal(post.campaignAuthorizationId, active[0].id);
+  assert.equal(post.status, "queued");
+  assert.equal(after.executionRequests.filter((item) => item.jobId === post.id && item.request?.dryRun !== true).length, 1);
+  assert.equal(after.oneTimeExecutionWindows.filter((item) => item.jobId === post.id).length, 1);
+  assert.equal(after.liveExecutionGrants.filter((item) => item.jobId === post.id).length, 1);
+  const historical = after.campaignAuthorizations.find((item) => item.id === oldAuthorization.id);
+  assert.equal(historical.status, "expired");
+  assert.equal(historical.validUntil, oldAuthorization.validUntil);
+
+  const counts = {
+    authorizations: after.campaignAuthorizations.length,
+    posts: after.posts.length,
+    executions: after.executionRequests.length,
+    windows: after.oneTimeExecutionWindows.length,
+    grants: after.liveExecutionGrants.length
+  };
+  await service.queueDueCampaignJobs("campaign-queue-scheduler-repeat");
+  const repeated = await service.snapshot();
+  assert.deepEqual({
+    authorizations: repeated.campaignAuthorizations.length,
+    posts: repeated.posts.length,
+    executions: repeated.executionRequests.length,
+    windows: repeated.oneTimeExecutionWindows.length,
+    grants: repeated.liveExecutionGrants.length
+  }, counts);
+});
+
+test("scheduler fails closed when persisted bootstrap account or target binding drifts", async (t) => {
+  for (const mode of ["account", "target"]) {
+    const { service, productRepo, now } = await fixture(t);
+    const first = await service.bootstrapAutonomousCampaign(brief(productRepo, now));
+    assert.equal(first.status, "READY_FOR_AUTONOMOUS_EXECUTION");
+    await service.store.mutate("test", `expire_bootstrap_${mode}_binding`, (state) => {
+      const campaign = state.campaigns.find((item) => item.id === first.campaignId);
+      const expiredSchedule = deriveBootstrapSchedule({ now: new Date(now.getTime() - 25 * 60 * 60_000), validityHours: 24, timezone: "UTC", quota: 1, concurrency: 1 });
+      campaign.autonomousBootstrap.schedule = expiredSchedule;
+      const authorization = state.campaignAuthorizations.find((item) => item.id === first.authorizationId);
+      authorization.status = "expired";
+      if (mode === "account") {
+        state.executionAccounts.find((item) => item.accountId === authorization.destinations[0].accountId).health = "quarantined";
+      } else {
+        state.targets.find((item) => item.id === campaign.autonomousBootstrap.targetId).url = "https://www.linkedin.com/feed/?drifted=1";
+      }
+      return state;
+    });
+    const before = await service.snapshot();
+    await service.queueDueCampaignJobs(`campaign-queue-scheduler-${mode}`);
+    const after = await service.snapshot();
+    assert.equal(after.campaignAuthorizations.filter((item) => item.campaignId === first.campaignId && item.status === "active").length, 0, mode);
+    assert.equal(after.executionRequests.length, before.executionRequests.length, mode);
+    assert.equal(after.oneTimeExecutionWindows.length, before.oneTimeExecutionWindows.length, mode);
+    assert.equal(after.liveExecutionGrants.length, before.liveExecutionGrants.length, mode);
+  }
+});
+
+test("scheduler does not renew persisted bootstrap policy across an immutable UNKNOWN", async (t) => {
+  const { service, productRepo, now } = await fixture(t);
+  const first = await service.bootstrapAutonomousCampaign(brief(productRepo, now));
+  assert.equal(first.status, "READY_FOR_AUTONOMOUS_EXECUTION");
+  await service.store.mutate("test", "expire_unknown_bootstrap_policy", (state) => {
+    const campaign = state.campaigns.find((item) => item.id === first.campaignId);
+    const expiredSchedule = deriveBootstrapSchedule({ now: new Date(now.getTime() - 25 * 60 * 60_000), validityHours: 24, timezone: "UTC", quota: 1, concurrency: 1 });
+    campaign.autonomousBootstrap.schedule = expiredSchedule;
+    const authorization = state.campaignAuthorizations.find((item) => item.id === first.authorizationId);
+    authorization.status = "expired";
+    const post = state.posts.find((item) => item.id === first.postId);
+    post.status = "submit_result_unknown";
+    post.executionState = "SUBMIT_RESULT_UNKNOWN";
+    const execution = state.executionRequests.find((item) => item.executionId === first.executionId);
+    execution.state = "SUBMIT_RESULT_UNKNOWN";
+    execution.submitState = "UNKNOWN";
+    state.submissionUncertainties.push({
+      id: "scheduler-immutable-unknown", status: "UNKNOWN", jobId: post.id,
+      campaignId: post.campaignId, executionId: first.executionId,
+      platform: "linkedin", accountId: "linkedin-bootstrap-0", targetId: post.targetId,
+      idempotencyKeys: [post.idempotencyKey], contentSha256: post.contentHash,
+      detectedAt: now.toISOString(), reasonCode: "transport_ambiguous"
+    });
+    return state;
+  });
+  const before = await service.snapshot();
+  await service.queueDueCampaignJobs("campaign-queue-scheduler");
+  const after = await service.snapshot();
+  assert.equal(after.campaignAuthorizations.filter((item) => item.campaignId === first.campaignId && item.status === "active").length, 0);
+  assert.equal(after.executionRequests.length, before.executionRequests.length);
+  assert.equal(after.submissionUncertainties.length, before.submissionUncertainties.length);
+  assert.equal(after.submissionUncertainties[0].status, "UNKNOWN");
 });
 
 test("terminal bootstrap authorization renews from high-level input when the candidate never crossed dispatch", async (t) => {

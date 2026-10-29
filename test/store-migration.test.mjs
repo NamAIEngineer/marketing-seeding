@@ -19,6 +19,7 @@ test("v1 state migrates additively to v8 without dropping existing records", () 
   assert.deepEqual(state.executionRequests, []);
   assert.deepEqual(state.executionReceipts, []);
   assert.deepEqual(state.executionLeases, []);
+  assert.deepEqual(state.listeningJobs, []);
   assert.deepEqual(state.artifacts, []);
   assert.deepEqual(state.stories, []);
   assert.equal(state.revision, 5);

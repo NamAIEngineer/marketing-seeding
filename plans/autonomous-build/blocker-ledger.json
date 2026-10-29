@@ -19,18 +19,18 @@
     },
     {
       "blocker_id": "LIVE-LINKEDIN-AUTH-001",
-      "classification": "EXTERNAL_HARD_BLOCKER",
+      "classification": "AUTHORITY_BRIDGE",
       "milestone": "live-linkedin-proof",
-      "root_cause": "Canonical runtime has no active exact LIVE campaign authorization, one-time window, execution-scoped grant, or lease; existing records are terminal, expired, paused, superseded, consumed or revoked.",
-      "affected_scope": "fresh real LinkedIn publish acceptance",
+      "root_cause": "The scheduler previously required a per-post low-level brief after a standing bootstrap schedule expired. The zero-touch renewal bridge now derives fresh exact standing authority from persisted high-level campaign policy.",
+      "affected_scope": "routine standing authority renewal",
       "detected_at": "2026-10-17T00:00:00Z",
-      "status": "EXTERNAL_HARD_BLOCKER",
+      "status": "RESOLVED",
       "owner_worker": "master",
-      "remediation": "Implemented and regression-tested standing bounded delegation; obtain fresh exact authority only in a separately authorized live lane.",
-      "verification": "Zero-touch bootstrap derived exact campaign/product/account/profile/target/content/window/grant/request controls and one fresh execution. Execution 39e667ef-f564-4480-bdbb-0247f3213bd0 used one durable submit intent and one autonomous final action; it is now SUBMIT_RESULT_UNKNOWN and quarantined. No retry or historical UNKNOWN mutation. Canonical observation after reconciliation: schema 8 revision 5673; effective time-valid authorization/window/grant/lease controls were 0/0/0/0 (raw rows included five active authorization records and one expired ACTIVE grant).",
-      "resolved_at": null,
-      "resume_point": "Fresh exact authorized LinkedIn campaign/account/profile/session input and policy permitting one harmless live test",
-      "external_dependency": "Authorized campaign objective/content, account/profile, target and policy permitting one harmless live test",
+      "remediation": "Added scheduler-only persisted-policy renewal through bootstrapAutonomousCampaign with exact authorization/campaign fingerprints, single-destination validation, binding drift checks, schedule validation, and UNKNOWN/submission fences.",
+      "verification": "Canonical read-only audit at state revision 14379 and SHA-256 d9882d2c33f513006238273cda8aaea2b91aa00556237a86488c8224965b7b18 observed six active Design OS standing_autonomous/live authorizations. Renewal created no request, one-time window, grant, lease, publication, browser action, or UNKNOWN row. See plans/autonomous-build/standing-autonomous-renewal/report.md and reports/post-renewal-bootstrap-audit-20261021.md.",
+      "resolved_at": "2026-10-21T23:15:39Z",
+      "resume_point": "Use the active standing authority only after normal quota, readiness, one-time-window, grant, transport, and publication-verification gates pass.",
+      "external_dependency": "None for authority derivation. Fresh real publication still requires a certified LinkedIn transport and independently observable platform result.",
       "last_checked_at": "2026-10-21T07:14:12Z"
     },
     {
@@ -43,11 +43,11 @@
       "status": "OPEN",
       "owner_worker": "master",
       "remediation": "Re-pinned the executable and connected runtime to ORCA 1.4.229, then ran the repeatable certification harness for both accessibility and pointer transports plus a reversible LinkedIn composer control. The transport abstraction remains deterministic and fail-closed for irreversible scope.",
-      "verification": "Fresh execution 39e667ef-f564-4480-bdbb-0247f3213bd0 persisted pre-submit evidence, one click and transport receipt. Activation evidence is CONTROL_NOT_OBSERVED; acceptance and publication are UNKNOWN. The attempt is quarantined and not retried.",
+      "verification": "Reversible ORCA control activation remains locally repeatable, but fresh LinkedIn execution 39e667ef-f564-4480-bdbb-0247f3213bd0 returned COMMAND_COMPLETED with CONTROL_NOT_OBSERVED; acceptance and independent publication were absent. Six immutable UNKNOWN records remain quarantined and no retry or second click occurred. Real irreversible-submit certification remains open.",
       "resolved_at": null,
       "resume_point": "Use either pinned transport only after a fresh exact live authority and readiness are available; irreversible LinkedIn publication still requires independent acceptance and publication proof.",
       "external_dependency": "Fresh authorized LinkedIn live lane is required for irreversible-submit/publication proof; transport control-activation certification itself is complete.",
-      "last_checked_at": "2026-10-21T07:14:12Z"
+      "last_checked_at": "2026-10-21T23:15:39Z"
     },
     {
       "blocker_id": "METRICS-CHECKPOINT-LIVE-001",
@@ -74,12 +74,12 @@
       "detected_at": "2026-10-18T00:00:00Z",
       "status": "OPEN",
       "owner_worker": "master",
-      "remediation": "Integrated the existing System-Agentic Seatbelt backend through the narrow Product Factory adapter, routed Node through the allowlisted Node 22 runtime, and staged below /usr/local/bin on macOS. Keep arbitrary project execution fail-closed until all seven profile checks are independently attested.",
-      "verification": "Focused Product Factory adapter gate 20/20 passed. Local-real staged node --check smoke passed at 2026-10-21T10:56:46.101Z with externalSideEffects=false; the smoke did not execute arbitrary project commands. Production factory-sandbox-v1 attestation remains absent.",
+      "remediation": "Reuse existing System-Agentic typed Seatbelt backend through current adapter; do not create another sandbox. Keep arbitrary Product Factory execution fail-closed until independent seven-check attestation is persisted.",
+      "verification": "Read-only reuse audit 2026-10-22 confirms existing System-Agentic typed Seatbelt backend and marketing adapter are reusable in fail-closed mode. Synthetic /bin/echo invocation completed under READ_ONLY; no arbitrary project command ran. Seven-check host attestation remains absent; executionEligible remains false. See plans/autonomous-build/reports/product-factory-seatbelt-reuse-audit-20261022.md",
       "resolved_at": null,
       "resume_point": "An independently reviewed sandbox with explicit network/filesystem/process/resource policy and descendant cleanup",
       "external_dependency": "Audited OS/container sandbox capability on the execution host",
-      "last_checked_at": "2026-10-21T10:56:46.101Z"
+      "last_checked_at": "2026-10-21T23:15:39Z"
     },
     {
       "blocker_id": "RELEASE-JOURNAL-DRIFT-001",
@@ -99,26 +99,32 @@
     }
   ],
   "last_audit": {
-    "at": "2026-10-21T10:56:46Z",
-    "head": "a0cd61f",
+    "at": "2026-10-21T23:15:39Z",
+    "head": "689967903aea51a4935659c33c2fcc8513ef8565",
     "result": "FOUNDATION_ONLY_WITH_EXTERNAL_BLOCKERS",
     "externalSideEffects": false,
     "canonicalRuntimeMutated": false,
     "historicalUnknownMutated": false,
-    "report": "plans/autonomous-build/reports/release-gate-20261021.md",
-    "observed_at": "2026-10-21T10:03:28Z",
-    "canonical_state_sha256": "80aa214755361323dcf635c58d6e8872a11564c4ef57de88f4f994ae4f627d72",
+    "report": "plans/autonomous-build/standing-autonomous-renewal/report.md",
+    "observed_at": "2026-10-21T23:15:39Z",
+    "canonical_state_sha256": "d9882d2c33f513006238273cda8aaea2b91aa00556237a86488c8224965b7b18",
     "raw_control_counts": {
-      "authorizations_status_active": 5,
-      "grants_status_active": 1,
+      "authorizations_status_active": 6,
+      "grants_status_active": 0,
       "windows_status_active_or_reserved": 0,
       "leases": 0
     },
     "effective_live_control_counts": {
-      "authorizations_within_validity": 1,
+      "authorizations_within_validity": 6,
       "grants_within_validity": 0,
       "windows_within_validity": 0,
       "leases": 0
-    }
+    },
+    "design_os_bootstrap_campaigns": 6,
+    "execution_requests": 85,
+    "immutable_unknown": 6,
+    "published_posts": 0,
+    "renewal_created_external_side_effects": false,
+    "product_factory_reuse_audit": "plans/autonomous-build/reports/product-factory-seatbelt-reuse-audit-20261022.md"
   }
 }

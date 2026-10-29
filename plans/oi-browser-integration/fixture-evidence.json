@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "evidenceStatus": "FIXTURE_VERIFIED",
+  "provenance": {
+    "artifactStatus": "HISTORICAL_SUMMARY",
+    "candidateEvidence": "fixture-run-6600387.json",
+    "fixtureHost": "fixture.test",
+    "fixtureSnapshotUrl": "https://fixture.test/community",
+    "execution": "isolated temporary JsonStore and BrowserInteractionFixture",
+    "sourceRevision": "1e471c44b5d63aa5aadb708623b21090b6f325b2"
+  },
+  "case": {
+    "campaign": "Product X developer awareness",
+    "communityA": "technical educational content accepted",
+    "communityB": "direct promotion restricted"
+  },
+  "memory": {
+    "observationEvidence": ["publication:fixture-1", "publication:fixture-2"],
+    "learningKind": "LEARNING",
+    "sampleSupport": 2,
+    "verifiedCount": 2,
+    "decisionHint": "prefer_target:<targetId>"
+  },
+  "decision": {
+    "entrypoint": "SeedingService.runCampaignControlCycle",
+    "before": { "action": "publish", "candidate": "deterministic-first" },
+    "after": { "action": "publish", "candidate": "preferred-target-from-learning", "changed": true },
+    "rationaleEvidence": ["memory:learning-<id>", "publication:fixture-1", "publication:fixture-2"]
+  },
+  "provider": {
+    "status": "SUCCEEDED",
+    "providerId": "local-fixture-provider",
+    "outputPersisted": false,
+    "outputTelemetry": "digest-only"
+  },
+  "browser": {
+    "snapshotSource": "STATIC_HTTP",
+    "intentAction": "CLICK",
+    "commandStatus": "COMMAND_COMPLETED",
+    "verification": "CONTROL_ACTIVATED",
+    "evidenceRefs": ["fixture:before", "fixture:after"],
+    "replayed": true,
+    "fixtureClicks": 1,
+    "externalSideEffects": false
+  },
+  "restart": {
+    "memoryRetrievable": true,
+    "learningVisible": true,
+    "snapshotVisible": true,
+    "executionVisible": true
+  },
+  "livePublication": false,
+  "credentialsUsed": false
+}

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "evidenceStatus": "RUNTIME_VERIFIED",
+  "runRevision": "df2f775ee23dd4475e9b358bc42f5e1770b73e29",
+  "sourceDirty": false,
+  "port": 4324,
+  "stateDirectory": "private temporary state directory",
+  "externalSideEffects": false,
+  "credentialsUsed": false,
+  "providerModel": "/Users/nam/.cache/system-agentic-ai/Qwen3-8B-4bit",
+  "health": {
+    "ok": true,
+    "sourceCommit": "df2f775ee23dd4475e9b358bc42f5e1770b73e29",
+    "schemaVersion": 8,
+    "stateRevisionAfterRestart": 3
+  },
+  "unauthorizedProviderRoute": {
+    "status": 401,
+    "error": "operator_token_required"
+  },
+  "providerRoute": {
+    "status": "SUCCEEDED",
+    "providerId": "local-qwen",
+    "modelHealth": "READY",
+    "executionSucceeded": true,
+    "outputTelemetry": "digest-only",
+    "persisted": true
+  },
+  "persistenceAfterRestart": {
+    "memoryItems": 1,
+    "browserSnapshots": 1,
+    "successfulProviderRoutes": 1,
+    "schemaVersion": 8,
+    "verified": true
+  },
+  "dashboard": {
+    "oiBrowserEvidenceStatus": "IMPLEMENTED",
+    "autoGtmStatus": "unavailable",
+    "autoGtmReason": "feed_not_generated"
+  },
+  "livePublication": false
+}

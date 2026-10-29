@@ -1,0 +1,26 @@
+{
+  "artifactVersion": 1,
+  "classification": "FIXTURE_VERIFIED",
+  "recordedAt": "2026-10-29T00:24:15.686515Z",
+  "candidateBranch": "integration/session-c-reconciled",
+  "verificationRevision": "65606a5bcbc2a5b7b7d23299d81ed76f0a8182b8",
+  "sourceTestRevision": "85913e984a4c45c2278be2fe644055426a1455c4",
+  "command": "node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs test/project-coordinator.test.mjs test/orca-native-session.test.mjs",
+  "result": {
+    "tests": 49,
+    "passed": 49,
+    "failed": 0,
+    "skipped": 0
+  },
+  "outputSha256": "de11261bb35be32814d29d41aa1bac04978d7be4adcb89a326ecacb221a05d6f",
+  "scope": [
+    "memory evidence independence and polling dedupe",
+    "provider body/JSON deadline",
+    "provider cancellation",
+    "browser semantic binding",
+    "native coordinator recovery and acceptance scheduling"
+  ],
+  "externalSideEffects": false,
+  "liveEligible": false,
+  "notes": "Focused recheck only; source/test files unchanged after 85913e9. Full suite evidence remains pinned to its exact historical source revision."
+}

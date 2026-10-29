@@ -1,0 +1,554 @@
+{
+  "schemaVersion": 1,
+  "kind": "GPM_LINKEDIN_REVERSIBLE_COMPOSER_CALIBRATION",
+  "provider": "GPM",
+  "profileReference": "82614dc6-2b75-4515-896c-32f73cb5ec51",
+  "profileLabel": "Profile 5671",
+  "browser": "Chrome/154.0.8037.98",
+  "target": "linkedin.com/feed/",
+  "attempts": 20,
+  "positiveActivations": 20,
+  "wrongTargetActivations": 0,
+  "activationSuccessRate": 1,
+  "silentFallbacks": 0,
+  "providerSwitches": 0,
+  "finalPostClicks": 0,
+  "publicationAttempts": 0,
+  "policy": {
+    "minimumTrials": 20,
+    "minimumActivationRate": 0.95,
+    "maximumWrongTargetActivations": 0
+  },
+  "certified": true,
+  "identityBinding": {
+    "runtimeVersion": "Chrome/154.0.8037.98",
+    "profileReferenceHash": "sha256:4aa099c99f37445307998cb6e80298e8",
+    "sessionReferenceHash": "sha256:39402bbc491080f86c69f6f76a9f18ac",
+    "adapterVersion": "wave/distribution-os-runtime-wave-13-bridge@0cfde51ae70e067bd3a8f020d95eba9704c3f375"
+  },
+  "attestationReference": "sha256:b779a58ef094e9a856021c6dd4e06fb1",
+  "startedAt": "2026-10-26T01:30:01.808Z",
+  "finishedAt": "2026-10-26T01:32:03.467Z",
+  "rows": [
+    {
+      "trial": 1,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 2,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 3,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 4,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 5,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 6,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 7,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 8,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 9,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 10,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 11,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 12,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 13,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 14,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 15,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 16,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 17,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 18,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 19,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    },
+    {
+      "trial": 20,
+      "before": {
+        "linkedinDomain": true,
+        "loginRequired": false,
+        "securityChallenge": false,
+        "sessionAuthenticated": true,
+        "authenticatedNavigation": true,
+        "composerTrigger": true,
+        "identityVerified": true,
+        "feedReachable": true
+      },
+      "after": {
+        "route": true,
+        "dialogCount": 1,
+        "editorCount": 1,
+        "audience": true,
+        "postButton": true,
+        "mediaControl": true,
+        "closeControl": true,
+        "confirmed": true
+      },
+      "activation": "CONTROL_ACTIVATED",
+      "error": null,
+      "cleanup": true
+    }
+  ]
+}

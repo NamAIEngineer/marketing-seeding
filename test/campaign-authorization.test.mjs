@@ -9,7 +9,7 @@ import { SeedingService } from "../src/service.mjs";
 import { campaignAuthorizationFingerprint, campaignContentHash, campaignScopeFingerprint, evaluateCampaignAuthorization } from "../src/campaign-authorization.mjs";
 import { approvalFingerprint, evaluateQueue } from "../src/guards.mjs";
 
-async function campaignFixture({ channels = ["threads"], rateLimits = {}, allowRepeatSameContent = false } = {}) {
+async function campaignFixture({ channels = ["threads"], rateLimits = {}, allowRepeatSameContent = false, providerByChannel = {} } = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), "campaign-auth-test-"));
   const productRepo = path.join(directory, "product-repo");
   await mkdir(productRepo);
@@ -27,6 +27,7 @@ async function campaignFixture({ channels = ["threads"], rateLimits = {}, allowR
       platform: channel,
       accountId,
       profileId,
+      ...(providerByChannel[channel] ? { provider: providerByChannel[channel], providerProfileId: profileId } : {}),
       expectedIdentityUrl: channel === "linkedin" ? "https://www.linkedin.com/in/fixture-owner" : undefined
     }, "operator");
     targets.push(await service.createTarget({
@@ -47,7 +48,8 @@ async function campaignFixture({ channels = ["threads"], rateLimits = {}, allowR
     id: `auth-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     validFrom: new Date(Date.now() - 60_000).toISOString(),
     validUntil: new Date(Date.now() + 24 * 60 * 60_000).toISOString(),
-    destinations: targets.map((target) => ({ platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id })),
+    destinations: targets.map((target) => ({ platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id,
+      ...(target.provider ? { provider: target.provider, providerProfileId: target.providerProfileId, identityReference: target.identityReference } : {}) })),
     approvedAssets: [],
     contentBoundary: {
       mode: "approved_copy_set",
@@ -215,6 +217,58 @@ test("blocked pre-dispatch draft without an execution request does not block a n
   const fresh = state.posts.find((item) => item.id === "blocked-bootstrap-fresh-post");
   const decision = evaluateCampaignAuthorization(fresh, state);
   assert.equal(decision.reasons.includes("duplicate_content_for_account"), false);
+});
+
+test("ambiguous standing reference fails live campaign authorization eligibility", async () => {
+  const { service, campaign, targets, authorization } = await campaignFixture({ channels: ["linkedin"] });
+  const copy = "One exact standing scope only.";
+  const firstAuthorization = await authorization([copy], {
+    id: "standing-reference-first",
+    executionMode: "standing_autonomous",
+    standingAuthorizationReference: "one-reference-one-scope"
+  });
+  const post = await service.createPost({
+    campaignId: campaign.id,
+    targetId: targets[0].id,
+    content: copy,
+    audience: "public"
+  }, "producer");
+  const state = await service.snapshot();
+  const collisionCampaignId = "second-campaign-for-same-reference";
+  const collision = {
+    ...structuredClone(firstAuthorization),
+    id: "standing-reference-collision",
+    campaignId: collisionCampaignId
+  };
+  state.campaigns.push({ ...structuredClone(campaign), id: collisionCampaignId });
+  state.campaignAuthorizations.push(collision);
+
+  const decision = evaluateCampaignAuthorization(state.posts.find((item) => item.id === post.id), state);
+  assert.ok(decision.reasons.includes("standing_authorization_reference_ambiguous"));
+});
+
+test("standing authorization reference cannot be activated for a second campaign", async () => {
+  const { service, campaign, targets, authorization } = await campaignFixture({ channels: ["linkedin"] });
+  const copy = "One exact standing scope only.";
+  const firstAuthorization = await authorization([copy], {
+    id: "standing-reference-activation-first",
+    executionMode: "standing_autonomous",
+    standingAuthorizationReference: "one-reference-one-activation-scope"
+  });
+  const secondCampaign = await service.createCampaign({
+    name: "Second scope",
+    objective: "Must not inherit the first standing reference",
+    productRepo: campaign.productRepo
+  }, "operator");
+  await service.updateCampaign(secondCampaign.id, { status: "active" }, "operator");
+
+  await assert.rejects(service.authorizeCampaign(secondCampaign.id, {
+    ...firstAuthorization,
+    id: "standing-reference-activation-second",
+    campaignId: secondCampaign.id
+  }, "operator"), /already bound to a different campaign scope/i);
+  const state = await service.snapshot();
+  assert.equal(state.campaignAuthorizations.filter((item) => item.standingAuthorizationReference === "one-reference-one-activation-scope").length, 1);
 });
 
 test("same-platform/account copy duplicates are blocked across different targets", async () => {
@@ -388,6 +442,32 @@ test("campaign authorization profile binding can be corrected without changing i
   assert.equal(updated.destinations[0].profileId, nextProfileId);
   assert.equal(after.posts.find((item) => item.id === post.id).campaignAuthorizationBinding, stored.binding);
   assert.equal(evaluateCampaignAuthorization(after.posts.find((item) => item.id === post.id), after).reasons.includes("destination_not_authorized"), false);
+});
+
+test("provider-aware authorization rebinding requires and preserves the complete GPM binding", async () => {
+  const { service, campaign, targets, authorization } = await campaignFixture({ channels: ["linkedin"], providerByChannel: { linkedin: "gpm" } });
+  const target = targets[0];
+  const content = "GPM binding correction copy";
+  await service.createPost({ campaignId: campaign.id, targetId: target.id, content, audience: "public" }, "producer");
+  const auth = await authorization([content]);
+  const before = await service.snapshot();
+  const account = before.executionAccounts[0];
+  const nextProfileId = "gpm-profile-rotated";
+  await service.registerExecutionAccount({ ...account, profileId: nextProfileId, provider: "gpm", providerProfileId: nextProfileId }, "operator");
+  await service.updateTarget(target.id, {
+    profileId: nextProfileId, provider: "gpm", providerProfileId: nextProfileId,
+    identityReference: account.identityReference
+  }, "operator");
+  await assert.rejects(
+    service.updateCampaignAuthorizationProfileBinding(campaign.id, auth.id, target.id, nextProfileId, "operator"),
+    /Provider-aware authorization rebinding requires/
+  );
+  const updated = await service.updateCampaignAuthorizationProfileBinding(campaign.id, auth.id, target.id, {
+    profileId: nextProfileId, provider: "gpm", providerProfileId: nextProfileId, identityReference: account.identityReference
+  }, "operator");
+  assert.equal(updated.destinations[0].provider, "gpm");
+  assert.equal(updated.destinations[0].providerProfileId, nextProfileId);
+  assert.equal(updated.destinations[0].identityReference, account.identityReference);
 });
 
 test("concurrency limit carries across campaign authorization renewal", async () => {

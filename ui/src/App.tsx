@@ -1109,6 +1109,9 @@ function MissionControlPanel({ data }: { data: R }) {
     : Array.isArray(data?.executionAccounts)
       ? data.executionAccounts
       : []
+  const accountAgents = data?.accountAgents && typeof data.accountAgents === "object" ? data.accountAgents : null
+  const accountAgentRows = Array.isArray(accountAgents?.agents) ? accountAgents.agents : []
+  const accountAgentSelection = accountAgents?.selection && typeof accountAgents.selection === "object" ? accountAgents.selection : null
   const accountRows = accountRuntime.map((account: R) => ({
     id: String(account?.id || "UNKNOWN"),
     platform: String(account?.platform || "UNKNOWN"),
@@ -1156,6 +1159,17 @@ function MissionControlPanel({ data }: { data: R }) {
   const factorySandbox = data?.productFactorySandbox && typeof data.productFactorySandbox === "object"
     ? data.productFactorySandbox
     : null
+  const browserRuntime = data?.browserRuntime && typeof data.browserRuntime === "object"
+    ? data.browserRuntime
+    : null
+  const browserRuntimeRows = Array.isArray(browserRuntime?.routes) ? browserRuntime.routes.slice(0, 12) : []
+  const gpmCatalog = data?.gpmAccountCatalog && typeof data.gpmAccountCatalog === "object" ? data.gpmAccountCatalog : null
+  const gpmProfiles = Array.isArray(gpmCatalog?.catalog?.profiles) ? gpmCatalog.catalog.profiles.slice(0, 12) : []
+  const gpmAccounts = Array.isArray(gpmCatalog?.accounts) ? gpmCatalog.accounts.slice(0, 12) : []
+  const sessionReadiness = data?.sessionReadiness && typeof data.sessionReadiness === "object" ? data.sessionReadiness : null
+  const sessionRows = Array.isArray(sessionReadiness?.rows) ? sessionReadiness.rows.slice(0, 12) : []
+  const camoufoxSession = data?.camoufoxSession && typeof data.camoufoxSession === "object" ? data.camoufoxSession : null
+  const camoufoxSessionRows = Array.isArray(camoufoxSession?.sessions) ? camoufoxSession.sessions.slice(0, 12) : []
   const unsupportedClaimCount = productIntelligence.reduce((total: number, item: R) => {
     const document = item?.document && typeof item.document === "object" ? item.document : {}
     return total + (Array.isArray(document.CLAIMS_WE_CANNOT_MAKE) ? document.CLAIMS_WE_CANNOT_MAKE.length : 0)
@@ -1291,6 +1305,33 @@ function MissionControlPanel({ data }: { data: R }) {
       <div className="mission-account-runtime">
         <div className="mission-account-head">
           <div>
+            <span className="mission-eyebrow">Account agent selection</span>
+            <small>Read-only advisory selection · execution readiness remains authoritative</small>
+          </div>
+          <span className="status">{accountAgentSelection?.status || "UNKNOWN"}</span>
+        </div>
+        {accountAgentRows.length ? (
+          <div className="mission-account-list">
+            {accountAgentRows.map((agent: R) => {
+              const runtime = accountRows.find((row) => row.id.includes(String(agent.accountId || "")))
+              const selected = String(agent.agentId || "") === String(accountAgentSelection?.selectedAgentId || "")
+              return <article key={String(agent.agentId || agent.accountId || "UNKNOWN")}>
+                <div className="mission-account-title">
+                  <strong>{compactText(agent.accountId, "UNKNOWN", 60)}</strong>
+                  <span className={agent.eligibilityState === "ELIGIBLE" ? "status completed" : "status failed"}>
+                    {compactText(agent.eligibilityState, "UNKNOWN", 24)}{selected ? " · selected" : ""}
+                  </span>
+                </div>
+                <small>{compactText(agent.platform, "UNKNOWN", 32)} · {compactText(agent.provider, "UNKNOWN", 32)} · advisory reasons: {Array.isArray(agent.eligibilityReasons) && agent.eligibilityReasons.length ? agent.eligibilityReasons.join(" · ") : "—"}</small>
+                <small>Execution runtime: {runtime ? (runtime.eligible ? "ELIGIBLE" : `INELIGIBLE · ${runtime.blocker || "UNKNOWN"}`) : "UNKNOWN"}</small>
+              </article>
+            })}
+          </div>
+        ) : <div className="empty-state">Chưa có account agent projection.</div>}
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head">
+          <div>
             <span className="mission-eyebrow">Account / session readiness</span>
             <small>Read-only projection · không đăng nhập, chọn account hoặc chạy browser</small>
           </div>
@@ -1315,6 +1356,76 @@ function MissionControlPanel({ data }: { data: R }) {
         ) : (
           <div className="empty-state">Chưa có account runtime projection.</div>
         )}
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head">
+          <div>
+            <span className="mission-eyebrow">Browser runtime routing</span>
+            <small>Read-only route/health projection · hệ thống tự chọn transport theo workload</small>
+          </div>
+          <span className="status">{browserRuntimeRows.length ? `${browserRuntimeRows.length} workload` : "UNKNOWN"}</span>
+        </div>
+        {browserRuntimeRows.length ? (
+          <div className="mission-account-list">
+            {browserRuntimeRows.map((row: R) => (
+              <article key={String(row.workload)}>
+                <div className="mission-account-title">
+                  <strong>{compactText(row.workload, "UNKNOWN", 80)}</strong>
+                  <span className={row.health?.state === "READY" ? "status completed" : "status draft"}>
+                    {compactText(row.health?.state, "UNKNOWN", 24)}
+                  </span>
+                </div>
+                <small>Route: {compactText(row.route, "UNKNOWN", 40)} · transport: {compactText(row.transportId, "UNKNOWN", 80)}</small>
+                <small>Runtime: {compactText(row.runtimeIdentity?.provider, "UNKNOWN", 60)} {compactText(row.runtimeIdentity?.providerVersion, "", 40)}</small>
+                <small>Reason: {compactText(row.health?.reason || row.reason, "UNKNOWN", 120)}</small>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">Chưa có browser runtime projection.</div>
+        )}
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head">
+          <div><span className="mission-eyebrow">GPM account catalog</span><small>Read-only probe · fingerprints only · không điều khiển profile</small></div>
+          <span className="status">{gpmCatalog?.catalog?.state || "UNKNOWN"}</span>
+        </div>
+        {gpmCatalog && (gpmProfiles.length || gpmAccounts.length) ? (
+          <div className="mission-account-list">
+            <article><div className="mission-account-title"><strong>Catalog state counts</strong><span className="status">{gpmCatalog.summary?.catalogProfiles ?? 0} profiles</span></div><small>Bound {gpmCatalog.summary?.boundProfiles ?? 0} · Unbound {gpmCatalog.summary?.unboundProfiles ?? 0} · Ambiguous {gpmCatalog.summary?.ambiguousProfiles ?? 0} · Missing {gpmCatalog.summary?.missingProfiles ?? 0}</small></article>
+            {gpmProfiles.map((row: R) => <article key={String(row.profileFingerprint)}><div className="mission-account-title"><strong>{compactText(row.name, "UNKNOWN", 60)}</strong><span className="status">{row.linkage?.status || "UNKNOWN"}</span></div><small>Profile fingerprint: {compactText(row.profileFingerprint, "UNKNOWN", 20)} · accounts {row.linkage?.accountCount ?? 0}</small></article>)}
+            {gpmAccounts.map((row: R) => <article key={`account-${String(row.profileFingerprint)}-${String(row.accountId)}`}><div className="mission-account-title"><strong>{compactText(row.platform, "UNKNOWN", 40)} account</strong><span className="status">{row.catalogLinkage || "UNKNOWN"}</span></div><small>Profile fingerprint: {compactText(row.profileFingerprint, "UNKNOWN", 20)}</small></article>)}
+          </div>
+        ) : <div className="empty-state">Catalog UNKNOWN hoặc chưa có GPM endpoint.</div>}
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head">
+          <div><span className="mission-eyebrow">Session readiness</span><small>Read-only exact binding · không tạo lease hoặc authority</small></div>
+          <span className="status">{sessionReadiness?.summary?.ready ?? 0}/{sessionReadiness?.summary?.accounts ?? 0} READY</span>
+        </div>
+        {sessionRows.length ? (
+          <div className="mission-account-list">
+            {sessionRows.map((row: R) => <article key={`${String(row.platform)}-${String(row.accountId)}-${String(row.profileFingerprint)}`}><div className="mission-account-title"><strong>{compactText(row.platform, "UNKNOWN", 40)} account</strong><span className={row.executionEligible === true ? "status completed" : "status draft"}>{compactText(row.status, "UNKNOWN", 24)}</span></div><small>Profile fingerprint: {compactText(row.profileFingerprint, "UNKNOWN", 20)} · observed: {compactText(row.observedProfileFingerprint, "UNKNOWN", 20)}</small><small>Reason: {Array.isArray(row.reasons) && row.reasons.length ? row.reasons.map((reason: unknown) => compactText(reason, "UNKNOWN", 80)).join(" · ") : "UNKNOWN"}</small></article>)}
+          </div>
+        ) : <div className="empty-state">Session readiness UNKNOWN hoặc chưa có account.</div>}
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head">
+          <div><span className="mission-eyebrow">Camoufox authenticated session</span><small>Evidence đọc từ metadata profile đã bảo vệ · không tự cấp quyền publish</small></div>
+          <span className={camoufoxSession?.state === "OBSERVED" ? "status completed" : "status draft"}>{compactText(camoufoxSession?.state, "UNKNOWN", 24)}</span>
+        </div>
+        {camoufoxSessionRows.length ? (
+          <div className="mission-account-list">
+            {camoufoxSessionRows.map((row: R) => <article key={`${String(row.platform)}-${String(row.accountId)}-${String(row.profileFingerprint)}`}>
+              <div className="mission-account-title"><strong>{compactText(row.displayName || `${row.platform} account`, "UNKNOWN", 80)}</strong><span className={row.state === "READY" && row.identityStatus === "VERIFIED" && row.freshness !== "EXPIRED" ? "status completed" : "status draft"}>{compactText(row.state, "UNKNOWN", 24)}</span></div>
+              <small>{compactText(row.platform, "UNKNOWN", 40)} · {compactText(row.accountId, "UNKNOWN", 80)} · identity {compactText(row.identityStatus, "UNKNOWN", 24)}</small>
+              <small>Auth: {compactText(row.authState, "UNKNOWN", 24)} · Profile fingerprint: {compactText(row.profileFingerprint, "UNKNOWN", 20)}</small>
+              <small>Freshness: {compactText(row.freshness, "UNKNOWN", 24)} · observed: {compactText(row.checkedAt, "UNKNOWN", 40)} · expires: {compactText(row.expiresAt, "UNKNOWN", 40)}</small>
+              <small>Identity: {compactText(row.identityReference, "UNKNOWN", 120)}</small>
+              <small>Canonical execution authority/readiness remains evaluated separately.</small>
+            </article>)}
+          </div>
+        ) : <div className="empty-state">Camoufox session UNKNOWN hoặc chưa có sanitized metadata.</div>}
       </div>
       <div className="mission-advisory-runtime">
         <div className="mission-account-head">
@@ -1348,7 +1459,7 @@ function MissionControlPanel({ data }: { data: R }) {
           <article>
             <span className="mission-eyebrow">Current blockers</span>
             <strong>{currentBlockerCount}</strong>
-            <small>{currentBlockerCount ? `${executionBlockers.length} execution · ${authorityBlockers.length} authority · ${blockedChannels.length} channel` : "Chưa có blocker projection"}</small>
+            <small>{currentBlockerCount ? `${executionBlockers.length} execution · ${authorityBlockers.length} authority · ${blockedChannels.length} channel · signal count` : "Chưa có blocker projection"}</small>
           </article>
           <article>
             <span className="mission-eyebrow">Standing authority</span>

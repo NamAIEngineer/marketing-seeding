@@ -1,5 +1,17 @@
 # Zero Touch Authority Bootstrap
 
+## Continuation update — scheduler renewal
+
+The persisted high-level campaign policy is now consumed by the scheduler
+through the existing `bootstrapAutonomousCampaign` path. Six exact active
+standing authorities were observed in the canonical runtime after renewal.
+Renewal created no execution request, one-time window, live grant, lease,
+publication, browser action, or UNKNOWN record. Existing posts remain subject
+to quota, duplicate-content, readiness, and immutable UNKNOWN gates.
+
+Focused campaign bootstrap: **19 passed, 0 failed**. Full suite: **583 total,
+581 passed, 0 failed, 2 skipped**.
+
 ## Outcome
 
 Implemented the missing product-resolution bridge for autonomous campaign

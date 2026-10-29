@@ -1,5 +1,6 @@
 import http from "node:http";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { JsonStore } from "./store.mjs";
@@ -9,6 +10,7 @@ import { FixtureWorkerBridge } from "./fixture-worker-bridge.mjs";
 import { readAutoGtmFeed } from "./auto-gtm-feed.mjs";
 import { OrcaCliClient } from "./orca-browser-client.mjs";
 import { LinkedInReadinessProvider } from "./linkedin-readiness.mjs";
+import { CamoufoxLinkedInReadinessProvider } from "./camoufox-linkedin-readiness-provider.mjs";
 import { configuredReadinessTtlMs } from "./readiness.mjs";
 import { LinkedInAdapter } from "./linkedin-adapter.mjs";
 import { OrcaAccessibilityTransport, OrcaPointerTransport } from "./browser-interaction-transport.mjs";
@@ -16,6 +18,11 @@ import { JevExecutionWorker } from "./jev-execution-worker.mjs";
 import { PlatformAdapterRegistry, ReadinessProviderRegistry } from "./platform-registries.mjs";
 import { isAuthorizedLocalShutdown, runtimeMetadata } from "./service-lifecycle.mjs";
 import { consumeSystemAgenticHandoff } from "./system-agentic-handoff-bridge.mjs";
+import { createDefaultBrowserRuntimeRouter } from "./browser-runtime-router.mjs";
+import { loadConfiguredLocalProvider } from "./oi-browser-provider-adapters.mjs";
+import { projectMarketDashboard, projectMarketOpportunities } from "./market-intelligence.mjs";
+import { observeCamoufoxSessionMetadata } from "./camoufox-session-observer.mjs";
+import { probeCamoufoxRuntime } from "./camoufox-runtime-probe.mjs";
 
 async function loadLocalEnv() {
   try {
@@ -28,6 +35,42 @@ async function loadLocalEnv() {
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
   }
+}
+
+async function loadConfiguredExecutionSessionResolver(env = process.env) {
+  // Session authority is an explicit host integration. Never infer a provider
+  // from discovery, ORCA, GPM, or browser runtime defaults; absent/incomplete
+  // config leaves JEV without a resolver (safe dry-run/pre-submit behavior).
+  // GPM is retired from the active lane. Historical GPM modules may remain
+  // installed, but stale GPM configuration is deliberately ignored.
+  const moduleSpecifier = String(env.SEEDING_EXECUTION_SESSION_RESOLVER_MODULE || "").trim();
+  const provider = String(env.SEEDING_EXECUTION_SESSION_PROVIDER || "").trim().toLowerCase();
+  const profileReference = String(env.SEEDING_EXECUTION_SESSION_PROFILE_REFERENCE || "").trim();
+  const sessionAuthority = String(env.SEEDING_EXECUTION_SESSION_AUTHORITY || "").trim();
+  const attestationRaw = String(env.SEEDING_EXECUTION_SESSION_HOST_ATTESTATION || "").trim();
+  if (!moduleSpecifier || !provider || !profileReference || !sessionAuthority || !attestationRaw) return null;
+  if (provider !== "camoufox") return null;
+  let hostAttestation;
+  try { hostAttestation = JSON.parse(attestationRaw); } catch { return null; }
+  if (!hostAttestation || typeof hostAttestation !== "object" || Array.isArray(hostAttestation) ||
+      !String(hostAttestation.host || "").trim() || !String(hostAttestation.runtime || "").trim() ||
+      !String(hostAttestation.version || "").trim() || !String(hostAttestation.evidence || "").trim()) return null;
+  let module;
+  try {
+    const specifier = moduleSpecifier.startsWith(".") || moduleSpecifier.startsWith("/")
+      ? pathToFileURL(path.resolve(appRoot, moduleSpecifier)).href : moduleSpecifier;
+    module = await import(specifier);
+  } catch { return null; }
+  const factory = module?.createExecutionSessionResolver || module?.default;
+  if (typeof factory !== "function") return null;
+  let resolver;
+  try {
+    resolver = await factory({ provider, profileReference, sessionAuthority, hostAttestation });
+  } catch { return null; }
+  if (!resolver || typeof resolver !== "object" || (typeof resolver.resolve !== "function" && typeof resolver.acquire !== "function")) return null;
+  const declaredProvider = String(resolver.provider || resolver.runtimeProvider || provider).trim().toLowerCase();
+  if (declaredProvider !== provider) return null;
+  return resolver;
 }
 
 async function loadTransportCertifications() {
@@ -45,6 +88,7 @@ async function loadTransportCertifications() {
 
 await loadLocalEnv();
 const configuredTransportCertifications = await loadTransportCertifications();
+const configuredExecutionSessionResolver = await loadConfiguredExecutionSessionResolver();
 
 // Keep loopback as the safe local default; VPS deployments can set SEEDING_HOST
 // explicitly (usually 127.0.0.1 behind nginx, or 0.0.0.0 with a firewall).
@@ -59,6 +103,11 @@ const trafficPollMinutes = Number(process.env.SEEDING_TRAFFIC_POLL_MINUTES || 0)
 const controlCycleEnabled = process.env.SEEDING_CONTROL_CYCLE_ENABLED === "true";
 const controlCycleMinutes = Number(process.env.SEEDING_CONTROL_CYCLE_MINUTES || 0);
 const discoveryPollMinutes = Number(process.env.SEEDING_DISCOVERY_POLL_MINUTES || 0);
+const camoufoxSessionMetadataFile = String(process.env.SEEDING_CAMOUFOX_SESSION_METADATA_FILE || "").trim();
+const camoufoxExecutablePath = String(process.env.SEEDING_CAMOUFOX_EXECUTABLE_PATH || "").trim();
+const camoufoxRuntimeMetadataPath = String(process.env.SEEDING_CAMOUFOX_RUNTIME_METADATA_PATH || "").trim();
+const camoufoxProfileRoot = String(process.env.SEEDING_CAMOUFOX_PROFILE_ROOT || "").trim();
+const camoufoxProfileReference = String(process.env.SEEDING_EXECUTION_SESSION_PROFILE_REFERENCE || "").trim();
 if (operatorToken.length < 32) {
   throw new Error("SEEDING_OPERATOR_TOKEN must contain at least 32 characters");
 }
@@ -79,11 +128,36 @@ const store = new JsonStore(stateFile, { requireLease: true });
 await store.acquireWriterLease();
 const readinessTtlMs = configuredReadinessTtlMs();
 const orcaBrowser = new OrcaCliClient();
+// GPM is retired from the active runtime. Historical GPM projections remain
+// available only when an explicit compatibility observer is injected by a
+// caller; the product server does not discover or attach GPM.
+const configuredOiBrowserProvider = await loadConfiguredLocalProvider();
 const readinessProviderRegistry = new ReadinessProviderRegistry();
-readinessProviderRegistry.register("linkedin", new LinkedInReadinessProvider(orcaBrowser, { ttlMs: readinessTtlMs }));
+const legacyLinkedInReadiness = new LinkedInReadinessProvider(orcaBrowser, { ttlMs: readinessTtlMs });
+readinessProviderRegistry.register("linkedin", new CamoufoxLinkedInReadinessProvider({
+  resolver: configuredExecutionSessionResolver,
+  fallbackProvider: legacyLinkedInReadiness,
+  ttlMs: readinessTtlMs
+}));
 const service = new SeedingService(store, {
   readinessTtlMs,
-  readinessProviderRegistry
+  readinessProviderRegistry,
+  browserRuntimeRouter: createDefaultBrowserRuntimeRouter({
+    orcaBrowser,
+
+    camoufox: {
+      executable: camoufoxExecutablePath || null,
+      profileReference: camoufoxProfileReference || null,
+      probe: ({ runtime }) => probeCamoufoxRuntime({
+        executablePath: runtime.executable || camoufoxExecutablePath,
+        metadataPath: camoufoxRuntimeMetadataPath,
+        profileRoot: camoufoxProfileRoot,
+        profileReference: runtime.profileReference || camoufoxProfileReference
+      })
+    }
+  }),
+  sessionReadinessObservation: () => observeCamoufoxSessionMetadata(camoufoxSessionMetadataFile),
+  ...(configuredOiBrowserProvider ? { oiBrowserProviders: [configuredOiBrowserProvider] } : {})
 });
 const platformAdapterRegistry = new PlatformAdapterRegistry();
 // The production lane is fail-closed until an explicit, platform/runtime
@@ -98,7 +172,11 @@ platformAdapterRegistry.register("linkedin", new LinkedInAdapter(orcaBrowser, {
   transportRuntime: { provider: "orca", providerVersion: orcaBrowser.runtimeVersion },
   requireCertifiedTransport: true
 }));
-const jevWorker = new JevExecutionWorker({ service, adapterRegistry: platformAdapterRegistry, workerId: `jev-server-${process.pid}` });
+const jevWorker = new JevExecutionWorker({
+  service, adapterRegistry: platformAdapterRegistry,
+  executionSessionResolver: configuredExecutionSessionResolver || null,
+  workerId: `jev-server-${process.pid}`
+});
 let initializedState;
 try {
   initializedState = await service.init();
@@ -172,10 +250,14 @@ function scheduleControlCycle(delayMs = controlCycleMinutes * 60_000) {
     controlCycleRuntime.lastStartedAt = new Date().toISOString();
     try {
       const state = await service.snapshot();
+      const autoGtm = await readAutoGtmFeed(autoGtmFeedFile);
       const results = [];
       for (const campaign of state.campaigns || []) {
         if (shuttingDown) break;
-        try { results.push(await service.runCampaignControlCycle(campaign.id, {}, "scheduled-control-cycle")); }
+        try {
+          const marketOpportunities = projectMarketOpportunities(autoGtm, { productId: campaign.productId || campaign.id });
+          results.push(await service.runCampaignControlCycle(campaign.id, { marketOpportunities }, "scheduled-control-cycle"));
+        }
         catch (error) { results.push({ campaignId: campaign.id, ok: false, reason: error.code || error.message }); }
       }
       controlCycleRuntime.lastSummary = { campaigns: results.length, succeeded: results.filter((item) => item?.advisory === true).length, failed: results.filter((item) => item?.ok === false).length };
@@ -431,6 +513,7 @@ function automationCanMutate(method, pathname) {
   if (/^\/api\/campaigns\/[^/]+\/content-candidates\/materialize$/.test(pathname)) return true;
   if (/^\/api\/campaigns\/[^/]+\/discoveries\/observe$/.test(pathname)) return true;
   if (/^\/api\/campaigns\/[^/]+\/control-cycle$/.test(pathname)) return true;
+  if (pathname === "/api/oi-browser/memory" || pathname === "/api/oi-browser/memory/consolidate" || pathname === "/api/oi-browser/memory/retract" || pathname === "/api/oi-browser/snapshots" || pathname === "/api/oi-browser/provider-route" || pathname === "/api/oi-browser/browser-intent" || pathname === "/api/oi-browser/browser-execute") return true;
   if (/^\/api\/posts\/[^/]+\/execution-request$/.test(pathname)) return true;
   if (/^\/api\/execution-requests\/[^/]+\/receipt$/.test(pathname)) return true;
   return [
@@ -607,9 +690,11 @@ const server = http.createServer(async (request, response) => {
       return sendJson(response, 200, await service.readyExecutionRequests());
     }
     if (request.method === "GET" && url.pathname === "/api/dashboard") {
+      const autoGtm = await readAutoGtmFeed(autoGtmFeedFile);
       return sendJson(response, 200, {
         ...(await service.dashboard()),
-        autoGtm: await readAutoGtmFeed(autoGtmFeedFile),
+        autoGtm,
+        marketIntelligence: projectMarketDashboard(autoGtm),
         automation: {
           trafficCollector: trafficRuntime,
           campaignQueue: campaignQueueRuntime,
@@ -629,6 +714,34 @@ const server = http.createServer(async (request, response) => {
     }
     if (request.method === "GET" && url.pathname === "/api/leads") {
       return sendJson(response, 200, await readAutoGtmFeed(autoGtmFeedFile));
+    }
+    if (request.method === "GET" && url.pathname === "/api/oi-browser/memory") {
+      if (!role) return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      const query = Object.fromEntries(url.searchParams.entries());
+      const scope = Object.fromEntries(["campaignId", "accountId", "communityId", "platform", "channel"].filter((key) => query[key]).map((key) => [key, query[key]]));
+      return sendJson(response, 200, await service.retrieveOiMemory({ ...query, scope }));
+    }
+    if (request.method === "POST" && url.pathname === "/api/oi-browser/memory") {
+      return sendJson(response, 201, await service.recordOiMemory(await readJson(request), actor));
+    }
+    if (request.method === "POST" && url.pathname === "/api/oi-browser/memory/consolidate") {
+      return sendJson(response, 200, await service.consolidateOiMemory(await readJson(request), actor));
+    }
+    if (request.method === "POST" && url.pathname === "/api/oi-browser/memory/retract") {
+      const input = await readJson(request);
+      return sendJson(response, 200, await service.retractOiMemoryEvidence(input.evidenceRef, actor));
+    }
+    if (request.method === "POST" && url.pathname === "/api/oi-browser/snapshots") {
+      return sendJson(response, 201, await service.recordBrowserSnapshot(await readJson(request), actor));
+    }
+    if (request.method === "POST" && url.pathname === "/api/oi-browser/provider-route") {
+      return sendJson(response, 200, await service.routeOiAgentTask(await readJson(request), actor));
+    }
+    if (request.method === "POST" && url.pathname === "/api/oi-browser/browser-intent") {
+      return sendJson(response, 200, await service.createBrowserIntent(await readJson(request)));
+    }
+    if (request.method === "POST" && url.pathname === "/api/oi-browser/browser-execute") {
+      return sendJson(response, 200, await service.executeBrowserIntent(await readJson(request), actor));
     }
     if (request.method === "GET" && url.pathname === "/api/flow-graph") {
       return sendJson(response, 200, await service.flowGraph());
@@ -693,7 +806,7 @@ const server = http.createServer(async (request, response) => {
     if (request.method === "PATCH" && match) {
       const input = await readJson(request);
       return sendJson(response, 200, await service.updateCampaignAuthorizationProfileBinding(
-        match[1], match[2], match[3], input.profileId, actor
+        match[1], match[2], match[3], input, actor
       ));
     }
     match = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/authorization\/(pause|resume)$/);

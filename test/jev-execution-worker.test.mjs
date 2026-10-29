@@ -422,6 +422,39 @@ test("campaign-authorized autonomous live mode also requires a bound one-job gra
   assert.ok(fixture.calls.some(([name]) => name === "sent"));
 });
 
+test("provider-aware Camoufox live execution never falls back to the host-session surface", async () => {
+  const fixture = executionFixture();
+  fixture.request.provider = "camoufox";
+  fixture.request.providerProfileId = fixture.request.profileId;
+  fixture.request.identityReference = fixture.context.account.expectedIdentityUrl;
+  fixture.request.target.identityReference = fixture.context.account.expectedIdentityUrl;
+  fixture.context.target.provider = "camoufox";
+  fixture.context.target.providerProfileId = fixture.request.profileId;
+  fixture.context.target.identityReference = fixture.context.account.expectedIdentityUrl;
+  fixture.context.target.url = fixture.request.target.url;
+  fixture.context.account.provider = "camoufox";
+  fixture.context.account.providerProfileId = fixture.request.profileId;
+  fixture.context.account.profileRef = fixture.request.profileId;
+  fixture.context.authorization.allowLiveExecution = true;
+  attachFixtureGrant(fixture);
+  fixture.context.liveGrant.provider = "camoufox";
+  fixture.context.liveGrant.providerProfileId = fixture.request.profileId;
+  fixture.context.liveGrant.identityReference = fixture.context.account.expectedIdentityUrl;
+  fixture.context.liveGrant.targetUrl = fixture.request.target.url;
+  let adapterCalls = 0;
+  const worker = new JevExecutionWorker({
+    service: fixture.service,
+    adapterRegistry: adapterRegistry({ linkedin: { async execute() { adapterCalls += 1; } } }),
+    env: { SEEDING_JEV_LIVE_ENABLED: "true", SEEDING_JEV_LIVE_EXECUTION_ID: "exec-1" }
+  });
+  const result = await worker.run("exec-1", { dryRun: false });
+  assert.equal(result.status, "PRE_SUBMIT_STOPPED");
+  assert.equal(result.reasonCode, "camoufox_execution_resolver_unavailable");
+  assert.equal(adapterCalls, 0);
+  assert.equal(fixture.calls.some(([name]) => name === "readiness"), false);
+  assert.equal(fixture.calls.some(([name]) => name === "intent"), false);
+});
+
 test("worker lease collision stops before readiness or adapter calls", async () => {
   const fixture = executionFixture({ service: { async acquireExecutionLease() { return { acquired: false, reason: "execution_lease_held" }; } } });
   let adapterCalls = 0;
@@ -812,6 +845,7 @@ test("LinkedIn adapter dry-run fills and verifies a draft, then closes without c
     media: [{ artifactId: "artifact-1", reference: mediaPath, sha256: mediaHash, type: "video/mp4" }]
   };
   const browser = {
+    legacyMutationEvaluation: true,
     async listTabs() { return [{ id: "page-1", profileId: "profile-1", url: "https://www.linkedin.com/feed/" }]; },
     async showTab() { return { pageId: "page-1", profileId: "profile-1", url: "https://www.linkedin.com/feed/" }; },
     async navigate(_id, url) { calls.push(["navigate", url]); },
@@ -949,6 +983,7 @@ test("LinkedIn adapter waits for the authenticated shell after navigation instea
     audience: "public", content: { contentId: "content-1", sha256: createHash("sha256").update("draft").digest("hex"), payload: "draft" }, media: []
   };
   const browser = {
+    legacyMutationEvaluation: true,
     async listTabs() { return [{ id: "page-1", profileId: "profile-1", url: "https://www.linkedin.com/feed/" }]; },
     async showTab() { return { pageId: "page-1", profileId: "profile-1", url: "https://www.linkedin.com/feed/" }; },
     async navigate() { hydrated = false; },
@@ -1010,6 +1045,7 @@ test("LinkedIn composer trigger uses one strictly guarded direct DOM activation 
     audience: "public", content: { contentId: "content-1", sha256: createHash("sha256").update("draft").digest("hex"), payload: "draft" }, media: []
   };
   const browser = {
+    legacyMutationEvaluation: true,
     async listTabs() { return [{ id: "page-1", profileId: "profile-1", url: "https://www.linkedin.com/feed/" }]; },
     async showTab() { return { pageId: "page-1", profileId: "profile-1", url: "https://www.linkedin.com/feed/" }; },
     async navigate() {}, async waitForUrl() {}, async waitForFeed() {},

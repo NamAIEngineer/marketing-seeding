@@ -1,9 +1,10 @@
-import { campaignAuthorizationFingerprint, campaignContentHash, campaignScopeFingerprint, evaluateCampaignAuthorization } from "./campaign-authorization.mjs";
+import { campaignAuthorizationFingerprint, campaignContentHash, campaignScopeFingerprint, evaluateCampaignAuthorization, standingAuthorizationReferenceIsAmbiguous } from "./campaign-authorization.mjs";
 import { oneTimeExecutionWindowFingerprint, oneTimeExecutionWindowInBounds, oneTimeExecutionWindowStatus } from "./one-time-execution-window.mjs";
 import { assertLiveGrantMatchesExecution, liveGrantEffectiveStatus } from "./live-execution-grant.mjs";
 import { contentSha256 } from "./execution-contracts.mjs";
-import { isReadinessFresh } from "./readiness.mjs";
+import { isReadinessFresh, readinessContextForTarget } from "./readiness.mjs";
 import { killSwitchReasons } from "./guards.mjs";
+import { bindingMatches, canonicalIdentityUrl, canonicalProvider } from "./execution-binding.mjs";
 
 const TERMINAL_OR_UNCERTAIN = new Set(["SUBMIT_SENT_INTENT", "SUBMIT_SENT", "SUBMIT_RESULT_UNKNOWN", "CONFIRMED"]);
 const ACTIVE_POSTS = new Set(["publishing", "processing", "submit_result_unknown", "published"]);
@@ -23,11 +24,15 @@ export function deriveStandingExecutionControlPlan({ authorization, state, post,
   if (authorization.status !== "active") reasons.push("campaign_authorization_not_active");
   if (authorization.allowLiveExecution !== true) reasons.push("live_execution_not_authorized");
   if (authorization.binding !== campaignAuthorizationFingerprint(authorization)) reasons.push("campaign_authorization_binding_stale");
+  if (standingAuthorizationReferenceIsAmbiguous(authorization, state)) reasons.push("standing_authorization_reference_ambiguous");
   if (post.campaignId !== authorization.campaignId || post.campaignAuthorizationId !== authorization.id || post.campaignAuthorizationBinding !== authorization.binding) reasons.push("campaign_binding_mismatch");
   if (target.id !== post.targetId) reasons.push("target_binding_mismatch");
   if (target.status && target.status !== "active") reasons.push("target_not_active");
-  if (account.status !== "enabled" || account.health !== "healthy" || account.platform !== target.channel || account.accountId !== target.accountId || account.profileId !== target.profileId) reasons.push("account_profile_binding_mismatch");
-  if (!isReadinessFresh(target.readiness, { platform: target.channel, accountId: target.accountId, profileId: target.profileId, targetId: target.id }, at)) reasons.push("readiness_not_fresh");
+  const provider = canonicalProvider(account.provider, { allowLegacy: true });
+  const accountBinding = { platform: account.platform, accountId: account.accountId, provider, providerProfileId: account.providerProfileId || account.profileId, profileId: account.profileId, identityReference: canonicalIdentityUrl(account.identityReference || account.expectedIdentityUrl), targetId: target.id, targetUrl: target.url };
+  const targetBinding = { platform: target.channel, accountId: target.accountId, provider, ...(account.provider || account.providerProfileId || target.provider || target.providerProfileId ? { providerProfileId: target.providerProfileId || account.providerProfileId || target.profileId } : {}), profileId: target.profileId, identityReference: canonicalIdentityUrl(target.identityReference || target.expectedIdentityUrl || account.identityReference || account.expectedIdentityUrl), targetId: target.id, targetUrl: target.url };
+  if (account.status !== "enabled" || account.health !== "healthy" || account.platform !== target.channel || account.accountId !== target.accountId || !bindingMatches(accountBinding, targetBinding, { requireIdentity: true, requireTarget: true })) reasons.push("account_profile_binding_mismatch");
+  if (!isReadinessFresh(target.readiness, readinessContextForTarget(target, account), at)) reasons.push("readiness_not_fresh");
   const campaign = (state.campaigns || []).find((item) => item.id === post.campaignId);
   if (!campaign || campaign.status !== "active") reasons.push("campaign_not_active");
   if (campaign && authorization.campaignBinding !== campaignScopeFingerprint(campaign)) reasons.push("campaign_scope_changed");
@@ -47,13 +52,15 @@ export function deriveStandingExecutionControlPlan({ authorization, state, post,
   else {
     if (liveGrantEffectiveStatus(liveGrant, at) !== "ACTIVE" || liveGrant.status !== "ACTIVE" || liveGrant.consumedAt || liveGrant.revokedAt) reasons.push("live_execution_grant_unavailable");
     if (liveGrant.boundExecutionId !== executionId) reasons.push("live_execution_grant_execution_mismatch");
-    if (liveGrant.campaignAuthorizationId !== authorization.id || liveGrant.campaignAuthorizationBinding !== authorization.binding || liveGrant.campaignId !== post.campaignId || liveGrant.jobId !== post.id || liveGrant.platform !== target.channel || liveGrant.accountId !== target.accountId || liveGrant.profileId !== target.profileId || liveGrant.targetId !== target.id) reasons.push("live_execution_grant_scope_mismatch");
+    if (liveGrant.campaignAuthorizationId !== authorization.id || liveGrant.campaignAuthorizationBinding !== authorization.binding || liveGrant.campaignId !== post.campaignId || liveGrant.jobId !== post.id || liveGrant.platform !== target.channel || liveGrant.provider !== provider || liveGrant.providerProfileId !== accountBinding.providerProfileId || liveGrant.identityReference !== accountBinding.identityReference || liveGrant.accountId !== target.accountId || liveGrant.profileId !== target.profileId || liveGrant.targetId !== target.id || liveGrant.targetUrl !== target.url) reasons.push("live_execution_grant_scope_mismatch");
     if (liveGrant.idempotencyKey !== post.idempotencyKey || liveGrant.content?.contentId !== post.contentId || liveGrant.content?.canonicalSha256 !== campaignContentHash(post.content) || liveGrant.content?.rawSha256 !== contentSha256(post.content) || (liveGrant.publicationVisibility || "PUBLIC") !== String(post.publicationVisibility || "PUBLIC").toUpperCase()) reasons.push("live_execution_grant_content_mismatch");
     try {
       assertLiveGrantMatchesExecution(liveGrant, {
         executionId, dryRun: false, campaignId: post.campaignId, jobId: post.id,
-        platform: target.channel, accountId: target.accountId, profileId: target.profileId,
-        target: { targetId: target.id }, audience: post.audience,
+        platform: target.channel, provider, providerProfileId: accountBinding.providerProfileId,
+        accountId: target.accountId, profileId: target.profileId,
+        identityReference: accountBinding.identityReference,
+        target: { targetId: target.id, url: target.url, identityReference: targetBinding.identityReference }, audience: post.audience,
         publicationVisibility: String(post.publicationVisibility || "PUBLIC").toUpperCase(),
         idempotencyKey: post.idempotencyKey,
         authorization: { authorizationId: authorization.id, binding: authorization.binding },

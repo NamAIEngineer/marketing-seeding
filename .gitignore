@@ -34,6 +34,9 @@ ui/AGENTS.md
 ui/CLAUDE.md
 ui/.figma/make/*
 !ui/.figma/make/site.json
+.venv-crawl4ai/
+.system-agentic-goals/
+scripts/__pycache__/
 
 # Keep only bundles currently referenced by public/index.html
 public/assets/*

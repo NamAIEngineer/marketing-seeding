@@ -99,7 +99,9 @@ function pinnedFetch(url, address, { signal, timeoutMs = DEFAULTS.timeoutMs } = 
       headers: { accept: "text/html, text/plain, application/xhtml+xml;q=0.9", "user-agent": "marketing-seeding-discovery/1.0" },
       lookup: (_hostname, options, callback) => {
         if (typeof options === "function") callback = options;
-        callback(null, address.address, address.family || net.isIP(address.address));
+        const family = address.family || net.isIP(address.address);
+        if (options?.all) callback(null, [{ address: address.address, family }]);
+        else callback(null, address.address, family);
       },
       signal
     }, (response) => {
@@ -325,4 +327,4 @@ export async function observePublicUrls(urls, options = {}) {
   return { requested: requested.length, truncated: Array.isArray(urls) && urls.length > requested.length, observations: results };
 }
 
-export { privateAddress };
+export { privateAddress, resolvePublicUrl, pinnedFetch };

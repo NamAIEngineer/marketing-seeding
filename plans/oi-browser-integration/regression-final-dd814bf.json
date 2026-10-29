@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "dd814bf1df82a0371171ce0ca3674d16a1009368",
+  "branch": "integration/session-c-reconciled",
+  "workspace": "/Users/nam/Documents/marketing-seeding-session-c-reconciled",
+  "capturedAt": "2026-10-29T00:00:00+07:00",
+  "baselineRevision": "79985bb411afc141f0edf10ae635fb91824d8bc9",
+  "checks": [
+    {
+      "command": "node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs test/oi-browser-live-bridge.test.mjs",
+      "classification": "FIXTURE_VERIFIED",
+      "tests": 32,
+      "pass": 32,
+      "fail": 0,
+      "skipped": 0,
+      "result": "PASS"
+    },
+    {
+      "command": "node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs",
+      "classification": "FIXTURE_VERIFIED",
+      "tests": 17,
+      "pass": 17,
+      "fail": 0,
+      "skipped": 0,
+      "result": "PASS"
+    },
+    {
+      "command": "node --check src/oi-browser-integration.mjs",
+      "classification": "IMPLEMENTED",
+      "result": "PASS"
+    },
+    {
+      "command": "npm test",
+      "classification": "FIXTURE_VERIFIED",
+      "tests": 811,
+      "pass": 809,
+      "fail": 0,
+      "skipped": 2,
+      "result": "PASS",
+      "outputSha256": "f1f09a5901ab4852adcebeb9459fa6f297d585c95f0100a5af2bf0ee8ef273ab"
+    },
+    {
+      "command": "git diff --check",
+      "classification": "IMPLEMENTED",
+      "result": "PASS"
+    }
+  ],
+  "changes": [
+    "Browser intent execution now validates immutable intent ID binding against action, element and snapshot fingerprint.",
+    "Browser intent execution rejects forged semantic target identity and frame bindings.",
+    "Browser intent execution rejects action and target-role mismatches before transport input.",
+    "Regression fixture covers forged action, frame, semantic identity and intent ID mutations.",
+    "Earlier memory evidence independence and provider body/JSON deadline fixes remain included at this revision."
+  ],
+  "independentReview": {
+    "status": "PENDING_FINAL_REVIEW",
+    "scope": "read-only review of dd814bf source/test diff",
+    "aOrBMutation": false,
+    "liveEligible": false,
+    "externalSideEffects": false,
+    "unknownRetryAllowed": false
+  },
+  "queueAttempt": {
+    "taskId": "ad044fdf-fbbf-4a99-a4eb-9165dc35987e",
+    "status": "UNKNOWN",
+    "reason": "QUEUE_RECEIPT_AMBIGUOUS after exact-ID reconciliation; no retry or resubmission",
+    "resubmitted": false
+  },
+  "liveEligible": false,
+  "externalSideEffects": false,
+  "unknownRetryAllowed": false
+}

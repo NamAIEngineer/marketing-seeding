@@ -78,6 +78,12 @@ export const CHANNELS = Object.freeze({
     dailyLimitPerAccount: 3,
     minimumIntervalMinutes: 60,
     requiresRulesReview: false,
+    // Legacy/manual posts still require explicit approval, while the
+    // standing-autonomous execution path may publish when an exact campaign
+    // authorization, readiness, window and grant are present. Keep the
+    // legacy flag for that boundary and expose the capability split through
+    // the read-only channel projection.
+    publishMode: "AUTONOMOUS_WHEN_AUTHORIZED",
     requiresHumanApproval: true,
     replyRequiresApproval: true
   },

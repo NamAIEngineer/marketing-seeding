@@ -1984,7 +1984,9 @@ function PlatformsPage({ data }: { data: R }) {
                   const status = String(capability?.status || "UNKNOWN")
                   const policy = [
                     capability?.requiresRulesReview === true ? "rules review" : null,
-                    capability?.requiresHumanApproval === true ? "human approval" : null,
+                    capability?.publishMode === "AUTONOMOUS_WHEN_AUTHORIZED"
+                      ? "autonomous when authorized"
+                      : capability?.requiresHumanApproval === true ? "human approval" : null,
                   ].filter(Boolean).join(" · ") || "bounded policy"
                   return (
                     <tr key={channel}>

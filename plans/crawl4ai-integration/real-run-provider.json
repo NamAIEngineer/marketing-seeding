@@ -1,0 +1,3856 @@
+{
+  "run": {
+    "contractVersion": 1,
+    "jobId": "listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+    "campaignId": "7acaa891-05c9-4251-8aab-4399c0222e0a",
+    "backend": "nodriver",
+    "sourceRevision": "nodriver-0233da5bfbe98dc58341f0863526b6315a97e646",
+    "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+    "sourceUrls": [
+      "https://example.com/",
+      "https://news.ycombinator.com/item?id=50276792"
+    ],
+    "scope": {
+      "campaignId": "7acaa891-05c9-4251-8aab-4399c0222e0a",
+      "communityId": null,
+      "platform": null,
+      "channel": null,
+      "purpose": null,
+      "locale": null
+    },
+    "policies": {},
+    "keywords": [],
+    "blockedKeywords": [],
+    "startedAt": "2026-10-28T19:52:10.349Z",
+    "completedAt": "2026-10-28T19:52:20.852Z",
+    "fetches": [
+      {
+        "contractVersion": 1,
+        "jobId": "listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+        "backend": "nodriver",
+        "sourceUrl": "https://example.com/",
+        "finalUrl": "https://example.com/",
+        "capturedAt": "2026-10-28T19:52:14.382Z",
+        "contentHash": "fa87188765e603e821d515a49cb8af3316da43767fdfc53a012d37824efc8de5",
+        "fetcherRevision": "nodriver-0233da5bfbe98dc58341f0863526b6315a97e646",
+        "browserVersion": "0.50.6",
+        "observedHttpStatus": 200,
+        "status": "SUCCEEDED",
+        "reason": null,
+        "contentType": "text/html",
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": false,
+          "structured": false,
+          "post": false,
+          "comment": false,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "processEvidence": {
+          "workerPid": 2217,
+          "browserPid": 2228,
+          "beforeCount": null,
+          "afterCount": null,
+          "cleanup": "browser_process_exited;profile_removed",
+          "processCountBefore": 1,
+          "processCountAfter": 0,
+          "peakRssKb": null,
+          "rssKbAfter": null,
+          "browserPids": []
+        },
+        "extracted": {
+          "contractVersion": 1,
+          "jobId": "listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "status": "SUCCEEDED",
+          "reason": null,
+          "sourceUrl": "https://example.com/",
+          "finalUrl": "https://example.com/",
+          "capturedAt": "2026-10-28T19:52:14.382Z",
+          "contentHash": "fa87188765e603e821d515a49cb8af3316da43767fdfc53a012d37824efc8de5",
+          "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+          "extractedHash": "0a080719be9fbb82a86a45b80dc8c2a430fbe17dc93d23758debac092864d00f",
+          "recordCount": 1,
+          "recordTypes": [
+            "page"
+          ],
+          "coverage": {
+            "html": true,
+            "markdown": true,
+            "structured": false,
+            "post": false,
+            "comment": false,
+            "iframe": false,
+            "shadowDom": "UNKNOWN",
+            "notes": [
+              "HTML-only extraction; no browser/network/model"
+            ]
+          },
+          "elapsedMs": 871,
+          "processEvidence": {
+            "workerPid": 2403,
+            "cleanup": "worker_exited"
+          }
+        }
+      },
+      {
+        "contractVersion": 1,
+        "jobId": "listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+        "backend": "nodriver",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "finalUrl": "https://news.ycombinator.com/item?id=50276792",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "contentHash": "011a575489f27f329acf6cd38595ea3eae2a022097dfe36bbf4e6ea32f823172",
+        "fetcherRevision": "nodriver-0233da5bfbe98dc58341f0863526b6315a97e646",
+        "browserVersion": "0.50.6",
+        "observedHttpStatus": 200,
+        "status": "SUCCEEDED",
+        "reason": null,
+        "contentType": "text/html",
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": false,
+          "structured": false,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "processEvidence": {
+          "workerPid": 2424,
+          "browserPid": 2427,
+          "beforeCount": null,
+          "afterCount": null,
+          "cleanup": "browser_process_exited;profile_removed",
+          "processCountBefore": 1,
+          "processCountAfter": 0,
+          "peakRssKb": null,
+          "rssKbAfter": null,
+          "browserPids": []
+        },
+        "extracted": {
+          "contractVersion": 1,
+          "jobId": "listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "status": "SUCCEEDED",
+          "reason": null,
+          "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+          "finalUrl": "https://news.ycombinator.com/item?id=50276792",
+          "capturedAt": "2026-10-28T19:52:18.388Z",
+          "contentHash": "011a575489f27f329acf6cd38595ea3eae2a022097dfe36bbf4e6ea32f823172",
+          "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+          "extractedHash": "37f14c5d516352de4ecf8c78e7d446820b7718d44661cabd510889e5a523067f",
+          "recordCount": 100,
+          "recordTypes": [
+            "post",
+            "comment"
+          ],
+          "coverage": {
+            "html": true,
+            "markdown": true,
+            "structured": true,
+            "post": true,
+            "comment": true,
+            "iframe": false,
+            "shadowDom": "UNKNOWN",
+            "notes": [
+              "HTML-only extraction; no browser/network/model",
+              "record limit reached: 100"
+            ]
+          },
+          "elapsedMs": 2340,
+          "processEvidence": {
+            "workerPid": 2504,
+            "cleanup": "worker_exited"
+          }
+        }
+      }
+    ],
+    "records": [
+      {
+        "recordId": "record-71b479654ea2cded409a58ede3bff77f",
+        "sourceId": null,
+        "recordType": "page",
+        "sourceUrl": "https://example.com/",
+        "url": "https://example.com/",
+        "contentHash": "cbf3f738cc4646f250e5964ab74741b434912a67e1cce86c798bf71af1cf85c8",
+        "capturedAt": "2026-10-28T19:52:14.382Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": null,
+        "sourceRefs": [
+          "https://example.com/",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:record-71b479654ea2cded409a58ede3bff77f"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": false,
+          "comment": false,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50276792",
+        "sourceId": "50276792",
+        "recordType": "post",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-carbon/",
+        "contentHash": "109a89d446d279c30950ebb5af7d9c195f3dd611b2c7f7b8405ad8aebefa7a8d",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": null,
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50276792"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279518",
+        "sourceId": "50279518",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279518&goto=item%3Fid%3D50276792%2350279518",
+        "contentHash": "9672a6df67b8d13dbe48f0c6288dfd4889d4682894c15046facf6f34b180a537",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279518"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279786",
+        "sourceId": "50279786",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279786&goto=item%3Fid%3D50276792%2350279786",
+        "contentHash": "674232fae67d2d58982bb3a69442e17c27a45eb27867cc25ab78b33c32594dac",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279786"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279870",
+        "sourceId": "50279870",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279870&goto=item%3Fid%3D50276792%2350279870",
+        "contentHash": "6111ce5d268724394d33319c8551082ab9abe35045e2373dfbe576bfc42c9fba",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279870"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279697",
+        "sourceId": "50279697",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279697&goto=item%3Fid%3D50276792%2350279697",
+        "contentHash": "77ed80edb23b98a4eabe4dd316ea66a517d41b8c2d5932430675cdad400dbc4a",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279697"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50277735",
+        "sourceId": "50277735",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50277735&goto=item%3Fid%3D50276792%2350277735",
+        "contentHash": "94db0329c2061e909cfc68efc31744c0fbd041085b52d49c24aa1a567ac631db",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50277735"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278693",
+        "sourceId": "50278693",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278693&goto=item%3Fid%3D50276792%2350278693",
+        "contentHash": "f58fe40958e4dd31534afe9ad3b913b67a44431afd17f4e856c3d0236b7235ad",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278693"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278816",
+        "sourceId": "50278816",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278816&goto=item%3Fid%3D50276792%2350278816",
+        "contentHash": "a1d1531aa14f45a62fa28235e41fd8daf023def1fe916b9c48324c019e203943",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278816"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278171",
+        "sourceId": "50278171",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278171&goto=item%3Fid%3D50276792%2350278171",
+        "contentHash": "0cb00d6a33fe29c35b6e068fce7c7f16468f05d5d7310318e3b7f87dba28d623",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278171"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278684",
+        "sourceId": "50278684",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278684&goto=item%3Fid%3D50276792%2350278684",
+        "contentHash": "4a6e98ff97735e07151060a19ca8137661568cc32e5ef61ef1d8e52b3413cc1d",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278684"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278205",
+        "sourceId": "50278205",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278205&goto=item%3Fid%3D50276792%2350278205",
+        "contentHash": "bf48335e5e03a95436be5750c6a1d088a1e264a22940d3f0dc5df460147ac17e",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278205"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279211",
+        "sourceId": "50279211",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279211&goto=item%3Fid%3D50276792%2350279211",
+        "contentHash": "bb95a8999c2bd94889a2a7db4573b9f1e346c005768ac613ac7bf98bce14e0ef",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279211"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279153",
+        "sourceId": "50279153",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279153&goto=item%3Fid%3D50276792%2350279153",
+        "contentHash": "51f77d6935b1ed9392c4fec4e3d19ff159ee3732f926ed30771125813d03a7b3",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279153"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279483",
+        "sourceId": "50279483",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279483&goto=item%3Fid%3D50276792%2350279483",
+        "contentHash": "af48d11b3ccf983122ccb3773899de34a452b5beeb4d7d4928d526d2faa0fc7a",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279483"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278447",
+        "sourceId": "50278447",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278447&goto=item%3Fid%3D50276792%2350278447",
+        "contentHash": "607a0653bd6ed84647d020898c8a22a73bda2cf6b70a721e0e056135ea3acfe9",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278447"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278321",
+        "sourceId": "50278321",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278321&goto=item%3Fid%3D50276792%2350278321",
+        "contentHash": "0f566a511a94dcc04a9c9e47e9c344e7b0fa7d2dc19165a9a68458827e0b8c61",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278321"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50277942",
+        "sourceId": "50277942",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50277942&goto=item%3Fid%3D50276792%2350277942",
+        "contentHash": "aaa904cbe3849b0696a1d36d8e01c0c5fa5e2467c09d17fbed639e3a9f1947af",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50277942"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279349",
+        "sourceId": "50279349",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279349&goto=item%3Fid%3D50276792%2350279349",
+        "contentHash": "0c4991a2e5ad41c1eda766f7d5a6f92daf28ee8810c6d0405b1a90a35e8e300b",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279349"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278068",
+        "sourceId": "50278068",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278068&goto=item%3Fid%3D50276792%2350278068",
+        "contentHash": "ac52b655d774f7fc279112f9aa550b19919f70fc9b6b88e664c134d7e1e896ba",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278068"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278244",
+        "sourceId": "50278244",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278244&goto=item%3Fid%3D50276792%2350278244",
+        "contentHash": "a88ad063e092ff31d21c3022e2e413cc5e612467e21446310bdc0c8536bcb000",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278244"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279011",
+        "sourceId": "50279011",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279011&goto=item%3Fid%3D50276792%2350279011",
+        "contentHash": "13deb639db5baca50a1835c5592cc3ae723c0a8706e8901cd1304c054663f2a6",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279011"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279122",
+        "sourceId": "50279122",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279122&goto=item%3Fid%3D50276792%2350279122",
+        "contentHash": "80dc1453fb29b6bbd3b7eabd22ee79ec0344aedde3a113364778522349a6bcd4",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279122"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279564",
+        "sourceId": "50279564",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279564&goto=item%3Fid%3D50276792%2350279564",
+        "contentHash": "5d791bd0ece794fd3d04f358a03326acfc82ec56c8905ba9c95b00ce1116dbd1",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279564"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278610",
+        "sourceId": "50278610",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278610&goto=item%3Fid%3D50276792%2350278610",
+        "contentHash": "cc122706ee3072cbb91913d990acaa005fa83ed673ee428c3c69038e129fa6dd",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278610"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278858",
+        "sourceId": "50278858",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278858&goto=item%3Fid%3D50276792%2350278858",
+        "contentHash": "aab0523744292a80443735e2b33180e5a9f4341ea05449c231790dbdc75d6c55",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278858"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279100",
+        "sourceId": "50279100",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279100&goto=item%3Fid%3D50276792%2350279100",
+        "contentHash": "37797c08f3d45158497882ec893e09511c40c2f689a15d0285adfa880ed5dca5",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279100"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278203",
+        "sourceId": "50278203",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278203&goto=item%3Fid%3D50276792%2350278203",
+        "contentHash": "06c38a789e09f4a735769654bc9c8cb6d7df7e21126fcd674f7fd53311a42c17",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278203"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278325",
+        "sourceId": "50278325",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278325&goto=item%3Fid%3D50276792%2350278325",
+        "contentHash": "d615965c04c8d8e449b07c592c686a90d9ecdf04bf37f6c5cf89261e63d37080",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278325"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278707",
+        "sourceId": "50278707",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278707&goto=item%3Fid%3D50276792%2350278707",
+        "contentHash": "56350bb487dc81142387cf27ceb9f170b1b4fdd99bc8c861ef5ab09d19b35e02",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278707"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278266",
+        "sourceId": "50278266",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278266&goto=item%3Fid%3D50276792%2350278266",
+        "contentHash": "df1ea4dc146adb8b9d4a75bbf07760aab5f3f1bf5b678bd7f44afcf6919cae01",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278266"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278434",
+        "sourceId": "50278434",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278434&goto=item%3Fid%3D50276792%2350278434",
+        "contentHash": "2074649e55e39bc3122c64bd9830ee644151f53ad844e5d54ecef16844e251c4",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278434"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278849",
+        "sourceId": "50278849",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278849&goto=item%3Fid%3D50276792%2350278849",
+        "contentHash": "49c07ddd131791a047cee4d5b39408aa670f1ce9480c8e1aa3d3747284c190b4",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278849"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278909",
+        "sourceId": "50278909",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278909&goto=item%3Fid%3D50276792%2350278909",
+        "contentHash": "38654952b4e2de6cb59b3ea3357195df01962b5cfaff08ad7d5f17bb1d9daaa9",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278909"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278848",
+        "sourceId": "50278848",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278848&goto=item%3Fid%3D50276792%2350278848",
+        "contentHash": "39067138bae97276fa4710789b3e041efd670157d6e32e252bc45491893dcda2",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278848"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50277991",
+        "sourceId": "50277991",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50277991&goto=item%3Fid%3D50276792%2350277991",
+        "contentHash": "864b6a64993400989b9e84512e16ab5f1163d5704e8fd83a841dbf7f2f7b0d42",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50277991"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278041",
+        "sourceId": "50278041",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278041&goto=item%3Fid%3D50276792%2350278041",
+        "contentHash": "f4a4547b5843b75f5ea63a69f8666dd206e301846ff61cc01021c2405502e01d",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278041"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279377",
+        "sourceId": "50279377",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279377&goto=item%3Fid%3D50276792%2350279377",
+        "contentHash": "3d573069e2e4573bb968975049cf5863e77734e11527f3f948c9c71f0f96ca43",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279377"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279326",
+        "sourceId": "50279326",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279326&goto=item%3Fid%3D50276792%2350279326",
+        "contentHash": "d5b3107735405d2023a0b95c7191e3ac1e918b395b0e62eee7b682d013f35d10",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279326"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278638",
+        "sourceId": "50278638",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278638&goto=item%3Fid%3D50276792%2350278638",
+        "contentHash": "bdde8e879fc0c3e063946c0c6b13adb065fdc206714b85b1bccb5b95a669fe31",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278638"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278762",
+        "sourceId": "50278762",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278762&goto=item%3Fid%3D50276792%2350278762",
+        "contentHash": "b14fa02c48d48898df6d79664c5d6a22cf3e8aa925ded2d6eb71167d98d5893d",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278762"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278860",
+        "sourceId": "50278860",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278860&goto=item%3Fid%3D50276792%2350278860",
+        "contentHash": "bd3218ab77f63a4ab5e41f9cd905f9c6d10bf6871913074e3006db96d1121366",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278860"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279228",
+        "sourceId": "50279228",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279228&goto=item%3Fid%3D50276792%2350279228",
+        "contentHash": "ddd22b0ba322bf5a5dda858e172934ea805ec05058b5c9dc251d65cf5d322ed6",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279228"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278814",
+        "sourceId": "50278814",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278814&goto=item%3Fid%3D50276792%2350278814",
+        "contentHash": "2a5cdeeb68e394356b02517089481481d8e2aba472f9de428782890d1bfefdaa",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278814"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279573",
+        "sourceId": "50279573",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279573&goto=item%3Fid%3D50276792%2350279573",
+        "contentHash": "b114dc92ec666783be1c3f0b820904ad53bc748d1e938bc66f33f280ea0cf14d",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279573"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50277917",
+        "sourceId": "50277917",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50277917&goto=item%3Fid%3D50276792%2350277917",
+        "contentHash": "27bf47fc4abdab63aed91d220aa42cd779eb5398a5955d6c5f88a9c340249868",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50277917"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278105",
+        "sourceId": "50278105",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278105&goto=item%3Fid%3D50276792%2350278105",
+        "contentHash": "08c197bd4f98fd55ef385240d1e8e4202a8f5aff5560d78eb44a438cae2b5ae7",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278105"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279079",
+        "sourceId": "50279079",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279079&goto=item%3Fid%3D50276792%2350279079",
+        "contentHash": "2c5c0753240b13d769a6c2ecf734197bde057dd5bb281c383e5f1a5e0582cb83",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279079"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278300",
+        "sourceId": "50278300",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278300&goto=item%3Fid%3D50276792%2350278300",
+        "contentHash": "2ebb718dcdf3508337b75d7ca21c01e56192a54e9d705511ccbaca3154569e51",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278300"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278882",
+        "sourceId": "50278882",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278882&goto=item%3Fid%3D50276792%2350278882",
+        "contentHash": "7c8ca5fdbc2a2d35aae9521ecb4ebde42d3e22716da8b0df762986e1042f14a4",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278882"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278669",
+        "sourceId": "50278669",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278669&goto=item%3Fid%3D50276792%2350278669",
+        "contentHash": "4b1635bb2f719799f6b23980b3921709ecf7bfe07d97cf445160ec226e187666",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278669"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279014",
+        "sourceId": "50279014",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279014&goto=item%3Fid%3D50276792%2350279014",
+        "contentHash": "acaa3924012c79fabfe284af29cee3622dc499a850c73ade85e21a765f89089f",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279014"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279425",
+        "sourceId": "50279425",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279425&goto=item%3Fid%3D50276792%2350279425",
+        "contentHash": "95ffb93a340fb9a5c51577c16b5d5ca38f20f7492e226540da9ee47424bae442",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279425"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278280",
+        "sourceId": "50278280",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278280&goto=item%3Fid%3D50276792%2350278280",
+        "contentHash": "9c2c962c305f0e210435f03265db763aaae7badce79a725eea8582dd8f0920dd",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278280"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279105",
+        "sourceId": "50279105",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279105&goto=item%3Fid%3D50276792%2350279105",
+        "contentHash": "7aaca5c1c57a15fb02289eab99228c9a6ba1b76041fb907a9807fcf932d8a3e7",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279105"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279300",
+        "sourceId": "50279300",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279300&goto=item%3Fid%3D50276792%2350279300",
+        "contentHash": "8692783e0c4cd1d156e662f63a8521c337b1cb2e2673c392b19495f143d8dbc8",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279300"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278543",
+        "sourceId": "50278543",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278543&goto=item%3Fid%3D50276792%2350278543",
+        "contentHash": "2bb64a2e2d9a6ad1cf7ab1dd8ae7f38f00a4833cc26cfe4ec005c84e119f4475",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278543"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279207",
+        "sourceId": "50279207",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279207&goto=item%3Fid%3D50276792%2350279207",
+        "contentHash": "4e97b1b7cc47b015da22f49c6809a1b857db24302258704f63af345b57de7beb",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279207"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278014",
+        "sourceId": "50278014",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278014&goto=item%3Fid%3D50276792%2350278014",
+        "contentHash": "f1571e06b219fca65681cb968c4a22e3ab028457e68a28f00eb74da851870e19",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278014"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278146",
+        "sourceId": "50278146",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278146&goto=item%3Fid%3D50276792%2350278146",
+        "contentHash": "616e6d5260148e537a240e86c3a0731ccd4341b3f2639f74537be39ad3e2f6aa",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278146"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278423",
+        "sourceId": "50278423",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278423&goto=item%3Fid%3D50276792%2350278423",
+        "contentHash": "1d3873b696c6f76bb9b74ba2004f7ce62e1e8f3a2e99e764722e97e46e3ada66",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278423"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279379",
+        "sourceId": "50279379",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279379&goto=item%3Fid%3D50276792%2350279379",
+        "contentHash": "64e2d7745c0eff0d952a210bc87e40b12d47ddb4376b2a9101f4467f3c7c5d37",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279379"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278570",
+        "sourceId": "50278570",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278570&goto=item%3Fid%3D50276792%2350278570",
+        "contentHash": "84ed30415ba3d3250522c6d103dc4eb4068ef15c31b0b62833d46bb467ca673a",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278570"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50277984",
+        "sourceId": "50277984",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50277984&goto=item%3Fid%3D50276792%2350277984",
+        "contentHash": "4698118233d2f2ec011aa4115d80c498419ac44a81d14939159c4a88814b7d74",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50277984"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278220",
+        "sourceId": "50278220",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278220&goto=item%3Fid%3D50276792%2350278220",
+        "contentHash": "2afeec58e8b5427fc7410dc2b84eb95716f46c3d4266d00faa61c21e7674775c",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278220"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278324",
+        "sourceId": "50278324",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278324&goto=item%3Fid%3D50276792%2350278324",
+        "contentHash": "2aaaa742fe5d09cc5ba5df1b5742acda7559f4303bfd2d3bdd75347ec289ad6a",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278324"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278364",
+        "sourceId": "50278364",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278364&goto=item%3Fid%3D50276792%2350278364",
+        "contentHash": "84fa38897c097d882ad0a3504dbfab6d02390aa04565abe83a1dc10b9281f35f",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278364"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279103",
+        "sourceId": "50279103",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279103&goto=item%3Fid%3D50276792%2350279103",
+        "contentHash": "54a9a67070fb8544002b91c8c81fe7620a1c7bc74916fc72d79ecc30d388e241",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279103"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279604",
+        "sourceId": "50279604",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279604&goto=item%3Fid%3D50276792%2350279604",
+        "contentHash": "be597ab4a27c8051eb0c5aae0936bc9ff37639309263ad62e135d080718ddb00",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279604"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279509",
+        "sourceId": "50279509",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279509&goto=item%3Fid%3D50276792%2350279509",
+        "contentHash": "db389da8017d31b0bf18b291e4f588626d00d7aaaee66380dfa119b543852a44",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279509"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50277575",
+        "sourceId": "50277575",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50277575&goto=item%3Fid%3D50276792%2350277575",
+        "contentHash": "b3e61bd9413c569fbc4660b4f97153e1fdee19e5c4d3dcfaf6d5c2ebc4ba182f",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50277575"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278598",
+        "sourceId": "50278598",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278598&goto=item%3Fid%3D50276792%2350278598",
+        "contentHash": "ca3c0371b3980b2baadb7bc294ddb804357b661782dae6cee307aa2abf7b7971",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278598"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279128",
+        "sourceId": "50279128",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279128&goto=item%3Fid%3D50276792%2350279128",
+        "contentHash": "f707e474b7b905844d14e3fad707f389a8b16002523ec8d6626ec8de06b39d1a",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279128"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278899",
+        "sourceId": "50278899",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278899&goto=item%3Fid%3D50276792%2350278899",
+        "contentHash": "679104d471230b4ef19d51eabac8546e3118add6cb547593bbbd9079ecbbf831",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278899"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279141",
+        "sourceId": "50279141",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279141&goto=item%3Fid%3D50276792%2350279141",
+        "contentHash": "5d3ba31a144fa41a0e299440c0508a95bb41bf03dc7370b87c3c0f748147190c",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279141"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279360",
+        "sourceId": "50279360",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279360&goto=item%3Fid%3D50276792%2350279360",
+        "contentHash": "024689fcff512eb8db182c61d635cbacccb2d56e6dde6cc254459afab1486801",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279360"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279412",
+        "sourceId": "50279412",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279412&goto=item%3Fid%3D50276792%2350279412",
+        "contentHash": "7de4b0f43fc22d246cbb25884ddcfa351889fe690b9ac533903c6799e6abf15d",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279412"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50277785",
+        "sourceId": "50277785",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50277785&goto=item%3Fid%3D50276792%2350277785",
+        "contentHash": "aa41439c191f9faf0ee3569440902bc589113376359358f7356400b571686f62",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50277785"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279179",
+        "sourceId": "50279179",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279179&goto=item%3Fid%3D50276792%2350279179",
+        "contentHash": "3ac6fd290dba70b3e3bc518878460d1d532a259b8d11a5e51c9d8f8867a3b155",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279179"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50277855",
+        "sourceId": "50277855",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50277855&goto=item%3Fid%3D50276792%2350277855",
+        "contentHash": "aa5295d621bf2ce4c7acaa2e86127376e7fe782a46e29e1afe08dfaba6d7e97b",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50277855"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50277969",
+        "sourceId": "50277969",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50277969&goto=item%3Fid%3D50276792%2350277969",
+        "contentHash": "2ebff94f81ff7c2922f47338954154d3763bb39a5b5c9583d6f2ebb03b46985c",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50277969"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278047",
+        "sourceId": "50278047",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278047&goto=item%3Fid%3D50276792%2350278047",
+        "contentHash": "44e9619a17d77ace4860a6ebdeb2ffac2861186b3d7d0b0cafcbe9fce3e24a8e",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278047"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279840",
+        "sourceId": "50279840",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279840&goto=item%3Fid%3D50276792%2350279840",
+        "contentHash": "ae20b03ce9036918ee543d289b3543197d651706af200975e8a8991d598d0d07",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279840"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278084",
+        "sourceId": "50278084",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278084&goto=item%3Fid%3D50276792%2350278084",
+        "contentHash": "0cf85734931f519c88b4f8ac77a5034b0df682ab7e855d1f84d1ef2f3fd2abde",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278084"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278775",
+        "sourceId": "50278775",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278775&goto=item%3Fid%3D50276792%2350278775",
+        "contentHash": "7655a833464ca65c1f442e0df6258f24c950041127d0aab9cbb9c848cde20229",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278775"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278226",
+        "sourceId": "50278226",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278226&goto=item%3Fid%3D50276792%2350278226",
+        "contentHash": "a41f52ae315dc7dd66d3479f4f232ed6c26e87f184772dad59acfa5f3a0191b4",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278226"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50278969",
+        "sourceId": "50278969",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50278969&goto=item%3Fid%3D50276792%2350278969",
+        "contentHash": "049ceb17f8cca4f0f367ba8064b1c4f745dc3fee0bb20a4c4983d06250f53327",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50278969"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279408",
+        "sourceId": "50279408",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279408&goto=item%3Fid%3D50276792%2350279408",
+        "contentHash": "ac58b4e9d25b2c012f1f3190402853e94a54ebe3b41398406e2d806322e86d13",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279408"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279232",
+        "sourceId": "50279232",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279232&goto=item%3Fid%3D50276792%2350279232",
+        "contentHash": "c52a67476f43dac087a565ba0607ce8508115ff8357262048fc60ea1a4ecefc6",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279232"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279478",
+        "sourceId": "50279478",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279478&goto=item%3Fid%3D50276792%2350279478",
+        "contentHash": "e773a3f90f8d30aa69d85a8c54ea095609a3cccf036a7a7fdf027a6bf2cb5c27",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279478"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279505",
+        "sourceId": "50279505",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279505&goto=item%3Fid%3D50276792%2350279505",
+        "contentHash": "3ab39880ed5552ffb4ca2da1f6918453b0c00273c729f40b5d7d92e1a923adcd",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279505"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279215",
+        "sourceId": "50279215",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279215&goto=item%3Fid%3D50276792%2350279215",
+        "contentHash": "20ee6ecba0270a2dc8fcadb4b2e116b5ef9878ddee55bb62251658e7e37c4e93",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279215"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279548",
+        "sourceId": "50279548",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279548&goto=item%3Fid%3D50276792%2350279548",
+        "contentHash": "569ef807e5c7211c91014be516303f447601ab720e83f0a9155db0b848b518d4",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279548"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50277130",
+        "sourceId": "50277130",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50277130&goto=item%3Fid%3D50276792%2350277130",
+        "contentHash": "5c93fd9dca41a9b96ec1b0a19042a196f04e8aff8d6002e833a382efca302fd5",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50277130"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50277980",
+        "sourceId": "50277980",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50277980&goto=item%3Fid%3D50276792%2350277980",
+        "contentHash": "b7e3a26a038f013133ea41fb6fd114ec303e46004a43c7815d3d72b835d7c5a6",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50277980"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279263",
+        "sourceId": "50279263",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279263&goto=item%3Fid%3D50276792%2350279263",
+        "contentHash": "eb7835cf6f6fe9ad826ba9881481a5a54f90938d2076386af7803429c18aa071",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279263"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279440",
+        "sourceId": "50279440",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279440&goto=item%3Fid%3D50276792%2350279440",
+        "contentHash": "7624676dac3d4a1db0a8c7f83fefe450c977b116e545d237c103fe98e3011941",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279440"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279510",
+        "sourceId": "50279510",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279510&goto=item%3Fid%3D50276792%2350279510",
+        "contentHash": "2bae7458ccf4215d887a0709db2fd77fd60223195b1b3261e2b0725c86308fb0",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279510"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50279406",
+        "sourceId": "50279406",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50279406&goto=item%3Fid%3D50276792%2350279406",
+        "contentHash": "a91f4fb7b8e1e54c1be2dc17747c5c503b8e0f6bdc35c95476ec933920c22cdf",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50279406"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50277722",
+        "sourceId": "50277722",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50277722&goto=item%3Fid%3D50276792%2350277722",
+        "contentHash": "6f24233b967aa90ee557d063b2f01783f80500cdf19a86ebaa187d7af4414afb",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50277722"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      },
+      {
+        "recordId": "50277762",
+        "sourceId": "50277762",
+        "recordType": "comment",
+        "sourceUrl": "https://news.ycombinator.com/item?id=50276792",
+        "url": "https://news.ycombinator.com/reply?id=50277762&goto=item%3Fid%3D50276792%2350277762",
+        "contentHash": "40fcd5e6197a5e5b1adf0f694ac8cd6d8c35fbab1e0476acb7777523ccc12d59",
+        "capturedAt": "2026-10-28T19:52:18.388Z",
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "parentRecordId": "50276792",
+        "sourceRefs": [
+          "https://news.ycombinator.com/item?id=50276792",
+          "listening-job:listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+          "listening-record:50277762"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      }
+    ],
+    "analysisInput": {
+      "schemaVersion": 1,
+      "scope": {
+        "campaignId": "7acaa891-05c9-4251-8aab-4399c0222e0a",
+        "communityId": null,
+        "platform": null,
+        "channel": null,
+        "purpose": null,
+        "locale": null
+      },
+      "digest": "5dd7e19a0a05b6c5326b4c23cf497744bdf28beab08591490ac532359f003013",
+      "recordIds": [
+        "record-71b479654ea2cded409a58ede3bff77f",
+        "50276792",
+        "50279518",
+        "50279786",
+        "50279870",
+        "50279697",
+        "50277735",
+        "50278693",
+        "50278816",
+        "50278171",
+        "50278684",
+        "50278205"
+      ],
+      "untrusted": true
+    },
+    "statuses": [
+      "SUCCEEDED",
+      "SUCCEEDED"
+    ],
+    "sourceHashes": [
+      "fa87188765e603e821d515a49cb8af3316da43767fdfc53a012d37824efc8de5",
+      "011a575489f27f329acf6cd38595ea3eae2a022097dfe36bbf4e6ea32f823172"
+    ],
+    "extractedHashes": [
+      "0a080719be9fbb82a86a45b80dc8c2a430fbe17dc93d23758debac092864d00f",
+      "37f14c5d516352de4ecf8c78e7d446820b7718d44661cabd510889e5a523067f"
+    ]
+  },
+  "persisted": {
+    "contractVersion": 1,
+    "jobId": "listening-fcd44f36f7779193dfcc1ede-8c4e3714",
+    "campaignId": "7acaa891-05c9-4251-8aab-4399c0222e0a",
+    "backend": "nodriver",
+    "status": "SUCCEEDED",
+    "sourceUrls": [
+      "https://example.com/",
+      "https://news.ycombinator.com/item?id=50276792"
+    ],
+    "requested": 2,
+    "succeeded": 2,
+    "partial": 0,
+    "blocked": 0,
+    "failed": 0,
+    "unknown": 0,
+    "records": 101,
+    "newRecords": 8,
+    "deduplicatedRecords": 93,
+    "memoryIds": [
+      "listening-memory-4b4cf72875b913c3c2e78616",
+      "listening-memory-a30b7b6d9d10c1ea901591a3",
+      "listening-memory-e4b85c202694e93fba464c05",
+      "listening-memory-bf5454594e3289161a6f70a4",
+      "listening-memory-9ef4b44c783b449095e0cef3",
+      "listening-memory-d1946834addab9c522aa1f60",
+      "listening-memory-8926bc3023523edd83d77606",
+      "listening-memory-1dae7d12e92431d12dcd3460",
+      "listening-memory-08e5389ad0dcccd39d369d4e",
+      "listening-memory-1919c81fee2e41975c145c04",
+      "listening-memory-584a0bb414592e36f1b16168",
+      "listening-memory-afc729621112c5383bd92245",
+      "listening-memory-f3b7e48b5792ab95a6302394",
+      "listening-memory-740e6b3925ef08b9fec54b19",
+      "listening-memory-2758028abc028b6a04e8bc73",
+      "listening-memory-9589a7f26b57afb7cb0666c7",
+      "listening-memory-22fe5958fc0577f662a088df",
+      "listening-memory-05dbc09f27d94848f0535101",
+      "listening-memory-55c3b05616ac0bbd17407241",
+      "listening-memory-dc4d91ef4760d7c99a75f3d9",
+      "listening-memory-e57d19a9056c8c26b1ec012a",
+      "listening-memory-8d2c18a7f6d96f8e3939e47b",
+      "listening-memory-8855759c51aa904a738de04a",
+      "listening-memory-c95dcc3bdfb44adf8d08c32b",
+      "listening-memory-e007ba26a3b7b2afb81eab98",
+      "listening-memory-7fb2ee247331c2afec374104",
+      "listening-memory-0d8d701fa372a452fc3a28f6",
+      "listening-memory-2a2e315cad85adb76c5473d6",
+      "listening-memory-12c32123f323ac3d8115d4b4",
+      "listening-memory-84ee4808481fe8008d43bff6",
+      "listening-memory-2ad0badfb1422643e057097f",
+      "listening-memory-894ab58cad20fe590fc3a41a",
+      "listening-memory-48acdbcf3cf41b7f7576524c",
+      "listening-memory-956f221c0e8b76e7167a8dfe",
+      "listening-memory-3cc7179a4f14bcd5398d2387",
+      "listening-memory-fa97780c4e328f7cfca92300",
+      "listening-memory-e6db49be954f8001934ebdb8",
+      "listening-memory-13995dc6d0f7b6d74296479c",
+      "listening-memory-3822a7d6295da0a0327bef9c",
+      "listening-memory-76ea3a64ccdd551abb85854a",
+      "listening-memory-ff7d15abf57c44cbce3031d2",
+      "listening-memory-d86566f6f06a01be85db9be4",
+      "listening-memory-b9e1e61d9128d44b2cd6115d",
+      "listening-memory-4d3b37f4a862f873c34a80e8",
+      "listening-memory-b8ff7b2fb2e99c4c9d47b7a6",
+      "listening-memory-5eb166c4e800a8b26d9a6856",
+      "listening-memory-0b69842c75f65e75269f43a9",
+      "listening-memory-ff11d4e2bb0e2d2a66b16140",
+      "listening-memory-4a160073e4d0ae03a59106d1",
+      "listening-memory-e8d159648280acfff57a314d",
+      "listening-memory-89e2cb5847b28d640fadd24f",
+      "listening-memory-77f4f3cb0d6d73f823482da2",
+      "listening-memory-42cc3175de5fed081ed0199a",
+      "listening-memory-aeccb697c93d65a25c4de4ef",
+      "listening-memory-b79c027e052c198fde447ab4",
+      "listening-memory-205d98e0aac64694551e89c5",
+      "listening-memory-d4e18e505ce212bd564194ea",
+      "listening-memory-29aed8296ceed37b6386a421",
+      "listening-memory-76ff1dd93905a9399e0f1e5b",
+      "listening-memory-8918010c5e71a0c95413d657",
+      "listening-memory-a90fa5be60b1f0d1b81e0880",
+      "listening-memory-d3c373251560b4211745d97a",
+      "listening-memory-1770f931d2c8615694cca5af",
+      "listening-memory-66764f580ecdb090e40dad46"
+    ],
+    "sourceHashes": [
+      "fa87188765e603e821d515a49cb8af3316da43767fdfc53a012d37824efc8de5",
+      "011a575489f27f329acf6cd38595ea3eae2a022097dfe36bbf4e6ea32f823172"
+    ],
+    "extractedHashes": [
+      "0a080719be9fbb82a86a45b80dc8c2a430fbe17dc93d23758debac092864d00f",
+      "37f14c5d516352de4ecf8c78e7d446820b7718d44661cabd510889e5a523067f"
+    ],
+    "providerReceipt": {
+      "schemaVersion": 1,
+      "decisionId": "provider-decision-16ccadf2087cbc5774561835",
+      "providerId": "local-qwen",
+      "status": "SUCCEEDED",
+      "startedAt": "2026-10-28T19:52:21.000Z",
+      "completedAt": "2026-10-28T19:52:40.380Z",
+      "attempted": [
+        {
+          "providerId": "local-qwen",
+          "status": "executionSucceeded"
+        }
+      ],
+      "availability": [
+        {
+          "id": "local-qwen",
+          "installed": true,
+          "authReady": true,
+          "healthy": true,
+          "health": {
+            "state": "READY",
+            "reason": "MODEL_LIST_OBSERVED",
+            "model": "/Users/nam/.cache/system-agentic-ai/Qwen3-8B-4bit"
+          },
+          "executionSucceeded": true,
+          "available": true,
+          "capabilities": [
+            "strategy-context",
+            "community-research",
+            "content-context"
+          ],
+          "tools": [],
+          "reasoningClasses": [
+            "deterministic",
+            "general"
+          ],
+          "successRate": 0
+        }
+      ],
+      "telemetry": {
+        "capability": "community-research",
+        "privacyClass": "local",
+        "reasoningClass": "general",
+        "tools": [],
+        "providerId": "local-qwen",
+        "successRate": null,
+        "analysisInputDigest": "5dd7e19a0a05b6c5326b4c23cf497744bdf28beab08591490ac532359f003013"
+      },
+      "persisted": {
+        "schemaVersion": 1,
+        "decisionId": "provider-decision-16ccadf2087cbc5774561835",
+        "providerId": "local-qwen",
+        "status": "SUCCEEDED",
+        "startedAt": "2026-10-28T19:52:21.000Z",
+        "completedAt": "2026-10-28T19:52:40.380Z",
+        "attempted": [
+          {
+            "providerId": "local-qwen",
+            "status": "executionSucceeded"
+          }
+        ],
+        "availability": [
+          {
+            "id": "local-qwen",
+            "installed": true,
+            "authReady": true,
+            "healthy": true,
+            "health": {
+              "state": "READY",
+              "reason": "MODEL_LIST_OBSERVED",
+              "model": "/Users/nam/.cache/system-agentic-ai/Qwen3-8B-4bit"
+            },
+            "executionSucceeded": true,
+            "available": true,
+            "capabilities": [
+              "strategy-context",
+              "community-research",
+              "content-context"
+            ],
+            "tools": [],
+            "reasoningClasses": [
+              "deterministic",
+              "general"
+            ],
+            "successRate": 0
+          }
+        ],
+        "telemetry": {
+          "capability": "community-research",
+          "privacyClass": "local",
+          "reasoningClass": "general",
+          "tools": [],
+          "providerId": "local-qwen",
+          "successRate": null,
+          "analysisInputDigest": "5dd7e19a0a05b6c5326b4c23cf497744bdf28beab08591490ac532359f003013"
+        }
+      },
+      "externalSideEffects": false
+    },
+    "externalSideEffects": false,
+    "startedAt": "2026-10-28T19:52:10.349Z",
+    "completedAt": "2026-10-28T19:52:20.852Z"
+  }
+}

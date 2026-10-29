@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "status": "RECORDED",
+  "notes": "Two bounded rounds on the same two public URLs. Times are wall-clock observations from product entrypoint; process/RSS evidence comes from each worker receipt. No superiority claim is made from this small sample.",
+  "urlSet": ["https://example.com/", "https://news.ycombinator.com/item?id=50276792"],
+  "limits": {"concurrency": 1, "urlsPerRound": 2, "timeoutMs": 30000, "maxHtmlBytes": 2000000},
+  "rounds": [
+    {"round": 1, "backend": "http", "status": "SUCCEEDED", "requested": 2, "succeeded": 2, "partial": 0, "records": 101, "elapsedMs": 5988, "processCountBefore": 1, "processCountAfter": 0, "peakRssKb": null, "cleanup": "worker_exited"},
+    {"round": 1, "backend": "nodriver", "status": "SUCCEEDED", "requested": 2, "succeeded": 2, "partial": 0, "records": 101, "elapsedMs": 30000, "processCountBefore": 1, "processCountAfter": 0, "peakRssKb": null, "cleanup": "browser_process_exited;profile_removed"},
+    {"round": 2, "backend": "http", "status": "SUCCEEDED", "requested": 2, "succeeded": 2, "partial": 0, "records": 101, "elapsedMs": 5960, "processCountBefore": 1, "processCountAfter": 0, "peakRssKb": null, "cleanup": "worker_exited"},
+    {"round": 2, "backend": "nodriver", "status": "SUCCEEDED", "requested": 2, "succeeded": 2, "partial": 0, "records": 101, "elapsedMs": 30000, "processCountBefore": 1, "processCountAfter": 0, "peakRssKb": null, "cleanup": "browser_process_exited;profile_removed"}
+  ],
+  "decision": "Keep http as default rollback baseline. Enable nodriver explicitly for JS/public pages where its rendered snapshot adds coverage; current sample does not establish a speed or memory win."
+}

@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "9875db34c3f068c1510b3e92e8c72e4134e641a9",
+  "branch": "integration/session-c-reconciled",
+  "workspace": "/Users/nam/Documents/marketing-seeding-session-c-reconciled",
+  "capturedAt": "2026-10-28T14:00:11Z",
+  "baselineRevision": "79985bb411afc141f0edf10ae635fb91824d8bc9",
+  "checks": [
+    {
+      "command": "node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs",
+      "classification": "FIXTURE_VERIFIED",
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "skipped": 0,
+      "result": "PASS"
+    },
+    {
+      "command": "npm test",
+      "classification": "FIXTURE_VERIFIED",
+      "tests": 805,
+      "pass": 803,
+      "fail": 0,
+      "skipped": 2,
+      "result": "PASS",
+      "outputSha256": "e00abd1cf8304e832361bb81643520267d2845939ba31554aecc86b869beae08"
+    },
+    {
+      "command": "git diff --check HEAD",
+      "classification": "IMPLEMENTED",
+      "result": "PASS"
+    }
+  ],
+  "changes": [
+    "Canonical evidenceRefs define independent memory samples; caller publicationId/sampleId changes do not inflate support.",
+    "Provider deadline covers fetch, response body consumption, and JSON parsing; timeout remains UNKNOWN/failure.",
+    "Already-aborted provider probe signals fail fast."
+  ],
+  "independentReview": {
+    "status": "PASS",
+    "capturedAt": "2026-10-28T13:58:13Z",
+    "reviewer": "independent-verifier",
+    "scope": "read-only source/test review",
+    "highOrMediumFindings": 0,
+    "aOrBMutation": false,
+    "secretFindings": 0
+  },
+  "queueAttempt": {
+    "taskId": "ms-session-c-memory-evidence-20261028",
+    "attempt": 1,
+    "status": "FAILED",
+    "reason": "local no-progress guard stopped worker before edit",
+    "resubmitted": false
+  },
+  "liveEligible": false,
+  "externalSideEffects": false,
+  "unknownRetryAllowed": false
+}

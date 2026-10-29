@@ -1,0 +1,383 @@
+{
+  "run": {
+    "contractVersion": 1,
+    "jobId": "listening-944f1a59d343eda92a47aa8e-52807f73",
+    "campaignId": "f5cbb163-92bf-4224-8ee0-8d2d3a16ad9a",
+    "backend": "nodriver",
+    "sourceRevision": "nodriver-0233da5bfbe98dc58341f0863526b6315a97e646",
+    "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+    "sourceUrls": [
+      "https://example.com/",
+      "https://www.python.org/community/",
+      "https://news.ycombinator.com/"
+    ],
+    "scope": {
+      "campaignId": "f5cbb163-92bf-4224-8ee0-8d2d3a16ad9a",
+      "communityId": null,
+      "platform": null,
+      "channel": null,
+      "purpose": null,
+      "locale": null
+    },
+    "policies": {},
+    "keywords": [],
+    "blockedKeywords": [],
+    "startedAt": "2026-10-28T19:14:18.813Z",
+    "completedAt": "2026-10-28T19:14:59.511Z",
+    "fetches": [
+      {
+        "contractVersion": 1,
+        "jobId": null,
+        "backend": "nodriver",
+        "sourceUrl": "https://example.com/",
+        "finalUrl": "https://example.com/",
+        "capturedAt": "2026-10-28T19:14:50.995Z",
+        "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "fetcherRevision": "nodriver-0233da5bfbe98dc58341f0863526b6315a97e646",
+        "browserVersion": null,
+        "observedHttpStatus": "UNKNOWN",
+        "status": "FAILED",
+        "reason": "worker produced no JSON (exit 1)",
+        "contentType": "text/html",
+        "coverage": {
+          "html": false,
+          "jsRendered": false,
+          "markdown": false,
+          "structured": false,
+          "post": false,
+          "comment": false,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": false,
+          "notes": []
+        },
+        "processEvidence": null,
+        "extracted": {
+          "status": "FAILED",
+          "reason": "worker produced no JSON (exit 1)",
+          "records": [],
+          "extractedHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      {
+        "contractVersion": 1,
+        "jobId": "listening-944f1a59d343eda92a47aa8e-52807f73",
+        "backend": "nodriver",
+        "sourceUrl": "https://www.python.org/community/",
+        "finalUrl": "https://www.python.org/community/",
+        "capturedAt": "2026-10-28T19:14:53.690Z",
+        "contentHash": "77e0893ed4ec285bd3743fa5e31200ccc0ee4ce87f0a31dfe6b338217e0d1519",
+        "fetcherRevision": "nodriver-0233da5bfbe98dc58341f0863526b6315a97e646",
+        "browserVersion": "0.50.6",
+        "observedHttpStatus": 200,
+        "status": "SUCCEEDED",
+        "reason": null,
+        "contentType": "text/html",
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": false,
+          "structured": false,
+          "post": false,
+          "comment": false,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "processEvidence": {
+          "workerPid": 55369,
+          "browserPid": 55375,
+          "beforeCount": null,
+          "afterCount": null,
+          "cleanup": "browser_process_exited;profile_removed",
+          "processCountBefore": 1,
+          "processCountAfter": 0,
+          "peakRssKb": null,
+          "rssKbAfter": null,
+          "browserPids": []
+        },
+        "extracted": {
+          "contractVersion": 1,
+          "jobId": "listening-944f1a59d343eda92a47aa8e-52807f73",
+          "status": "PARTIAL",
+          "reason": "structured content was incomplete",
+          "sourceUrl": "https://www.python.org/community/",
+          "finalUrl": "https://www.python.org/community/",
+          "capturedAt": "2026-10-28T19:14:53.690Z",
+          "contentHash": "77e0893ed4ec285bd3743fa5e31200ccc0ee4ce87f0a31dfe6b338217e0d1519",
+          "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+          "extractedHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "records": [],
+          "coverage": {
+            "html": true,
+            "markdown": false,
+            "structured": false,
+            "post": false,
+            "comment": false,
+            "iframe": false,
+            "shadowDom": "UNKNOWN",
+            "notes": [
+              "HTML-only extraction; no browser/network/model"
+            ]
+          },
+          "elapsedMs": 1123,
+          "childPid": 55424,
+          "stderr": "",
+          "processEvidence": {
+            "workerPid": 55424,
+            "cleanup": "worker_exited"
+          }
+        }
+      },
+      {
+        "contractVersion": 1,
+        "jobId": "listening-944f1a59d343eda92a47aa8e-52807f73",
+        "backend": "nodriver",
+        "sourceUrl": "https://news.ycombinator.com/",
+        "finalUrl": "https://news.ycombinator.com/",
+        "capturedAt": "2026-10-28T19:14:58.090Z",
+        "contentHash": "b082a9d6c4d545f57c5e3c09eee0a90e38ce6c64e8b3400e0b48cf4e31c15468",
+        "fetcherRevision": "nodriver-0233da5bfbe98dc58341f0863526b6315a97e646",
+        "browserVersion": "0.50.6",
+        "observedHttpStatus": 200,
+        "status": "SUCCEEDED",
+        "reason": null,
+        "contentType": "text/html",
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": false,
+          "structured": false,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "processEvidence": {
+          "workerPid": 55448,
+          "browserPid": 55449,
+          "beforeCount": null,
+          "afterCount": null,
+          "cleanup": "browser_process_exited;profile_removed",
+          "processCountBefore": 1,
+          "processCountAfter": 0,
+          "peakRssKb": null,
+          "rssKbAfter": null,
+          "browserPids": []
+        },
+        "extracted": {
+          "contractVersion": 1,
+          "jobId": "listening-944f1a59d343eda92a47aa8e-52807f73",
+          "status": "SUCCEEDED",
+          "reason": null,
+          "sourceUrl": "https://news.ycombinator.com/",
+          "finalUrl": "https://news.ycombinator.com/",
+          "capturedAt": "2026-10-28T19:14:58.090Z",
+          "contentHash": "b082a9d6c4d545f57c5e3c09eee0a90e38ce6c64e8b3400e0b48cf4e31c15468",
+          "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+          "extractedHash": "af38b0a5533dbb1f98f74200cf32f34f14c82b6c56a5abf7578c4de2b64f898a",
+          "records": [
+            {
+              "recordId": "page-57c635fdffa077cff4324e7dd81ff6ab",
+              "sourceId": null,
+              "recordType": "page",
+              "sourceUrl": "https://news.ycombinator.com/",
+              "url": "https://news.ycombinator.com/",
+              "title": "Hacker News",
+              "text": "| | ![](https://news.ycombinator.com/y18.svg)⟨1⟩ | **Hacker News⟨2⟩**new⟨3⟩ | past⟨4⟩ | comments⟨5⟩ | ask⟨6⟩ | show⟨7⟩ | jobs⟨8⟩ | submit⟨9⟩ | login⟨10⟩ | | --- | --- | --- | | | | | 1. | ⟨11⟩ | Gemini 4 Carbon⟨12⟩ (blog.google⟨13⟩) | | --- | --- | --- | | | 463 points by acossta⟨14⟩ 2 hours ago⟨15⟩ | hide⟨16⟩ | 386 comments⟨15⟩ | | | 2. | ⟨17⟩ | CNC Stone Carving⟨18⟩ (carmelitegothic.com⟨19⟩) | | | 272 points by bschne⟨20⟩ 4 hours ago⟨21⟩ | hide⟨22⟩ | 97 comments⟨21⟩ | | | 3. | ⟨23⟩ | Why Is This Fingerprinting Script Creating Bioweapons?⟨24⟩ (nullpt.rs⟨25⟩) | | | 96 points by hazebooth⟨26⟩ 2 hours ago⟨27⟩ | hide⟨28⟩ | 15 comments⟨27⟩ | | | 4. | ⟨29⟩ | MacBook Pro with PROLED XDR Display and Touch⟨30⟩ (apple.com⟨31⟩) | | | 286 points by etothet⟨32⟩ 2 hours ago⟨33⟩ | hide⟨34⟩ | 445 comments⟨33⟩ | | | 5. | ⟨35⟩ | Dayjob: Tax – evaluating AI agents on 50 professional tax assignments⟨36⟩ (surgehq.ai⟨37⟩) | | | 107 points by landonxi⟨38⟩ 3 hours ago⟨39⟩ | hide⟨40⟩ | 61 comments⟨39⟩ | | | 6. | ⟨41⟩ | Show HN: SlideBySide – Present slides without sharing your screen⟨42⟩ (slidebyside.com⟨43⟩) | | | 27 points by denismenace⟨44⟩ 2 hours ago⟨45⟩ | hide⟨46⟩ | 12 comments⟨45⟩ | | | 7. | ⟨47⟩ | The Grid, a factory-scale robot in Massachusetts that builds PCBs on demand⟨48⟩ (circuithub.com⟨49⟩) | | | 302 points by seddona⟨50⟩ 10 hours ago⟨51⟩ | hide⟨52⟩ | 136 comments⟨51⟩ | | | 8. | ⟨53⟩ | Start Doing Graph Theory⟨54⟩ (vertex.degree⟨55⟩) | | | 450 points by ibobev⟨56⟩ 11 hours ago⟨57⟩ | hide⟨58⟩ | 103 comments⟨57⟩ | | | 9. | ⟨59⟩ | Apple's git still trusts the compromised eMudhra certificates⟨60⟩ (we-have-a-problem.com⟨61⟩) | | | 874 points by galadran⟨62⟩ 8 hours ago⟨63⟩ | hide⟨64⟩ | 339 comments⟨63⟩ | | | 10. | ![⟨65⟩] | Converge (YC S23) Is Hiring a Founding Platform Engineer⟨66⟩ (runconverge.com⟨67⟩) | | | 2 hours ago⟨68⟩ | hide⟨69⟩ | | | 11. | ⟨70⟩ | The Agent SDK⟨71⟩ (cursor.com⟨72⟩) | | | 64 points by torutofu⟨73⟩ 5 hours ago⟨74⟩ | hide⟨75⟩ | 66 comments⟨74⟩ | | | 12. | ⟨76⟩ | AlpineBSD⟨77⟩ (alpinebsd.org⟨78⟩) | | | 91 points by bradley_taunt⟨79⟩ 4 hours ago⟨80⟩ | hide⟨81⟩ | 83 comments⟨80⟩ | | | 13. | ⟨82⟩ | Gaussian Splats part 3: There's always a bigger scene⟨83⟩ (magnopus.com⟨84⟩) | | | 63 points by ibobev⟨56⟩ 6 hours ago⟨85⟩ | hide⟨86⟩ | 13 comments⟨85⟩ | | | 14. | ⟨87⟩ | Counting Sand Dunes in the Simpson Desert⟨88⟩ (ford.com⟨89⟩) | | | 6 points by bryanrasmussen⟨90⟩ 1 hour ago⟨91⟩ | hide⟨92⟩ | discuss⟨91⟩ | | | 15. | ⟨93⟩ | Emacs Turns 50⟨94⟩ (technologyreview.com⟨95⟩) | | | 286 points by internet_points⟨96⟩ 5 hours ago⟨97⟩ | hide⟨98⟩ | 114 comments⟨97⟩ | | | 16. | ⟨99⟩ | Git for the US Code⟨100⟩ (lexifina.com⟨101⟩) | | | 401 points by alansaber⟨102⟩ 17 hours ago⟨103⟩ | hide⟨104⟩ | 207 comments⟨103⟩ | | | 17. | ⟨105⟩ | Regent's Ground-Effect Vehicle Reimagines Coastal Travel⟨106⟩ (ieee.org⟨107⟩) | | | 28 points by rbanffy⟨108⟩ 3 hours ago⟨109⟩ | hide⟨110⟩ | 19 comments⟨109⟩ | | | 18. | ⟨111⟩ | From confession to conspiracy: How the Wedgewood fake polls story spread⟨112⟩ (uw.edu⟨113⟩) | | | 47 points by croes⟨114⟩ 4 hours ago⟨115⟩ | hide⟨116⟩ | 34 comments⟨115⟩ | | | 19. | ⟨117⟩ | Ink droplets in motion snag top prize in Nikon Small World contest⟨118⟩ (arstechnica.com⟨119⟩) | | | 367 points by _Microft⟨120⟩ 19 hours ago⟨121⟩ | hide⟨122⟩ | 68 comments⟨121⟩ | | | 20. | ⟨123⟩ | Kentucky man becomes the first humanist granted religious exemption from AI⟨124⟩ (religionnews.com⟨125⟩) | | | 313 points by danso⟨126⟩ 5 hours ago⟨127⟩ | hide⟨128⟩ | 366 comments⟨127⟩ | | | 21. | ⟨129⟩ | At least 68 killed in Spanish high-speed train crash⟨130⟩ (bbc.com⟨131⟩) | | | 7 points by saikatsg⟨132⟩ 25 minutes ago⟨133⟩ | hide⟨134⟩ | 1 comment⟨133⟩ | | | 22. | ⟨135⟩ | Survival LLM: AI assistant and emergency library that runs on your own computer⟨136⟩ (brangus.io⟨137⟩) | | | 492 points by Luc⟨138⟩ 23 hours ago⟨139⟩ | hide⟨140⟩ | 186 comments⟨139⟩ | | | 23. | ⟨141⟩ | Decompiling Fast Food Tycoon 2: Drawing the World⟨142⟩ (healeycodes.com⟨143⟩) | | | 160 points by healeycodes⟨144⟩ 13 hours ago⟨145⟩ | hide⟨146⟩ | 32 comments⟨145⟩ | | | 24. | ⟨147⟩ | US agency approves Amazon Leo’s $11.5B acquisition of Globalstar⟨148⟩ (reuters.com⟨149⟩) | | | 195 points by noptd⟨150⟩ 7 hours ago⟨151⟩ | hide⟨152⟩ | 94 comments⟨151⟩ | | | 25. | ⟨153⟩ | Nvidia Nemotron 3.5 Transcribe: open ASR for 40 languages⟨154⟩ (huggingface.co⟨155⟩) | | | 59 points by wondersky⟨156⟩ 3 hours ago⟨157⟩ | hide⟨158⟩ | 7 comments⟨157⟩ | | | 26. | ⟨159⟩ | Tailscale SSH: Investigation and remediation update⟨160⟩ (tailscale.com⟨161⟩) | | | 357 points by figmert⟨162⟩ 23 hours ago⟨163⟩ | hide⟨164⟩ | 183 comments⟨163⟩ | | | 27. | ⟨165⟩ | Early progress on accelerating drug development with Claude⟨166⟩ (anthropic.com⟨167⟩) | | | 308 points by dataking⟨168⟩ 22 hours ago⟨169⟩ | hide⟨170⟩ | 302 comments⟨169⟩ | | | 28. | ⟨171⟩ | Archive.today links going forward⟨172⟩ (reddit.com⟨173⟩) | | | 121 points by consumer451⟨174⟩ 3 hours ago⟨175⟩ | hide⟨176⟩ | 75 comments⟨175⟩ | | | 29. | ⟨177⟩ | Code-execution flaw in UEFI firmware threatens most servers on planet Earth⟨178⟩ (arstechnica.com⟨119⟩) | | | 283 points by DamnInteresting⟨179⟩ 22 hours ago⟨180⟩ | hide⟨181⟩ | 179 comments⟨180⟩ | | | 30. | ⟨182⟩ | Executable Archaeology: Reanimating the Heuristic Compiler (1961) and KBEmacs (1984)⟨183⟩ (arxiv.org⟨184⟩) | | | 8 points by abrax3141⟨185⟩ 3 hours ago⟨186⟩ | hide⟨187⟩ | discuss⟨186⟩ | | | | | More⟨188⟩ | | | ![⟨65⟩] | | | --- | Consider applying for YC's Winter 2027 batch! _Applications_ are open till November 2.⟨189⟩ Guidelines⟨190⟩ | FAQ⟨191⟩ | Lists⟨192⟩ | API⟨193⟩ | Security⟨194⟩ | Legal⟨195⟩ | Apply to YC⟨189⟩ | Contact Search: |",
+              "author": null,
+              "contentHash": "57c635fdffa077cff4324e7dd81ff6abb120efa82442c76af904a96fb5d56b1b",
+              "parentRecordId": null
+            }
+          ],
+          "coverage": {
+            "html": true,
+            "markdown": true,
+            "structured": false,
+            "post": false,
+            "comment": false,
+            "iframe": false,
+            "shadowDom": "UNKNOWN",
+            "notes": [
+              "HTML-only extraction; no browser/network/model"
+            ]
+          },
+          "elapsedMs": 686,
+          "childPid": 55515,
+          "stderr": "",
+          "processEvidence": {
+            "workerPid": 55515,
+            "cleanup": "worker_exited"
+          }
+        }
+      }
+    ],
+    "records": [
+      {
+        "schemaVersion": 1,
+        "recordId": "record-585a0c6c57242ded2f2023d935575b77",
+        "sourceId": null,
+        "index": 0,
+        "recordType": "page",
+        "sourceUrl": "https://news.ycombinator.com/",
+        "url": "https://news.ycombinator.com/",
+        "title": "Hacker News",
+        "text": "| | ![](https://news.ycombinator.com/y18.svg)⟨1⟩ | **Hacker News⟨2⟩**new⟨3⟩ | past⟨4⟩ | comments⟨5⟩ | ask⟨6⟩ | show⟨7⟩ | jobs⟨8⟩ | submit⟨9⟩ | login⟨10⟩ | | --- | --- | --- | | | | | 1. | ⟨11⟩ | Gemini 4 Carbon⟨12⟩ (blog.google⟨13⟩) | | --- | --- | --- | | | 463 points by acossta⟨14⟩ 2 hours ago⟨15⟩ | hide⟨16⟩ | 386 comments⟨15⟩ | | | 2. | ⟨17⟩ | CNC Stone Carving⟨18⟩ (carmelitegothic.com⟨19⟩) | | | 272 points by bschne⟨20⟩ 4 hours ago⟨21⟩ | hide⟨22⟩ | 97 comments⟨21⟩ | | | 3. | ⟨23⟩ | Why Is This Fingerprinting Script Creating Bioweapons?⟨24⟩ (nullpt.rs⟨25⟩) | | | 96 points by hazebooth⟨26⟩ 2 hours ago⟨27⟩ | hide⟨28⟩ | 15 comments⟨27⟩ | | | 4. | ⟨29⟩ | MacBook Pro with PROLED XDR Display and Touch⟨30⟩ (apple.com⟨31⟩) | | | 286 points by etothet⟨32⟩ 2 hours ago⟨33⟩ | hide⟨34⟩ | 445 comments⟨33⟩ | | | 5. | ⟨35⟩ | Dayjob: Tax – evaluating AI agents on 50 professional tax assignments⟨36⟩ (surgehq.ai⟨37⟩) | | | 107 points by landonxi⟨38⟩ 3 hours ago⟨39⟩ | hide⟨40⟩ | 61 comments⟨39⟩ | | | 6. | ⟨41⟩ | Show HN: SlideBySide – Present slides without sharing your screen⟨42⟩ (slidebyside.com⟨43⟩) | | | 27 points by denismenace⟨44⟩ 2 hours ago⟨45⟩ | hide⟨46⟩ | 12 comments⟨45⟩ | | | 7. | ⟨47⟩ | The Grid, a factory-scale robot in Massachusetts that builds PCBs on demand⟨48⟩ (circuithub.com⟨49⟩) | | | 302 points by seddona⟨50⟩ 10 hours ago⟨51⟩ | hide⟨52⟩ | 136 comments⟨51⟩ | | | 8. | ⟨53⟩ | Start Doing Graph Theory⟨54⟩ (vertex.degree⟨55⟩) | | | 450 points by ibobev⟨56⟩ 11 hours ago⟨57⟩ | hide⟨58⟩ | 103 comments⟨57⟩ | | | 9. | ⟨59⟩ | Apple's git still trusts the compromised eMudhra certificates⟨60⟩ (we-have-a-problem.com⟨61⟩) | | | 874 points by galadran⟨62⟩ 8 hours ago⟨63⟩ | hide⟨64⟩ | 339 comments⟨63⟩ | | | 10. | ![⟨65⟩] | Converge (YC S23) Is Hiring a Founding Platform Engineer⟨66⟩ (runconverge.com⟨67⟩) | | | 2 hours ago⟨68⟩ | hide⟨69⟩ | | | 11. | ⟨70⟩ | The Agent SDK⟨71⟩ (cursor.com⟨72⟩) | | | 64 points by torutofu⟨73⟩ 5 hours ago⟨74⟩ | hide⟨75⟩ | 66 comments⟨74⟩ | | | 12. | ⟨76⟩ | AlpineBSD⟨77⟩ (alpinebsd.org⟨78⟩) | | | 91 points by bradley_taunt⟨79⟩ 4 hours ago⟨80⟩ | hide⟨81⟩ | 83 comments⟨80⟩ | | | 13. | ⟨82⟩ | Gaussian Splats part 3: There's always a bigger scene⟨83⟩ (magnopus.com⟨84⟩) | | | 63 points by ibobev⟨56⟩ 6 hours ago⟨85⟩ | hide⟨86⟩ | 13 comments⟨85⟩ | | | 14. | ⟨87⟩ | Counting Sand Dunes in the Simpson Desert⟨88⟩ (ford.com⟨89⟩) | | | 6 points by bryanrasmussen⟨90⟩ 1 hour ago⟨91⟩ | hide⟨92⟩ | discuss⟨91⟩ | | | 15. | ⟨93⟩ | Emacs Turns 50⟨94⟩ (technologyreview.com⟨95⟩) | | | 286 points by internet_points⟨96⟩ 5 hours ago⟨97⟩ | hide⟨98⟩ | 114 comments⟨97⟩ | | | 16. | ⟨99⟩ | Git for the US Code⟨100⟩ (lexifina.com⟨101⟩) | | | 401 points by alansaber⟨102⟩ 17 hours ago⟨103⟩ | hide⟨104⟩ | 207 comments⟨103⟩ | | | 17. | ⟨105⟩ | Regent's Ground-Effect Vehicle Reimagines Coastal Travel⟨106⟩ (ieee.org⟨107⟩) | | | 28 points by rbanffy⟨108⟩ 3 hours ago⟨109⟩ | hide⟨110⟩ | 19 comments⟨109⟩ | | | 18. | ⟨111⟩ | From confession to conspiracy: How the Wedgewood fake polls story spread⟨112⟩ (uw.edu⟨113⟩) | | | 47 points by croes⟨114⟩ 4 hours ago⟨115⟩ | hide⟨116⟩ | 34 comments⟨115⟩ | | | 19. | ⟨117⟩ | Ink droplets in motion snag top prize in Nikon Small World contest⟨118⟩ (arstechnica.com⟨119⟩) | | | 367 points by _Microft⟨120⟩ 19 hours ago⟨121⟩ | hide⟨122⟩ | 68 comments⟨121⟩ | | | 20. | ⟨123⟩ | Kentucky man becomes the first humanist granted religious exemption from AI⟨124⟩ (religionnews.com⟨125⟩) | | | 313 points by danso⟨126⟩ 5 hours ago⟨127⟩ | hide⟨128⟩ | 366 comments⟨127⟩ | | | 21. | ⟨129⟩ | At least 68 killed in Spanish high-speed train crash⟨130⟩ (bbc.com⟨131⟩) | | | 7 points by saikatsg⟨132⟩ 25 minutes ago⟨133⟩ | hide⟨134⟩ | 1 comment⟨133⟩ | | | 22. | ⟨135⟩ | Survival LLM: AI assistant and emergency library that runs on your own computer⟨136⟩ (brangus.io⟨137⟩) | | | 492 points by Luc⟨138⟩ 23 hours ago⟨139⟩ | hide⟨140⟩ | 186 comments⟨139⟩ | | | 23. | ⟨141⟩ | Decompiling Fast Food Tycoon 2: Drawing the World⟨142⟩ (healeycodes.com⟨143⟩) | | | 160 points by healeycodes⟨144⟩ 13 hours ago⟨145⟩ | hide⟨146⟩ | 32 comments⟨145⟩ | | | 24. | ⟨147⟩ | US agency approves Amazon Leo’s $11.5B acquisition of Globalstar⟨148⟩ (reuters.com⟨149⟩) | | | 195 points by noptd⟨150⟩ 7 hours ago⟨151⟩ | hide⟨152⟩ | 94 comments⟨151⟩ | | | 25. | ⟨153⟩ | Nvidia Nemotron 3.5 Transcribe: open ASR for 40 languages⟨154⟩ (huggingface.co⟨155⟩) | | | 59 points by wondersky⟨156⟩ 3 hours ago⟨157⟩ | hide⟨158⟩ | 7 comments⟨157⟩ | | | 26. | ⟨159⟩ | Tailscale SSH: Investigation and remediation update⟨160⟩ (tailscale.com⟨161⟩) | | | 357 points by figmert⟨162⟩ 23 hours ago⟨163⟩ | hide⟨164⟩ | 183 comments⟨163⟩ | | | 27. | ⟨165⟩ | Early progress on accelerating drug development with Claude⟨166⟩ (anthropic.com⟨167⟩) | | | 308 points by dataking⟨168⟩ 22 hours ago⟨169⟩ | hide⟨170⟩ | 302 comments⟨169⟩ | | | 28. | ⟨171⟩ | Archive.today links going forward⟨172⟩ (reddit.com⟨173⟩) | | | 121 points by consumer451⟨174⟩ 3 hours ago⟨175⟩ | hide⟨176⟩ | 75 comments⟨175⟩ | | | 29. | ⟨177⟩ | Code-execution flaw in UEFI firmware threatens most servers on planet Earth⟨178⟩ (arstechnica.com⟨119⟩) | | | 283 points by DamnInteresting⟨179⟩ 22 hours ago⟨180⟩ | hide⟨181⟩ | 179 comments⟨180⟩ | | | 30. | ⟨182⟩ | Executable Archaeology: Reanimating the Heuristic Compiler (1961) and KBEmacs (1984)⟨183⟩ (arxiv.org⟨184⟩) | | | 8 points by abrax3141⟨185⟩ 3 hours ago⟨186⟩ | hide⟨187⟩ | discuss⟨186⟩ | | | | | More⟨188⟩ | | | ![⟨65⟩] | | | --- | Consider applying for YC's Winter 2027 batch! _Applications_ are open till November 2.⟨189⟩ Guidelines⟨190⟩ | FAQ⟨191⟩ | Lists⟨192⟩ | API⟨193⟩ | Security⟨194⟩ | Legal⟨195⟩ | Apply to YC⟨189⟩ | Contact Search: |",
+        "author": null,
+        "contentHash": "57c635fdffa077cff4324e7dd81ff6abb120efa82442c76af904a96fb5d56b1b",
+        "capturedAt": "2026-10-28T19:14:58.090Z",
+        "publishedAt": null,
+        "parentRecordId": null,
+        "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+        "sourceRefs": [
+          "https://news.ycombinator.com/",
+          "listening-job:listening-944f1a59d343eda92a47aa8e-52807f73",
+          "listening-record:record-585a0c6c57242ded2f2023d935575b77"
+        ],
+        "coverage": {
+          "html": true,
+          "jsRendered": true,
+          "markdown": true,
+          "structured": true,
+          "post": true,
+          "comment": true,
+          "iframe": false,
+          "shadowDom": "UNKNOWN",
+          "requestedScrollSteps": 0,
+          "completedScrollSteps": 0,
+          "network": true,
+          "notes": [
+            "public-read temporary profile",
+            "document status observed by CDP"
+          ]
+        },
+        "untrusted": true
+      }
+    ],
+    "analysisInput": {
+      "schemaVersion": 1,
+      "scope": {
+        "campaignId": "f5cbb163-92bf-4224-8ee0-8d2d3a16ad9a",
+        "communityId": null,
+        "platform": null,
+        "channel": null,
+        "purpose": null,
+        "locale": null
+      },
+      "records": [
+        {
+          "recordId": "record-585a0c6c57242ded2f2023d935575b77",
+          "recordType": "page",
+          "sourceUrl": "https://news.ycombinator.com/",
+          "title": "Hacker News",
+          "text": "| | ![](https://news.ycombinator.com/y18.svg)⟨1⟩ | **Hacker News⟨2⟩**new⟨3⟩ | past⟨4⟩ | comments⟨5⟩ | ask⟨6⟩ | show⟨7⟩ | jobs⟨8⟩ | submit⟨9⟩ | login⟨10⟩ | | --- | --- | --- | | | | | 1. | ⟨11⟩ | Gemini 4 Carbon⟨12⟩ (blog.google⟨13⟩) | | --- | --- | --- | | | 463 points by acossta⟨14⟩ 2 hours ago⟨15⟩ | hide⟨16⟩ | 386 comments⟨15⟩ | | | 2. | ⟨17⟩ | CNC Stone Carving⟨18⟩ (carmelitegothic.com⟨19⟩) | | | 272 points by bschne⟨20⟩ 4 hours ago⟨21⟩ | hide⟨22⟩ | 97 comments⟨21⟩ | | | 3. | ⟨23⟩ | Why Is This Fingerprinting Script Creating Bioweapons?⟨24⟩ (nullpt.rs⟨25⟩) | | | 96 points by hazebooth⟨26⟩ 2 hours ago⟨27⟩ | hide⟨28⟩ | 15 comments⟨27⟩ | | | 4. | ⟨29⟩ | MacBook Pro with PROLED XDR Display and Touch⟨30⟩ (apple.com⟨31⟩) | | | 286 points by etothet⟨32⟩ 2 hours ago⟨33⟩ | hide⟨34⟩ | 445 comments⟨33⟩ | | | 5. | ⟨35⟩ | Dayjob: Tax – evaluating AI agents on 50 professional tax assignments⟨36⟩ (surgehq.ai⟨37⟩) | | | 107 points by landonxi⟨38⟩ 3 hours ago⟨39⟩ | hide⟨40⟩ | 61 comments⟨39⟩ | | | 6. | ⟨41⟩ | Show HN: SlideBySide – Present slides without sharing your screen⟨42⟩ (slidebyside.com⟨43⟩) | | | 27 points by denismenace⟨44⟩ 2 hours ago⟨45⟩ | hide⟨46⟩ | 12 comments⟨45⟩ | | | 7. | ⟨47⟩ | The Grid, a factory-scale robot in Massachusetts that builds PCBs on demand⟨48⟩ (circuithub.com⟨49⟩) | | | 302 points by seddona⟨50⟩ 10 hours ago⟨51⟩ | hide⟨52⟩ | 136 comments⟨51⟩ | | | 8. | ⟨53⟩ | Start Doing Graph Theory⟨54⟩ (vertex.degree⟨55⟩) | | | 450 points by ibobev⟨56⟩ 11 hours ago⟨57⟩ | hide⟨58⟩ | 103 comments⟨57⟩ | | | 9. | ⟨59⟩ | Apple's git still trusts the compromised eMudhra certificates⟨60⟩ (we-have-a-problem.com⟨61⟩) | | | 874 points by galadran⟨62⟩ 8 hours ago⟨63⟩ | hide⟨64⟩ | 339 comments⟨63⟩ | | | 10. | ![⟨65⟩] | Converge (YC S23) Is Hiring a Founding Platform Engineer⟨66⟩ (runconverge.com⟨67⟩) | | | 2 hours ago⟨68⟩ | hide⟨69⟩ | | | 11. | ⟨70⟩ | The Agent SDK⟨71⟩ (cursor.com⟨72⟩) | | | 64 points by torutofu⟨73⟩ 5 hours ago⟨74⟩ | hide⟨75⟩ | 66 comments⟨74⟩ | | | 12. | ⟨76⟩ | AlpineBSD⟨77⟩ (alpinebsd.org⟨78⟩) | | | 91 points by bradley_taunt⟨79⟩ 4 hours ago⟨80⟩ | hide⟨81⟩ | 83 comments⟨80⟩ | | | 13. | ⟨82⟩ | Gaussian Splats part 3: There's always a bigger scene⟨83⟩ (magnopus.com⟨84⟩) | | | 63 points by ibobev⟨56⟩ 6 hours ago⟨85⟩ | hide⟨86⟩ | 13 comments⟨85⟩ | | | 14. | ⟨87⟩ | Counting Sand Dunes in the Simpson Desert⟨88⟩ (ford.com⟨89⟩) | | | 6 points by bryanrasmussen⟨90⟩ 1 hour ago⟨91⟩ | hide⟨92⟩ | discuss⟨91⟩ | | | 15. | ⟨93⟩ | Emacs Turns 50⟨94⟩ (technologyre",
+          "contentHash": "57c635fdffa077cff4324e7dd81ff6abb120efa82442c76af904a96fb5d56b1b",
+          "sourceRefs": [
+            "https://news.ycombinator.com/",
+            "listening-job:listening-944f1a59d343eda92a47aa8e-52807f73",
+            "listening-record:record-585a0c6c57242ded2f2023d935575b77"
+          ]
+        }
+      ],
+      "digest": "06aca938f89504819277557b602b2d85372823e4af43f14f27460a4cd9f4355f",
+      "untrusted": true
+    },
+    "statuses": [
+      "FAILED",
+      "PARTIAL",
+      "SUCCEEDED"
+    ],
+    "sourceHashes": [
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "77e0893ed4ec285bd3743fa5e31200ccc0ee4ce87f0a31dfe6b338217e0d1519",
+      "b082a9d6c4d545f57c5e3c09eee0a90e38ce6c64e8b3400e0b48cf4e31c15468"
+    ],
+    "extractedHashes": [
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "af38b0a5533dbb1f98f74200cf32f34f14c82b6c56a5abf7578c4de2b64f898a"
+    ]
+  },
+  "persisted": {
+    "contractVersion": 1,
+    "jobId": "listening-944f1a59d343eda92a47aa8e-52807f73",
+    "campaignId": "f5cbb163-92bf-4224-8ee0-8d2d3a16ad9a",
+    "backend": "nodriver",
+    "status": "PARTIAL",
+    "sourceUrls": [
+      "https://example.com/",
+      "https://www.python.org/community/",
+      "https://news.ycombinator.com/"
+    ],
+    "requested": 3,
+    "succeeded": 1,
+    "partial": 1,
+    "blocked": 0,
+    "failed": 1,
+    "unknown": 0,
+    "records": 1,
+    "newRecords": 1,
+    "deduplicatedRecords": 0,
+    "memoryIds": [
+      "listening-memory-6a1bcca75b502f2626dc314e"
+    ],
+    "sourceHashes": [
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "77e0893ed4ec285bd3743fa5e31200ccc0ee4ce87f0a31dfe6b338217e0d1519",
+      "b082a9d6c4d545f57c5e3c09eee0a90e38ce6c64e8b3400e0b48cf4e31c15468"
+    ],
+    "extractedHashes": [
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "af38b0a5533dbb1f98f74200cf32f34f14c82b6c56a5abf7578c4de2b64f898a"
+    ],
+    "providerReceipt": {
+      "schemaVersion": 1,
+      "decisionId": "provider-decision-524fd6d977f1461f50c263b1",
+      "providerId": null,
+      "status": "FAILED",
+      "failure": "unavailable",
+      "attempted": [],
+      "availability": [],
+      "telemetry": {
+        "capability": "community-research",
+        "privacyClass": "local",
+        "reasoningClass": "general",
+        "tools": []
+      },
+      "persisted": {
+        "schemaVersion": 1,
+        "decisionId": "provider-decision-524fd6d977f1461f50c263b1",
+        "providerId": null,
+        "status": "FAILED",
+        "failure": "unavailable",
+        "attempted": [],
+        "availability": [],
+        "telemetry": {
+          "capability": "community-research",
+          "privacyClass": "local",
+          "reasoningClass": "general",
+          "tools": []
+        }
+      },
+      "externalSideEffects": false
+    },
+    "externalSideEffects": false,
+    "startedAt": "2026-10-28T19:14:18.813Z",
+    "completedAt": "2026-10-28T19:14:59.511Z"
+  }
+}

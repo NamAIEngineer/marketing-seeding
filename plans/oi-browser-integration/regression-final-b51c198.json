@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-29T02:00:00+07:00",
+  "classification": "FIXTURE_VERIFIED",
+  "sourceRevision": "b51c1984ccfbd4151dcb057089f4bf122bbb681b",
+  "checks": [
+    {
+      "command": "node --test test/oi-browser-integration.test.mjs test/oi-browser-provider-adapters.test.mjs test/oi-browser-live-bridge.test.mjs test/project-coordinator.test.mjs test/orca-native-session.test.mjs",
+      "result": "55 total, 55 pass, 0 fail, 0 skipped",
+      "outputSha256": "aa7df77931fd1c1b483018e66668ce667de43987bd454afd24722f7daaa7d3b9"
+    },
+    {
+      "command": "npm test",
+      "result": "817 total, 815 pass, 0 fail, 2 skipped",
+      "outputSha256": "35f3549d1fceb4e536b3b91e318ceb39b5676ae7bb128b677c79cc28c4b1ff38"
+    },
+    {
+      "command": "/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests",
+      "workspace": "/Users/nam/Documents/auto-gtm",
+      "result": "160 total, 160 pass, 0 fail",
+      "outputSha256": "c09899dbafbac213912d503b04961855b078fe0843a66295c17e6e3c84d14bf7",
+      "pipCheck": "No broken requirements found"
+    },
+    {
+      "command": "node --check src/oi-browser-integration.mjs && node --check src/oi-browser-provider-adapters.mjs && git diff --check",
+      "result": "PASS"
+    }
+  ],
+  "changes": [
+    "Provider analysis context is capped at 12 records and 16 KB with bounded refs/text.",
+    "Analysis digest and evidence refs are forwarded to the provider router and prompt.",
+    "Raw analysis secrets, credentialed URLs, secret query parameters, and malformed/non-HTTP source URLs are excluded or redacted before provider forwarding.",
+    "Canonical JsonStore persists only analysis digest/evidence refs, never raw analysis input."
+  ],
+  "independentReview": {
+    "status": "PASS_WITH_EDGE_CLOSED",
+    "reviewer": "independent-verifier",
+    "initialFocused": "29/29 pass; credentialed URL edge found",
+    "followUp": "credentialed URL and secret query redaction verified at b9446ca; malformed URL catch path then fail-closed at b51c198"
+  },
+  "liveEligible": false,
+  "externalSideEffects": false,
+  "unknownRetryAllowed": false,
+  "limitations": [
+    "A dirty overlay is not reconciled",
+    "Authenticated Camoufox, standing authority, live publication, metrics, and conversion remain unverified",
+    "Auto-GTM generation/media remains unavailable; lead-feed only"
+  ]
+}

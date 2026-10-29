@@ -132,6 +132,8 @@ test("HTTP mutations require the local operator bearer token", async (context) =
   assert.equal("secret" in leadFeed.leads[0].evidence[0], false);
   const dashboardWithLeads = await (await fetch(`${baseUrl}/api/dashboard`)).json();
   assert.equal(dashboardWithLeads.autoGtm.leadCount, 1);
+  assert.equal(dashboardWithLeads.marketIntelligence.readOnly, true);
+  assert.equal(dashboardWithLeads.marketIntelligence.opportunityCount, 0);
   assert.equal((await fetch(`${baseUrl}/api/flow-graph`)).status, 200);
   assert.equal((await fetch(`${baseUrl}/..%2Fpackage.json`)).status, 404);
   assert.equal((await fetch(`${baseUrl}/api/operator/session`)).status, 401);

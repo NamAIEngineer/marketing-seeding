@@ -1,6 +1,8 @@
 import { validateExecutionReceiptV1 } from "./execution-contracts.mjs";
 import { normalizePublicationVerification, PlatformAdapterRegistry } from "./platform-registries.mjs";
 import { assertLiveGrantMatchesExecution } from "./live-execution-grant.mjs";
+import { bindingMatches, canonicalIdentityUrl, canonicalProvider } from "./execution-binding.mjs";
+import { createCamoufoxOiBrowserBridge } from "./oi-browser-camoufox-bridge.mjs";
 
 export const SUBMIT_READINESS_SAFETY_MARGIN_MS = 30_000;
 
@@ -37,12 +39,45 @@ function recoveryClass(result) {
   return "NONE";
 }
 
+function sameTransportIdentity(left, right) {
+  if (!left || !right) return false;
+  return ["transport", "provider", "providerVersion"].every((key) => String(left[key] || "") === String(right[key] || ""));
+}
+
+function requestBindingMatchesContext(request, target, account) {
+  const platform = String(request?.platform || target?.channel || account?.platform || "").toLowerCase();
+  const identity = (value, allowPlatformAlias = false) => value?.identityReference ||
+    (allowPlatformAlias && platform === "linkedin" ? value?.expectedIdentityUrl : undefined);
+  return bindingMatches({
+    platform: request?.platform,
+    accountId: request?.accountId,
+    provider: request?.provider,
+    ...(request?.provider || request?.providerProfileId ? { providerProfileId: request?.providerProfileId || request?.profileId } : {}),
+    profileId: request?.profileId,
+    identityReference: request?.identityReference || request?.target?.identityReference || identity(request, true) || identity(request?.target, true),
+    targetId: request?.target?.targetId,
+    targetUrl: request?.target?.url
+  }, {
+    platform: target?.channel,
+    accountId: target?.accountId,
+    provider: target?.provider || account?.provider,
+    ...((target?.provider || target?.providerProfileId || account?.provider || account?.providerProfileId)
+      ? { providerProfileId: target?.providerProfileId || account?.providerProfileId || target?.profileId }
+      : {}),
+    profileId: target?.profileId,
+    identityReference: target?.identityReference || identity(target, true) || account?.identityReference || identity(account, true),
+    targetId: target?.id,
+    targetUrl: target?.url
+  }, { requireIdentity: true, requireTarget: true });
+}
+
 export class JevExecutionWorker {
-  constructor({ service, adapterRegistry, workerId = `jev-${process.pid}`, env = process.env, leaseMs = 120_000, now = () => new Date() } = {}) {
+  constructor({ service, adapterRegistry, executionSessionResolver = null, workerId = `jev-${process.pid}`, env = process.env, leaseMs = 120_000, now = () => new Date() } = {}) {
     if (!service) throw new Error("JEV worker requires the control-plane service");
     this.service = service;
     if (!(adapterRegistry instanceof PlatformAdapterRegistry)) throw new Error("JEV worker requires a PlatformAdapterRegistry");
     this.adapterRegistry = adapterRegistry;
+    this.executionSessionResolver = executionSessionResolver;
     this.workerId = String(workerId).trim();
     if (!this.workerId) throw new Error("workerId is required");
     this.env = env;
@@ -100,6 +135,12 @@ export class JevExecutionWorker {
       schemaVersion: 1,
       executionId: request.executionId,
       jobId: request.jobId,
+      ...(request.provider || request.providerProfileId ? {
+        provider: request.provider,
+        providerProfileId: request.providerProfileId || request.profileId,
+        identityReference: request.identityReference || request.target?.identityReference,
+        targetUrl: request.target?.url
+      } : {}),
       attempt: requestRow.attempt,
       startedAt,
       finishedAt,
@@ -193,19 +234,70 @@ export class JevExecutionWorker {
       finally { heartbeatBusy = false; }
     }, Math.max(1_000, Math.floor(this.leaseMs / 3)));
     heartbeat.unref?.();
+    let executionSession = null;
+    let resolvedSessionEnvelope = null;
+    let executionTransport = null;
+    let executionBrowserSurface = null;
     try {
-      if (!initial.account || initial.account.status !== "enabled" || initial.account.health !== "healthy" || initial.account.profileId !== initial.request.profileId || initial.account.accountId !== initial.request.accountId) {
+      if (!initial.account || initial.account.status !== "enabled" || initial.account.health !== "healthy" || initial.account.accountId !== initial.request.accountId || !requestBindingMatchesContext(initial.request, initial.target, initial.account)) {
         return { status: "HUMAN_REQUIRED", executionId, reasonCode: "account_profile_binding_invalid" };
+      }
+
+      const dryRunRequest = dryRun === true || initial.request?.dryRun === true;
+      const liveEnabledAtAcquire = !dryRunRequest && this.#liveEnabled(executionId, initial, { exactOperatorDispatch });
+      // Provider-aware Camoufox execution must consume the exact injected
+      // session. Never fall back to the configured host-session/ORCA surface
+      // when the resolver is absent; legacy rows without an explicit provider
+      // retain their historical compatibility lane.
+      if (!dryRunRequest && liveEnabledAtAcquire && canonicalProvider(initial.request.provider, { allowLegacy: true }) === "camoufox" && !this.executionSessionResolver) {
+        return { status: "PRE_SUBMIT_STOPPED", executionId, reasonCode: "camoufox_execution_resolver_unavailable" };
+      }
+      // Resolve the provider session before readiness so the readiness check
+      // and the adapter consume the same selected browser surface. No session
+      // is acquired for dry-run work.
+      if (!dryRunRequest && liveEnabledAtAcquire && this.executionSessionResolver) {
+        const resolver = this.executionSessionResolver;
+        const acquire = typeof resolver.resolve === "function" ? resolver.resolve.bind(resolver) : resolver.acquire?.bind(resolver);
+        if (typeof acquire !== "function") throw Object.assign(new Error("execution session resolver is invalid"), { code: "EXECUTION_SESSION_RESOLVER_INVALID" });
+        // The resolver must receive the exact execution binding at its top
+        // level. Keep context metadata alongside it; never hide provider,
+        // profile, account, or verified identity under a nested field.
+        resolvedSessionEnvelope = await acquire({ ...initial.request, account: initial.account, context: initial, executionId });
+        executionSession = resolvedSessionEnvelope?.session || resolvedSessionEnvelope;
+        executionTransport = resolvedSessionEnvelope?.transport || executionSession?.transport || null;
+        executionBrowserSurface = resolvedSessionEnvelope?.browserSurface || executionSession?.browserSurface || null;
+        if (!executionSession || typeof executionSession !== "object") throw Object.assign(new Error("execution session unavailable"), { code: "EXECUTION_SESSION_UNAVAILABLE" });
+        const sessionLifecycle = String(executionSession.lifecycle || "").toUpperCase();
+        if (sessionLifecycle !== "READY") throw Object.assign(new Error("execution session is not ready"), { code: sessionLifecycle === "CHALLENGED" ? "SESSION_CHALLENGE" : sessionLifecycle === "STALE" ? "SESSION_STALE" : "EXECUTION_SESSION_NOT_READY" });
+        if (typeof executionSession.assertUsable === "function") executionSession.assertUsable();
+        if (String(executionSession.platform || "").toLowerCase() !== String(initial.request.platform || "").toLowerCase() ||
+            String(executionSession.accountId || "") !== String(initial.request.accountId || "") ||
+            (executionSession.provider && canonicalProvider(executionSession.provider, { allowLegacy: true }) !== canonicalProvider(initial.request.provider, { allowLegacy: true })) ||
+            (executionSession.expectedIdentity?.providerProfileId && String(executionSession.expectedIdentity.providerProfileId) !== String(initial.request.providerProfileId || initial.request.profileId)) ||
+            (executionSession.expectedIdentity?.identityReference && canonicalIdentityUrl(executionSession.expectedIdentity.identityReference) !== canonicalIdentityUrl(initial.request.identityReference || initial.request.target?.identityReference))) {
+          throw Object.assign(new Error("execution session binding does not match request"), { code: "EXECUTION_SESSION_BINDING_MISMATCH" });
+        }
+        if (!executionTransport || typeof executionTransport.runtimeIdentity !== "function") {
+          throw Object.assign(new Error("execution session transport is unavailable"), { code: "EXECUTION_TRANSPORT_UNAVAILABLE" });
+        }
+        const observedTransportIdentity = executionTransport.runtimeIdentity();
+        const expectedProvider = String(executionSession.provider || "").toLowerCase();
+        if (String(observedTransportIdentity?.provider || "").toLowerCase() !== expectedProvider ||
+            !sameTransportIdentity(executionSession.transportIdentity || observedTransportIdentity, observedTransportIdentity)) {
+          throw Object.assign(new Error("execution session transport identity does not match"), { code: "EXECUTION_TRANSPORT_IDENTITY_MISMATCH" });
+        }
+        if (initial.request.platform === "linkedin" && (!executionBrowserSurface || typeof executionBrowserSurface !== "object")) {
+          throw Object.assign(new Error("LinkedIn execution browser surface is unavailable"), { code: "EXECUTION_SESSION_SURFACE_MISSING" });
+        }
       }
 
       const readinessStarted = Date.now();
       // The request already carries bound READY readiness. Reuse it while fresh;
       // the service refreshes automatically when it is stale or missing.
-      const readiness = await this.service.refreshCampaignJobReadiness(initial.post.id, this.workerId, {
-        executionId: initial.request.executionId
-      });
+      const readinessOptions = { executionId: initial.request.executionId };
+      if (executionBrowserSurface) readinessOptions.browserSurface = executionBrowserSurface;
+      const readiness = await this.service.refreshCampaignJobReadiness(initial.post.id, this.workerId, readinessOptions);
       const readinessRefreshMs = Date.now() - readinessStarted;
-      const dryRunRequest = initial.request?.dryRun === true;
       if ((dryRunRequest ? readiness.readinessState !== "READY" : readiness.status !== "queued" || readiness.readinessState !== "READY")) {
         // A readiness gate is evaluated before the adapter and before the
         // durable submit boundary.  Its UNKNOWN/BLOCKED result is therefore
@@ -219,6 +311,31 @@ export class JevExecutionWorker {
           reasonCode,
           reasonCodes: readiness.reasons || [reasonCode]
         };
+      }
+      // Capture the live semantic DOM through the exact acquired Camoufox
+      // surface before the canonical platform adapter runs. The bridge is
+      // observational only; LinkedInAdapter remains the sole executor.
+      let oiBrowserSnapshot = null;
+      if (!dryRunRequest && liveEnabledAtAcquire && canonicalProvider(initial.request.provider, { allowLegacy: true }) === "camoufox" && executionBrowserSurface && executionTransport &&
+          typeof executionBrowserSurface.listTabs === "function" && typeof executionBrowserSurface.snapshot === "function") {
+        try {
+          const bridge = createCamoufoxOiBrowserBridge({ transport: executionTransport, browserSurface: executionBrowserSurface });
+          const captured = await bridge.capture({
+            pageId: executionSession?.pageId || null,
+            profileId: executionSession?.profileReference || executionSession?.expectedIdentity?.providerProfileId || initial.request.providerProfileId || initial.request.profileId || null,
+            url: initial.request.target?.url || null,
+            evidenceContext: { executionId }
+          });
+          oiBrowserSnapshot = await this.service.recordBrowserSnapshot({
+            snapshot: captured.snapshot,
+            executionId,
+            campaignId: initial.request.campaignId,
+            communityId: initial.request.target?.communityId || null,
+            runtimeBinding: { transport: executionTransport, browserSurface: executionBrowserSurface, pageId: captured.pageId, profileId: executionSession?.profileReference || executionSession?.expectedIdentity?.providerProfileId || initial.request.providerProfileId || initial.request.profileId }
+          }, `jev-worker:${this.workerId}:oi-browser`);
+        } catch (error) {
+          return { status: "PRE_SUBMIT_STOPPED", executionId, reasonCode: String(error?.code || "oi_browser_snapshot_failed").toLowerCase() };
+        }
       }
       const refreshed = await this.service.prepareExecutionRequest(initial.post.id, `jev-worker:${this.workerId}`, { dryRun: dryRunRequest });
       if (refreshed.executionId !== executionId || refreshed.state !== "REQUEST_READY") {
@@ -238,6 +355,10 @@ export class JevExecutionWorker {
         dryRun,
         liveEnabled,
         account: context.account,
+        executionSession: executionSession || undefined,
+        transport: executionTransport || undefined,
+        browserSurface: executionBrowserSurface || undefined,
+        transportIdentity: executionSession?.transportIdentity || executionSession?.runtimeIdentity || executionTransport?.runtimeIdentity?.() || undefined,
         beforeProviderSend: async () => {
           if (dryRun) return null;
           return this.service.assertExecutionSendable(executionId, lease);
@@ -252,16 +373,15 @@ export class JevExecutionWorker {
                 current.request?.accountId !== context.request.accountId || current.request?.profileId !== context.request.profileId ||
                 current.request?.target?.targetId !== context.request.target.targetId || current.target?.id !== context.request.target.targetId ||
                 current.target?.accountId !== context.request.accountId || current.target?.profileId !== context.request.profileId ||
-                current.target?.channel !== context.request.platform) {
+                current.target?.channel !== context.request.platform || !requestBindingMatchesContext(current.request, current.target, current.account)) {
               throw Object.assign(new Error("Execution context changed before submit"), { code: "execution_context_mismatch" });
             }
             submitReadiness = readinessEvidence(current);
             const expiresAt = Date.parse(submitReadiness?.expiresAt || "");
             if (!Number.isFinite(expiresAt) || expiresAt - this.now().getTime() <= SUBMIT_READINESS_SAFETY_MARGIN_MS) {
-              const refreshed = await this.service.refreshCampaignJobReadiness(context.request.jobId, `jev-worker:${this.workerId}`, {
-                force: true,
-                executionId
-              });
+              const readinessRefreshOptions = { force: true, executionId };
+              if (executionBrowserSurface) readinessRefreshOptions.browserSurface = executionBrowserSurface;
+              const refreshed = await this.service.refreshCampaignJobReadiness(context.request.jobId, `jev-worker:${this.workerId}`, readinessRefreshOptions);
               current = await this.service.executionContext(executionId);
               submitReadiness = readinessEvidence(current);
               const refreshedExpiresAt = Date.parse(submitReadiness?.expiresAt || "");
@@ -293,6 +413,11 @@ export class JevExecutionWorker {
             throw error;
           }
           try {
+            const selectedTransportIdentity = executionSession?.transportIdentity || executionSession?.runtimeIdentity || null;
+            const suppliedTransportIdentity = submitBoundaryEvidence.transportIdentity || selectedTransportIdentity;
+            if (selectedTransportIdentity && !sameTransportIdentity(selectedTransportIdentity, suppliedTransportIdentity)) {
+              throw Object.assign(new Error("Submit transport differs from acquired execution session"), { code: "TRANSPORT_SWITCH_AFTER_SESSION_ACQUIRE" });
+            }
             return await this.service.beginExecutionSubmitIntent(executionId, lease, {
               liveEnabled,
               liveExecutionId: this.env.SEEDING_JEV_LIVE_EXECUTION_ID,
@@ -300,7 +425,7 @@ export class JevExecutionWorker {
               exactLiveDispatchEnabled: exactOperatorDispatch && this.env.SEEDING_JEV_EXACT_LIVE_ENABLED === "true",
               verifiedGates,
               requireTransportCertification: adapter.requiresCertifiedTransport === true,
-              transportIdentity: submitBoundaryEvidence.transportIdentity,
+              transportIdentity: suppliedTransportIdentity,
               transportCertification: submitBoundaryEvidence.transportCertification,
               preSubmitControlEvidence: submitBoundaryEvidence.preSubmitControlEvidence
             });
@@ -319,6 +444,10 @@ export class JevExecutionWorker {
         },
         onSubmitSent: (submitAcceptanceEvidence) => this.service.markExecutionSubmitSent(executionId, lease, submitAcceptanceEvidence)
       });
+      if (oiBrowserSnapshot?.snapshot?.fingerprint) {
+        result.oiBrowserSnapshotFingerprint = oiBrowserSnapshot.snapshot.fingerprint;
+        result.oiBrowserEvidenceStatus = oiBrowserSnapshot.snapshot.evidenceStatus;
+      }
       if (preSubmitFailure) {
         result.preSubmitFailure = preSubmitFailure;
       }
@@ -349,6 +478,18 @@ export class JevExecutionWorker {
       return { status: dryRun ? (dryRunPassed ? "DRY_RUN_COMPLETE" : "DRY_RUN_FAILED") : receipt.submitState, executionId, receipt };
     } finally {
       clearInterval(heartbeat);
+      if (executionSession) {
+        const envelopeRelease = resolvedSessionEnvelope && typeof resolvedSessionEnvelope.release === "function"
+          ? resolvedSessionEnvelope.release.bind(resolvedSessionEnvelope) : null;
+        const resolverRelease = typeof this.executionSessionResolver?.release === "function"
+          ? this.executionSessionResolver.release.bind(this.executionSessionResolver) : null;
+        const sessionRelease = typeof executionSession.release === "function"
+          ? executionSession.release.bind(executionSession) : typeof executionSession.detach === "function"
+            ? executionSession.detach.bind(executionSession) : null;
+        if (envelopeRelease) await Promise.resolve().then(() => envelopeRelease()).catch(() => undefined);
+        else if (resolverRelease) await Promise.resolve().then(() => resolverRelease(resolvedSessionEnvelope?.handle || executionSession)).catch(() => undefined);
+        else if (sessionRelease) await Promise.resolve().then(() => sessionRelease()).catch(() => undefined);
+      }
       await this.service.releaseExecutionLease(lease.id, lease.token);
     }
   }

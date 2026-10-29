@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "evidenceStatus": "RUNTIME_VERIFIED",
+  "candidateSourceRevision": "20ba20f6f8f273a72cb0db88b216d645aeecaeb1",
+  "candidateSourceDirty": false,
+  "baseline": {
+    "revision": "79985bb411afc141f0edf10ae635fb91824d8bc9",
+    "worktree": "/Users/nam/Documents/marketing-seeding",
+    "branch": "pr3-4-2-presubmit-cancel",
+    "command": "npm test",
+    "result": { "total": 576, "pass": 574, "fail": 0, "skipped": 2 },
+    "classification": "BASELINE_PASS_WITH_EXISTING_SKIPS"
+  },
+  "candidate": {
+    "worktree": "/Users/nam/Documents/marketing-seeding-session-c-reconciled",
+    "branch": "integration/session-c-reconciled",
+    "focused": {
+      "command": "node --test test/oi-browser-integration.test.mjs test/browser-runtime-router.test.mjs test/oi-browser-provider-adapters.test.mjs test/oi-browser-live-bridge.test.mjs",
+      "result": { "total": 37, "pass": 37, "fail": 0, "skipped": 0 }
+    },
+    "full": {
+      "command": "node --test test/*.test.mjs",
+      "result": { "total": 790, "pass": 788, "fail": 0, "skipped": 2 }
+    },
+    "syntax": {
+      "command": "node --check src/oi-browser-integration.mjs && node --check src/oi-browser-provider-adapters.mjs && node --check src/oi-browser-camoufox-bridge.mjs && node --check src/service.mjs && node --check src/server.mjs",
+      "result": "PASS"
+    },
+    "diffCheck": { "command": "git diff --check", "result": "PASS" },
+    "skipReason": "Existing ACL environment checks; no candidate failures"
+  },
+  "autoGtm": {
+    "command": "/Users/nam/Documents/auto-gtm/.venv/bin/python -m unittest discover tests",
+    "result": { "total": 154, "pass": 154, "fail": 0, "errors": 0 },
+    "pipCheck": "No broken requirements found",
+    "revision": "9368098477d78f75d57fdf5db276129948f3a183"
+  },
+  "independentVerifier": {
+    "readOnlyReview": {
+      "status": "PASS",
+      "capturedAt": "2026-10-28T02:36:14Z",
+      "candidateRevision": "e9a7bfa9dc561a4dad06035caaeabff35ee0d8f0",
+      "codeTestRevision": "20ba20f6f8f273a72cb0db88b216d645aeecaeb1",
+      "sourceTestDiff": "empty",
+      "report": "plans/oi-browser-integration/independent-verifier-20261028.md"
+    },
+    "queueAttempt": {
+      "taskId": "2fdee808-270a-491c-a042-14dc3fad3972",
+      "provider": "local-qwen",
+      "policy": "READ_ONLY",
+      "status": "FAILED",
+      "error": "Remote end closed connection without response",
+      "report": null,
+      "passClaim": false
+    }
+  },
+  "sessionCoordination": {
+    "nativeDelivery": "ACKNOWLEDGED",
+    "sessionA": {
+      "marker": "RESULT-A-20261028T0420Z",
+      "nativeTerminal": "term_58af59e8-f5dd-4968-a724-78b48a04cf3c",
+      "head": "52072ceaf371836a0783b9f8b3c4eda8a46415c5",
+      "checkpoint": "PENDING",
+      "dirtyScopePreserved": true
+    },
+    "sessionB": {
+      "marker": "RESULT-B-20261028T0420Z",
+      "nativeTerminal": "term_41a5601e-887e-4ac0-a8d7-35112fedb375",
+      "head": "b675a98e6dd2da3c12133dff715eddea616c91f5",
+      "checkpoint": "COMPLETED",
+      "focusedTests": { "total": 41, "pass": 41, "fail": 0, "skipped": 0 },
+      "trackedScopeClean": true
+    }
+  },
+  "runtimeBoundary": {
+    "activeRuntime": "127.0.0.1:4318",
+    "owner": "SESSION A",
+    "candidateRuntimeTouched": false,
+    "externalSideEffects": false,
+    "credentialsUsed": false,
+    "livePublication": false
+  },
+  "capturedAt": "2026-10-28T01:30:00Z"
+}

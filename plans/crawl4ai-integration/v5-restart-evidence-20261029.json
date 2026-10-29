@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "rehearsal": true,
+  "liveEligible": false,
+  "externalSideEffects": false,
+  "unknownRetryAllowed": false,
+  "sourceRevision": "3d3d0b0f76656df188f6e0d339e91c9d0f3031bd",
+  "focused": {"command": "node --test test/listening-v5.test.mjs test/listening-adapter.test.mjs test/listening-contract.test.mjs test/store-migration.test.mjs", "total": 20, "passed": 20, "failed": 0, "outputSha256": "7a31b212517a75f431bc923a1a75c9f60b06475cbf66e09f53ba29131b7484f0"},
+  "full": {"command": "npm test", "total": 825, "passed": 823, "failed": 0, "skipped": 2, "outputSha256": "1aba8fe6ffc35395bed904243f981c2085d2d2f338202082f8a94a548b35f252", "verifiedAt": "2026-10-28T23:24:46Z"},
+  "publicCampaignRun": {
+    "classification": "RUNTIME_VERIFIED",
+    "backend": "http",
+    "python": "3.12.15 pinned D environment",
+    "jobId": "listening-785c32cd7081c573d686b25f231c683d",
+    "status": "SUCCEEDED",
+    "records": 1,
+    "canonicalDiscoveryCount": 1,
+    "canonicalMemoryCount": 1,
+    "evidenceSha256": "2a4a5f61bc967f6ee92c7470d668285d7ba7208aa0805eb8dedb30f9d6317231",
+    "source": "https://example.com/",
+    "externalSideEffects": false
+  },
+  "terminalReplay": {
+    "classification": "RUNTIME_VERIFIED",
+    "jobId": "listening-785c32cd7081c573d686b25f231c683d",
+    "status": "SUCCEEDED",
+    "records": 1,
+    "stateSha256Before": "490439f64c1a895b80b5131f408f24a364a615db95be414176ef1e88dddb5e8d",
+    "stateSha256After": "490439f64c1a895b80b5131f408f24a364a615db95be414176ef1e88dddb5e8d",
+    "evidenceSha256": "69b129e81381cf28592c29287da6fe53b850ed7192505c9decbf7fb818eeb27c",
+    "extractorWasNeeded": false
+  },
+  "limitations": ["No authenticated Camoufox or LinkedIn publication was attempted", "No live metrics or conversion evidence", "Standalone D revision remains blocked independently"]
+}

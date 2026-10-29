@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "candidateRevision": "590f70acf8650c599b9f398b60ba671754c1e41c",
+  "codeRevision": "9875db34c3f068c1510b3e92e8c72e4134e641a9",
+  "capturedAt": "2026-10-28T14:09:37Z",
+  "fixture": {
+    "campaignId": "c-independent",
+    "communityId": "community-a",
+    "evidenceRef": "fixture:fixture-canonical",
+    "externalSideEffects": false
+  },
+  "memory": {
+    "firstDeduplicated": false,
+    "secondDeduplicated": true,
+    "callerPublicationIds": ["caller-a", "caller-b"],
+    "sampleIds": ["fixture:fixture-canonical"],
+    "supportCount": 1,
+    "learningCount": 0,
+    "classification": "FIXTURE_VERIFIED"
+  },
+  "provider": {
+    "operation": "probeOpenAiCompatibleProvider",
+    "timeoutMs": 100,
+    "responseBody": "json promise never resolves",
+    "result": {"state": "UNKNOWN", "reason": "provider timeout"},
+    "abortObserved": true,
+    "elapsedMs": 103,
+    "classification": "FIXTURE_VERIFIED"
+  },
+  "liveEligible": false,
+  "externalSideEffects": false,
+  "unknownRetryAllowed": false
+}

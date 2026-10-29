@@ -1,0 +1,44 @@
+{
+  "task_id": "session-c-oi-browser-audit",
+  "title": "SCOUT · oi-browser and auto-gtm integration audit",
+  "workspace": "/Users/nam/Documents/marketing-seeding-session-c",
+  "role": "worker",
+  "required_capabilities": ["task.submit"],
+  "execution_policy": "WORKSPACE_WRITE",
+  "objective": "Audit implementation, tests, and runtime call paths in /Users/nam/Documents/oi-browser-source at pinned revision 1e471c44b5d63aa5aadb708623b21090b6f325b2, /Users/nam/Documents/auto-gtm at revision 9368098477d78f75d57fdf5db276129948f3a183, and the marketing-seeding target. Inspect the named oi-browser modules or their replacements: karpathy-wiki-memory-engine, cli-harness-router, agent-dom-browser-service, companion-chat-orchestrator, sqlite-workspace-store, official-companions-catalog. Inspect current target memory/store/router/browser/executor/auto-gtm paths and A/B coordination evidence. Write only docs/integrations/oi-browser-audit.md in the C worktree. For each subsystem record SOURCE+revision, ACTUAL BEHAVIOR, OVERLAP, DECISION (REUSE_AS_IS, REUSE_AND_ADAPT, MERGE_INTO_EXISTING_MODULE, EXTRACT_SHARED_CORE, DO_NOT_USE), TARGET, WHY, RISK, OWNER, TEST. Verify consolidation learning vs observation copy, CLI inference/dispatch vs status simulation, timeout failure semantics, live DOM interaction vs static HTML, shared element mapping, and persistence durability/transactions/concurrency. Include source attribution and explicit limits. Do not edit product source, A/B worktrees, credentials, runtime state, browser profiles, canonical state, or external systems. Do not publish, message, deploy, merge, or run live social actions.",
+  "context": {
+    "acceptance_file": "plans/oi-browser-integration/acceptance.md",
+    "acceptance_ids": ["A1", "A2", "A3", "A4", "A5", "A6", "C1", "C2", "C3", "C4", "C5", "V1", "V2", "V3", "V4", "V5"],
+    "source_revisions": {
+      "oi_browser": "1e471c44b5d63aa5aadb708623b21090b6f325b2",
+      "auto_gtm": "9368098477d78f75d57fdf5db276129948f3a183",
+      "target_base": "79985bb411afc141f0edf10ae635fb91824d8bc9"
+    },
+    "session_owners": {
+      "A": "/Users/nam/Documents/marketing-seeding-wave-13-bridge @ 52072ce (dirty; Camoufox/runtime)",
+      "B": "/Users/nam/Documents/marketing-seeding-integration @ 6899679 (dirty; authority/service)"
+    }
+  },
+  "constraints": [
+    "Write only docs/integrations/oi-browser-audit.md",
+    "No secrets or full credentials",
+    "No external side effects",
+    "No product source changes",
+    "No spawning child tasks"
+  ],
+  "acceptance_criteria": [
+    "audit file exists and is non-empty",
+    "all six requested subsystem names or replacements addressed",
+    "explicit decisions and risks per subsystem",
+    "source revisions and tests/call paths cited",
+    "Status line present"
+  ],
+  "execution_context": {
+    "origin": "interactive-host",
+    "host_role": "orchestrator",
+    "dispatch_depth": 1,
+    "parent_task_id": null,
+    "direct_or_dispatch": "DISPATCH",
+    "framing_result": "Independent read/audit artifact before native integration"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "classification": "NATIVE_RESUME_VERIFIED",
+  "rehearsal": true,
+  "liveEligible": false,
+  "externalSideEffects": false,
+  "unknownRetryAllowed": false,
+  "sourceRevision": "b389f0fe0c6fb5cde94980330ec8817af1f993c4",
+  "workspace": "/Users/nam/Documents/marketing-seeding-session-c-reconciled",
+  "branch": "integration/session-c-reconciled",
+  "stateFile": "/Users/nam/build-agentic-AI/.agentic/marketing-seeding/project-coordinator/state.json",
+  "supervisor": {
+    "label": "ai.marketing-seeding.project-coordinator",
+    "launchdAction": "kickstart -k",
+    "pidAfterRestart": 85057,
+    "startup": "launchd RunAtLoad + KeepAlive"
+  },
+  "before": {
+    "capturedAt": "2026-10-28T15:57:25.418275+00:00",
+    "sha256": "6004e2096cf1f22008b37f07dfd6d8bb10f40ff928bfa5f0ae452995d6179e9b",
+    "schemaVersion": 2,
+    "revision": 26,
+    "resultCount": 3,
+    "tasks": [
+      ["launchd-c-followup-1", "COMPLETE", 1],
+      ["launchd-c-followup-2", "COMPLETE", 1],
+      ["session-a-checkpoint-20261028", "COMPLETE", 2]
+    ]
+  },
+  "after": {
+    "capturedAt": "2026-10-28T15:57:27.608748+00:00",
+    "sha256": "260136c9cdd4c444f920ca44c04fc2a8e13af03382c053aab1caa46e7ec522b0",
+    "schemaVersion": 3,
+    "revision": 27,
+    "resultCount": 3,
+    "tasks": [
+      ["launchd-c-followup-1", "COMPLETE", 1],
+      ["launchd-c-followup-2", "COMPLETE", 1],
+      ["session-a-checkpoint-20261028", "COMPLETE", 2]
+    ],
+    "replayedAfterRestart": false
+  },
+  "assertions": [
+    "Schema v2 state migrated additively to schema v3.",
+    "All prior completed results and attempt counts were retained.",
+    "No completed task was executed again after restart.",
+    "Restart was scoped to the C project coordinator LaunchAgent; A runtime 4318 and B worktree were untouched."
+  ]
+}

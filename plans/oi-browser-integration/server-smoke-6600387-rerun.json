@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "evidenceStatus": "RUNTIME_VERIFIED",
+  "runRevision": "6600387b254db13bf0494fc14a8f512a6f990e1a",
+  "sourceDirty": false,
+  "port": 4323,
+  "candidatePid": 1510,
+  "externalSideEffects": false,
+  "credentialsUsed": false,
+  "providerModel": "/Users/nam/.cache/system-agentic-ai/Qwen3-8B-4bit",
+  "health": {
+    "ok": true,
+    "service": "global-seeding",
+    "runtime": {
+      "pid": 1510,
+      "sourceCommit": "6600387b254db13bf0494fc14a8f512a6f990e1a",
+      "sourceDirty": false,
+      "schemaVersion": 8,
+      "stateRevision": 1
+    }
+  },
+  "providerRoute": {
+    "status": "SUCCEEDED",
+    "providerId": "local-qwen",
+    "failure": null,
+    "attempted": [
+      {
+        "providerId": "local-qwen",
+        "status": "executionSucceeded"
+      }
+    ],
+    "availability": [
+      {
+        "id": "local-qwen",
+        "installed": true,
+        "authReady": true,
+        "healthy": true,
+        "health": {
+          "state": "READY",
+          "reason": "MODEL_LIST_OBSERVED",
+          "model": "/Users/nam/.cache/system-agentic-ai/Qwen3-8B-4bit"
+        },
+        "executionSucceeded": true,
+        "available": true,
+        "capabilities": [
+          "strategy-context",
+          "community-research",
+          "content-context"
+        ],
+        "tools": [],
+        "reasoningClasses": [
+          "deterministic",
+          "general"
+        ],
+        "successRate": 0
+      }
+    ],
+    "outputPresent": false,
+    "persisted": true
+  },
+  "dashboard": {
+    "evidenceStatus": "IMPLEMENTED",
+    "providers": {
+      "recentDecisions": [
+        {
+          "schemaVersion": 1,
+          "decisionId": "provider-decision-9cf84a0f6216989a0574f438",
+          "providerId": "local-qwen",
+          "status": "SUCCEEDED",
+          "startedAt": "2026-10-27T18:55:44.000Z",
+          "completedAt": "2026-10-27T18:55:46.380Z",
+          "attempted": [
+            {
+              "providerId": "local-qwen",
+              "status": "executionSucceeded"
+            }
+          ],
+          "availability": [
+            {
+              "id": "local-qwen",
+              "installed": true,
+              "authReady": true,
+              "healthy": true,
+              "health": {
+                "state": "READY",
+                "reason": "MODEL_LIST_OBSERVED",
+                "model": "/Users/nam/.cache/system-agentic-ai/Qwen3-8B-4bit"
+              },
+              "executionSucceeded": true,
+              "available": true,
+              "capabilities": [
+                "strategy-context",
+                "community-research",
+                "content-context"
+              ],
+              "tools": [],
+              "reasoningClasses": [
+                "deterministic",
+                "general"
+              ],
+              "successRate": 0
+            }
+          ],
+          "telemetry": {
+            "capability": "strategy-context",
+            "privacyClass": "local",
+            "reasoningClass": "deterministic",
+            "tools": [],
+            "providerId": "local-qwen",
+            "successRate": null
+          },
+          "outputDigest": "2a7cd5021e0cff9f08cadccd2b0640df70b7534d10491389b9cb485fcc0eaa03",
+          "recordedAt": "2026-10-27T18:55:46.382Z"
+        }
+      ],
+      "healthy": 1,
+      "successfulRoutes": 1
+    },
+    "autoGtm": {
+      "ok": false,
+      "source": "auto-gtm",
+      "status": "unavailable",
+      "generatedAt": null,
+      "ageMs": null,
+      "campaignId": null,
+      "portfolioProduct": "",
+      "leads": [],
+      "leadCount": 0,
+      "signalCount": 0,
+      "reason": "feed_not_generated"
+    }
+  },
+  "unauthorizedPost": {
+    "status": 401,
+    "body": {
+      "ok": false,
+      "error": "operator_token_required"
+    }
+  },
+  "livePublication": false
+}

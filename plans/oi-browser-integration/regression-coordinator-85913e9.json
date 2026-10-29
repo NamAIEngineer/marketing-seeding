@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "classification": "FIXTURE_VERIFIED",
+  "sourceRevision": "85913e984a4c45c2278be2fe644055426a1455c4",
+  "documentationRevision": "087b96110ebabe024f9b23e5b28d638193b573b9",
+  "command": "node --test test/project-coordinator.test.mjs test/orca-native-session.test.mjs",
+  "result": {"total": 20, "passed": 20, "failed": 0, "skipped": 0, "outputSha256": "c7f56d9950a5635cb407f7aa537cf7dcf21defd16dfda073b927618661442d88"},
+  "acceptance": {
+    "versionedChecks": true,
+    "sourceRevisionFence": true,
+    "evidenceReferenceFence": true,
+    "workerCompletionSeparatedFromAcceptance": true,
+    "dependentReleaseRequiresPassed": true,
+    "repairAndNextTaskScheduling": true,
+    "atomicParentResultAndChildPersist": true,
+    "restartAndIdempotentReplay": true,
+    "boundedAttemptAndRuntimeLimits": true
+  },
+  "independentReview": {"status": "PASS", "reviewer": "independent_verifier", "scope": "read-only source/test/diff review", "reviewedRevision": "85913e984a4c45c2278be2fe644055426a1455c4"},
+  "rehearsal": true,
+  "liveEligible": false,
+  "externalSideEffects": false,
+  "unknownRetryAllowed": false,
+  "limitations": ["Does not prove A/B continuous receiver availability", "Does not prove authenticated Camoufox or LinkedIn publication"]
+}

@@ -200,6 +200,30 @@ test("bootstrap certification requires an exact live execution binding and evide
   assert.throws(() => selectCertifiedTransport({ transports: [transport], platform: "linkedin", runtime: { provider: "orca", providerVersion: "1.4.230" }, requireIrreversibleSubmit: true, executionBinding: binding, certifications: [{ ...cert, expiresAt: new Date(Date.now() - 1).toISOString() }] }), /No certified browser interaction transport/);
 });
 
+test("bootstrap certification distinguishes a GPM profile from the same UUID on ORCA", () => {
+  const transport = { runtimeIdentity: () => ({ transport: "gpm-cdp", provider: "gpm", providerVersion: "5.1.2" }) };
+  const binding = {
+    platform: "linkedin", executionId: "gpm-exec", campaignId: "gpm-campaign", jobId: "gpm-job",
+    accountId: "linkedin_primary", provider: "gpm", providerProfileId: "same-uuid", profileId: "same-uuid",
+    identityReference: "https://www.linkedin.com/in/owner", targetId: "gpm-target", targetUrl: "https://www.linkedin.com/feed/",
+    authorizationId: "gpm-auth", authorizationBinding: "gpm-binding", contentSha256: "a".repeat(64), mediaSha256: [], visibility: "PUBLIC"
+  };
+  const certification = {
+    transport: "gpm-cdp", provider: "gpm", providerVersion: "5.1.2", certified: true, irreversibleSubmit: true,
+    bootstrap: true, certificationScope: "BOOTSTRAP_LIVE_LINKEDIN_SUBMIT", expiresAt: new Date(Date.now() + 60_000).toISOString(),
+    evidenceReference: "gpm-proof", executionBinding: { ...binding }
+  };
+  assert.equal(selectCertifiedTransport({ transports: [transport], platform: "linkedin", runtime: { provider: "gpm", providerVersion: "5.1.2" }, requireIrreversibleSubmit: true, executionBinding: binding, certifications: [certification] }), transport);
+  assert.throws(() => selectCertifiedTransport({
+    transports: [transport], platform: "linkedin", runtime: { provider: "gpm", providerVersion: "5.1.2" }, requireIrreversibleSubmit: true,
+    executionBinding: { ...binding, provider: "orca" }, certifications: [certification]
+  }), /No certified browser interaction transport/);
+  assert.throws(() => selectCertifiedTransport({
+    transports: [transport], platform: "linkedin", runtime: { provider: "gpm", providerVersion: "5.1.2" }, requireIrreversibleSubmit: true,
+    executionBinding: { ...binding, identityReference: "https://www.linkedin.com/in/other" }, certifications: [certification]
+  }), /No certified browser interaction transport/);
+});
+
 test("bootstrap certification is derived only when explicitly enabled and stays execution-scoped", () => {
   const binding = {
     platform: "linkedin", executionId: "exec-derive", campaignId: "campaign-1", jobId: "job-1",
@@ -284,6 +308,37 @@ test("ORCA runtime probe rejects an unpinned or mismatched executable before fin
   await assert.rejects(mismatched.assertRuntimeVersion(), { code: "ORCA_RUNTIME_VERSION_MISMATCH" });
   const pinned = new OrcaCliClient({ executable, providerVersion: "1.4.229" });
   assert.deepEqual(await pinned.assertRuntimeVersion(), { expectedVersion: "1.4.229", observedVersion: "1.4.229", connectedRuntimeVersion: "1.4.229", executable });
+});
+
+test("ORCA transport health reports READY only after the read-only runtime probe", async () => {
+  const browser = {
+    runtimeVersion: "1.4.237",
+    browserCommandCount: () => 0,
+    async assertRuntimeVersion({ expectedVersion }) {
+      assert.equal(expectedVersion, "1.4.237");
+      return { expectedVersion, observedVersion: "1.4.237", connectedRuntimeVersion: "1.4.237" };
+    }
+  };
+  const transport = new OrcaAccessibilityTransport(browser);
+  const health = await transport.health();
+  assert.equal(health.state, "READY");
+  assert.equal(health.observedProviderVersion, "1.4.237");
+  assert.equal(health.readinessEvidence, "READ_ONLY_EXECUTABLE_AND_CONNECTED_RUNTIME_VERSION");
+});
+
+test("ORCA transport health stays UNKNOWN without a version probe and fails closed on mismatch", async () => {
+  const unprobed = await new OrcaAccessibilityTransport({ runtimeVersion: "1.4.237" }).health();
+  assert.equal(unprobed.state, "UNKNOWN");
+  assert.equal(unprobed.reason, "ORCA_RUNTIME_PROBE_NOT_CONFIGURED");
+
+  const mismatched = await new OrcaPointerTransport({
+    runtimeVersion: "1.4.232",
+    async assertRuntimeVersion() {
+      throw Object.assign(new Error("version mismatch"), { code: "ORCA_RUNTIME_VERSION_MISMATCH" });
+    }
+  }).health();
+  assert.equal(mismatched.state, "UNAVAILABLE");
+  assert.equal(mismatched.reason, "ORCA_RUNTIME_VERSION_MISMATCH");
 });
 
 test("ORCA connected runtime status must match the executable certification pin", async () => {

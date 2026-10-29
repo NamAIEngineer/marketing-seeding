@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "evidenceStatus": "RUNTIME_VERIFIED",
+  "runRevision": "7378f8cac202ce8efc0c5c66cb789e67f504f32e",
+  "sourceDirty": false,
+  "port": 4337,
+  "stateDirectory": "private temporary state directory",
+  "externalSideEffects": false,
+  "credentialsUsed": false,
+  "providerModel": "/Users/nam/.cache/system-agentic-ai/Qwen3-8B-4bit",
+  "livePublication": false,
+  "health": {
+    "ok": true,
+    "sourceCommit": "7378f8cac202ce8efc0c5c66cb789e67f504f32e",
+    "schemaVersion": 8
+  },
+  "unauthorizedProviderRoute": {
+    "status": 401,
+    "error": "operator_token_required"
+  },
+  "providerRoute": {
+    "status": "SUCCEEDED",
+    "providerId": "local-qwen",
+    "executionSucceeded": true,
+    "decisionPersisted": true,
+    "persistedDecisionId": "provider-decision-d08555d34d96803fb1e2403f",
+    "failure": null
+  },
+  "memoryWrite": {
+    "status": 201,
+    "persisted": true,
+    "deduplicated": false
+  },
+  "snapshotWrite": {
+    "status": 201,
+    "persisted": true,
+    "source": "STATIC_HTTP",
+    "fingerprintPresent": true
+  },
+  "dashboard": {
+    "oiBrowserEvidenceStatus": "IMPLEMENTED",
+    "memoryTotal": 1,
+    "snapshotTotal": 1,
+    "autoGtmStatus": "unavailable",
+    "autoGtmReason": "feed_not_generated"
+  },
+  "persistenceAfterRestart": {
+    "sourceCommit": "7378f8cac202ce8efc0c5c66cb789e67f504f32e",
+    "schemaVersion": 8,
+    "memoryItems": 1,
+    "browserSnapshots": 1,
+    "successfulProviderRoutes": 1,
+    "verified": true
+  }
+}

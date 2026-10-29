@@ -3,6 +3,7 @@ import path from "node:path";
 import { executionAccountKey } from "./readiness.mjs";
 import { matchingOneTimeExecutionWindow } from "./one-time-execution-window.mjs";
 import { normalizePublicationVisibility } from "./publication-visibility.mjs";
+import { accountTargetBindingMatches, canonicalIdentityUrl, canonicalProvider, canonicalTargetUrl, destinationBindingMatches } from "./execution-binding.mjs";
 
 const SUPPORTED_AUTH_STATUSES = new Set(["active", "paused", "expired", "revoked"]);
 const sha256Pattern = /^[a-f0-9]{64}$/i;
@@ -112,7 +113,11 @@ export function normalizeCampaignAuthorization(input, campaign, now = new Date()
     platform: required(item.platform, "destination platform"),
     accountId: required(item.accountId, "destination accountId"),
     targetId: required(item.targetId, "destination targetId"),
-    profileId: String(item.profileId || "").trim() || null
+    provider: canonicalProvider(item.provider, { allowLegacy: true }),
+    providerProfileId: String(item.providerProfileId || item.profileReference || item.profileId || "").trim() || null,
+    profileId: String(item.profileId || item.providerProfileId || "").trim() || null,
+    identityReference: canonicalIdentityUrl(item.identityReference || item.expectedIdentityUrl),
+    targetUrl: canonicalTargetUrl(item.targetUrl || item.url)
   })) : [];
   if (destinations.length === 0) throw new Error("Campaign authorization requires at least one approved destination");
   if (new Set(destinations.map((item) => `${item.platform}\0${item.accountId}\0${item.targetId}`)).size !== destinations.length) {
@@ -127,10 +132,10 @@ export function normalizeCampaignAuthorization(input, campaign, now = new Date()
       const platform = required(item.platform, "selection platform");
       const accountId = required(item.accountId, "selection accountId");
       const targetId = required(item.targetId, "selection targetId");
-      const profileId = required(item.profileId, "selection profileId");
+      const profileId = required(item.profileId || item.providerProfileId, "selection profileId");
       const destination = destinations.find((candidate) => candidate.platform === platform && candidate.accountId === accountId && candidate.targetId === targetId);
-      if (!destination || destination.profileId !== profileId) throw new Error("accountSelectionPolicy order must contain exact authorized account/profile destinations");
-      return `${platform}\0${accountId}\0${targetId}\0${profileId}`;
+      if (!destination || destination.profileId !== profileId || (item.provider && canonicalProvider(item.provider) !== destination.provider) || (item.providerProfileId && item.providerProfileId !== destination.providerProfileId)) throw new Error("accountSelectionPolicy order must contain exact authorized account/profile destinations");
+      return `${platform}\0${accountId}\0${targetId}\0${destination.provider}\0${destination.providerProfileId}`;
     });
     if (new Set(orderKeys).size !== orderKeys.length) throw new Error("accountSelectionPolicy order must contain unique authorized destinations");
   }
@@ -243,7 +248,7 @@ export function normalizeCampaignAuthorization(input, campaign, now = new Date()
     status: "active",
     platforms: [...new Set(destinations.map((item) => item.platform))],
     destinations,
-    accountSelectionPolicy: accountSelectionPolicy ? { mode: "ordered", order: accountSelectionPolicy.order.map((item) => ({ platform: String(item.platform), accountId: String(item.accountId), targetId: String(item.targetId), profileId: required(item.profileId, "selection profileId") })) } : null,
+    accountSelectionPolicy: accountSelectionPolicy ? { mode: "ordered", order: accountSelectionPolicy.order.map((item) => ({ platform: String(item.platform), accountId: String(item.accountId), targetId: String(item.targetId), provider: canonicalProvider(item.provider, { allowLegacy: true }), providerProfileId: required(item.providerProfileId || item.profileId, "selection providerProfileId"), profileId: required(item.profileId || item.providerProfileId, "selection profileId") })) } : null,
     approvedAssets,
     contentBoundary: contentBoundaryNormalized,
     audienceRules: { allowedAudiences },
@@ -263,6 +268,15 @@ export function normalizeCampaignAuthorization(input, campaign, now = new Date()
 export function campaignAuthorizationFingerprint(authorization) {
   const { approvedAt, approvedBy, activatedAt, updatedAt, binding, status, ...scope } = authorization;
   return digest(scope);
+}
+
+export function standingAuthorizationReferenceIsAmbiguous(authorization, state) {
+  if (authorization?.executionMode !== "standing_autonomous" || !authorization.standingAuthorizationReference) return false;
+  const campaignIds = new Set((state?.campaignAuthorizations || [])
+    .filter((item) => item.executionMode === "standing_autonomous" &&
+      item.standingAuthorizationReference === authorization.standingAuthorizationReference)
+    .map((item) => item.campaignId));
+  return campaignIds.size > 1;
 }
 
 function localClock(now, timezone) {
@@ -289,13 +303,20 @@ export function evaluateCampaignAuthorization(post, state, now = new Date(), { m
   if (!SUPPORTED_AUTH_STATUSES.has(authorization.status) || authorization.status !== "active") reasons.push("campaign_authorization_not_active");
   if (authorization.binding !== campaignAuthorizationFingerprint(authorization)) reasons.push("campaign_authorization_binding_stale");
   if (post.campaignAuthorizationBinding !== authorization.binding) reasons.push("job_authorization_binding_stale");
+  if (standingAuthorizationReferenceIsAmbiguous(authorization, state)) {
+    reasons.push("standing_authorization_reference_ambiguous");
+  }
   if (!Number.isFinite(Date.parse(authorization.validFrom)) || now < new Date(authorization.validFrom)) reasons.push("campaign_authorization_not_yet_valid");
   if (!Number.isFinite(Date.parse(authorization.validUntil)) || now > new Date(authorization.validUntil)) reasons.push("campaign_authorization_expired");
   if (!campaign || authorization.campaignBinding !== campaignScopeFingerprint(campaign)) reasons.push("campaign_scope_changed");
   if (!target) reasons.push("target_missing");
   if (!account || account.status !== "enabled") reasons.push("execution_account_unavailable");
-  if (account && target?.profileId !== account.profileId) reasons.push("execution_profile_mismatch");
-  const destination = authorization.destinations?.find((item) => item.targetId === post.targetId && item.platform === target?.channel && item.accountId === target?.accountId && item.targetUrl === target?.url && item.profileId === account?.profileId && target?.profileId === account?.profileId);
+  if (account && !accountTargetBindingMatches(target, account, { requireTarget: true })) reasons.push("execution_profile_mismatch");
+  // Legacy destinations store only `profileId`; provider-aware destinations
+  // store `providerProfileId`. Compare the effective profile in both lanes.
+  // Missing provider fields never infer a provider from UUID shape: the
+  // explicit compatibility lane is ORCA only.
+  const destination = authorization.destinations?.find((item) => destinationBindingMatches(item, target, account, { requireTarget: true }));
   if (!destination) reasons.push("destination_not_authorized");
   if (post.assetPath) {
     const asset = authorization.approvedAssets?.find((item) => item.artifactId === post.artifactId && item.sha256 === post.assetSha256);

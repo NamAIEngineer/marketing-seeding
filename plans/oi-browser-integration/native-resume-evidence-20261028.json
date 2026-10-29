@@ -1,0 +1,238 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-10-28T12:14:15Z",
+  "source": {
+    "baseRevision": "10ce8686e57464667daf343e8cb502cef46d09fd",
+    "branch": "integration/session-c-reconciled",
+    "dirty": false,
+    "finalDocsRevision": "docs-only-after-10ce868"
+  },
+  "status": "NATIVE_RESUME_VERIFIED",
+  "rehearsal": true,
+  "liveEligible": false,
+  "externalSideEffects": false,
+  "unknownRetryAllowed": false,
+  "supervisor": {
+    "label": "ai.marketing-seeding.project-coordinator",
+    "state": "running",
+    "pid": 26915,
+    "launchdKeepAlive": true,
+    "statePath": "~/build-agentic-AI/.agentic/marketing-seeding/project-coordinator/state.json"
+  },
+  "sessions": [
+    {
+      "name": "session-a",
+      "terminal": "term_58af59e8-f5dd-4968-a724-78b48a04cf3c",
+      "worktree": "/Users/nam/Documents/marketing-seeding-wave-13-bridge",
+      "branch": "wave/distribution-os-runtime-wave-13-bridge",
+      "baseRevision": "1ed57710f66d8ca1a6284d16b149d9039fcb032e",
+      "followUpRequestId": "536fa680-2dd7-4330-8573-67566db016cb",
+      "marker": "SESSION-A-NATIVE-FOLLOWUP-ACK-1-20261028T1445Z",
+      "result": "COMPLETED",
+      "artifactHash": "2903df5db1800124fa59515c8042e966a1e9498a528122d75309deace9291f22",
+      "worktreeChanged": false
+    },
+    {
+      "name": "session-b",
+      "terminal": "term_41a5601e-887e-4ac0-a8d7-35112fedb375",
+      "worktree": "/Users/nam/Documents/marketing-seeding-integration",
+      "branch": "integration/autonomous-build",
+      "baseRevision": "b675a98e6dd2da3c12133dff715eddea616c91f5",
+      "followUpRequestId": "b705ab7f-a863-44b7-bf54-8f57a05d269f",
+      "marker": "SESSION-B-NATIVE-FOLLOWUP-ACK-1-20261028T1455Z",
+      "result": "COMPLETED",
+      "artifactHash": "97799c6641a26e9b0967240331c6c370aba39f3041c4c9f453f9e79e07ff7441",
+      "worktreeChanged": false
+    },
+    {
+      "name": "session-c",
+      "terminal": "term_cd87226a-1c3c-453c-95b4-ecbeac817007",
+      "worktree": "/Users/nam/Documents/marketing-seeding-session-c-reconciled",
+      "branch": "integration/session-c-reconciled",
+      "baseRevision": "6bb0eee183e93467436c1af5b340c1cef1883c0f",
+      "followUpRequestId": "0211fd64-6e6a-4965-ade2-cced83ed0e86",
+      "marker": "SESSION-C-NATIVE-FOLLOWUP-ACK-2-20261028T1515Z",
+      "result": "COMPLETED",
+      "artifactHash": "110034b8a1491a77f1c6fa35b61ed08a8c7f5b630a4801dd64311789e2391659",
+      "attemptCount": 2
+    },
+    {
+      "name": "session-c",
+      "terminal": "term_cd87226a-1c3c-453c-95b4-ecbeac817007",
+      "worktree": "/Users/nam/Documents/marketing-seeding-session-c-reconciled",
+      "branch": "integration/session-c-reconciled",
+      "baseRevision": "6bb0eee183e93467436c1af5b340c1cef1883c0f",
+      "followUpRequestId": "fc821d69-2281-4757-b5c2-8d1f5628a63b",
+      "marker": "SESSION-C-LAUNCHD-FOLLOWUP-ACK-1-20261028T1525Z",
+      "result": "COMPLETED",
+      "artifactHash": "a6cf8a3201799ff1aaf0ff5aaba1a5ff7b5e727ba848a8caa162d7bc1b9e1960",
+      "attemptCount": 1
+    },
+    {
+      "name": "session-c",
+      "terminal": "term_cd87226a-1c3c-453c-95b4-ecbeac817007",
+      "worktree": "/Users/nam/Documents/marketing-seeding-session-c-reconciled",
+      "branch": "integration/session-c-reconciled",
+      "baseRevision": "6bb0eee183e93467436c1af5b340c1cef1883c0f",
+      "followUpRequestId": "4f19fde8-0f31-4f8d-8b40-0d36de8dd45a",
+      "marker": "SESSION-C-LAUNCHD-FOLLOWUP-ACK-2-20261028T1545Z",
+      "result": "COMPLETED",
+      "artifactHash": "4b3e51dad6b2d8aaf63377f416a8a30ecc9f25041986dd19aa21b1f29b0f4770",
+      "attemptCount": 1,
+      "replayed": true
+    }
+  ],
+  "state": {
+    "revision": 26,
+    "tasks": [
+      {
+        "taskId": "launchd-c-followup-1",
+        "owner": "session-c",
+        "requestId": "fc821d69-2281-4757-b5c2-8d1f5628a63b",
+        "marker": "SESSION-C-LAUNCHD-FOLLOWUP-ACK-1-20261028T1525Z",
+        "status": "COMPLETE",
+        "attemptCount": 1,
+        "wakeState": "NATIVE_COMPLETED"
+      },
+      {
+        "taskId": "launchd-c-followup-2",
+        "owner": "session-c",
+        "requestId": "4f19fde8-0f31-4f8d-8b40-0d36de8dd45a",
+        "marker": "SESSION-C-LAUNCHD-FOLLOWUP-ACK-2-20261028T1545Z",
+        "status": "COMPLETE",
+        "attemptCount": 1,
+        "wakeState": "NATIVE_COMPLETED"
+      },
+      {
+        "taskId": "session-a-checkpoint-20261028",
+        "owner": "session-a",
+        "requestId": "8ec39d22-ec26-48a9-94b9-1717cf75af60",
+        "marker": "SESSION-A-CHECKPOINT-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028T1600Z",
+        "status": "COMPLETE",
+        "attemptCount": 2,
+        "wakeState": "NATIVE_COMPLETED"
+      }
+    ],
+    "resultCount": 3,
+    "replayAfterRestart": false
+  },
+  "artifacts": [
+    {
+      "session": "session-a",
+      "marker": "SESSION-A-NATIVE-FOLLOWUP-ACK-1-20261028T1445Z",
+      "path": "/tmp/ms-native-a-rehearsal-20261028-1445/artifacts/a-native-1.json",
+      "sha256": "2903df5db1800124fa59515c8042e966a1e9498a528122d75309deace9291f22",
+      "contract": {
+        "rehearsal": true,
+        "liveEligible": false,
+        "externalSideEffects": false,
+        "unknownRetryAllowed": false,
+        "task": "native-a-followup-1"
+      },
+      "createdBySession": true
+    },
+    {
+      "session": "session-b",
+      "marker": "SESSION-B-NATIVE-FOLLOWUP-ACK-1-20261028T1455Z",
+      "path": "/tmp/ms-native-b-rehearsal-20261028-1455/artifacts/b-native-1.json",
+      "sha256": "97799c6641a26e9b0967240331c6c370aba39f3041c4c9f453f9e79e07ff7441",
+      "contract": {
+        "rehearsal": true,
+        "liveEligible": false,
+        "externalSideEffects": false,
+        "unknownRetryAllowed": false,
+        "task": "native-b-followup-1"
+      },
+      "createdBySession": true
+    },
+    {
+      "session": "session-c",
+      "marker": "SESSION-C-NATIVE-FOLLOWUP-ACK-2-20261028T1515Z",
+      "path": "/tmp/ms-native-c-rehearsal-20261028-1515/artifacts/c-native-2.json",
+      "sha256": "110034b8a1491a77f1c6fa35b61ed08a8c7f5b630a4801dd64311789e2391659",
+      "contract": {
+        "rehearsal": true,
+        "liveEligible": false,
+        "externalSideEffects": false,
+        "unknownRetryAllowed": false,
+        "task": "native-c-followup-2"
+      },
+      "createdBySession": true
+    },
+    {
+      "session": "session-c",
+      "marker": "SESSION-C-LAUNCHD-FOLLOWUP-ACK-1-20261028T1525Z",
+      "path": "/Users/nam/build-agentic-AI/.agentic/marketing-seeding/project-coordinator/artifacts/c-launchd-1.json",
+      "sha256": "a6cf8a3201799ff1aaf0ff5aaba1a5ff7b5e727ba848a8caa162d7bc1b9e1960",
+      "contract": {
+        "rehearsal": true,
+        "liveEligible": false,
+        "externalSideEffects": false,
+        "unknownRetryAllowed": false,
+        "task": "launchd-c-followup-1"
+      },
+      "createdBySession": true
+    },
+    {
+      "session": "session-c",
+      "marker": "SESSION-C-LAUNCHD-FOLLOWUP-ACK-2-20261028T1545Z",
+      "path": "/Users/nam/build-agentic-AI/.agentic/marketing-seeding/project-coordinator/artifacts/c-launchd-2.json",
+      "sha256": "4b3e51dad6b2d8aaf63377f416a8a30ecc9f25041986dd19aa21b1f29b0f4770",
+      "contract": {
+        "rehearsal": true,
+        "liveEligible": false,
+        "externalSideEffects": false,
+        "unknownRetryAllowed": false,
+        "task": "launchd-c-followup-2"
+      },
+      "createdBySession": true
+    },
+    {
+      "session": "session-a",
+      "marker": "SESSION-A-CHECKPOINT-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028T1600Z",
+      "path": "/Users/nam/build-agentic-AI/.agentic/marketing-seeding/project-coordinator/artifacts/session-a-checkpoint-20261028.json",
+      "sha256": "94aa53a52b514b198375774fb2ba2cdfd1bebe8731110e3324d00dd0af0803c7",
+      "contract": {
+        "schemaVersion": 1,
+        "rehearsal": true,
+        "liveEligible": false,
+        "externalSideEffects": false,
+        "unknownRetryAllowed": false,
+        "workspace": "/Users/nam/Documents/marketing-seeding-wave-13-bridge",
+        "head": "1ed57710f66d8ca1a6284d16b149d9039fcb032e",
+        "branch": "wave/distribution-os-runtime-wave-13-bridge",
+        "trackedDirtyFileCount": 12,
+        "trackedDirtyDiffstat": "public/assets/index-DNqX5qeD.js            | 28 +++++++--------\n src/auto-gtm-feed.mjs                      | 41 ++++++++++++++++++---\n src/camoufox-execution-transport.mjs       |  7 +++-\n src/camoufox-playwright-protocol.mjs       | 57 +++++++++++++++++++++++++++---\n src/market-intelligence.mjs                | 12 +++++--\n src/server.mjs                             | 29 +++++++++++++--\n src/service.mjs                            |  9 +++++\n test/auto-gtm-feed.test.mjs                | 39 ++++++++++++++++++++\n test/camoufox-execution-transport.test.mjs | 11 ++++++\n test/camoufox-playwright-protocol.test.mjs | 17 +++++++++\n test/server-lifecycle.test.mjs             | 11 +++++-\n ui/src/App.tsx                             | 23 ++++++++++++\n 12 files changed, 254 insertions(+), 30 deletions(-)",
+        "untrackedPathCount": 567,
+        "ownedModules": [
+          "Camoufox runtime and browser protocol/transport",
+          "readiness and execution-session paths",
+          "server and service",
+          "strategy and market intelligence / Auto-GTM",
+          "Mission Control UI and built assets",
+          "related tests and implementation docs"
+        ],
+        "ownershipNotes": "Server, service, and UI paths have prior integration overlap requiring serial ownership reconciliation.",
+        "latestCompletedImplementationCheckpoint": {
+          "commit": "1ed57710f66d8ca1a6284d16b149d9039fcb032e",
+          "subject": "chore(runtime): checkpoint camoufox bridge",
+          "files": 36
+        },
+        "focusedTestsPreviouslyRun": {
+          "evidenceSource": "plans/autonomous-build/session-recovery-audit.md at current HEAD",
+          "results": [
+            "`npm test`: **758 total, 756 pass, 0 fail, 2 skip**. UI `npm run build`: PASS. Focused Camoufox/router/readiness tests: PASS, 0 failures. `git diff --check`: PASS. No new regression observed."
+          ],
+          "currentDirtyOverlayVerified": false
+        },
+        "cleanCheckpointWithoutDroppingUnrelatedFiles": {
+          "possibleWithExactPathSelection": true,
+          "readyNow": false,
+          "blocker": "Tracked changes span A-owned implementation and shared integration paths; untracked continuation/runtime artifacts must remain untouched. Existing focused test evidence predates the current dirty overlay."
+        },
+        "blockerAndNextAction": "Reconcile ownership and intended hunks for shared server/service/UI paths, then run focused tests on the current overlay before selecting only approved tracked paths for a checkpoint."
+      },
+      "createdBySession": true
+    }
+  ]
+}
