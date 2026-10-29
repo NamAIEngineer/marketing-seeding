@@ -2258,13 +2258,27 @@ export class SeedingService {
     const rows = [];
     for (const channel of channels) {
       const targets = (snapshot.targets || []).filter((target) => target.channel === channel && target.status !== "disabled" && (!requestedAccounts.size || requestedAccounts.has(target.accountId)));
-      const accountIds = [...new Set([
-        ...targets.map((target) => target.accountId),
-        ...requestedAccounts,
-        ...(input.allSocial === true
-          ? (snapshot.executionAccounts || []).filter((item) => item.platform === channel && item.provider === "camoufox" && item.status !== "disabled").map((item) => item.accountId)
-          : [])
-      ])];
+      // `allSocial` broadens the channel set only. An explicit account
+      // selection always remains a hard boundary, including when the user
+      // combines it with All Social in the Overview. This keeps one Account
+      // Agent isolated per selected account and avoids silently fanning out
+      // to an unselected duplicate account on the same platform.
+      const availableAccountIds = (snapshot.executionAccounts || [])
+        .filter((item) => item.platform === channel && item.provider === "camoufox" && item.status !== "disabled")
+        .map((item) => item.accountId);
+      const selectedForChannel = requestedAccounts.size
+        ? [...requestedAccounts].filter((accountId) => availableAccountIds.includes(accountId) || targets.some((target) => target.accountId === accountId))
+        : [];
+      // A selected account on another platform is not a blocked target for
+      // this channel; it is outside the channel fan-out scope. Keep the plan
+      // readable by omitting that channel row entirely.
+      if (requestedAccounts.size && selectedForChannel.length === 0) continue;
+      const accountIds = [...new Set(requestedAccounts.size
+        ? selectedForChannel
+        : [
+            ...targets.map((target) => target.accountId),
+            ...(input.allSocial === true ? availableAccountIds : [])
+          ])];
       for (const accountId of accountIds) {
         const target = targets.find((item) => item.accountId === accountId);
         const account = (snapshot.executionAccounts || []).find((item) => item.id === executionAccountKey(channel, accountId));

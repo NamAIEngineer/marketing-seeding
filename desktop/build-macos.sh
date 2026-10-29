@@ -131,6 +131,8 @@ export PATH="$APP_ROOT/../bin:$APP_ROOT/../lib/node_modules/npm/bin:$PATH"
 export SEEDING_BUILD_COMMIT=$(cat "$APP_ROOT/source-commit.txt")
 export SEEDING_BUILD_DIRTY=false
 export SEEDING_9ROUTER_ENDPOINT="${SEEDING_9ROUTER_ENDPOINT:-http://127.0.0.1:20128/v1}"
+export SEEDING_CONTENT_AUTO_PROVISION="${SEEDING_CONTENT_AUTO_PROVISION:-true}"
+export SEEDING_CONTENT_MODE="${SEEDING_CONTENT_MODE:-PRODUCTION}"
 if [ -x "$APP_ROOT/provision-9router.sh" ]; then
   if ! "$APP_ROOT/provision-9router.sh" "$DATA_ROOT" >"$DATA_ROOT/9router-provision-command" 2>"$DATA_ROOT/9router-provision-error"; then
     printf '%s\n' "provision_failed" >"$DATA_ROOT/9router-provision-status"

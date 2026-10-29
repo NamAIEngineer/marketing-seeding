@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, createPublicKey, verify as verifySignature } from "node:crypto";
 
 const DEFAULT_TIMEOUT_MS = 4_000;
 const text = (value, limit = 240) => String(value ?? "").replace(/[\r\n]+/g, " ").trim().slice(0, limit);
@@ -33,7 +33,23 @@ function normalizeManifest(payload, url) {
   if (!version || !downloadUrl || !/^[a-f0-9]{64}$/.test(sha256)) throw new Error("release manifest requires version, HTTPS downloadUrl and SHA-256");
   const parsed = new URL(downloadUrl);
   if (parsed.protocol !== "https:" || parsed.username || parsed.password) throw new Error("release download URL must be HTTPS without credentials");
-  return { schemaVersion: 1, version, downloadUrl: parsed.toString(), sha256, signature: signature || null, manifestUrl: url, publishedAt: text(payload.publishedAt, 80) || null, notes: text(payload.notes, 500) || null, manifestDigest: createHash("sha256").update(JSON.stringify({ version, downloadUrl: parsed.toString(), sha256, signature: signature || null })).digest("hex") };
+  const signedFields = { version, downloadUrl: parsed.toString(), sha256 };
+  return { schemaVersion: 1, version, downloadUrl: parsed.toString(), sha256, signature: signature || null, signedFields, manifestUrl: url, publishedAt: text(payload.publishedAt, 80) || null, notes: text(payload.notes, 500) || null, manifestDigest: createHash("sha256").update(JSON.stringify({ ...signedFields, signature: signature || null })).digest("hex") };
+}
+
+function verifyManifestSignature(manifest) {
+  const configured = String(process.env.SEEDING_UPDATE_PUBLIC_KEY || "").trim();
+  if (!configured) return { configured: false, verified: false, reason: manifest.signature ? "update public key is not configured" : "manifest checksum received; signed release required before install" };
+  if (!manifest.signature) return { configured: true, verified: false, reason: "release manifest signature is missing" };
+  try {
+    const key = createPublicKey(configured);
+    const signature = Buffer.from(manifest.signature, "base64");
+    const payload = Buffer.from(JSON.stringify(manifest.signedFields));
+    const verified = verifySignature(null, payload, key, signature);
+    return { configured: true, verified, reason: verified ? "release manifest signature verified" : "release manifest signature invalid" };
+  } catch (error) {
+    return { configured: true, verified: false, reason: `release manifest signature could not be verified: ${text(error?.message || error, 160)}` };
+  }
 }
 
 export async function discoverUpdate({ fetchImpl = globalThis.fetch, timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
@@ -47,7 +63,9 @@ export async function discoverUpdate({ fetchImpl = globalThis.fetch, timeoutMs =
     const body = await response.text();
     if (!response.ok) return { status: "UNAVAILABLE", currentVersion: current, checkedAt: new Date().toISOString(), manifest: null, updateAvailable: false, automaticUpdates: true, reason: `release manifest HTTP ${response.status}` };
     const manifest = normalizeManifest(JSON.parse(body), url);
-    return { status: "READY", currentVersion: current, checkedAt: new Date().toISOString(), manifest, updateAvailable: compareVersions(manifest.version, current) > 0, automaticUpdates: true, signatureVerified: false, reason: manifest.signature ? "signed manifest received; signature verification delegated to updater" : "manifest checksum received; signed release required before install" };
+    const signature = verifyManifestSignature(manifest);
+    const updateAvailable = compareVersions(manifest.version, current) > 0;
+    return { status: "READY", currentVersion: current, checkedAt: new Date().toISOString(), manifest, updateAvailable, automaticUpdates: true, signatureVerified: signature.verified, signatureConfigured: signature.configured, reason: signature.reason, installEligible: updateAvailable && signature.verified };
   } catch (error) {
     return { status: error?.name === "AbortError" ? "TIMEOUT" : "UNAVAILABLE", currentVersion: current, checkedAt: new Date().toISOString(), manifest: null, updateAvailable: false, automaticUpdates: true, reason: text(error?.message || "release manifest unavailable") };
   } finally { clearTimeout(timer); }

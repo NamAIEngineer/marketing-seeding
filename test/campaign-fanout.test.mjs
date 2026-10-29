@@ -67,3 +67,25 @@ test("All Social execute delegates only READY targets to the guarded queue", asy
   assert.deepEqual(calls[1][1][2], { targetIds: [target.id] });
 });
 
+test("All Social honors an explicit one-or-many account selection", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "campaign-fanout-selection-"));
+  const repo = path.join(root, "repo"); await mkdir(repo); await writeFile(path.join(repo, "README.md"), "fixture\n");
+  const service = new SeedingService(new JsonStore(path.join(root, "state.json")));
+  await service.init();
+  const campaign = await service.createCampaign({ name: "Fanout selection", objective: "fixture", productRepo: repo });
+  const accounts = ["one", "two"].map((accountId) => ({ platform: "linkedin", accountId, provider: "camoufox", providerProfileId: `profile-${accountId}`, profileId: `profile-${accountId}`, identityReference: `https://www.linkedin.com/in/${accountId}`, status: "enabled", health: "healthy" }));
+  for (const account of accounts) await service.registerExecutionAccount(account);
+  const checkedAt = new Date().toISOString();
+  const targets = [];
+  for (const account of accounts) targets.push(await service.createTarget({ channel: "linkedin", name: account.accountId, url: `https://www.linkedin.com/company/${account.accountId}`, accountId: account.accountId, profileId: account.profileId, provider: "camoufox", providerProfileId: account.providerProfileId, identityReference: account.identityReference, status: "active", readiness: { state: "ready", checkedAt, expiresAt: new Date(Date.now() + 60_000).toISOString(), checks: { sessionValid: true, composerCapable: true, platformAvailable: true } } }));
+  await service.store.mutate("fixture", "set_selection_authority", (state) => {
+    for (const account of state.executionAccounts) Object.assign(account, { agentStatus: "READY", loginStatus: "READY" });
+    state.campaignAuthorizations = [{ id: "auth-selection", campaignId: campaign.id, status: "active", executionMode: "standing_autonomous", allowLiveExecution: true, destinations: targets.map((target) => ({ platform: "linkedin", accountId: target.accountId, targetId: target.id, profileId: target.profileId, provider: "camoufox", providerProfileId: target.providerProfileId, identityReference: target.identityReference })) }];
+    return state;
+  });
+  const plan = await service.planCampaignFanout(campaign.id, { allSocial: true, accountIds: ["two"] });
+  assert.equal(plan.rows.length, 1);
+  assert.equal(plan.rows[0].accountId, "two");
+  assert.equal(plan.requestedAccountIds[0], "two");
+});
+

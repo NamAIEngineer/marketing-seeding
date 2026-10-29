@@ -261,15 +261,10 @@ let updateDiscoveryTimer = null;
 const updateRuntime = { enabled: updatePollMinutes > 0, intervalMinutes: updatePollMinutes || null, running: false, lastStartedAt: null, lastCompletedAt: null, nextRunAt: null, result: null };
 let contentRuntimeCache = null;
 let contentRuntimeCacheAt = 0;
-async function readContentRuntimeStatus({ refresh = false } = {}) {
-  if (!refresh && contentRuntimeCache && Date.now() - contentRuntimeCacheAt < 60_000) return structuredClone(contentRuntimeCache);
-  const runtime = await ensureContentRuntime({
-    mode: String(process.env.SEEDING_CONTENT_MODE || "LOCAL").toUpperCase(),
-    storageRoot: path.join(dataDir, "content-runtime"),
-    resourcesDir: process.resourcesPath || appRoot,
-    repair: false
-  });
-  const projection = {
+const contentRuntimeAutoProvision = process.env.SEEDING_CONTENT_AUTO_PROVISION === "true";
+const contentRuntimeProvision = { enabled: contentRuntimeAutoProvision, attempted: false, running: false, startedAt: null, completedAt: null, error: null };
+function projectContentRuntime(runtime) {
+  return {
     status: runtime.status,
     ready: runtime.ready === true,
     mode: runtime.mode,
@@ -284,10 +279,45 @@ async function readContentRuntimeStatus({ refresh = false } = {}) {
     ffmpeg: runtime.ffmpeg ? { status: runtime.ffmpeg.status, source: runtime.ffmpeg.source || null } : null,
     chrome: runtime.chrome ? { status: runtime.chrome.status, source: runtime.chrome.source || null } : null,
     repair: runtime.repair ? { attempted: runtime.repair.attempted === true, actions: runtime.repair.actions || [] } : { attempted: false, actions: [] },
+    provisioning: { ...contentRuntimeProvision },
     checkedAt: new Date().toISOString()
   };
+}
+async function startContentRuntimeProvisioning() {
+  if (!contentRuntimeAutoProvision || contentRuntimeProvision.attempted || contentRuntimeProvision.running) return;
+  contentRuntimeProvision.attempted = true;
+  contentRuntimeProvision.running = true;
+  contentRuntimeProvision.startedAt = new Date().toISOString();
+  try {
+    const runtime = await ensureContentRuntime({
+      mode: String(process.env.SEEDING_CONTENT_MODE || "PRODUCTION").toUpperCase(),
+      storageRoot: path.join(dataDir, "content-runtime"),
+      resourcesDir: process.resourcesPath || appRoot,
+      repair: true,
+      allowNetwork: true
+    });
+    contentRuntimeCache = projectContentRuntime(runtime);
+    contentRuntimeCacheAt = Date.now();
+  } catch (error) {
+    contentRuntimeProvision.error = String(error?.message || "content runtime provisioning failed").replace(/\s+/g, " ").slice(0, 300);
+  } finally {
+    contentRuntimeProvision.running = false;
+    contentRuntimeProvision.completedAt = new Date().toISOString();
+    if (contentRuntimeCache) contentRuntimeCache.provisioning = { ...contentRuntimeProvision };
+  }
+}
+async function readContentRuntimeStatus({ refresh = false } = {}) {
+  if (!refresh && contentRuntimeCache && Date.now() - contentRuntimeCacheAt < 60_000) return structuredClone(contentRuntimeCache);
+  const runtime = await ensureContentRuntime({
+    mode: String(process.env.SEEDING_CONTENT_MODE || (contentRuntimeAutoProvision ? "PRODUCTION" : "LOCAL")).toUpperCase(),
+    storageRoot: path.join(dataDir, "content-runtime"),
+    resourcesDir: process.resourcesPath || appRoot,
+    repair: false
+  });
+  const projection = projectContentRuntime(runtime);
   contentRuntimeCache = projection;
   contentRuntimeCacheAt = Date.now();
+  if (contentRuntimeAutoProvision && !runtime.ready && !contentRuntimeProvision.attempted) void startContentRuntimeProvisioning();
   return structuredClone(projection);
 }
 let jevExecutionRunning = false;
@@ -1175,6 +1205,10 @@ server.listen(port, host, () => {
   scheduleJevExecution();
   scheduleControlCycle();
   scheduleDiscoveryCollection();
+  // Packaged first run provisions the pinned Crawl4AI/nodriver runtime in
+  // durable user storage. The server remains responsive while this bounded
+  // network install runs; Overview reports RUNNING/UNAVAILABLE truthfully.
+  if (contentRuntimeAutoProvision) void startContentRuntimeProvisioning();
 });
 
 if (trafficPollMinutes > 0) {

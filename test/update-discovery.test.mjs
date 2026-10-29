@@ -15,10 +15,34 @@ test("update discovery validates HTTPS manifest and reports unsigned verificatio
     assert.equal(result.status, "READY");
     assert.equal(result.updateAvailable, true);
     assert.equal(result.signatureVerified, false);
+    assert.equal(result.installEligible, false);
     assert.match(result.reason, /signed release required/i);
   } finally {
     if (prior === undefined) delete process.env.SEEDING_RELEASE_MANIFEST_URL; else process.env.SEEDING_RELEASE_MANIFEST_URL = prior;
     if (priorVersion === undefined) delete process.env.SEEDING_BUILD_VERSION; else process.env.SEEDING_BUILD_VERSION = priorVersion;
+  }
+});
+
+test("update discovery verifies an Ed25519 manifest when a release key is configured", async () => {
+  const priorUrl = process.env.SEEDING_RELEASE_MANIFEST_URL;
+  const priorVersion = process.env.SEEDING_BUILD_VERSION;
+  const priorKey = process.env.SEEDING_UPDATE_PUBLIC_KEY;
+  const { generateKeyPairSync, sign } = await import("node:crypto");
+  const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+  const publicPem = publicKey.export({ type: "spki", format: "pem" });
+  const fields = { version: "0.4.0", downloadUrl: "https://updates.example.test/app.zip", sha256: "b".repeat(64) };
+  const signature = sign(null, Buffer.from(JSON.stringify(fields)), privateKey).toString("base64");
+  process.env.SEEDING_RELEASE_MANIFEST_URL = "https://updates.example.test/manifest.json";
+  process.env.SEEDING_BUILD_VERSION = "0.3.0";
+  process.env.SEEDING_UPDATE_PUBLIC_KEY = publicPem;
+  try {
+    const result = await discoverUpdate({ fetchImpl: async () => ({ ok: true, status: 200, async text() { return JSON.stringify({ ...fields, signature }); } }) });
+    assert.equal(result.signatureVerified, true);
+    assert.equal(result.installEligible, true);
+  } finally {
+    if (priorUrl === undefined) delete process.env.SEEDING_RELEASE_MANIFEST_URL; else process.env.SEEDING_RELEASE_MANIFEST_URL = priorUrl;
+    if (priorVersion === undefined) delete process.env.SEEDING_BUILD_VERSION; else process.env.SEEDING_BUILD_VERSION = priorVersion;
+    if (priorKey === undefined) delete process.env.SEEDING_UPDATE_PUBLIC_KEY; else process.env.SEEDING_UPDATE_PUBLIC_KEY = priorKey;
   }
 });
 
