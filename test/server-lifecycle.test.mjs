@@ -82,7 +82,8 @@ test("managed service health reports its process and graceful shutdown releases 
       SEEDING_AUTOMATION_TOKEN: automationToken,
       SEEDING_CONTROL_TOKEN: controlToken,
       SEEDING_BUILD_COMMIT: "c5d24a9",
-      SEEDING_BUILD_DIRTY: "false"
+      SEEDING_BUILD_DIRTY: "false",
+      SEEDING_HEALTH_NONCE: "fixture-health-nonce"
     },
     stdio: "ignore"
   });
@@ -95,6 +96,11 @@ test("managed service health reports its process and graceful shutdown releases 
       sourceDirty: false,
       schemaVersion: 8,
       stateRevision: 0
+    });
+    assert.deepEqual(health.serviceOwnership, {
+      service: "marketing-seeding",
+      nonce: "fixture-health-nonce",
+      sourceCommit: "c5d24a9"
     });
     assert.equal(health.campaignQueue.enabled, true);
     assert.equal(health.campaignQueue.intervalSeconds, 30);

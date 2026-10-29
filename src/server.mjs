@@ -117,6 +117,7 @@ const automationToken = String(process.env.SEEDING_AUTOMATION_TOKEN || "").trim(
 const controlToken = String(process.env.SEEDING_CONTROL_TOKEN || "").trim();
 const sourceCommit = String(process.env.SEEDING_BUILD_COMMIT || "");
 const sourceDirty = process.env.SEEDING_BUILD_DIRTY === "true";
+const healthNonce = String(process.env.SEEDING_HEALTH_NONCE || "");
 const trafficPollMinutes = Number(process.env.SEEDING_TRAFFIC_POLL_MINUTES || 0);
 const controlCycleEnabled = process.env.SEEDING_CONTROL_CYCLE_ENABLED === "true";
 const controlCycleMinutes = Number(process.env.SEEDING_CONTROL_CYCLE_MINUTES || 0);
@@ -758,6 +759,7 @@ const server = http.createServer(async (request, response) => {
       const state = await service.snapshot();
       return sendJson(response, 200, {
         ok: true, service: "global-seeding", stateFile,
+        serviceOwnership: { service: "marketing-seeding", nonce: healthNonce || null, sourceCommit: sourceCommit || "unknown" },
         runtime: runtimeMetadata({ pid: process.pid, sourceCommit, sourceDirty, state }),
         executionRuntime: projectExecutionRuntime(state),
         productFactorySandbox: await service.productFactorySandboxCapability(),

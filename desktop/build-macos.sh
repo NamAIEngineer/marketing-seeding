@@ -27,6 +27,7 @@ fi
 ditto "$SOURCE/desktop/provision-9router.sh" "$APP/Contents/Resources/app/provision-9router.sh"
 ditto "$SOURCE/desktop/provision-camoufox.sh" "$APP/Contents/Resources/app/provision-camoufox.sh"
 ditto "$SOURCE/desktop/update-macos.sh" "$APP/Contents/Resources/app/update-macos.sh"
+ditto "$SOURCE/desktop/health-probe.mjs" "$APP/Contents/Resources/app/health-probe.mjs"
 cp "$NODE_BIN" "$APP/Contents/Resources/bin/node"
 if [ -n "$NPM_BIN" ] && [ -n "$NPM_ROOT" ] && [ -d "$NPM_ROOT/npm" ]; then
   ditto "$NPM_ROOT/npm" "$APP/Contents/Resources/lib/node_modules/npm"
@@ -71,6 +72,13 @@ DATA_ROOT="$HOME/Library/Application Support/Marketing Seeding OS"
 PORT=4321
 mkdir -p "$DATA_ROOT"
 chmod 700 "$DATA_ROOT"
+HEALTH_NONCE_FILE="$DATA_ROOT/health-nonce"
+if [ ! -s "$HEALTH_NONCE_FILE" ]; then
+  /usr/bin/openssl rand -hex 32 > "$HEALTH_NONCE_FILE"
+  chmod 600 "$HEALTH_NONCE_FILE"
+fi
+HEALTH_NONCE=$(cat "$HEALTH_NONCE_FILE")
+SOURCE_COMMIT=$(cat "$APP_ROOT/source-commit.txt")
 for TOKEN in operator automation; do
   FILE="$DATA_ROOT/$TOKEN-token"
   if [ ! -s "$FILE" ]; then
@@ -83,7 +91,7 @@ export SEEDING_OPERATOR_TOKEN=$(cat "$DATA_ROOT/operator-token")
 export SEEDING_AUTOMATION_TOKEN=$(cat "$DATA_ROOT/automation-token")
 export SEEDING_HOST=127.0.0.1
 export SEEDING_PORT=$PORT
-if ! /usr/bin/curl -fsS --max-time 2 "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then
+if ! "$APP_ROOT/../bin/node" "$APP_ROOT/health-probe.mjs" "http://127.0.0.1:$PORT/health" "$HEALTH_NONCE" "$SOURCE_COMMIT" >/dev/null 2>&1; then
   LABEL=ai.marketing-seeding.packaged
   PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
   mkdir -p "$HOME/Library/LaunchAgents"
@@ -103,7 +111,7 @@ EOF
   /bin/launchctl bootstrap "gui/$(id -u)" "$PLIST"
   READY=0
   for ATTEMPT in 1 2 3 4 5 6 7 8 9 10; do
-    if /usr/bin/curl -fsS --max-time 2 "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then READY=1; break; fi
+    if "$APP_ROOT/../bin/node" "$APP_ROOT/health-probe.mjs" "http://127.0.0.1:$PORT/health" "$HEALTH_NONCE" "$SOURCE_COMMIT" >/dev/null 2>&1; then READY=1; break; fi
     sleep 1
   done
   if [ "$READY" -ne 1 ]; then
@@ -124,6 +132,7 @@ export SEEDING_OPERATOR_TOKEN=$(cat "$DATA_ROOT/operator-token")
 export SEEDING_AUTOMATION_TOKEN=$(cat "$DATA_ROOT/automation-token")
 export SEEDING_HOST=127.0.0.1
 export SEEDING_PORT=4321
+export SEEDING_HEALTH_NONCE=$(cat "$DATA_ROOT/health-nonce")
 export SEEDING_9ROUTER_ENDPOINT="${SEEDING_9ROUTER_ENDPOINT:-http://127.0.0.1:20128/v1}"
 export SEEDING_NODE_BIN="$APP_ROOT/../bin/node"
 export SEEDING_NPM_BIN="$APP_ROOT/../bin/npm"

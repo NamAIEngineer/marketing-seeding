@@ -1,6 +1,35 @@
 #!/bin/sh
 set -eu
 
+# Validate the extracted candidate before codesign/swap.  An archive can carry
+# a validly signed but unrelated application; accepting it would replace the
+# Marketing Seeding runtime with an arbitrary bundle.  Keep this check small,
+# deterministic, and independent of the current app contents.
+validate_app_bundle() {
+  CANDIDATE=${1:?candidate app bundle path required}
+  [ -d "$CANDIDATE" ] || { echo "candidate app bundle is not a directory" >&2; return 1; }
+  INFO="$CANDIDATE/Contents/Info.plist"
+  [ -f "$INFO" ] || { echo "candidate app Info.plist missing" >&2; return 1; }
+  IDENTIFIER=$(/usr/bin/plutil -extract CFBundleIdentifier raw -o - "$INFO" 2>/dev/null || true)
+  EXECUTABLE=$(/usr/bin/plutil -extract CFBundleExecutable raw -o - "$INFO" 2>/dev/null || true)
+  [ "$IDENTIFIER" = "ai.marketing-seeding.local" ] || { echo "candidate bundle identifier mismatch" >&2; return 1; }
+  [ "$EXECUTABLE" = "launch" ] || { echo "candidate bundle executable mismatch" >&2; return 1; }
+  [ -x "$CANDIDATE/Contents/MacOS/launch" ] || { echo "candidate launch executable missing" >&2; return 1; }
+  for MARKER in \
+    "$CANDIDATE/Contents/Resources/app/source-commit.txt" \
+    "$CANDIDATE/Contents/Resources/app/update-macos.sh" \
+    "$CANDIDATE/Contents/Resources/app/package.json"; do
+    [ -f "$MARKER" ] || { echo "candidate resource marker missing: $MARKER" >&2; return 1; }
+  done
+}
+
+# Offline fixture hook used by focused tests.  It validates only the supplied
+# bundle and never downloads, verifies signatures, launches, or swaps files.
+if [ "${SEEDING_UPDATE_VALIDATE_TEST:-0}" = "1" ]; then
+  validate_app_bundle "$1"
+  exit $?
+fi
+
 # Replace a bundle at its exact path. The current app is first moved out of
 # the way, so `mv staged current` cannot turn into a nested app directory.
 # On any failed install, restore the old path or fail closed if the destination
@@ -60,6 +89,7 @@ ACTUAL_SHA256=$(/usr/bin/shasum -a 256 "$ARCHIVE" | awk '{print $1}')
 /usr/bin/ditto -x -k "$ARCHIVE" "$TMP_DIR/unpacked"
 NEW_APP=$(find "$TMP_DIR/unpacked" -maxdepth 2 -name '*.app' -print -quit)
 [ -n "$NEW_APP" ] || { echo "release app bundle missing" >&2; exit 1; }
+validate_app_bundle "$NEW_APP"
 /usr/bin/codesign --verify --deep --strict "$NEW_APP"
 /usr/bin/ditto "$APP" "$BACKUP/previous.app"
 [ -f "$DATA_ROOT/state.json" ] && /usr/bin/cp "$DATA_ROOT/state.json" "$BACKUP/state.json"

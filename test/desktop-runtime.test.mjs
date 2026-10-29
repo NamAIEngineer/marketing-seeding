@@ -4,6 +4,7 @@ import { mkdtemp, readFile, writeFile, mkdir, access } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { execFile, spawn } from "node:child_process";
+import http from "node:http";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
@@ -15,6 +16,31 @@ test("packaged launcher probes the server's /health route", async () => {
   assert.equal(launcher.includes("/health/live"), false);
   assert.ok((launcher.match(/\/health/g) || []).length >= 2);
   assert.match(server, /url\.pathname === ["']\/health["']/);
+  assert.match(launcher, /health-probe\.mjs/);
+  assert.match(launcher, /health-nonce/);
+});
+
+test("updater rejects an unrelated app bundle before swap", async () => {
+  const fixture = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-wrong-app-"));
+  const app = path.join(fixture, "Wrong.app");
+  await mkdir(path.join(app, "Contents", "MacOS"), { recursive: true });
+  await mkdir(path.join(app, "Contents", "Resources", "app"), { recursive: true });
+  await writeFile(path.join(app, "Contents", "Info.plist"), `<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>CFBundleIdentifier</key><string>com.example.foreign</string><key>CFBundleExecutable</key><string>launch</string></dict></plist>`);
+  await writeFile(path.join(app, "Contents", "MacOS", "launch"), "#!/bin/sh\n");
+  await execFileAsync("chmod", ["+x", path.join(app, "Contents", "MacOS", "launch")]);
+  await assert.rejects(execFileAsync("sh", [path.join(root, "desktop/update-macos.sh"), app], { env: { ...process.env, SEEDING_UPDATE_VALIDATE_TEST: "1" } }), /bundle identifier mismatch/);
+});
+
+test("launcher health probe rejects a foreign service collision on the fixed port", async (context) => {
+  const server = http.createServer((_request, response) => {
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(JSON.stringify({ ok: true, service: "global-seeding", serviceOwnership: { service: "other-app", nonce: "foreign", sourceCommit: "foreign" } }));
+  });
+  await new Promise((resolve, reject) => server.listen(0, "127.0.0.1", (error) => error ? reject(error) : resolve()));
+  context.after(() => server.close());
+  const { port } = server.address();
+  const probe = path.join(root, "desktop/health-probe.mjs");
+  await assert.rejects(execFileAsync(process.execPath, [probe, `http://127.0.0.1:${port}/health`, "expected-nonce", "expected-commit"]), /health ownership service mismatch/);
 });
 
 test("malformed update manifest is fail-closed through the server route", async () => {
