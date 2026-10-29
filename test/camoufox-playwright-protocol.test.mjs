@@ -95,6 +95,24 @@ test("Camoufox protocol recognizes the rendered LinkedIn owner profile module", 
   assert.equal(observed.evidence.identitySource, "linkedin-owner-profile-module");
 });
 
+test("Camoufox protocol keeps a generic authenticated surface UNKNOWN without owner identity evidence", async () => {
+  const genericPage = {
+    url: () => "https://www.linkedin.com/feed/",
+    async evaluate(source) {
+      if (source.includes("const identityVerified")) return { sessionAuthenticated: true, identityVerified: true, feedReachable: true, securityChallenge: false, loginRequired: false };
+      if (source.includes("linkedin-navigation-surface")) return { identityReference: "https://www.linkedin.com/in/member", stableId: "member", ambiguous: false, confidence: 20, source: "linkedin-rendered-profile-link", candidates: [{ reference: "https://www.linkedin.com/in/member", score: 20 }] };
+      throw new Error("unexpected protocol expression");
+    },
+    locator() { return { async evaluateAll() { return []; }, nth() { return { async fill() {}, async click() {}, async setInputFiles() {} }; } }; },
+    async goto() {}, async waitForURL() {}, async waitForFunction() {}
+  };
+  const client = new CamoufoxPlaywrightProtocolClient({ context: { pages: () => [genericPage], async newPage() { return genericPage; } }, profileReference: "linkedin-profile", expectedIdentity: { platform: "linkedin", accountId: "account-1" } });
+  await client.attach();
+  const observed = await client.observeIdentity();
+  assert.equal(observed.state, "UNKNOWN");
+  assert.equal(observed.evidence.identityVerified, false);
+});
+
 test("Camoufox protocol fails closed when rendered LinkedIn identity is ambiguous or different", async () => {
   const page = (identity) => ({
     url: () => "https://www.linkedin.com/feed/",

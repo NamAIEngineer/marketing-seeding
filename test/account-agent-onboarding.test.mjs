@@ -10,13 +10,14 @@ test('credential onboarding registers isolated agent and persists bounded login 
   const dir = await mkdtemp(path.join(os.tmpdir(), 'account-onboard-'));
   const store = new JsonStore(path.join(dir, 'state.json'));
   let runnerCalls = 0;
-  const service = new SeedingService(store, { accountAgentRunner: async ({ account }) => { runnerCalls += 1; assert.equal(account.accountId, 'acct-1'); return { status: 'READY', code: 'LOGIN_CONFIRMED', reason: 'exact identity observed' }; } });
+  const service = new SeedingService(store, { accountAgentRunner: async ({ account }) => { runnerCalls += 1; assert.equal(account.accountId, 'acct-1'); assert.equal(account.identityReference, null); return { status: 'READY', code: 'LOGIN_CONFIRMED', reason: 'exact identity observed', identityReference: 'https://www.linkedin.com/in/discovered-acct-1' }; } });
   await service.init();
-  const result = await service.onboardExecutionAccount({ platform: 'linkedin', accountId: 'acct-1', profileId: 'profile-1', identityReference: 'https://www.linkedin.com/in/acct-1', username: 'u', password: 'p', storeCredentials: async () => ({ credentialStored: true }) });
+  const result = await service.onboardExecutionAccount({ platform: 'linkedin', accountId: 'acct-1', profileId: 'profile-1', username: 'u', password: 'p', storeCredentials: async () => ({ credentialStored: true }) });
   assert.equal(runnerCalls, 1);
   assert.equal(result.login.status, 'READY');
   assert.equal(result.account.credentialStored, true);
   assert.equal(result.account.agentStatus, 'READY');
+  assert.equal(result.account.identityReference, 'https://www.linkedin.com/in/discovered-acct-1');
   const state = await store.read();
   assert.equal(state.executionAccounts.length, 1);
   assert.equal(state.executionAccounts[0].health, 'healthy');

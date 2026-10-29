@@ -35,8 +35,18 @@ export async function loginAccountWithCamoufox({ platform, accountId, protocol, 
   // protocol identity observation must match the bound account exactly.
   if (typeof protocol.observeIdentity !== "function") return { status: "UNKNOWN", code: "LOGIN_IDENTITY_UNAVAILABLE", reason: "authenticated surface lacks exact account identity evidence" };
   const observed = await protocol.observeIdentity(pageId);
+  const observedState = String(observed?.state || observed?.status || "").trim().toUpperCase();
+  if (observedState && observedState !== "READY") {
+    if (["CHALLENGED", "CHALLENGE", "MFA", "SECURITY_CHALLENGE"].includes(observedState)) return { status: "BLOCKED", code: "ACCOUNT_SECURITY_CHALLENGE", reason: "authenticated surface is waiting for a security factor" };
+    return { status: "UNKNOWN", code: "LOGIN_SESSION_NOT_READY", reason: "browser identity evidence did not prove an authenticated ready session" };
+  }
+  const observedPlatform = String(observed?.platform || "").trim().toLowerCase();
+  const observedAccountId = String(observed?.accountId || "").trim();
+  if ((observedPlatform && observedPlatform !== channel) || (observedAccountId && observedAccountId !== String(accountId))) {
+    return { status: "UNKNOWN", code: "LOGIN_ACCOUNT_BINDING_MISMATCH", reason: "authenticated surface account binding did not match the requested account" };
+  }
   const observedRef = String(observed?.identityReference || observed?.expectedIdentityReference || "").replace(/\/$/, "").toLowerCase();
   const expectedRef = String(expectedIdentity || "").replace(/\/$/, "").toLowerCase();
-  if (!observedRef || observed?.ambiguous || (expectedRef && observedRef !== expectedRef)) return { status: "UNKNOWN", code: "LOGIN_IDENTITY_MISMATCH", reason: "authenticated surface identity did not exactly match the account binding" };
+  if (!observedRef || observed?.ambiguous || (expectedRef && observedRef !== expectedRef)) return { status: "UNKNOWN", code: expectedRef ? "LOGIN_IDENTITY_MISMATCH" : "LOGIN_IDENTITY_UNAVAILABLE", reason: expectedRef ? "authenticated surface identity did not exactly match the account binding" : "authenticated surface identity could not be derived" };
   return { status: "READY", code: "LOGIN_CONFIRMED", platform: channel, accountId: String(accountId), loginUrl: target, identityReference: observedRef };
 }

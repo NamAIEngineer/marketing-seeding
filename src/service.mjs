@@ -1502,7 +1502,7 @@ function projectExecutionAccountRuntime(state, { now = new Date() } = {}) {
       provider: canonicalProvider(account.provider, { allowLegacy: true }),
       profileFingerprint: accountProfileFingerprint(account.profileId),
       sessionMode: "SESSION_REUSE",
-      authMode: "MANUAL_AUTH",
+      authMode: account.provider === "camoufox" ? "AUTOMATED_CREDENTIAL_LOGIN" : "MANUAL_AUTH",
       status,
       health,
       lastReadinessAt: account.lastReadinessAt || latest?.checkedAt || null,
@@ -1518,6 +1518,11 @@ function projectExecutionAccountRuntime(state, { now = new Date() } = {}) {
       eligibleTargetRefs: eligibleTargetIds.map((id) => accountProfileFingerprint(id)),
       currentBlocker,
       ...eligibility
+      ,agentStatus: account.agentStatus || "UNKNOWN"
+      ,loginStatus: account.loginStatus || "UNKNOWN"
+      ,sessionRecoveryStatus: account.sessionRecoveryStatus || "UNKNOWN"
+      ,lastFailureCode: account.lastFailureCode || null
+      ,lastFailureReason: account.lastFailureReason || null
     };
   }).sort((left, right) => left.id.localeCompare(right.id));
 }
@@ -6332,11 +6337,10 @@ export class SeedingService {
     const accountId = String(input.accountId || "").trim();
     if (!platform || !accountId) throw new Error("platform and accountId are required");
     if (!String(input.username || "") || !String(input.password || "")) throw new Error("username and password are required");
-    if (!String(input.identityReference || input.expectedIdentityUrl || "").trim()) throw new Error("identityReference is required for exact login verification");
     const profileId = String(input.profileId || input.providerProfileId || `camoufox-${platform}-${accountId}`).trim();
     const account = await this.registerExecutionAccount({
       platform, accountId, provider: "camoufox", providerProfileId: profileId,
-      profileId, identityReference: input.identityReference || input.expectedIdentityUrl || null,
+      profileId, ...(String(input.identityReference || input.expectedIdentityUrl || "").trim() ? { identityReference: input.identityReference || input.expectedIdentityUrl } : {}),
       status: "enabled", health: "unknown"
     }, actor);
     const credential = await input.storeCredentials({ platform, accountId, username: input.username, password: input.password });
@@ -6355,10 +6359,40 @@ export class SeedingService {
     const final = await this.store.mutate(actor, "account_agent_login_finished", (state) => {
       const row = state.executionAccounts.find((item) => item.id === account.id);
       const status = ["READY", "BLOCKED", "UNKNOWN"].includes(result?.status) ? result.status : "UNKNOWN";
-      Object.assign(row, { agentStatus: status === "READY" ? "READY" : status === "BLOCKED" ? "BLOCKED" : "UNKNOWN", loginStatus: status, sessionHealth: status === "READY" ? "ready" : status === "BLOCKED" ? "blocked" : "unknown", health: status === "READY" ? "healthy" : status === "BLOCKED" ? "human_required" : "unknown", lastLoginAt: status === "READY" ? finishedAt : row.lastLoginAt || null, lastFailureCode: status === "READY" ? null : String(result?.code || "UNKNOWN").slice(0, 80), lastFailureReason: status === "READY" ? null : String(result?.reason || "UNKNOWN").replace(/\s+/g, " ").slice(0, 300), loginEvidenceAt: finishedAt, updatedAt: finishedAt });
+      const discoveredIdentity = String(result?.identityReference || "").trim();
+      Object.assign(row, { ...(discoveredIdentity ? { identityReference: discoveredIdentity, expectedIdentityUrl: discoveredIdentity } : {}), agentStatus: status === "READY" ? "READY" : status === "BLOCKED" ? "BLOCKED" : "UNKNOWN", loginStatus: status, sessionHealth: status === "READY" ? "ready" : status === "BLOCKED" ? "blocked" : "unknown", health: status === "READY" ? "healthy" : status === "BLOCKED" ? "human_required" : "unknown", lastLoginAt: status === "READY" ? finishedAt : row.lastLoginAt || null, lastFailureCode: status === "READY" ? null : String(result?.code || "UNKNOWN").slice(0, 80), lastFailureReason: status === "READY" ? null : String(result?.reason || "UNKNOWN").replace(/\s+/g, " ").slice(0, 300), loginEvidenceAt: finishedAt, updatedAt: finishedAt });
       return row;
     });
     return { account: projectOnboardedAccount(final.result), login: { status: result.status, code: result.code, reason: result.reason } };
+  }
+
+  /** Retry only recoverable/unknown accounts. Human-required challenges stay
+   * isolated until the user supplies an available factor or replaces creds. */
+  async recoverAccountAgents(actor = "account-agent-recovery") {
+    if (!this.accountAgentRunner) return { status: "UNAVAILABLE", attempted: 0, results: [] };
+    const state = await this.store.read();
+    const candidates = (state.executionAccounts || []).filter((account) => account?.provider === "camoufox" && account?.status === "enabled" && ["UNKNOWN", "RUNNING"].includes(String(account.loginStatus || account.agentStatus || "UNKNOWN").toUpperCase()) && account.lastFailureCode !== "ACCOUNT_SECURITY_CHALLENGE").slice(0, 32);
+    const results = [];
+    for (const account of candidates) {
+      const started = nowIso();
+      await this.store.mutate(actor, "account_agent_recovery_started", (next) => {
+        const row = next.executionAccounts.find((item) => item.id === account.id);
+        if (row) Object.assign(row, { agentStatus: "RUNNING", loginAttemptAt: started, sessionRecoveryStatus: "RUNNING", updatedAt: started });
+      });
+      let result;
+      try { result = await this.accountAgentRunner({ account }); }
+      catch (error) { result = { status: "UNKNOWN", code: String(error?.code || "ACCOUNT_AGENT_ERROR"), reason: String(error?.message || "recovery failed") }; }
+      const finished = nowIso();
+      const safeStatus = ["READY", "BLOCKED", "UNKNOWN"].includes(result?.status) ? result.status : "UNKNOWN";
+      await this.store.mutate(actor, "account_agent_recovery_finished", (next) => {
+        const row = next.executionAccounts.find((item) => item.id === account.id);
+        if (!row) return;
+        const discoveredIdentity = String(result?.identityReference || "").trim();
+        Object.assign(row, { ...(discoveredIdentity ? { identityReference: discoveredIdentity, expectedIdentityUrl: discoveredIdentity } : {}), agentStatus: safeStatus, loginStatus: safeStatus, sessionHealth: safeStatus === "READY" ? "ready" : safeStatus === "BLOCKED" ? "blocked" : "unknown", health: safeStatus === "READY" ? "healthy" : safeStatus === "BLOCKED" ? "human_required" : "unknown", sessionRecoveryStatus: safeStatus === "READY" ? "RECOVERED" : safeStatus === "BLOCKED" ? "HUMAN_REQUIRED" : "UNKNOWN", lastLoginAt: safeStatus === "READY" ? finished : row.lastLoginAt || null, lastFailureCode: safeStatus === "READY" ? null : String(result?.code || "UNKNOWN").slice(0, 80), lastFailureReason: safeStatus === "READY" ? null : String(result?.reason || "UNKNOWN").replace(/\s+/g, " ").slice(0, 300), loginEvidenceAt: finished, updatedAt: finished });
+      });
+      results.push({ accountId: account.accountId, platform: account.platform, status: safeStatus, code: String(result?.code || "UNKNOWN").slice(0, 80) });
+    }
+    return { status: "COMPLETED", attempted: results.length, results };
   }
 
   async createSchedule(campaignId, input, actor = "operator") {

@@ -5,7 +5,7 @@ import { timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { JsonStore } from "./store.mjs";
 import { SeedingService, pollConfiguredDiscoveries, projectExecutionRuntime } from "./service.mjs";
-import { agenticRoot, appRoot, autoGtmFeedFile, browserAutomationFile, dailyAutomationFile, dailyAutomationReceiptFile, publicRoot, stateFile } from "./paths.mjs";
+import { agenticRoot, appRoot, autoGtmFeedFile, browserAutomationFile, dailyAutomationFile, dailyAutomationReceiptFile, dataDir, publicRoot, stateFile } from "./paths.mjs";
 import { FixtureWorkerBridge } from "./fixture-worker-bridge.mjs";
 import { readAutoGtmFeed } from "./auto-gtm-feed.mjs";
 import { OrcaCliClient } from "./orca-browser-client.mjs";
@@ -26,6 +26,7 @@ import { probeCamoufoxRuntime } from "./camoufox-runtime-probe.mjs";
 import { readCoordinatorProjection } from "./project-coordinator-projection.mjs";
 import { accountCredentialStatus, storeAccountCredentials } from "./account-credentials.mjs";
 import { runCamoufoxAccountAgent } from "./camoufox-account-agent.mjs";
+import { createAutoCamoufoxAccountAgentRunner, createAutoCamoufoxExecutionSessionResolver } from "./camoufox-auto-runtime.mjs";
 import { completeNineRouter, connectNineRouter, nineRouterStatus, selectNineRouterModel } from "./nine-router.mjs";
 
 async function loadLocalEnv() {
@@ -112,6 +113,22 @@ const camoufoxExecutablePath = String(process.env.SEEDING_CAMOUFOX_EXECUTABLE_PA
 const camoufoxRuntimeMetadataPath = String(process.env.SEEDING_CAMOUFOX_RUNTIME_METADATA_PATH || "").trim();
 const camoufoxProfileRoot = String(process.env.SEEDING_CAMOUFOX_PROFILE_ROOT || "").trim();
 const camoufoxProfileReference = String(process.env.SEEDING_EXECUTION_SESSION_PROFILE_REFERENCE || "").trim();
+const autoCamoufoxRunner = createAutoCamoufoxAccountAgentRunner({
+  dataRoot: dataDir,
+  runtimeRoot: String(process.env.SEEDING_CAMOUFOX_RUNTIME_ROOT || path.join(dataDir, "camoufox-runtime")),
+  profileRoot: camoufoxProfileRoot || path.join(dataDir, "camoufox-profiles"),
+  npmBin: String(process.env.SEEDING_NPM_BIN || "").trim(),
+  headless: process.env.SEEDING_CAMOUFOX_HEADLESS !== "false"
+});
+let serviceRef = null;
+const autoCamoufoxExecutionResolver = createAutoCamoufoxExecutionSessionResolver({
+  dataRoot: dataDir,
+  runtimeRoot: String(process.env.SEEDING_CAMOUFOX_RUNTIME_ROOT || path.join(dataDir, "camoufox-runtime")),
+  profileRoot: camoufoxProfileRoot || path.join(dataDir, "camoufox-profiles"),
+  npmBin: String(process.env.SEEDING_NPM_BIN || "").trim(),
+  headless: process.env.SEEDING_CAMOUFOX_HEADLESS !== "false",
+  stateReader: async () => serviceRef ? serviceRef.snapshot() : { executionAccounts: [] }
+});
 if (operatorToken.length < 32) {
   throw new Error("SEEDING_OPERATOR_TOKEN must contain at least 32 characters");
 }
@@ -139,7 +156,7 @@ const configuredOiBrowserProvider = await loadConfiguredLocalProvider();
 const readinessProviderRegistry = new ReadinessProviderRegistry();
 const legacyLinkedInReadiness = new LinkedInReadinessProvider(orcaBrowser, { ttlMs: readinessTtlMs });
 readinessProviderRegistry.register("linkedin", new CamoufoxLinkedInReadinessProvider({
-  resolver: configuredExecutionSessionResolver,
+  resolver: configuredExecutionSessionResolver || autoCamoufoxExecutionResolver,
   fallbackProvider: legacyLinkedInReadiness,
   ttlMs: readinessTtlMs
 }));
@@ -164,8 +181,9 @@ const service = new SeedingService(store, {
   ...(configuredOiBrowserProvider ? { oiBrowserProviders: [configuredOiBrowserProvider] } : {})
   ,accountAgentRunner: configuredExecutionSessionResolver
     ? ({ account }) => runCamoufoxAccountAgent({ account, resolver: configuredExecutionSessionResolver })
-    : null
+    : autoCamoufoxRunner
 });
+serviceRef = service;
 const platformAdapterRegistry = new PlatformAdapterRegistry();
 // The production lane is fail-closed until an explicit, platform/runtime
 // scoped irreversible-submit certification record is supplied. Reversible
@@ -181,7 +199,7 @@ platformAdapterRegistry.register("linkedin", new LinkedInAdapter(orcaBrowser, {
 }));
 const jevWorker = new JevExecutionWorker({
   service, adapterRegistry: platformAdapterRegistry,
-  executionSessionResolver: configuredExecutionSessionResolver || null,
+  executionSessionResolver: configuredExecutionSessionResolver || autoCamoufoxExecutionResolver,
   workerId: `jev-server-${process.pid}`
 });
 let initializedState;
@@ -213,6 +231,7 @@ let controlCycleTimer = null;
 let discoveryTimer = null;
 let campaignQueueTimer = null;
 let jevExecutionTimer = null;
+let accountAgentRecoveryTimer = null;
 let jevExecutionRunning = false;
 const jevExecutionStarted = new Set();
 let campaignQueueRunning = false;
@@ -341,6 +360,16 @@ function scheduleCampaignQueueEvaluation(delayMs = 30_000) {
   }, Math.max(1_000, delayMs));
   campaignQueueRuntime.nextRunAt = new Date(Date.now() + Math.max(1_000, delayMs)).toISOString();
   campaignQueueTimer.unref();
+}
+
+function scheduleAccountAgentRecovery(delayMs = 60_000) {
+  if (shuttingDown) return;
+  if (accountAgentRecoveryTimer) clearTimeout(accountAgentRecoveryTimer);
+  accountAgentRecoveryTimer = setTimeout(async () => {
+    try { await service.recoverAccountAgents(); } catch (error) { process.stderr.write(`Account Agent recovery stopped ${String(error?.code || "recovery_error")}\n`); }
+    scheduleAccountAgentRecovery();
+  }, Math.max(5_000, delayMs));
+  accountAgentRecoveryTimer.unref();
 }
 
 function scheduleJevExecution(delayMs = 5_000) {
@@ -1024,6 +1053,7 @@ server.listen(port, host, () => {
   process.stdout.write(`Jang Global Seeding dashboard: http://${host}:${address.port}\n`);
   fixtureWorker.start();
   scheduleCampaignQueueEvaluation();
+  scheduleAccountAgentRecovery(10_000);
   scheduleJevExecution();
   scheduleControlCycle();
   scheduleDiscoveryCollection();
@@ -1044,6 +1074,7 @@ function shutdown() {
   if (discoveryTimer) clearTimeout(discoveryTimer);
   if (campaignQueueTimer) clearTimeout(campaignQueueTimer);
   if (jevExecutionTimer) clearTimeout(jevExecutionTimer);
+  if (accountAgentRecoveryTimer) clearTimeout(accountAgentRecoveryTimer);
   fixtureWorker.stop();
   server.close(() => {
     void (async () => {

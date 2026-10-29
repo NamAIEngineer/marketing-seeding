@@ -191,7 +191,15 @@ export class CamoufoxPlaywrightProtocolClient {
     const expectedIdentity = canonicalIdentityUrl(this.#expectedIdentity.identityReference || this.#expectedIdentity.expectedIdentityUrl);
     const observedIdentity = canonicalIdentityUrl(observed?.identityReference);
     const expectedStableId = expectedIdentity ? expectedIdentity.split('/in/')[1] || null : null;
-    const independentIdentityVerified = Boolean(observedIdentity && !observed?.ambiguous && observedIdentity === expectedIdentity && observed?.stableId && observed.stableId === expectedStableId);
+    // During credential onboarding there is no caller supplied identity. A
+    // rendered profile link is accepted only when it came from a bounded
+    // owner surface (navigation/header or LinkedIn's owner profile module),
+    // has a stable /in/<id> value, and is unambiguous. Feed text or an
+    // arbitrary member link cannot establish account identity.
+    const ownerSurfaceEvidence = ["linkedin-owner-profile-module", "linkedin-navigation-surface"].includes(observed?.source);
+    const independentIdentityVerified = expectedIdentity
+      ? Boolean(observedIdentity && !observed?.ambiguous && observedIdentity === expectedIdentity && observed?.stableId && observed.stableId === expectedStableId)
+      : Boolean(observedIdentity && !observed?.ambiguous && observed?.stableId && ownerSurfaceEvidence);
     const sessionState = state.securityChallenge ? "CHALLENGED" : state.loginRequired ? "LOGIN_REQUIRED" : state.sessionAuthenticated && independentIdentityVerified ? "READY" : "UNKNOWN";
     return { state: sessionState, provider: "camoufox", platform: text(this.#expectedIdentity.platform).toLowerCase(), accountId: text(this.#expectedIdentity.accountId), providerProfileId: this.#profileReference, profileReference: this.#profileReference, identityReference: observedIdentity || null, expectedIdentityReference: expectedIdentity || null, stableIdentityId: observed?.stableId || null, evidence: { sessionAuthenticated: state.sessionAuthenticated === true, identityVerified: independentIdentityVerified, stableIdentityId: observed?.stableId || null, stableIdentityIdVerified: Boolean(observed?.stableId && observed.stableId === expectedStableId), feedReachable: state.feedReachable === true, identitySource: observed?.source || null, identityConfidence: observed?.confidence || 0, identityAmbiguous: observed?.ambiguous === true, candidateCount: Array.isArray(observed?.candidates) ? observed.candidates.length : 0 } };
   }

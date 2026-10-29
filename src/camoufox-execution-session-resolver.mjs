@@ -28,21 +28,31 @@ function validateAttestation(value) {
 }
 
 function exactSelection(selector, registry, request, configuredProfile = "") {
+  const requestedProvider = text(request.provider).toLowerCase();
+  const requestedProfile = text(request.providerProfileId || request.profileReference || request.profileRef || request.profileId);
   const result = selector(registry, request);
   const selected = result?.selected;
   const provider = text(selected?.provider).toLowerCase();
   const profile = text(selected?.providerProfileId || selected?.profileRef || selected?.profileReference);
-  const requestedProvider = text(request.provider).toLowerCase();
-  const requestedProfile = text(request.providerProfileId || request.profileReference || request.profileRef || request.profileId);
   const requestedIdentity = canonicalIdentityUrl(request.identityReference || request.expectedIdentityUrl);
   const identity = canonicalIdentityUrl(selected?.identityReference || selected?.expectedIdentityUrl);
+  if (!selected) {
+    // Preserve a precise provider mismatch when the requested account/profile
+    // exists under another provider; otherwise report no exact profile.
+    const requestedAccount = text(request.accountId);
+    const requestedPlatform = text(request.platform).toLowerCase();
+    const source = Array.isArray(registry) ? registry : [];
+    const candidate = source.find((item) => text(item.accountId) === requestedAccount && text(item.platform).toLowerCase() === requestedPlatform && (!requestedProfile || text(item.providerProfileId || item.profileRef) === requestedProfile));
+    if (candidate && requestedProvider && text(candidate.provider).toLowerCase() !== requestedProvider) return failure("PROVIDER_BINDING_MISMATCH", "selected account provider does not match the execution request", result?.status || null);
+    return failure("PROFILE_BINDING_MISSING", "no eligible Camoufox account matches the execution request", result?.status || null);
+  }
   if (requestedProvider && requestedProvider !== provider) return failure("PROVIDER_BINDING_MISMATCH", "selected account provider does not match the execution request", result?.status || null);
-  if (!selected || provider !== "camoufox" || !profile || (configuredProfile && profile !== configuredProfile)) return failure("PROFILE_BINDING_MISSING", "selected account lacks exact Camoufox provider/profile binding", result?.status || null);
+  if (provider !== "camoufox" || !profile || (configuredProfile && profile !== configuredProfile)) return failure("PROFILE_BINDING_MISSING", "selected account lacks exact Camoufox provider/profile binding", result?.status || null);
   if (requestedProfile && requestedProfile !== profile) return failure("PROFILE_BINDING_MISMATCH", "selected Camoufox profile does not match the execution request", result?.status || null);
   if (request.accountId && text(selected.accountId) !== text(request.accountId)) return failure("ACCOUNT_BINDING_MISMATCH", "selected account does not match the execution request", result?.status || null);
   if (request.platform && text(selected.platform).toLowerCase() !== text(request.platform).toLowerCase()) return failure("PLATFORM_BINDING_MISMATCH", "selected platform does not match the execution request", result?.status || null);
   if (requestedIdentity && identity !== requestedIdentity) return failure("IDENTITY_BINDING_MISMATCH", "selected identity does not match the execution request", result?.status || null);
-  if (String(selected.platform).toLowerCase() === "linkedin" && !identity) return failure("IDENTITY_BINDING_MISSING", "selected LinkedIn account lacks verified identity binding", result?.status || null);
+  if (String(selected.platform).toLowerCase() === "linkedin" && !identity && request.allowIdentityDiscovery !== true) return failure("IDENTITY_BINDING_MISSING", "selected LinkedIn account lacks verified identity binding", result?.status || null);
   return Object.freeze({ result, selected, provider, profile, identity });
 }
 

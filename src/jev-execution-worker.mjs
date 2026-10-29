@@ -263,6 +263,10 @@ export class JevExecutionWorker {
         // level. Keep context metadata alongside it; never hide provider,
         // profile, account, or verified identity under a nested field.
         resolvedSessionEnvelope = await acquire({ ...initial.request, account: initial.account, context: initial, executionId });
+        if (resolvedSessionEnvelope?.ready === false) {
+          const code = String(resolvedSessionEnvelope.code || resolvedSessionEnvelope.status || "execution_session_not_ready").trim().toLowerCase();
+          throw Object.assign(new Error(resolvedSessionEnvelope.reason || "execution session is not ready"), { code: code || "execution_session_not_ready" });
+        }
         executionSession = resolvedSessionEnvelope?.session || resolvedSessionEnvelope;
         executionTransport = resolvedSessionEnvelope?.transport || executionSession?.transport || null;
         executionBrowserSurface = resolvedSessionEnvelope?.browserSurface || executionSession?.browserSurface || null;

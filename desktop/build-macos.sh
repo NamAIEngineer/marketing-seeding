@@ -21,6 +21,7 @@ ditto "$SOURCE/src" "$APP/Contents/Resources/app/src"
 ditto "$SOURCE/public" "$APP/Contents/Resources/app/public"
 ditto "$SOURCE/scripts" "$APP/Contents/Resources/app/scripts"
 ditto "$SOURCE/desktop/provision-9router.sh" "$APP/Contents/Resources/app/provision-9router.sh"
+ditto "$SOURCE/desktop/provision-camoufox.sh" "$APP/Contents/Resources/app/provision-camoufox.sh"
 ditto "$SOURCE/desktop/update-macos.sh" "$APP/Contents/Resources/app/update-macos.sh"
 cp "$NODE_BIN" "$APP/Contents/Resources/bin/node"
 if [ -n "$NPM_BIN" ]; then cp "$NPM_BIN" "$APP/Contents/Resources/bin/npm"; fi
@@ -119,12 +120,16 @@ if [ -x "$APP_ROOT/provision-9router.sh" ]; then
     printf '%s\n' "ready" >"$DATA_ROOT/9router-provision-status"
   fi
 fi
+if [ -x "$APP_ROOT/provision-camoufox.sh" ]; then
+  "$APP_ROOT/provision-camoufox.sh" "$DATA_ROOT" >"$DATA_ROOT/camoufox-provision-command" 2>"$DATA_ROOT/camoufox-provision-error" || true
+fi
 cd "$APP_ROOT"
 exec "$NODE" src/server.mjs
 SERVICE
 chmod 755 "$APP/Contents/MacOS/launch"
 chmod 755 "$APP/Contents/MacOS/service"
 chmod 755 "$APP/Contents/Resources/app/provision-9router.sh"
+chmod 755 "$APP/Contents/Resources/app/provision-camoufox.sh"
 chmod 755 "$APP/Contents/Resources/app/update-macos.sh"
 plutil -lint "$APP/Contents/Info.plist"
 ditto -c -k --sequesterRsrc --keepParent "$APP" "$OUTPUT/Marketing-Seeding-OS-macOS.zip"
