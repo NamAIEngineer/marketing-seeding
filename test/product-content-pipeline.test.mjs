@@ -4,6 +4,7 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { runProductContentPipeline } from '../src/product-content-pipeline.mjs';
+import { probeContentRuntime, repairContentRuntime, resolveContentRuntimePaths, stageVerifiedBinary } from '../src/product-content-runtime.mjs';
 
 async function fixture() {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'product-content-pipeline-'));
@@ -77,4 +78,69 @@ test('fixture mode does not fabricate remote research', async () => {
   }));
   assert.equal(result.status, 'FAILED');
   assert.equal(result.failure.code, 'INVALID_INPUT');
+});
+
+test('LOCAL mode preflights the configured runtime before invoking Crawl4AI', async () => {
+  const root = await fixture();
+  const runtimeRoot = path.join(root, 'runtime');
+  const paths = resolveContentRuntimePaths({ storageRoot: runtimeRoot, env: { PATH: '/usr/bin:/bin' } });
+  const result = await runProductContentPipeline(input(root, path.join(root, 'local-out'), {
+    mode: 'LOCAL',
+    contentRuntimePaths: paths,
+    runtimeProbeTimeoutMs: 5_000,
+  }));
+  assert.equal(result.status, 'FAILED');
+  assert.equal(result.failure.code, 'RESEARCH_BACKEND_UNAVAILABLE');
+  assert.equal(result.failure.stage, 'runtime');
+  assert.equal(result.mp4Path, null);
+  assert.equal(await fs.stat(path.join(root, 'local-out', 'fixture-run-01-report.json')).then(() => true).catch(() => false), false);
+});
+
+test('read-only runtime preflight reports missing Crawl4AI without claiming success', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'content-runtime-probe-'));
+  const paths = resolveContentRuntimePaths({ storageRoot: root, env: { PATH: '/usr/bin:/bin:/opt/homebrew/bin' } });
+  const result = await probeContentRuntime({ mode: 'LOCAL', paths, timeoutMs: 5_000 });
+  assert.equal(result.readOnly, true);
+  assert.equal(result.ready, false);
+  assert.equal(result.status, 'UNAVAILABLE');
+  assert.equal(result.failure.code, 'RESEARCH_BACKEND_UNAVAILABLE');
+  assert.equal(result.ffmpeg.status, 'READY');
+  assert.equal(result.python.status === 'FAILED' || result.python.status === 'MISSING', true);
+  assert.equal(await fs.stat(path.join(root, 'runtime-manifest.json')).then(() => true).catch(() => false), false);
+});
+
+test('production preflight requires nodriver imports and a Chrome executable', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'content-runtime-production-'));
+  const paths = resolveContentRuntimePaths({ storageRoot: root, env: { PATH: '/usr/bin:/bin' } });
+  paths.chromeCandidates.splice(0, paths.chromeCandidates.length, { candidate: path.join(root, 'missing-chrome'), path: path.join(root, 'missing-chrome') });
+  const result = await probeContentRuntime({ mode: 'PRODUCTION', paths, timeoutMs: 5_000 });
+  assert.equal(result.ready, false);
+  assert.equal(result.failure.code, 'RESEARCH_BACKEND_UNAVAILABLE');
+  assert.equal(result.requirements.chrome, true);
+  assert.equal(result.chrome.status, 'MISSING');
+});
+
+test('repair remains blocked unless network install is explicitly allowed', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'content-runtime-repair-'));
+  const paths = resolveContentRuntimePaths({ storageRoot: root, env: { PATH: '/usr/bin:/bin:/opt/homebrew/bin' } });
+  const result = await repairContentRuntime({ mode: 'LOCAL', paths, repair: true, allowNetwork: false, timeoutMs: 5_000 });
+  assert.equal(result.ready, false);
+  assert.equal(result.failure.code, 'CONTENT_RUNTIME_NETWORK_REQUIRED');
+  assert.equal(result.repair.attempted, true);
+});
+
+test('checksum-pinned media staging rejects mismatch and accepts exact bytes', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'content-runtime-stage-'));
+  const source = path.join(root, 'source.bin');
+  const destination = path.join(root, 'bin', 'ffmpeg');
+  await fs.writeFile(source, 'binary fixture');
+  const mismatch = await stageVerifiedBinary({ sourcePath: source, destinationPath: destination, expectedSha256: '0'.repeat(64) });
+  assert.equal(mismatch.status, 'FAILED');
+  assert.equal(mismatch.failure.code, 'CONTENT_RUNTIME_CHECKSUM_MISMATCH');
+  const crypto = await import('node:crypto');
+  const digest = crypto.createHash('sha256').update('binary fixture').digest('hex');
+  const staged = await stageVerifiedBinary({ sourcePath: source, destinationPath: destination, expectedSha256: digest });
+  assert.equal(staged.status, 'STAGED');
+  assert.equal(staged.sha256, digest);
+  assert.equal(await fs.readFile(destination, 'utf8'), 'binary fixture');
 });

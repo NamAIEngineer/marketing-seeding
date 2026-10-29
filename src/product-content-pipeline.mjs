@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { probeContentRuntime } from './product-content-runtime.mjs';
 
 /**
  * Local product to content pipeline.
@@ -212,12 +213,16 @@ function normalizeMode(value) {
   return mode;
 }
 
-function invokeJsonWorker(script, payload, { pythonPath = 'python3', timeoutMs = 30_000, maxOutputBytes = 2_500_000 } = {}) {
+function invokeJsonWorker(script, payload, { pythonPath = 'python3', timeoutMs = 30_000, maxOutputBytes = 2_500_000, environment = {} } = {}) {
   return new Promise((resolve, reject) => {
     let stdout = '';
     let stderr = '';
     let settled = false;
-    const child = spawn(pythonPath, [script], { shell: false, stdio: ['pipe', 'pipe', 'pipe'], env: { PATH: process.env.PATH || '' } });
+    const child = spawn(pythonPath, [script], {
+      shell: false,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: { PATH: process.env.PATH || '', PYTHONUNBUFFERED: '1', ...environment }
+    });
     const finish = (error, value) => {
       if (settled) return;
       settled = true;
@@ -256,7 +261,7 @@ async function researchLocal(source, root, mode, options) {
   const contentHash = sha256Buffer(data);
   let result;
   try {
-    result = await invokeJsonWorker(CRAWL4AI_SCRIPT, {
+    result = await invokeJsonWorker(options.extractorScript || CRAWL4AI_SCRIPT, {
       contractVersion: 1,
       jobId: `pipeline-${contentHash.slice(0, 12)}`,
       sourceUrl: source.url || `file://${filePath}`,
@@ -281,7 +286,7 @@ async function researchRemote(source, mode, options) {
   const url = required(source.url, 'source.url', 1_000);
   let fetched;
   try {
-    fetched = await invokeJsonWorker(NODRIVER_SCRIPT, { contractVersion: 1, jobId: `pipeline-${sha256(url).slice(0, 12)}`, sourceUrl: url, waitSeconds: options.waitSeconds || 1 }, options);
+    fetched = await invokeJsonWorker(options.fetcherScript || NODRIVER_SCRIPT, { contractVersion: 1, jobId: `pipeline-${sha256(url).slice(0, 12)}`, sourceUrl: url, waitSeconds: options.waitSeconds || 1 }, options);
   } catch (error) {
     throw error instanceof PipelineError ? error : new PipelineError('RESEARCH_FAILED', error.message, 'research');
   }
@@ -294,7 +299,7 @@ async function researchRemote(source, mode, options) {
   if (!html) throw new PipelineError('NO_SOURCE_EVIDENCE', 'nodriver returned empty HTML', 'research');
   let extracted;
   try {
-    const parsed = await invokeJsonWorker(CRAWL4AI_SCRIPT, { contractVersion: 1, jobId: fetched.jobId, sourceUrl: url, finalUrl: fetched.finalUrl || url, html, contentHash: fetched.contentHash }, options);
+    const parsed = await invokeJsonWorker(options.extractorScript || CRAWL4AI_SCRIPT, { contractVersion: 1, jobId: fetched.jobId, sourceUrl: url, finalUrl: fetched.finalUrl || url, html, contentHash: fetched.contentHash }, options);
     if (parsed.status !== 'SUCCEEDED' && parsed.status !== 'PARTIAL') throw new PipelineError('RESEARCH_FAILED', parsed.reason || 'Crawl4AI extraction failed', 'research');
     extracted = extractFixtureText(parsed.markdown || html, url);
     if (!extracted.text) throw new PipelineError('NO_SOURCE_EVIDENCE', 'Crawl4AI returned no readable evidence', 'research');
@@ -479,6 +484,30 @@ export async function runProductContentPipeline(input = {}, options = {}) {
     // the request envelope. Keep one bounded adapter context for both worker
     // and renderer selection.
     const runtimeOptions = { ...options, ...input };
+    let runtime = null;
+    if (mode !== 'FIXTURE' && runtimeOptions.localBackend !== 'fixture') {
+      runtime = await probeContentRuntime({
+        mode,
+        paths: runtimeOptions.contentRuntimePaths || runtimeOptions.contentRuntime?.paths || null,
+        storageRoot: runtimeOptions.contentRuntimeStorageRoot,
+        resourcesDir: runtimeOptions.contentRuntimeResourcesDir,
+        env: runtimeOptions.environment || process.env,
+        timeoutMs: Math.min(30_000, Number(runtimeOptions.runtimeProbeTimeoutMs) || 30_000),
+      });
+      if (!runtime.ready) {
+        const runtimeFailure = runtime.failure || { code: 'CONTENT_RUNTIME_UNAVAILABLE', message: 'content runtime is unavailable' };
+        throw new PipelineError(runtimeFailure.code, runtimeFailure.message, 'runtime', runtimeFailure.details || runtime);
+      }
+      runtimeOptions.pythonPath = runtime.python?.path || runtime.paths.pythonPath;
+      runtimeOptions.ffmpegPath = runtime.ffmpeg?.path || runtime.paths.ffmpegPath;
+      runtimeOptions.extractorScript = runtime.paths.extractorScript;
+      runtimeOptions.fetcherScript = runtime.paths.fetcherScript;
+      runtimeOptions.environment = {
+        PATH: runtime.paths.pathEnv,
+        ...(runtimeOptions.environment || {}),
+        ...(runtime.chrome?.path ? { SEEDING_NODRIVER_CHROME: runtime.chrome.path } : {}),
+      };
+    }
     const sources = asArray(input.sources, 'sources', MAX_SOURCE_COUNT);
     const targets = asArray(input.targets, 'targets', MAX_ASSET_COUNT);
     const assets = asArray(input.assets, 'assets', MAX_ASSET_COUNT);
@@ -510,6 +539,13 @@ export async function runProductContentPipeline(input = {}, options = {}) {
       copies,
       media,
       evidence: evidence.map(({ text: _text, ...item }) => item),
+      runtime: runtime ? {
+        status: runtime.status,
+        paths: runtime.paths,
+        python: runtime.python,
+        ffmpeg: runtime.ffmpeg,
+        chrome: runtime.chrome,
+      } : null,
       externalSideEffects: false,
     };
   } catch (error) {
