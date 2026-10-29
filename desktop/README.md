@@ -22,8 +22,12 @@ authority, UNKNOWN quarantine, and final publication gates remain in force.
 
 On first service start, the bundle looks for the pinned `9router@0.5.109`
 binary. It uses an existing verified binary when present; otherwise it provisions
-that exact npm version in the app's protected runtime directory and starts it on
-loopback. The 9Router dashboard still owns provider login and API-key creation:
+that exact npm version in the app's protected runtime directory. Provisioning
+first checks the HTTPS npm registry metadata against the immutable tarball,
+SHA-512 integrity, and SHA-1 package digest recorded in
+`desktop/9router-provenance.json`; it rejects a registry, metadata, lockfile, or
+installed-version mismatch and reports `UNAVAILABLE` without executing the
+package. The 9Router dashboard still owns provider login and API-key creation:
 the app cannot complete that human-authenticated step, so Overview reports
 `CONNECT_REQUIRED` until the user supplies an app-scoped API key through the
 operator connect action. The key is stored with mode `0600`; provider keys and
