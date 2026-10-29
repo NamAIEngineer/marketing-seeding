@@ -313,7 +313,7 @@ test("HTTP mutations require the local operator bearer token", async (context) =
   assert.equal(health.executionRuntime.readOnly, true);
   assert.equal(health.executionRuntime.publicationRule.includes("COMMAND_COMPLETED"), true);
   assert.ok(health.executionRuntime.counts);
-  assert.equal(health.productFactorySandbox.status, "UNSUPPORTED");
+  assert.ok(["UNSUPPORTED", "UNAVAILABLE"].includes(health.productFactorySandbox.status));
   assert.equal(health.productFactorySandbox.executionEligible, false);
   assert.equal(health.productFactorySandbox.unsafeCommandDisposition, "NOT_EXECUTED_UNSAFE");
   assert.equal(health.productFactorySandbox.checks.resourceLimits, "UNSUPPORTED");

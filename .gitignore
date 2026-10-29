@@ -25,6 +25,7 @@ node_modules/
 ui/node_modules/
 ui/dist/
 ui/.rollbacks/
+desktop/dist/
 
 # Local verification evidence tied to this machine
 docs/VERIFICATION-2026-10-07.md

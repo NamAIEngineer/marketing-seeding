@@ -25,6 +25,24 @@ By default, the server stores runtime data under `build-agentic-AI/.agentic/mark
 
 To rebuild the UI, run `pnpm.cmd install` and `pnpm.cmd build` inside `ui`, then copy the generated `ui\dist` files into `public`. A fresh clone can run immediately because the current frontend build is included in `public`.
 
+## macOS desktop app
+
+The repository also ships a native macOS app wrapper around the same local
+Overview and API. It does not fork a second dashboard or copy runtime state into
+the repository. Build and open it on macOS with Node.js 22 or newer:
+
+```sh
+sh desktop/build-macos.sh
+open "desktop/dist/Marketing Seeding OS.app"
+```
+
+The app stores state and generated bearer tokens in
+`~/Library/Application Support/Marketing Seeding OS`, serves only on
+`127.0.0.1`, and opens the Overview in a native WebKit window. The packaged
+source revision is recorded in the app resources. Listening, Camoufox, media,
+and publication capabilities remain evidence-gated; unavailable runtimes are
+reported as unavailable or UNKNOWN rather than presented as completed work.
+
 ## Architecture
 
 ```text
