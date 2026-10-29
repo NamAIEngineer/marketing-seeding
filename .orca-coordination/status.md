@@ -11,7 +11,7 @@
 - Candidate worktree: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`
 - Branch: `integration/session-c-reconciled`
 - Candidate source/test revision: `85913e984a4c45c2278be2fe644055426a1455c4`; current Listening V5 regression run and coordinator acceptance checks are pinned to this revision; prior code/test revisions remain recorded in historical evidence.
-- Code/test checkpoint: `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`
+- Code/test checkpoint: `85913e984a4c45c2278be2fe644055426a1455c4`
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
 - Remote observed: `origin=https://github.com/DevAngular333/marketing-seeding.git`.
 - C-owned source/tests for the earlier oi-browser/provider slice are committed through `b51c198`; Listening V5 source/tests are committed through `3d3d0b0`; current docs/evidence follow on the candidate branch; `7f2b74a` remains the prior integration evidence checkpoint.
@@ -26,7 +26,7 @@
 
 ## C Listening V5 continuation (2026-10-29)
 
-- C source/test commit: `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`.
+- C Listening V5 source/test commit: `3d3d0b0f76656df188f6e0d339e91c9d0f3031bd`; current C coordinator/acceptance source/test commit: `85913e984a4c45c2278be2fe644055426a1455c4`.
 - `IMPLEMENTED`: canonical `JsonStore.listeningJobs` additive collection, deterministic scope-bound Listening job IDs, per-source checkpoints, restart resume for pending sources, terminal replay without fetch, bounded dashboard projection, writer-lease-safe CLI path, and immutable UNKNOWN quarantine.
 - `FIXTURE_VERIFIED`: `node --test test/listening-v5.test.mjs test/listening-adapter.test.mjs test/listening-contract.test.mjs test/store-migration.test.mjs` → 20/20; independent read-only review PASS after UNKNOWN promotion fix.
 - `FIXTURE_VERIFIED`: full `npm test` at exact commit → 825 total, 823 pass, 0 fail, 2 skipped; output SHA-256 `1aba8fe6ffc35395bed904243f981c2085d2d2f338202082f8a94a548b35f252`.
