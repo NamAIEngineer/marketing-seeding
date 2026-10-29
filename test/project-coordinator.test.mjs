@@ -438,3 +438,36 @@ test("acceptance evidence cannot release a dependency when source revision or ev
   assert.equal(task.lastAcceptance.reason, "COORDINATOR_ACCEPTANCE_SOURCE_REVISION_MISMATCH");
   assert.equal(coordinator.snapshot().results[0].acceptanceStatus, "FAILED");
 });
+
+test("goal projection and A/B/C/D session registry survive restart without replacing task state", async () => {
+  const { root, coordinator } = await fixture();
+  await coordinator.reconcileGoal({
+    goalId: "ORCA_MS_CD_COMPLETE_20261029_01",
+    goalRunId: "run_5c4c40ae690b",
+    mode: "GOAL",
+    nativeGoalMode: "UNAVAILABLE",
+    status: "ACTIVE",
+    owner: "session-c",
+    consumer: "launchd:ai.marketing-seeding.project-coordinator",
+    checkpoint: "bec96d672870099dea51752c6114d1237faa14f2",
+    nextAction: "reconcile native worker receipts",
+    currentBlockers: ["A receiver lifecycle fence"],
+    taskRefs: [{ taskId: "a-handshake", owner: "session-a", status: "DISPATCHED", deliveryStatus: "TURN_STARTED", acceptanceStatus: "PENDING", workspace: "/tmp/a" }],
+    wake: { condition: "dependency result or native receipt", nextWakeAt: "2026-10-29T05:00:00.000Z" }
+  });
+  await coordinator.upsertSession({ role: "session-a", workspace: "/tmp/a", branch: "a", observedHead: "a1", receiverState: "RECEIVER_VERIFIED", uiMappingState: "UNKNOWN", mappingGeneration: 2 });
+  await coordinator.upsertSession({ role: "session-b", workspace: "/tmp/b", branch: "b", observedHead: "b1", receiverState: "PARTIAL", uiMappingState: "UNKNOWN" });
+  await coordinator.upsertSession({ role: "session-c", workspace: root, branch: "c", observedHead: "c1", receiverState: "RECEIVER_VERIFIED", uiMappingState: "UI_MAPPING_VERIFIED" });
+  await coordinator.upsertSession({ role: "session-d", workspace: "/tmp/d", branch: "d", observedHead: "d1", receiverState: "UNKNOWN", uiMappingState: "UNKNOWN", unknownReason: "owner continuity unavailable" });
+
+  const restarted = new ProjectCoordinator({ stateFile: path.join(root, "state.json"), worker: coordinator.worker });
+  await restarted.init();
+  const state = restarted.snapshot();
+  assert.equal(state.goal.goalId, "ORCA_MS_CD_COMPLETE_20261029_01");
+  assert.equal(state.goal.goalRunId, "run_5c4c40ae690b");
+  assert.equal(state.goal.nativeGoalMode, "UNAVAILABLE");
+  assert.equal(state.goal.taskRefs[0].taskId, "a-handshake");
+  assert.equal(state.sessionRegistry.length, 4);
+  assert.equal(state.sessionRegistry.find((item) => item.role === "session-a").mappingGeneration, 2);
+  assert.equal(state.sessionRegistry.find((item) => item.role === "session-d").receiverState, "UNKNOWN");
+});

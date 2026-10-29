@@ -18,6 +18,9 @@ const MAX_ERROR = 240;
 const MAX_ACCEPTANCE_CHECKS = 64;
 const MAX_EVIDENCE_REFS = 32;
 const MAX_FOLLOW_UP_TASKS = 8;
+const MAX_GOAL_TASKS = 128;
+const MAX_GOAL_BLOCKERS = 64;
+const MAX_SESSION_REGISTRY = 32;
 const NATIVE_RECOVERY_MAX_ATTEMPTS = 3;
 const NATIVE_RECOVERY_BASE_DELAY_MS = 5_000;
 const NATIVE_RECOVERY_MAX_DELAY_MS = 60_000;
@@ -48,6 +51,107 @@ function optionalText(value, max = 240) {
 function evidenceRefs(value) {
   if (!Array.isArray(value)) return [];
   return [...new Set(value.map((item) => optionalText(item, 240)).filter(Boolean))].slice(0, MAX_EVIDENCE_REFS);
+}
+
+function normalizeGoalTask(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("coordinator goal task must be an object");
+  const taskId = id(value.taskId || value.id, "goal task id");
+  const status = optionalText(value.status, 80)?.toUpperCase() || "UNKNOWN";
+  const deliveryStatus = optionalText(value.deliveryStatus, 80)?.toUpperCase() || "UNKNOWN";
+  const acceptanceStatus = optionalText(value.acceptanceStatus, 80)?.toUpperCase() || "UNKNOWN";
+  return {
+    taskId,
+    dispatchId: optionalText(value.dispatchId, 160),
+    requestId: optionalText(value.requestId, 160),
+    owner: optionalText(value.owner, 120),
+    scope: optionalText(value.scope, 240),
+    workspace: optionalText(value.workspace, 320),
+    sourceRevision: optionalText(value.sourceRevision, 160),
+    status,
+    deliveryStatus,
+    workerStatus: optionalText(value.workerStatus, 120),
+    acceptanceStatus,
+    dependency: optionalText(value.dependency, 240),
+    artifactPath: optionalText(value.artifactPath, 320),
+    evidenceRefs: evidenceRefs(value.evidenceRefs),
+    blocker: optionalText(value.blocker, MAX_ERROR),
+    nextAction: optionalText(value.nextAction, 240),
+    lastProgressAt: optionalText(value.lastProgressAt, 80)
+  };
+}
+
+function normalizeSessionRecord(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("coordinator session record must be an object");
+  const role = id(value.role, "session role");
+  const workspace = text(value.workspace, "session workspace", 320);
+  const mappingGeneration = Number.isSafeInteger(value.mappingGeneration) && value.mappingGeneration >= 0 ? value.mappingGeneration : 0;
+  return {
+    role,
+    sessionId: optionalText(value.sessionId, 160),
+    terminalHandle: optionalText(value.terminalHandle, 160),
+    tabId: optionalText(value.tabId, 160),
+    paneKey: optionalText(value.paneKey, 240),
+    tabTitle: optionalText(value.tabTitle, 240),
+    workspace,
+    branch: optionalText(value.branch, 240),
+    observedHead: optionalText(value.observedHead, 160),
+    ownedScope: Array.isArray(value.ownedScope) ? [...new Set(value.ownedScope.map((item) => optionalText(item, 240)).filter(Boolean))].slice(0, 32) : [],
+    receiverState: optionalText(value.receiverState, 120)?.toUpperCase() || "UNKNOWN",
+    uiMappingState: optionalText(value.uiMappingState, 120)?.toUpperCase() || "UNKNOWN",
+    currentTaskId: optionalText(value.currentTaskId, 160),
+    mappingGeneration,
+    observedAt: optionalText(value.observedAt, 80),
+    verifiedAt: optionalText(value.verifiedAt, 80),
+    handshakeRequestId: optionalText(value.handshakeRequestId, 160),
+    evidenceRefs: evidenceRefs(value.evidenceRefs),
+    unknownReason: optionalText(value.unknownReason, MAX_ERROR)
+  };
+}
+
+function normalizeGoalProjection(value) {
+  if (value === null || value === undefined) return null;
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("coordinator goal projection must be an object");
+  const goalId = id(value.goalId, "goalId");
+  const goalRunId = value.goalRunId ? id(value.goalRunId, "goalRunId") : null;
+  const status = optionalText(value.status || value.goalStatus, 80)?.toUpperCase() || "RUNNING";
+  const acceptanceMatrix = Array.isArray(value.acceptanceMatrix) ? value.acceptanceMatrix.slice(0, MAX_ACCEPTANCE_CHECKS).map((item) => ({
+    id: id(item?.id, "goal acceptance id"),
+    status: optionalText(item?.status, 80)?.toUpperCase() || "UNKNOWN",
+    owner: optionalText(item?.owner, 120),
+    dependency: optionalText(item?.dependency, 240),
+    classification: optionalText(item?.classification, 80)?.toUpperCase() || "UNKNOWN",
+    evidenceRefs: evidenceRefs(item?.evidenceRefs),
+    detail: optionalText(item?.detail, 240)
+  })) : [];
+  const taskRefs = Array.isArray(value.taskRefs || value.tasks)
+    ? (value.taskRefs || value.tasks).slice(0, MAX_GOAL_TASKS).map(normalizeGoalTask)
+    : [];
+  const wakeInput = value.wake && typeof value.wake === "object" && !Array.isArray(value.wake) ? value.wake : {};
+  return {
+    schemaVersion: 1,
+    goalId,
+    goalRunId,
+    mode: optionalText(value.mode, 80)?.toUpperCase() || "GOAL",
+    nativeGoalMode: optionalText(value.nativeGoalMode, 80)?.toUpperCase() || "UNAVAILABLE",
+    status,
+    owner: optionalText(value.owner, 120),
+    consumer: optionalText(value.consumer, 240),
+    checkpoint: optionalText(value.checkpoint, 240),
+    sourceRevision: optionalText(value.sourceRevision, 160),
+    nextAction: optionalText(value.nextAction, 240),
+    acceptanceMatrix,
+    taskRefs,
+    currentBlockers: Array.isArray(value.currentBlockers) ? [...new Set(value.currentBlockers.map((item) => optionalText(item, MAX_ERROR)).filter(Boolean))].slice(0, MAX_GOAL_BLOCKERS) : [],
+    wake: {
+      consumer: optionalText(wakeInput.consumer, 240),
+      condition: optionalText(wakeInput.condition, 240),
+      nextWakeAt: optionalText(wakeInput.nextWakeAt, 80),
+      lastWakeAt: optionalText(wakeInput.lastWakeAt, 80)
+    },
+    evidenceRefs: evidenceRefs(value.evidenceRefs),
+    observedAt: optionalText(value.observedAt, 80),
+    updatedAt: optionalText(value.updatedAt, 80)
+  };
 }
 
 function normalizeLimits(value) {
@@ -244,7 +348,9 @@ function initialState() {
     tasks: [],
     dependencyEvents: [],
     wakeEvents: [],
-    results: []
+    results: [],
+    goal: null,
+    sessionRegistry: []
   };
 }
 
@@ -319,6 +425,10 @@ function normalizeState(value) {
   for (const key of ["tasks", "dependencyEvents", "wakeEvents", "results"]) {
     if (!Array.isArray(value[key])) value[key] = [];
   }
+  value.goal = normalizeGoalProjection(value.goal);
+  value.sessionRegistry = Array.isArray(value.sessionRegistry)
+    ? value.sessionRegistry.slice(-MAX_SESSION_REGISTRY).map(normalizeSessionRecord)
+    : [];
   value.revision = Number.isSafeInteger(value.revision) && value.revision >= 0 ? value.revision : 0;
   for (const task of value.tasks) {
     if (!Array.isArray(task.dependsOn)) task.dependsOn = [];
@@ -552,6 +662,38 @@ export class ProjectCoordinator {
 
   snapshot() { return structuredClone(this.state); }
 
+  async reconcileGoal(input = {}) {
+    if (!this.state) throw new Error("ProjectCoordinator must be initialized first");
+    const lock = await acquireProcessLock(this.lockFile);
+    try {
+      this.state = normalizeState(JSON.parse(await readFile(this.stateFile, "utf8")));
+      const current = this.state.goal || {};
+      const next = normalizeGoalProjection({ ...current, ...input, acceptanceMatrix: input.acceptanceMatrix ?? current.acceptanceMatrix, taskRefs: input.taskRefs ?? current.taskRefs, currentBlockers: input.currentBlockers ?? current.currentBlockers, wake: { ...(current.wake || {}), ...(input.wake || {}) } });
+      this.state.goal = next;
+      await this.persist();
+      return structuredClone(next);
+    } finally {
+      await releaseProcessLock(this.lockFile, lock);
+    }
+  }
+
+  async upsertSession(input = {}) {
+    if (!this.state) throw new Error("ProjectCoordinator must be initialized first");
+    const normalized = normalizeSessionRecord(input);
+    const lock = await acquireProcessLock(this.lockFile);
+    try {
+      this.state = normalizeState(JSON.parse(await readFile(this.stateFile, "utf8")));
+      const index = this.state.sessionRegistry.findIndex((item) => item.role === normalized.role);
+      if (index >= 0) this.state.sessionRegistry[index] = normalized;
+      else this.state.sessionRegistry.push(normalized);
+      this.state.sessionRegistry = this.state.sessionRegistry.slice(-MAX_SESSION_REGISTRY);
+      await this.persist();
+      return structuredClone(normalized);
+    } finally {
+      await releaseProcessLock(this.lockFile, lock);
+    }
+  }
+
   async persist(state = this.state) {
     if (!state) throw new Error("ProjectCoordinator must be initialized first");
     state.revision += 1;
@@ -560,6 +702,7 @@ export class ProjectCoordinator {
     state.dependencyEvents = state.dependencyEvents.slice(-MAX_EVENTS);
     state.wakeEvents = state.wakeEvents.slice(-MAX_EVENTS);
     state.results = state.results.slice(-MAX_EVENTS);
+    state.sessionRegistry = state.sessionRegistry.slice(-MAX_SESSION_REGISTRY);
     await atomicWrite(this.stateFile, state);
   }
 

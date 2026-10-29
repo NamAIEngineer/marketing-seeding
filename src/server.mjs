@@ -5,7 +5,7 @@ import { timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { JsonStore } from "./store.mjs";
 import { SeedingService, pollConfiguredDiscoveries, projectExecutionRuntime } from "./service.mjs";
-import { appRoot, autoGtmFeedFile, browserAutomationFile, dailyAutomationFile, dailyAutomationReceiptFile, publicRoot, stateFile } from "./paths.mjs";
+import { agenticRoot, appRoot, autoGtmFeedFile, browserAutomationFile, dailyAutomationFile, dailyAutomationReceiptFile, publicRoot, stateFile } from "./paths.mjs";
 import { FixtureWorkerBridge } from "./fixture-worker-bridge.mjs";
 import { readAutoGtmFeed } from "./auto-gtm-feed.mjs";
 import { OrcaCliClient } from "./orca-browser-client.mjs";
@@ -23,6 +23,7 @@ import { loadConfiguredLocalProvider } from "./oi-browser-provider-adapters.mjs"
 import { projectMarketDashboard, projectMarketOpportunities } from "./market-intelligence.mjs";
 import { observeCamoufoxSessionMetadata } from "./camoufox-session-observer.mjs";
 import { probeCamoufoxRuntime } from "./camoufox-runtime-probe.mjs";
+import { readCoordinatorProjection } from "./project-coordinator-projection.mjs";
 
 async function loadLocalEnv() {
   try {
@@ -693,6 +694,7 @@ const server = http.createServer(async (request, response) => {
       const autoGtm = await readAutoGtmFeed(autoGtmFeedFile);
       return sendJson(response, 200, {
         ...(await service.dashboard()),
+        coordinator: await readCoordinatorProjection(path.join(process.env.SEEDING_COORDINATOR_STATE_ROOT || path.join(agenticRoot, ".agentic", "marketing-seeding", "project-coordinator"), "state.json")),
         autoGtm,
         marketIntelligence: projectMarketDashboard(autoGtm),
         automation: {
