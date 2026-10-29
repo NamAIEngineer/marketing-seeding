@@ -19,3 +19,30 @@ the exact source commit used to build it. Crawl4AI and nodriver remain optional
 local backends: the app never fabricates listening, Camoufox, media, or
 publication evidence when those runtimes are unavailable. All existing account,
 authority, UNKNOWN quarantine, and final publication gates remain in force.
+
+On first service start, the bundle looks for the pinned `9router@0.5.109`
+binary. It uses an existing verified binary when present; otherwise it provisions
+that exact npm version in the app's protected runtime directory and starts it on
+loopback. The 9Router dashboard still owns provider login and API-key creation:
+the app cannot complete that human-authenticated step, so Overview reports
+`CONNECT_REQUIRED` until the user supplies an app-scoped API key through the
+operator connect action. The key is stored with mode `0600`; provider keys and
+dashboard passwords are never read or copied.
+
+Model choices come only from the authenticated live `/v1/models` catalog. The
+catalog does not prove remaining quota, so quota is shown as `UNVERIFIED` until
+an actual model request supplies evidence. Authentication or entitlement
+failures are separated from rate limits and receive cooldowns to avoid repeated
+failing calls. No hard-coded plan labels are used.
+
+The autonomous lane remains governed by standing authority, exact account
+binding, schedules, quotas, platform rules, UNKNOWN quarantine and kill switch.
+Each social account has an isolated Account Agent projection; All Social is
+fan-out only to eligible account agents, with per-account failure isolation.
+This branch does not claim live multi-account publication without provider
+evidence.
+
+`update-macos.sh` is the reversible update seam: HTTPS release download,
+SHA-256 pin, strict code-signature verification, previous app/state backup and
+staged swap. Automatic release discovery and signed release infrastructure are
+pending.

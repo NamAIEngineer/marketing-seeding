@@ -18,6 +18,8 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/app" "$APP/Contents/Reso
 ditto "$SOURCE/src" "$APP/Contents/Resources/app/src"
 ditto "$SOURCE/public" "$APP/Contents/Resources/app/public"
 ditto "$SOURCE/scripts" "$APP/Contents/Resources/app/scripts"
+ditto "$SOURCE/desktop/provision-9router.sh" "$APP/Contents/Resources/app/provision-9router.sh"
+ditto "$SOURCE/desktop/update-macos.sh" "$APP/Contents/Resources/app/update-macos.sh"
 cp "$NODE_BIN" "$APP/Contents/Resources/bin/node"
 cp "$SOURCE/package.json" "$APP/Contents/Resources/app/package.json"
 git -C "$SOURCE" rev-parse HEAD > "$APP/Contents/Resources/app/source-commit.txt"
@@ -99,13 +101,20 @@ export SEEDING_OPERATOR_TOKEN=$(cat "$DATA_ROOT/operator-token")
 export SEEDING_AUTOMATION_TOKEN=$(cat "$DATA_ROOT/automation-token")
 export SEEDING_HOST=127.0.0.1
 export SEEDING_PORT=4321
+export SEEDING_9ROUTER_ENDPOINT="${SEEDING_9ROUTER_ENDPOINT:-http://127.0.0.1:20128/v1}"
 export SEEDING_BUILD_COMMIT=$(cat "$APP_ROOT/source-commit.txt")
 export SEEDING_BUILD_DIRTY=false
+export SEEDING_9ROUTER_ENDPOINT="${SEEDING_9ROUTER_ENDPOINT:-http://127.0.0.1:20128/v1}"
+if [ -x "$APP_ROOT/provision-9router.sh" ]; then
+  "$APP_ROOT/provision-9router.sh" "$DATA_ROOT" >/dev/null 2>&1 || true
+fi
 cd "$APP_ROOT"
 exec "$NODE" src/server.mjs
 SERVICE
 chmod 755 "$APP/Contents/MacOS/launch"
 chmod 755 "$APP/Contents/MacOS/service"
+chmod 755 "$APP/Contents/Resources/app/provision-9router.sh"
+chmod 755 "$APP/Contents/Resources/app/update-macos.sh"
 plutil -lint "$APP/Contents/Info.plist"
 ditto -c -k --sequesterRsrc --keepParent "$APP" "$OUTPUT/Marketing-Seeding-OS-macOS.zip"
 echo "$APP"

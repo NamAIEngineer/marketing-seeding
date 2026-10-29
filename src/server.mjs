@@ -24,6 +24,7 @@ import { projectMarketDashboard, projectMarketOpportunities } from "./market-int
 import { observeCamoufoxSessionMetadata } from "./camoufox-session-observer.mjs";
 import { probeCamoufoxRuntime } from "./camoufox-runtime-probe.mjs";
 import { readCoordinatorProjection } from "./project-coordinator-projection.mjs";
+import { completeNineRouter, connectNineRouter, nineRouterStatus, selectNineRouterModel } from "./nine-router.mjs";
 
 async function loadLocalEnv() {
   try {
@@ -697,6 +698,7 @@ const server = http.createServer(async (request, response) => {
         coordinator: await readCoordinatorProjection(path.join(process.env.SEEDING_COORDINATOR_STATE_ROOT || path.join(agenticRoot, ".agentic", "marketing-seeding", "project-coordinator"), "state.json")),
         autoGtm,
         marketIntelligence: projectMarketDashboard(autoGtm),
+        nineRouter: await nineRouterStatus({ refresh: false }),
         automation: {
           trafficCollector: trafficRuntime,
           campaignQueue: campaignQueueRuntime,
@@ -708,6 +710,21 @@ const server = http.createServer(async (request, response) => {
           fixtureWorker: fixtureWorker.runtime()
         }
       });
+    }
+    if (request.method === "GET" && url.pathname === "/api/9router/status") {
+      return sendJson(response, 200, await nineRouterStatus({ refresh: true }));
+    }
+    if (request.method === "POST" && url.pathname === "/api/9router/connect") {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 200, await connectNineRouter(await readJson(request)));
+    }
+    if (request.method === "POST" && url.pathname === "/api/9router/select-model") {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 200, await selectNineRouterModel(await readJson(request)));
+    }
+    if (request.method === "POST" && url.pathname === "/api/9router/chat") {
+      if (role !== "operator" && role !== "automation") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 200, await completeNineRouter(await readJson(request)));
     }
     let handoffMatch = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/distribution-handoffs$/);
     if (request.method === "GET" && handoffMatch) {

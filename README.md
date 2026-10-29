@@ -43,6 +43,15 @@ source revision is recorded in the app resources. Listening, Camoufox, media,
 and publication capabilities remain evidence-gated; unavailable runtimes are
 reported as unavailable or UNKNOWN rather than presented as completed work.
 
+The accepted autonomous direction is one isolated Account Agent per social
+account. An All Social campaign fans out only to accounts with valid sessions,
+exact standing authority, schedule/quota capacity and platform readiness;
+UNKNOWN and failures stay isolated per account. The current branch exposes the
+guards and projections but does not claim live multi-account publication without
+provider evidence. A reversible update seam backs up durable state and verifies
+signed release artifacts before swapping code; release discovery infrastructure
+remains pending.
+
 ## Architecture
 
 ```text
