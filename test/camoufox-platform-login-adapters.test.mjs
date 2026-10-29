@@ -133,6 +133,36 @@ test("account identity READY does not imply community posting rights", async () 
   assert.equal(result.postingRights.reason, "target_membership_or_rules_required");
 });
 
+for (const platform of ["facebook_group", "reddit", "product_hunt", "indie_hackers"]) {
+  test(`${platform} requires accepted rules evidence before posting-rights READY`, async () => {
+    const adapter = getCamoufoxPlatformLoginAdapter(platform);
+    const target = { id: `${platform}-rules`, url: FIXTURES[platform].target };
+    const absent = fixtureProtocol(adapter, {
+      identity: FIXTURES[platform].identity,
+      rights: { targetMatched: true, canPost: true, authenticatedSurface: true, source: adapter.rule.rightsSource, submitControlEnabled: true }
+    });
+    const absentResult = await adapter.checkPostingRights({ protocol: absent, pageId: "page-1", target, identityReady: true });
+    assert.equal(absentResult.status, "UNKNOWN");
+    assert.equal(absentResult.reason, "target_rules_evidence_unavailable");
+
+    const denied = fixtureProtocol(adapter, {
+      identity: FIXTURES[platform].identity,
+      rights: { targetMatched: true, canPost: true, authenticatedSurface: true, source: adapter.rule.rightsSource, submitControlEnabled: true, rulesEvidencePresent: true, rulesEvidenceAccepted: false, rulesEvidenceDenied: true, rulesStatus: "denied" }
+    });
+    const deniedResult = await adapter.checkPostingRights({ protocol: denied, pageId: "page-1", target, identityReady: true });
+    assert.equal(deniedResult.status, "BLOCKED");
+    assert.equal(deniedResult.reason, "target_membership_or_rules_required");
+
+    const accepted = fixtureProtocol(adapter, {
+      identity: FIXTURES[platform].identity,
+      rights: { targetMatched: true, canPost: true, authenticatedSurface: true, source: adapter.rule.rightsSource, submitControlEnabled: true, rulesEvidencePresent: true, rulesEvidenceAccepted: true, rulesStatus: "reviewed" }
+    });
+    const acceptedResult = await adapter.checkPostingRights({ protocol: accepted, pageId: "page-1", target, identityReady: true });
+    assert.equal(acceptedResult.status, "READY");
+    assert.equal(acceptedResult.reason, "target_posting_rights_confirmed");
+  });
+}
+
 test("unsupported platform and incomplete caller inputs fail closed", async () => {
   const unsupported = await loginAccountWithCamoufoxPlatform({ platform: "linkedin", accountId: "a" });
   assert.equal(unsupported.status, "BLOCKED");

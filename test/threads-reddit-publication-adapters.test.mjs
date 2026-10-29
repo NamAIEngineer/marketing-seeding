@@ -84,7 +84,7 @@ for (const [platform, Adapter] of [["threads", ThreadsPublicationAdapter], ["red
   test(`${platform} fixture verifies publication only with independent exact evidence`, async () => {
     const adapter = new Adapter({ now: () => new Date(NOW) });
     const candidate = {
-      postId: "post-fixture", permalink: platform === "threads" ? "https://threads.net/@fixture-owner/post/post-fixture" : "https://reddit.com/r/fixture/comments/post-fixture/title",
+      postId: "post-fixture", permalink: platform === "threads" ? "https://threads.net/@fixture-topic/post/post-fixture" : "https://reddit.com/r/fixture/comments/post-fixture/title",
       authorMatched: true, authorPath: new URL(base[platform].identity).pathname, targetMatched: true, contentMatched: true,
       timestamp: "2026-10-30T04:00:02.000Z", timestampMatched: true
     };
@@ -92,6 +92,37 @@ for (const [platform, Adapter] of [["threads", ThreadsPublicationAdapter], ["red
     assert.equal(observed.state, "CONFIRMED");
     assert.equal(observed.publicationUrl, candidate.permalink);
     assert.equal(observed.publicationReference, candidate.postId);
+  });
+
+  test(`${platform} verifier rejects a wrong-target permalink even when targetMatched is supplied`, () => {
+    const target = base[platform].target;
+    const wrongPermalink = platform === "threads"
+      ? "https://threads.net/@other-topic/post/post-fixture"
+      : "https://reddit.com/r/other/comments/post-fixture/title";
+    const contentHash = createHash("sha256").update("Fixture publication content").digest("hex");
+    const result = verifyThreadsRedditPublicationEvidence({
+      platform,
+      identityReference: base[platform].identity,
+      targetUrl: target,
+      contentHash,
+      submittedAt: NOW
+    }, {
+      observedAt: later,
+      contentHash,
+      candidate: {
+        postId: "post-fixture",
+        permalink: wrongPermalink,
+        authorMatched: true,
+        authorPath: new URL(base[platform].identity).pathname,
+        // This field comes from an untrusted provider/verifier boundary.
+        targetMatched: true,
+        contentMatched: true,
+        timestamp: "2026-10-30T04:00:02.000Z",
+        timestampMatched: true
+      }
+    });
+    assert.equal(result.state, "UNKNOWN");
+    assert.equal(result.verificationEvidence?.targetMatched, false);
   });
 
   test(`${platform} live submit records intent before click and returns UNKNOWN when verification is missing`, async () => {

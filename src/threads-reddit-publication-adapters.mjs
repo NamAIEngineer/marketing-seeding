@@ -112,14 +112,22 @@ const DESCRIPTORS = Object.freeze({
     identitySource: "threads-owner-profile-surface", rightsSource: "threads-composer",
     identityPath: /^\/@[a-z0-9][a-z0-9._-]{0,49}$/i,
     targetPath: (pathname) => /^\/@[a-z0-9][a-z0-9._-]{0,49}(?:\/.*)?$/i.test(pathname) || /^\/post\/[a-z0-9_-]+$/i.test(pathname),
-    publicationPath: /\/@[^/]+\/post\//i, submitLabel: /^(?:post|share|publish|send)$/i
+    publicationPath: /\/@[^/]+\/post\//i,
+    // The permalink path is the only independent target proof. A caller
+    // supplied targetMatched flag is advisory and must never override it.
+    strictTarget: true,
+    submitLabel: /^(?:post|share|publish|send)$/i
   }),
   reddit: Object.freeze({
     platform: "reddit", hosts: Object.freeze(["reddit.com"]),
     identitySource: "reddit-owner-profile-surface", rightsSource: "reddit-community-composer",
     identityPath: /^\/user\/[a-z0-9_-]{3,50}$/i,
     targetPath: (pathname) => /^\/r\/[a-z0-9_+-]{2,80}(?:\/.*)?$/i.test(pathname) || /^\/user\/[a-z0-9_-]{3,50}(?:\/.*)?$/i.test(pathname),
-    publicationPath: /\/comments\/|\/post\//i, submitLabel: /^(?:post|submit|publish|comment|send)$/i
+    publicationPath: /\/comments\/|\/post\//i,
+    // The permalink path is the only independent target proof. A caller
+    // supplied targetMatched flag is advisory and must never override it.
+    strictTarget: true,
+    submitLabel: /^(?:post|submit|publish|comment|send)$/i
   }),
   facebook_group: Object.freeze({
     platform: "facebook_group", hosts: Object.freeze(["facebook.com"]),

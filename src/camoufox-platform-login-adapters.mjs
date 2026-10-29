@@ -122,6 +122,7 @@ const IDENTITY_RULES = Object.freeze({
     usernameQuery: /email|phone|username|mobile/i,
     submitQuery: /log\s*in|login|sign\s*in|continue/i,
     rightsSource: "facebook-group-composer",
+    requireRulesEvidence: true,
     identityExpression: null,
     postingRightsExpression: null
   }),
@@ -173,6 +174,7 @@ const IDENTITY_RULES = Object.freeze({
     usernameQuery: /email|username|user\s*name/i,
     submitQuery: /log\s*in|login|sign\s*in|continue/i,
     rightsSource: "reddit-community-composer",
+    requireRulesEvidence: true,
     identityExpression: null,
     postingRightsExpression: null
   }),
@@ -199,6 +201,7 @@ const IDENTITY_RULES = Object.freeze({
     usernameQuery: /email|username|user\s*name/i,
     submitQuery: /log\s*in|login|sign\s*in|continue/i,
     rightsSource: "product-hunt-composer",
+    requireRulesEvidence: true,
     identityExpression: null,
     postingRightsExpression: null
   }),
@@ -225,6 +228,7 @@ const IDENTITY_RULES = Object.freeze({
     usernameQuery: /email|username|user\s*name/i,
     submitQuery: /log\s*in|login|sign\s*in|continue/i,
     rightsSource: "indie-hackers-community-composer",
+    requireRulesEvidence: true,
     identityExpression: null,
     postingRightsExpression: null
   })
@@ -331,11 +335,16 @@ function postingRightsExpressionFor(rule, targetUrl) {
     const membershipRequired = membershipStatus === 'required' || membershipStatus === 'not_member' || postingStatus === 'blocked';
     const rightsDeclared = explicitCanPost === 'true' || explicitCanPost === 'false' || Boolean(membershipStatus || postingStatus);
     const canPost = explicitCanPost === 'true' || (targetMatched && editors.length === 1 && Boolean(postControl) && postControl.disabled !== true && postControl.getAttribute('aria-disabled') !== 'true');
+    const rules = document.querySelector('[data-rules-status],[data-community-rules],[data-group-rules]');
+    const rulesStatus = (rules?.getAttribute('data-rules-status') || rules?.getAttribute('data-community-rules') || rules?.getAttribute('data-group-rules') || '').toLowerCase();
+    const rulesEvidenceAccepted = ['reviewed','accepted','acknowledged','available','visible'].includes(rulesStatus);
+    const rulesEvidenceDenied = ['denied','rejected','blocked','required','pending'].includes(rulesStatus);
     return {
       targetMatched, canPost: Boolean(canPost), rightsDeclared, authenticatedSurface: Boolean(targetMatched && (editors.length || explicit || postControl)),
       membershipRequired, membershipStatus: membershipStatus || null, postingStatus: postingStatus || null,
       source: ${source}, composerVisible: editors.length === 1, submitControlVisible: Boolean(postControl),
-      submitControlEnabled: Boolean(postControl && postControl.disabled !== true && postControl.getAttribute('aria-disabled') !== 'true')
+      submitControlEnabled: Boolean(postControl && postControl.disabled !== true && postControl.getAttribute('aria-disabled') !== 'true'),
+      rulesStatus: rulesStatus || null, rulesEvidencePresent: Boolean(rulesStatus), rulesEvidenceAccepted, rulesEvidenceDenied
     };
   })()`;
 }
@@ -523,10 +532,20 @@ async function checkPostingRights(adapter, { protocol, pageId, target, identityR
       postingStatus: text(value.postingStatus, 80) || null,
       composerVisible: value.composerVisible === true,
       submitControlVisible: value.submitControlVisible === true,
-      submitControlEnabled: value.submitControlEnabled === true
+      submitControlEnabled: value.submitControlEnabled === true,
+      rulesStatus: text(value.rulesStatus, 80).toLowerCase() || null,
+      rulesEvidencePresent: value.rulesEvidencePresent === true || Boolean(text(value.rulesStatus, 80)),
+      rulesEvidenceAccepted: value.rulesEvidenceAccepted === true || ["reviewed", "accepted", "acknowledged", "available", "visible"].includes(text(value.rulesStatus, 80).toLowerCase()),
+      rulesEvidenceDenied: value.rulesEvidenceDenied === true || ["denied", "rejected", "blocked", "required", "pending"].includes(text(value.rulesStatus, 80).toLowerCase())
     } : null;
     if (!evidence || evidence.source !== adapter.rule.rightsSource || !evidence.targetMatched) {
       return { status: "UNKNOWN", targetId, reason: "target_rights_evidence_unavailable", evidence };
+    }
+    if (adapter.rule.requireRulesEvidence && !evidence.rulesEvidenceAccepted) {
+      if (evidence.rulesEvidenceDenied || evidence.membershipRequired || evidence.postingStatus === "blocked") {
+        return { status: "BLOCKED", targetId, reason: "target_membership_or_rules_required", evidence };
+      }
+      return { status: "UNKNOWN", targetId, reason: "target_rules_evidence_unavailable", evidence };
     }
     if (evidence.canPost && evidence.authenticatedSurface) return { status: "READY", targetId, reason: "target_posting_rights_confirmed", evidence };
     if (evidence.membershipRequired || evidence.postingStatus === "blocked" || (evidence.rightsDeclared && evidence.canPost === false)) {
