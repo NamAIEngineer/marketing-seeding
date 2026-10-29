@@ -154,5 +154,10 @@ chmod 755 "$APP/Contents/Resources/app/provision-9router.sh"
 chmod 755 "$APP/Contents/Resources/app/provision-camoufox.sh"
 chmod 755 "$APP/Contents/Resources/app/update-macos.sh"
 plutil -lint "$APP/Contents/Info.plist"
+if [ -n "${SEEDING_CODESIGN_IDENTITY:-}" ]; then
+  /usr/bin/codesign --force --deep --strict --options runtime --timestamp --sign "$SEEDING_CODESIGN_IDENTITY" "$APP"
+else
+  printf '%s\n' 'unsigned:no_codesign_identity_configured' > "$APP/Contents/Resources/app/signing-status.txt"
+fi
 ditto -c -k --sequesterRsrc --keepParent "$APP" "$OUTPUT/Marketing-Seeding-OS-macOS.zip"
 echo "$APP"

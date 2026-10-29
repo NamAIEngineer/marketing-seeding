@@ -44,5 +44,15 @@ evidence.
 
 `update-macos.sh` is the reversible update seam: HTTPS release download,
 SHA-256 pin, strict code-signature verification, previous app/state backup and
-staged swap. Automatic release discovery and signed release infrastructure are
-pending.
+atomic staged swap with rollback on rename failure. Discovery remains
+read-only unless the operator explicitly configures a signed installer; set
+`SEEDING_UPDATE_INSTALLER_ENABLED=true` only alongside a release process that
+invokes the updater and verifies the target bundle. The app reports
+`automaticUpdates=false` and `installEligible=false` by default because this
+checkout has no installer or Apple signing identity.
+
+For release builds, set `SEEDING_CODESIGN_IDENTITY` to a Developer ID
+Application identity before running `build-macos.sh`; the script then signs the
+bundle with hardened runtime and a timestamp. Notarization and stapling still
+require the owner's Apple Developer credentials and an external `notarytool`
+submission; no such credentials were available for this artifact.
