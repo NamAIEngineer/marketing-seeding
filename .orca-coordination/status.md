@@ -39,6 +39,7 @@
 - Current marker handshake: A and B both returned `turn_started`/real read-only result with marker `ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`; A reported receiver READY, B reported orphaned terminal and follow-up capability unconfirmed.
 - Latest read-only A runtime recheck at `2026-10-28T12:04:21Z`: `127.0.0.1:4318` HTTP 200, PID `79925`, `sourceCommit=1ed5771`, `sourceDirty=true`, schema 8, `UNKNOWN=6`, verified 0, publication unverified 150; Camoufox session metadata is `STALE` and readiness is `UNKNOWN`. C did not restart or mutate A.
 - Fresh A runtime health attempt at `2026-10-29T00:27:42Z` timed out after 15s; C did not restart or mutate A. This is `UNKNOWN`, not logout or failure proof.
+- Fresh C coordinator check at `2026-10-29T00:39:44Z`: LaunchAgent `ai.marketing-seeding.project-coordinator` is running with `KeepAlive`/`RunAtLoad` (PID `85057`); durable state is schema 3, revision 27, with three historical completed tasks and no active continuation task. Process liveness is not owner-task consumption proof.
 
 ## Historical and current candidate evidence
 
