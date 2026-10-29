@@ -13,6 +13,7 @@ import { LinkedInReadinessProvider } from "./linkedin-readiness.mjs";
 import { CamoufoxLinkedInReadinessProvider } from "./camoufox-linkedin-readiness-provider.mjs";
 import { configuredReadinessTtlMs } from "./readiness.mjs";
 import { LinkedInAdapter } from "./linkedin-adapter.mjs";
+import { THREADS_ADAPTER, REDDIT_ADAPTER } from "./threads-reddit-publication-adapters.mjs";
 import { OrcaAccessibilityTransport, OrcaPointerTransport } from "./browser-interaction-transport.mjs";
 import { JevExecutionWorker } from "./jev-execution-worker.mjs";
 import { PlatformAdapterRegistry, ReadinessProviderRegistry } from "./platform-registries.mjs";
@@ -207,6 +208,12 @@ platformAdapterRegistry.register("linkedin", new LinkedInAdapter(orcaBrowser, {
   transportRuntime: { provider: "orca", providerVersion: orcaBrowser.runtimeVersion },
   requireCertifiedTransport: true
 }));
+// Threads and Reddit use the exact Camoufox execution session supplied by JEV
+// for both submit and independent permalink verification. Their adapters are
+// fixture-proven; live publication remains gated by the same authority/grant
+// and platform readiness checks.
+platformAdapterRegistry.register("threads", THREADS_ADAPTER);
+platformAdapterRegistry.register("reddit", REDDIT_ADAPTER);
 const jevWorker = new JevExecutionWorker({
   service, adapterRegistry: platformAdapterRegistry,
   executionSessionResolver: configuredExecutionSessionResolver || autoCamoufoxExecutionResolver,
