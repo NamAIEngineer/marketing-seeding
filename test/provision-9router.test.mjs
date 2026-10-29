@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { chmod, mkdtemp, readFile, writeFile, mkdir } from "node:fs/promises";
+import { access, chmod, cp, mkdtemp, readFile, writeFile, mkdir, symlink, unlink } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { execFile } from "node:child_process";
@@ -10,6 +10,16 @@ const execFileAsync = promisify(execFile);
 const root = path.resolve(new URL("..", import.meta.url).pathname);
 const provisioner = path.join(root, "desktop/provision-9router.sh");
 const node = process.execPath;
+const realPackageCandidates = [
+  "/usr/local/lib/node_modules/9router",
+  "/opt/homebrew/lib/node_modules/9router",
+];
+const realPackage = (await (async () => {
+  for (const candidate of realPackageCandidates) {
+    try { await access(path.join(candidate, "cli.js")); return candidate; } catch {}
+  }
+  return null;
+})());
 
 const provenance = {
   package: "9router",
@@ -29,7 +39,7 @@ async function fixture(mode) {
   const dir = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-9router-"));
   const npm = path.join(dir, "npm-fixture.mjs");
   const script = `#!/usr/bin/env node
-import { mkdir, writeFile } from "node:fs/promises";
+import { cp, mkdir, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 const args = process.argv.slice(2);
 const mode = ${JSON.stringify(mode)};
@@ -45,10 +55,8 @@ const prefix = args[args.indexOf("--prefix") + 1];
 const packageRoot = path.join(prefix, "node_modules", "9router");
 const binRoot = path.join(prefix, "node_modules", ".bin");
 await mkdir(binRoot, { recursive: true });
-await mkdir(packageRoot, { recursive: true });
-await writeFile(path.join(packageRoot, "package.json"), JSON.stringify({ name: "9router", version: provenance.version }));
-await writeFile(path.join(binRoot, "9router"), "#!/bin/sh\\nprintf '%s\\n' '0.5.109'\\n");
-await (await import("node:fs/promises")).chmod(path.join(binRoot, "9router"), 0o755);
+await cp(process.env.FIXTURE_SOURCE, packageRoot, { recursive: true });
+await symlink("../9router/cli.js", path.join(binRoot, "9router"));
 await writeFile(path.join(prefix, "node_modules", ".package-lock.json"), JSON.stringify({ packages: { [path.join("fixture", "node_modules", "9router")]: { version: provenance.version, resolved: provenance.tarball, integrity: provenance.integrity } } }));
 `;
   await writeFile(npm, script);
@@ -59,11 +67,12 @@ await writeFile(path.join(prefix, "node_modules", ".package-lock.json"), JSON.st
 async function run(mode) {
   const f = await fixture(mode);
   const data = path.join(f.dir, "data");
-  const env = { ...process.env, SEEDING_9ROUTER_COMMAND: path.join(f.dir, "missing"), SEEDING_NPM_BIN: f.npm, SEEDING_NODE_BIN: node, SEEDING_9ROUTER_START: "false" };
+  const env = { ...process.env, FIXTURE_SOURCE: realPackage || "", SEEDING_9ROUTER_COMMAND: path.join(f.dir, "missing"), SEEDING_NPM_BIN: f.npm, SEEDING_NODE_BIN: node, SEEDING_9ROUTER_START: "false" };
   return { fixture: f, data, result: await execFileAsync("sh", [provisioner, data], { env }).then((value) => ({ ok: true, ...value })).catch((error) => ({ ok: false, ...error })) };
 }
 
 test("provisions the exact registry-pinned package after metadata and lock verification", async () => {
+  assert.ok(realPackage, "verified 9router fixture package is required");
   const checkedIn = JSON.parse(await readFile(path.join(root, "desktop/9router-provenance.json"), "utf8"));
   assert.equal(checkedIn.package, provenance.package);
   assert.equal(checkedIn.version, provenance.version);
@@ -93,26 +102,45 @@ test("rejects a successful npm command that leaves the pinned package missing", 
 });
 
 test("reuses an explicitly supplied verified binary without requiring npm", async () => {
+  assert.ok(realPackage, "verified 9router fixture package is required");
   const f = await fixture("reuse");
   const command = path.join(f.dir, "verified-9router");
-  await writeFile(command, "#!/bin/sh\nprintf '%s\\n' '0.5.109'\n");
-  await chmod(command, 0o755);
+  await symlink(path.join(realPackage, "cli.js"), command);
   const data = path.join(f.dir, "data");
   const result = await execFileAsync("sh", [provisioner, data], { env: { ...process.env, SEEDING_9ROUTER_COMMAND: command, SEEDING_NPM_BIN: path.join(f.dir, "missing-npm"), SEEDING_9ROUTER_START: "false" } });
   assert.equal(result.stdout.trim(), command);
 });
 
 test("reuses an integrity-verified runtime package without requiring registry access", async () => {
+  assert.ok(realPackage, "verified 9router fixture package is required");
   const f = await fixture("reuse-runtime");
   const runtime = path.join(f.dir, "data", "9router-runtime");
   const packageRoot = path.join(runtime, "node_modules", "9router");
   const binRoot = path.join(runtime, "node_modules", ".bin");
-  await mkdir(packageRoot, { recursive: true });
+  await cp(realPackage, packageRoot, { recursive: true });
   await mkdir(binRoot, { recursive: true });
-  await writeFile(path.join(packageRoot, "package.json"), JSON.stringify({ name: "9router", version: provenance.version }));
-  await writeFile(path.join(binRoot, "9router"), "#!/bin/sh\nprintf '%s\\n' '0.5.109'\n");
-  await chmod(path.join(binRoot, "9router"), 0o755);
+  await symlink("../9router/cli.js", path.join(binRoot, "9router"));
   await writeFile(path.join(runtime, "node_modules", ".package-lock.json"), JSON.stringify({ packages: { "node_modules/9router": { version: provenance.version, resolved: provenance.tarball, integrity: provenance.integrity } } }));
   const result = await execFileAsync("sh", [provisioner, path.join(f.dir, "data")], { env: { ...process.env, SEEDING_9ROUTER_COMMAND: path.join(f.dir, "missing"), SEEDING_NPM_BIN: path.join(f.dir, "missing-npm"), SEEDING_9ROUTER_START: "false" } });
   assert.equal(result.stdout.trim(), path.join(runtime, "node_modules", ".bin", "9router"));
+});
+
+test("rejects a mutated offline runtime even when version and lock metadata still match", async () => {
+  assert.ok(realPackage, "verified 9router fixture package is required");
+  const f = await fixture("mutated-runtime");
+  const runtime = path.join(f.dir, "data", "9router-runtime");
+  const packageRoot = path.join(runtime, "node_modules", "9router");
+  const binRoot = path.join(runtime, "node_modules", ".bin");
+  await cp(realPackage, packageRoot, { recursive: true });
+  await mkdir(binRoot, { recursive: true });
+  await symlink("../9router/cli.js", path.join(binRoot, "9router"));
+  await unlink(path.join(binRoot, "9router"));
+  await writeFile(path.join(binRoot, "9router"), "#!/bin/sh\nprintf '%s\\n' '0.5.109'\n");
+  await chmod(path.join(binRoot, "9router"), 0o755);
+  await writeFile(path.join(runtime, "node_modules", ".package-lock.json"), JSON.stringify({ packages: { "node_modules/9router": { version: provenance.version, resolved: provenance.tarball, integrity: provenance.integrity } } }));
+  await assert.rejects(
+    execFileAsync("sh", [provisioner, path.join(f.dir, "data")], { env: { ...process.env, SEEDING_9ROUTER_COMMAND: path.join(f.dir, "missing"), SEEDING_NPM_BIN: path.join(f.dir, "missing-npm"), SEEDING_NODE_BIN: node, SEEDING_9ROUTER_START: "false" } }),
+    /installed package bytes or provenance mismatch/,
+  );
+  assert.match(await readFile(path.join(f.dir, "data", "9router-provision-status"), "utf8"), /^UNAVAILABLE:/);
 });
