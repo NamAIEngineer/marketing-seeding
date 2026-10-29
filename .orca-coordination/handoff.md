@@ -86,6 +86,7 @@
 
 - Candidate source/test revision: `85913e984a4c45c2278be2fe644055426a1455c4`; branch `integration/session-c-reconciled`.
 - Coordinator continuation: `IMPLEMENTED` at `85913e9`; acceptance checks require matching source revision/evidence, worker completion is separate from acceptance, dependent tasks release only on `PASSED`, and repair/next tasks persist atomically with the parent result. Focused coordinator/native `20/20`; combined Listening/store focused `40/40`; full `828/826/0/2`.
+- Evidence: `plans/oi-browser-integration/regression-coordinator-85913e9.json`, SHA-256 `6bd65fcb34bcd6cbc212c6419302cf44c17a57a5825326eec947f92189dcb0ae`; independent verifier PASS.
 - Files: `src/store.mjs`, `src/listening-contract.mjs`, `src/listening-adapter.mjs`, `src/service.mjs`, `scripts/listening-run.mjs`, `test/listening-v5.test.mjs`, `test/store-migration.test.mjs`.
 - Entrypoint remains `node scripts/listening-run.mjs --urls ... --backend http|nodriver [--campaign-id ...]`; campaign-scoped runs acquire the canonical writer lease, resume deterministic job rows and persist only bounded redacted metadata.
 - V5 acceptance: `IMPLEMENTED`; focused `FIXTURE_VERIFIED` 20/20 (output SHA-256 `7a31b212517a75f431bc923a1a75c9f60b06475cbf66e09f53ba29131b7484f0`); full `FIXTURE_VERIFIED` 825/823/0/2 (output SHA-256 `1aba8fe6ffc35395bed904243f981c2085d2d2f338202082f8a94a548b35f252`); public campaign-scoped `RUNTIME_VERIFIED` success and terminal replay with unchanged state hash. No `LIVE_VERIFIED` publication, authority, metrics or conversion evidence.
