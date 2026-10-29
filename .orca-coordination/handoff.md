@@ -5,7 +5,7 @@
 - Candidate: `/Users/nam/Documents/marketing-seeding-session-c-reconciled`, branch `integration/session-c-reconciled`; source/test checkpoint `85913e9`; later commits are documentation/evidence-only.
 - Source/test checkpoint: `85913e984a4c45c2278be2fe644055426a1455c4`; metadata/evidence HEAD follows this checkpoint; prior integration checkpoint `7f2b74a` retained.
 - Base: `79985bb411afc141f0edf10ae635fb91824d8bc9`.
-- A checkpoint represented: `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; current A overlay read-only recheck is 13 tracked dirty + 90 untracked, preserved outside candidate.
+- A checkpoint represented: `1ed57710f66d8ca1a6284d16b149d9039fcb032e`; the earlier A overlay read-only recheck was 13 tracked dirty + 90 untracked. Fresh read-only status at `2026-10-29T00:27:42Z` is 22 tracked dirty + 100 untracked, preserved outside candidate. Runtime health timed out and remains UNKNOWN.
 - B owner checkpoint: `b675a98e6dd2da3c12133dff715eddea616c91f5`; current B read-only recheck is tracked-clean with 16 untracked paths; not cherry-picked because candidate already contains/adapts substantive behavior.
 - Source pins: oi-browser `1e471c44b5d63aa5aadb708623b21090b6f325b2`; auto-gtm `9368098477d78f75d57fdf5db276129948f3a183`.
 
@@ -21,7 +21,7 @@
 
 - A: `SESSION-A-ACK-20261028T1210Z`, Orca terminal `term_58af59e8-f5dd-4968-a724-78b48a04cf3c`, HEAD `1ed5771`, dirty scope preserved.
 - B: `SESSION-B-ACK-20261028T1210Z`, Orca terminal `term_41a5601e-887e-4ac0-a8d7-35112fedb375`, HEAD `b675a98`, tracked scope clean.
-- Current marker handshake: A request `461d4128-4075-41ea-b07f-291c421385bb` returned `SESSION-A-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`, HEAD `1ed5771`, then latest read-only status showed 13 tracked + 90 untracked entries, receiver READY. B request `7cdca6e2-c446-4d8c-b4d6-686e061e9da8` returned `SESSION-B-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`, HEAD `b675a98`, 0 tracked + 16 untracked; terminal still reports orphaned/follow-up unconfirmed.
+- Current marker handshake: A request `461d4128-4075-41ea-b07f-291c421385bb` returned `SESSION-A-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`, HEAD `1ed5771`; the earlier read-only status showed 13 tracked + 90 untracked entries and receiver READY. Fresh Orca inventory marks A's terminal orphaned. B request `7cdca6e2-c446-4d8c-b4d6-686e061e9da8` returned `SESSION-B-ACK-ORCA_MS_OS_ABC_CHATGPT_20261028_MASTER_01`, HEAD `b675a98`, 0 tracked + 16 untracked; its terminal is also orphaned. Continuous follow-up remains unconfirmed.
 
 ## ChatGPT bridge evidence
 
