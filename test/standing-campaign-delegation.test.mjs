@@ -65,3 +65,134 @@ test("standing delegation fails closed when the bound account is unhealthy", () 
   assert.equal(result.allowed, false);
   assert.ok(result.reasons.includes("account_profile_binding_mismatch"));
 });
+
+test("standing delegation permits the exact execution after its grant and post cross the durable intent boundary", () => {
+  const f = fixture();
+  f.window.status = "CONSUMED";
+  f.window.consumedExecutionId = "exec-1";
+  f.window.consumedAt = f.now.toISOString();
+  f.grant.status = "CONSUMED";
+  f.grant.consumedExecutionId = "exec-1";
+  f.grant.consumedAt = f.now.toISOString();
+  f.post.status = "publishing";
+  f.post.executionState = "SUBMIT_SENT_INTENT";
+  f.post.jobLifecycle = [{ state: "EXECUTING", executionId: "exec-1" }];
+  assert.equal(deriveStandingExecutionControlPlan({ ...f, oneTimeWindow: f.window, liveGrant: f.grant, executionId: "exec-1" }).allowed, true);
+
+  f.grant.consumedExecutionId = "other-execution";
+  assert.equal(deriveStandingExecutionControlPlan({ ...f, oneTimeWindow: f.window, liveGrant: f.grant, executionId: "exec-1" }).allowed, false);
+});
+
+test("final provider fence fails closed for consumed, expired, revoked and sibling controls", () => {
+  const exactConsumedIntent = (f) => {
+    f.window.status = "CONSUMED";
+    f.window.consumedExecutionId = "exec-1";
+    f.window.consumedAt = f.now.toISOString();
+    f.grant.status = "CONSUMED";
+    f.grant.consumedExecutionId = "exec-1";
+    f.grant.consumedAt = f.now.toISOString();
+    f.post.status = "publishing";
+    f.post.executionState = "SUBMIT_SENT_INTENT";
+    f.post.jobLifecycle = [{ state: "EXECUTING", executionId: "exec-1" }];
+  };
+  const derive = (f) => deriveStandingExecutionControlPlan({
+    ...f, oneTimeWindow: f.window, liveGrant: f.grant, executionId: "exec-1"
+  });
+
+  {
+    const f = fixture();
+    exactConsumedIntent(f);
+    f.grant.consumedExecutionId = "sibling-execution";
+    const result = derive(f);
+    assert.equal(result.allowed, false);
+    assert.ok(result.reasons.includes("live_execution_grant_unavailable"));
+  }
+  {
+    const f = fixture();
+    exactConsumedIntent(f);
+    f.grant.consumedAt = null;
+    const result = derive(f);
+    assert.equal(result.allowed, false);
+    assert.ok(result.reasons.includes("live_execution_grant_unavailable"));
+  }
+  {
+    const f = fixture();
+    exactConsumedIntent(f);
+    f.window.consumedExecutionId = "sibling-execution";
+    const result = derive(f);
+    assert.equal(result.allowed, false);
+    assert.ok(result.reasons.includes("one_time_execution_window_consumed_elsewhere"));
+  }
+  {
+    const f = fixture();
+    f.grant.validUntil = new Date(f.now.getTime() - 1).toISOString();
+    const result = derive(f);
+    assert.equal(result.allowed, false);
+    assert.ok(result.reasons.includes("live_execution_grant_unavailable"));
+  }
+  {
+    const f = fixture();
+    f.grant.status = "REVOKED";
+    const result = derive(f);
+    assert.equal(result.allowed, false);
+    assert.ok(result.reasons.includes("live_execution_grant_unavailable"));
+  }
+  {
+    const f = fixture();
+    f.window.validUntil = new Date(f.now.getTime() - 1).toISOString();
+    const result = derive(f);
+    assert.equal(result.allowed, false);
+    assert.ok(result.reasons.includes("one_time_execution_window_unavailable"));
+  }
+  {
+    const f = fixture();
+    f.window.status = "REVOKED";
+    const result = derive(f);
+    assert.equal(result.allowed, false);
+    assert.ok(result.reasons.includes("one_time_execution_window_unavailable"));
+  }
+  {
+    const f = fixture();
+    exactConsumedIntent(f);
+    f.post.jobLifecycle = [{ state: "EXECUTING", executionId: "sibling-execution" }];
+    const result = derive(f);
+    assert.equal(result.allowed, false);
+    assert.ok(result.reasons.includes("post_already_active_or_published"));
+  }
+  {
+    const f = fixture();
+    exactConsumedIntent(f);
+    f.post.executionState = "EXECUTING";
+    const result = derive(f);
+    assert.equal(result.allowed, false);
+    assert.ok(result.reasons.includes("post_already_active_or_published"));
+  }
+  {
+    const f = fixture();
+    exactConsumedIntent(f);
+    f.post.status = "queued";
+    const result = derive(f);
+    assert.equal(result.allowed, false);
+    assert.ok(result.reasons.includes("post_submit_lifecycle_mismatch"));
+  }
+  {
+    const f = fixture();
+    exactConsumedIntent(f);
+    f.post.status = "published";
+    const result = derive(f);
+    assert.equal(result.allowed, false);
+    assert.ok(result.reasons.includes("post_already_active_or_published"));
+    assert.ok(result.reasons.includes("post_submit_lifecycle_mismatch"));
+  }
+  {
+    const f = fixture();
+    f.state.executionRequests.push({
+      executionId: "sibling-execution",
+      request: { idempotencyKey: f.post.idempotencyKey },
+      state: "CONFIRMED"
+    });
+    const result = derive(f);
+    assert.equal(result.allowed, false);
+    assert.ok(result.reasons.includes("idempotency_blocked"));
+  }
+});

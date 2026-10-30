@@ -78,6 +78,35 @@ export function campaignContentHash(content) {
   return digest(String(content || ""));
 }
 
+/**
+ * Match an artifact against the exact media scope granted by an authorization.
+ * In addition to explicitly approved assets, a standing policy may authorize
+ * deterministic MP4s produced by the grounded local content pipeline. The
+ * policy is deliberately narrow: it binds renderer, run-id namespace, byte
+ * ceiling, provenance kind and the artifact hash recorded at staging time.
+ */
+export function generatedMediaPolicyMatches(authorization, artifact) {
+  const policy = authorization?.contentBoundary?.generatedMediaPolicy;
+  const provenance = artifact?.provenance;
+  if (authorization?.executionMode !== "standing_autonomous" || authorization?.contentBoundary?.mode !== "approved_template_set" ||
+      !policy || policy.mode !== "grounded_pipeline_mp4" || !provenance || provenance.kind !== "grounded_pipeline_mp4") return false;
+  const runId = String(provenance.runId || "");
+  const prefix = String(policy.runIdPrefix || "");
+  if (!runId || !prefix || !runId.startsWith(prefix)) return false;
+  if (String(provenance.renderer || "") !== String(policy.renderer || "ffmpeg")) return false;
+  const bytes = Number(provenance.bytes);
+  if (!Number.isSafeInteger(bytes) || bytes < 1 || bytes > Number(policy.maxBytes)) return false;
+  if (String(provenance.sha256 || "").toLowerCase() !== String(artifact?.sha256 || "").toLowerCase()) return false;
+  return true;
+}
+
+export function artifactAuthorizedForCampaign(authorization, artifact, post = null) {
+  if (!authorization || !artifact) return false;
+  if (authorization.approvedAssets?.some((item) => item.artifactId === artifact.id && item.sha256 === artifact.sha256)) return true;
+  return generatedMediaPolicyMatches(authorization, artifact) &&
+    (!post?.assetSha256 || post.assetSha256 === artifact.sha256);
+}
+
 export function publicationIdentityKey({ campaignId, contentId, platform, accountId, targetId }) {
   return digest({ campaignId, contentId, platform, accountId, targetId });
 }
@@ -168,6 +197,23 @@ export function normalizeCampaignAuthorization(input, campaign, now = new Date()
     platform: required(item.platform, "approved template platform"),
     template: required(item.template, "approved template text")
   })) : [];
+  const generatedMediaPolicyInput = contentBoundary.generatedMediaPolicy;
+  let generatedMediaPolicy = null;
+  if (generatedMediaPolicyInput !== undefined && generatedMediaPolicyInput !== null) {
+    if (!generatedMediaPolicyInput || typeof generatedMediaPolicyInput !== "object" || Array.isArray(generatedMediaPolicyInput)) {
+      throw new Error("generatedMediaPolicy must be an object");
+    }
+    const policyMode = required(generatedMediaPolicyInput.mode, "generatedMediaPolicy.mode");
+    const runIdPrefix = required(generatedMediaPolicyInput.runIdPrefix, "generatedMediaPolicy.runIdPrefix");
+    const renderer = required(generatedMediaPolicyInput.renderer || "ffmpeg", "generatedMediaPolicy.renderer");
+    const maxBytes = Number(generatedMediaPolicyInput.maxBytes);
+    if (mode !== "approved_template_set") throw new Error("generatedMediaPolicy requires approved_template_set authorization");
+    if (policyMode !== "grounded_pipeline_mp4") throw new Error("Unsupported generatedMediaPolicy mode");
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,119}$/.test(runIdPrefix)) throw new Error("generatedMediaPolicy.runIdPrefix is invalid");
+    if (renderer !== "ffmpeg") throw new Error("generatedMediaPolicy.renderer must be ffmpeg");
+    if (!Number.isSafeInteger(maxBytes) || maxBytes < 128 || maxBytes > 128 * 1024 * 1024) throw new Error("generatedMediaPolicy.maxBytes must be between 128 and 134217728");
+    generatedMediaPolicy = { mode: policyMode, runIdPrefix, renderer, maxBytes };
+  }
   if (new Set(templates.map((item) => `${item.platform}\0${item.id}`)).size !== templates.length) throw new Error("Campaign templates must be unique per platform and ID");
   const authorizedPlatforms = new Set(destinations.map((item) => item.platform));
   if (templates.some((item) => !authorizedPlatforms.has(item.platform))) throw new Error("Campaign templates cannot exceed the authorized platform scope");
@@ -195,6 +241,7 @@ export function normalizeCampaignAuthorization(input, campaign, now = new Date()
     contentHashes,
     approvedClaims,
     templates,
+    generatedMediaPolicy,
     storyPolicy: normalizeStoryPolicy(contentBoundary.storyPolicy, mode),
     requiredDisclosures: [...new Set((contentBoundary.requiredDisclosures || []).map((item) => required(item, "required disclosure")))],
     forbiddenTerms: [...new Set((contentBoundary.forbiddenTerms || []).map((item) => required(item, "forbidden term").toLocaleLowerCase("en-US")))],
@@ -319,9 +366,9 @@ export function evaluateCampaignAuthorization(post, state, now = new Date(), { m
   const destination = authorization.destinations?.find((item) => destinationBindingMatches(item, target, account, { requireTarget: true }));
   if (!destination) reasons.push("destination_not_authorized");
   if (post.assetPath) {
-    const asset = authorization.approvedAssets?.find((item) => item.artifactId === post.artifactId && item.sha256 === post.assetSha256);
-    if (!asset) reasons.push("asset_not_authorized");
     const artifact = (state.artifacts || []).find((item) => item.id === post.artifactId);
+    const asset = artifactAuthorizedForCampaign(authorization, artifact, post) ? artifact : null;
+    if (!asset) reasons.push("asset_not_authorized");
     let pathsMatch = false;
     try { pathsMatch = Boolean(artifact?.path && post.assetPath && path.resolve(artifact.path) === path.resolve(post.assetPath)); } catch {}
     if (!artifact || artifact.campaignId !== post.campaignId || artifact.status !== "verified" || artifact.sha256 !== post.assetSha256 || !pathsMatch) reasons.push("asset_evidence_missing_or_stale");

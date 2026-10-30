@@ -11,6 +11,8 @@ function option(name, fallback = null) {
 
 const stateFile = path.resolve(option("--state-file", process.env.SEEDING_COORDINATOR_STATE_FILE || path.join(process.cwd(), ".agentic", "project-coordinator", "state.json")));
 const taskFile = option("--task-file", null);
+const goalFile = option("--goal-file", process.env.SEEDING_COORDINATOR_GOAL_FILE || null);
+const sessionRegistryFile = option("--session-registry-file", process.env.SEEDING_COORDINATOR_SESSION_REGISTRY_FILE || null);
 const registerOnly = process.argv.includes("--register-only");
 const intervalMs = Number(option("--interval-ms", process.env.SEEDING_COORDINATOR_INTERVAL_MS || 500));
 const once = process.argv.includes("--once");
@@ -55,6 +57,16 @@ async function worker(task, context) {
 const coordinator = new ProjectCoordinator({ stateFile, worker, intervalMs });
 await coordinator.init();
 if (recoverTaskId) await coordinator.recoverTask({ taskId: recoverTaskId, reason: "supervisor startup reconciles exact native request" });
+if (goalFile) {
+  const goal = JSON.parse(await readFile(path.resolve(goalFile), "utf8"));
+  await coordinator.reconcileGoal(goal);
+}
+if (sessionRegistryFile) {
+  const registry = JSON.parse(await readFile(path.resolve(sessionRegistryFile), "utf8"));
+  const records = Array.isArray(registry) ? registry : registry?.sessions;
+  if (!Array.isArray(records)) throw new Error("coordinator session registry file must contain an array or {sessions: []}");
+  for (const session of records) await coordinator.upsertSession(session);
+}
 if (taskFile) {
   const requested = JSON.parse(await readFile(path.resolve(taskFile), "utf8"));
   if (!requested || typeof requested !== "object" || Array.isArray(requested)) throw new Error("coordinator task file must contain an object");

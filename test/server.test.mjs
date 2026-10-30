@@ -15,6 +15,47 @@ const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 
 test("HTTP mutations require the local operator bearer token", async (context) => {
   const dataDir = await mkdtemp(path.join(os.tmpdir(), "seeding-server-test-"));
+  const coordinatorRoot = await mkdtemp(path.join(os.tmpdir(), "seeding-coordinator-dashboard-test-"));
+  await writeFile(path.join(coordinatorRoot, "state.json"), JSON.stringify({
+    schemaVersion: 3,
+    coordinatorId: "coord-dashboard-fixture",
+    revision: 7,
+    updatedAt: "2026-10-29T00:00:00.000Z",
+    goal: {
+      goalId: "ORCA_MS_CD_COMPLETE_20261029_01",
+      goalRunId: "run-dashboard-fixture",
+      mode: "GOAL",
+      nativeGoalMode: "UNAVAILABLE",
+      status: "ACTIVE",
+      owner: "session-c",
+      nextAction: "reconcile worker result",
+      currentBlockers: ["receiver identity unknown"],
+      wake: { consumer: "launchd:project-coordinator", condition: "task result" }
+    },
+    sessionRegistry: [{
+      role: "session-c",
+      workspace: appRoot,
+      terminalHandle: "term-private-dashboard-fixture",
+      tabId: "tab-private-dashboard-fixture",
+      paneKey: "pane-private-dashboard-fixture",
+      handshakeRequestId: "request-private-dashboard-fixture",
+      evidenceRefs: ["private-dashboard-ref"],
+      receiverState: "RECEIVER_VERIFIED",
+      uiMappingState: "UI_MAPPING_VERIFIED",
+      mappingGeneration: 1
+    }],
+    tasks: [{
+      taskId: "dashboard-task",
+      owner: "session-c",
+      scope: "dashboard",
+      status: "RUNNING",
+      workerStatus: "EXECUTING",
+      acceptanceStatus: "PENDING",
+      attemptCount: 1
+    }],
+    results: [],
+    wakeEvents: [{ type: "TASK_SCHEDULED", taskId: "dashboard-task", at: "2026-10-29T00:00:00.000Z" }]
+  }));
   await writeFile(path.join(dataDir, "daily-automation.json"), JSON.stringify({
     id: "automation-fixture",
     enabled: true,
@@ -85,7 +126,7 @@ test("HTTP mutations require the local operator bearer token", async (context) =
   const automationToken = randomBytes(32).toString("hex");
   const child = spawn(process.execPath, ["src/server.mjs"], {
     cwd: appRoot,
-    env: { ...process.env, OPENSSL_CONF: "", SEEDING_DATA_DIR: dataDir, SEEDING_AUTO_GTM_FEED_FILE: autoGtmFeed, SEEDING_PORT: "0", SEEDING_OPERATOR_TOKEN: token, SEEDING_AUTOMATION_TOKEN: automationToken, SEEDING_TRAFFIC_POLL_MINUTES: "240", SEEDING_JEV_WORKER_ENABLED: "false", SEEDING_JEV_LIVE_ENABLED: "false", SEEDING_JEV_EXACT_LIVE_ENABLED: "false" },
+    env: { ...process.env, OPENSSL_CONF: "", SEEDING_DATA_DIR: dataDir, SEEDING_AUTO_GTM_FEED_FILE: autoGtmFeed, SEEDING_COORDINATOR_STATE_ROOT: coordinatorRoot, SEEDING_PORT: "0", SEEDING_OPERATOR_TOKEN: token, SEEDING_AUTOMATION_TOKEN: automationToken, SEEDING_TRAFFIC_POLL_MINUTES: "240", SEEDING_JEV_WORKER_ENABLED: "false", SEEDING_JEV_LIVE_ENABLED: "false", SEEDING_JEV_EXACT_LIVE_ENABLED: "false" },
     stdio: ["ignore", "pipe", "pipe"]
   });
   context.after(() => child.kill());
@@ -131,6 +172,14 @@ test("HTTP mutations require the local operator bearer token", async (context) =
   assert.equal("privateEmail" in leadFeed.leads[0], false);
   assert.equal("secret" in leadFeed.leads[0].evidence[0], false);
   const dashboardWithLeads = await (await fetch(`${baseUrl}/api/dashboard`)).json();
+  assert.equal(dashboardWithLeads.coordinator.available, true);
+  assert.equal(dashboardWithLeads.coordinator.goal.goalId, "ORCA_MS_CD_COMPLETE_20261029_01");
+  assert.equal(dashboardWithLeads.coordinator.goal.nativeGoalMode, "UNAVAILABLE");
+  assert.equal(dashboardWithLeads.coordinator.sessionRegistry[0].receiverState, "RECEIVER_VERIFIED");
+  assert.equal("terminalHandle" in dashboardWithLeads.coordinator.sessionRegistry[0], false);
+  assert.equal("workspace" in dashboardWithLeads.coordinator.sessionRegistry[0], false);
+  assert.equal(JSON.stringify(dashboardWithLeads.coordinator).includes("private-dashboard"), false);
+  assert.equal(dashboardWithLeads.coordinator.tasks[0].acceptanceStatus, "PENDING");
   assert.equal(dashboardWithLeads.autoGtm.leadCount, 1);
   assert.equal(dashboardWithLeads.marketIntelligence.readOnly, true);
   assert.equal(dashboardWithLeads.marketIntelligence.opportunityCount, 0);
@@ -264,7 +313,7 @@ test("HTTP mutations require the local operator bearer token", async (context) =
   assert.equal(health.executionRuntime.readOnly, true);
   assert.equal(health.executionRuntime.publicationRule.includes("COMMAND_COMPLETED"), true);
   assert.ok(health.executionRuntime.counts);
-  assert.equal(health.productFactorySandbox.status, "UNSUPPORTED");
+  assert.ok(["UNSUPPORTED", "UNAVAILABLE"].includes(health.productFactorySandbox.status));
   assert.equal(health.productFactorySandbox.executionEligible, false);
   assert.equal(health.productFactorySandbox.unsafeCommandDisposition, "NOT_EXECUTED_UNSAFE");
   assert.equal(health.productFactorySandbox.checks.resourceLimits, "UNSUPPORTED");

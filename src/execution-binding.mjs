@@ -29,9 +29,17 @@ export function canonicalIdentityUrl(value) {
   try {
     const url = new URL(raw);
     url.hash = "";
-    url.search = "";
     url.hostname = url.hostname.toLowerCase();
     url.pathname = url.pathname.replace(/\/{2,}/g, "/").replace(/\/$/, "") || "/";
+    // Facebook numeric profiles encode their immutable identity in `id`.
+    // Preserve that one bounded query parameter across provider-aware binding
+    // comparisons; all other identity query material remains discarded.
+    if (url.hostname.replace(/^www\./, "") === "facebook.com" && url.pathname.toLowerCase() === "/profile.php") {
+      const id = url.searchParams.get("id") || "";
+      url.search = /^\d{3,80}$/.test(id) ? `?id=${encodeURIComponent(id)}` : "";
+    } else {
+      url.search = "";
+    }
     return url.toString();
   } catch {
     return raw;

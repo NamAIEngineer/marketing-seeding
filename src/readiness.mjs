@@ -80,7 +80,13 @@ export function normalizeExecutionAccount(input, now = new Date(), platformPolic
   const health = String(input.health || "unknown");
   if (!accountHealthStates.has(health)) throw new Error("Unsupported account health state");
 
-  const identityReference = platformPolicies.normalizeIdentityUrl(platform, input.identityReference ?? input.expectedIdentityUrl);
+  const providedIdentity = input.identityReference ?? input.expectedIdentityUrl;
+  // Camoufox onboarding discovers the identity from the authenticated page.
+  // Until then the account remains UNKNOWN and cannot enter an execution
+  // binding. Legacy ORCA/other provider lanes keep their strict URL contract.
+  const identityReference = provider === "camoufox" && !providedIdentity
+    ? null
+    : platformPolicies.normalizeIdentityUrl(platform, providedIdentity);
 
   return {
     id: `${platform}:${accountId}`,

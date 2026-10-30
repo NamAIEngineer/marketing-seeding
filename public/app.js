@@ -296,6 +296,13 @@ async function load() {
   if (!response.ok) throw new Error(`Không tải được dashboard: HTTP ${response.status}`);
   const data = await response.json();
   dashboardData = data;
+  const router = data.nineRouter || {};
+  const routerNode = document.querySelector("#nineRouterStatus");
+  if (routerNode) {
+    const modelText = router.selection?.model ? `Mô hình: ${router.selection.model} · ${router.selection.reason}` : "Chưa chọn mô hình";
+    routerNode.innerHTML = `<strong>9Router ${escapeHtml(router.binary?.version || "chưa cài")}</strong><span>${escapeHtml(router.catalogStatus || "UNKNOWN")} · ${router.models?.length || 0} model live · ${escapeHtml(modelText)}</span><small>${router.connectRequired ? "Cần kết nối một lần trong dashboard 9Router; không tự lấy credential nhà cung cấp." : "Catalog xác thực đã sẵn sàng."}</small>`;
+    routerNode.className = `integration-status ${router.authenticated ? "ready" : "warning"}`;
+  }
   document.querySelector("#updatedAt").textContent = `Phiên bản ${data.revision} · ${date(data.updatedAt)}`;
   document.querySelector("#kpis").innerHTML = [
     kpi("Đã xuất bản", data.statuses.published),

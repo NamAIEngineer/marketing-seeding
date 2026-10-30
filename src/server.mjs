@@ -5,14 +5,21 @@ import { timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { JsonStore } from "./store.mjs";
 import { SeedingService, pollConfiguredDiscoveries, projectExecutionRuntime } from "./service.mjs";
-import { appRoot, autoGtmFeedFile, browserAutomationFile, dailyAutomationFile, dailyAutomationReceiptFile, publicRoot, stateFile } from "./paths.mjs";
+import { agenticRoot, appRoot, autoGtmFeedFile, browserAutomationFile, dailyAutomationFile, dailyAutomationReceiptFile, dataDir, publicRoot, stateFile } from "./paths.mjs";
 import { FixtureWorkerBridge } from "./fixture-worker-bridge.mjs";
 import { readAutoGtmFeed } from "./auto-gtm-feed.mjs";
 import { OrcaCliClient } from "./orca-browser-client.mjs";
 import { LinkedInReadinessProvider } from "./linkedin-readiness.mjs";
 import { CamoufoxLinkedInReadinessProvider } from "./camoufox-linkedin-readiness-provider.mjs";
+import { registerCamoufoxReadinessProviders } from "./camoufox-readiness-provider.mjs";
 import { configuredReadinessTtlMs } from "./readiness.mjs";
 import { LinkedInAdapter } from "./linkedin-adapter.mjs";
+import { THREADS_ADAPTER, REDDIT_ADAPTER } from "./threads-reddit-publication-adapters.mjs";
+import {
+  FACEBOOK_GROUP_ADAPTER,
+  PRODUCT_HUNT_ADAPTER,
+  INDIE_HACKERS_ADAPTER
+} from "./facebook-producthunt-indiehackers-publication-adapters.mjs";
 import { OrcaAccessibilityTransport, OrcaPointerTransport } from "./browser-interaction-transport.mjs";
 import { JevExecutionWorker } from "./jev-execution-worker.mjs";
 import { PlatformAdapterRegistry, ReadinessProviderRegistry } from "./platform-registries.mjs";
@@ -23,6 +30,17 @@ import { loadConfiguredLocalProvider } from "./oi-browser-provider-adapters.mjs"
 import { projectMarketDashboard, projectMarketOpportunities } from "./market-intelligence.mjs";
 import { observeCamoufoxSessionMetadata } from "./camoufox-session-observer.mjs";
 import { probeCamoufoxRuntime } from "./camoufox-runtime-probe.mjs";
+import { readCoordinatorProjection } from "./project-coordinator-projection.mjs";
+import { accountCredentialStatus, storeAccountCredentials } from "./account-credentials.mjs";
+import { runCamoufoxAccountAgent } from "./camoufox-account-agent.mjs";
+import { createAutoCamoufoxAccountAgentRunner, createAutoCamoufoxExecutionSessionResolver } from "./camoufox-auto-runtime.mjs";
+import { completeNineRouter, connectNineRouter, nineRouterStatus, selectNineRouterModel } from "./nine-router.mjs";
+import { runListeningExtraction, persistListeningRun } from "./listening-adapter.mjs";
+import { normalizeBackend, createListeningJobId } from "./listening-contract.mjs";
+import { discoverUpdate, unavailableUpdateResult } from "./update-discovery.mjs";
+import { installDiscoveredUpdate } from "./update-installer.mjs";
+import { readDesktopProvisioningStatus } from "./desktop-provisioning.mjs";
+import { ensureContentRuntime } from "./product-content-runtime.mjs";
 
 async function loadLocalEnv() {
   try {
@@ -99,15 +117,34 @@ const automationToken = String(process.env.SEEDING_AUTOMATION_TOKEN || "").trim(
 const controlToken = String(process.env.SEEDING_CONTROL_TOKEN || "").trim();
 const sourceCommit = String(process.env.SEEDING_BUILD_COMMIT || "");
 const sourceDirty = process.env.SEEDING_BUILD_DIRTY === "true";
+const healthNonce = String(process.env.SEEDING_HEALTH_NONCE || "");
 const trafficPollMinutes = Number(process.env.SEEDING_TRAFFIC_POLL_MINUTES || 0);
 const controlCycleEnabled = process.env.SEEDING_CONTROL_CYCLE_ENABLED === "true";
 const controlCycleMinutes = Number(process.env.SEEDING_CONTROL_CYCLE_MINUTES || 0);
 const discoveryPollMinutes = Number(process.env.SEEDING_DISCOVERY_POLL_MINUTES || 0);
+const updatePollMinutes = Number(process.env.SEEDING_UPDATE_POLL_MINUTES || 60);
 const camoufoxSessionMetadataFile = String(process.env.SEEDING_CAMOUFOX_SESSION_METADATA_FILE || "").trim();
 const camoufoxExecutablePath = String(process.env.SEEDING_CAMOUFOX_EXECUTABLE_PATH || "").trim();
 const camoufoxRuntimeMetadataPath = String(process.env.SEEDING_CAMOUFOX_RUNTIME_METADATA_PATH || "").trim();
 const camoufoxProfileRoot = String(process.env.SEEDING_CAMOUFOX_PROFILE_ROOT || "").trim();
 const camoufoxProfileReference = String(process.env.SEEDING_EXECUTION_SESSION_PROFILE_REFERENCE || "").trim();
+const autoCamoufoxRunner = createAutoCamoufoxAccountAgentRunner({
+  dataRoot: dataDir,
+  runtimeRoot: String(process.env.SEEDING_CAMOUFOX_RUNTIME_ROOT || path.join(dataDir, "camoufox-runtime")),
+  profileRoot: camoufoxProfileRoot || path.join(dataDir, "camoufox-profiles"),
+  npmBin: String(process.env.SEEDING_NPM_BIN || "").trim(),
+  statusFile: path.join(dataDir, "camoufox-provision-status.json"),
+  headless: process.env.SEEDING_CAMOUFOX_HEADLESS !== "false"
+});
+let serviceRef = null;
+const autoCamoufoxExecutionResolver = createAutoCamoufoxExecutionSessionResolver({
+  dataRoot: dataDir,
+  runtimeRoot: String(process.env.SEEDING_CAMOUFOX_RUNTIME_ROOT || path.join(dataDir, "camoufox-runtime")),
+  profileRoot: camoufoxProfileRoot || path.join(dataDir, "camoufox-profiles"),
+  npmBin: String(process.env.SEEDING_NPM_BIN || "").trim(),
+  headless: process.env.SEEDING_CAMOUFOX_HEADLESS !== "false",
+  stateReader: async () => serviceRef ? serviceRef.snapshot() : { executionAccounts: [] }
+});
 if (operatorToken.length < 32) {
   throw new Error("SEEDING_OPERATOR_TOKEN must contain at least 32 characters");
 }
@@ -120,6 +157,9 @@ if (!Number.isFinite(trafficPollMinutes) || trafficPollMinutes < 0 || (trafficPo
 }
 if (!Number.isFinite(discoveryPollMinutes) || discoveryPollMinutes < 0 || (discoveryPollMinutes > 0 && discoveryPollMinutes < 15)) {
   throw new Error("SEEDING_DISCOVERY_POLL_MINUTES must be 0 (disabled) or at least 15");
+}
+if (!Number.isFinite(updatePollMinutes) || updatePollMinutes < 0 || (updatePollMinutes > 0 && updatePollMinutes < 15)) {
+  throw new Error("SEEDING_UPDATE_POLL_MINUTES must be 0 (disabled) or at least 15");
 }
 if (controlCycleEnabled && (!Number.isFinite(controlCycleMinutes) || controlCycleMinutes < 15)) {
   throw new Error("SEEDING_CONTROL_CYCLE_MINUTES must be at least 15 when enabled");
@@ -135,10 +175,17 @@ const configuredOiBrowserProvider = await loadConfiguredLocalProvider();
 const readinessProviderRegistry = new ReadinessProviderRegistry();
 const legacyLinkedInReadiness = new LinkedInReadinessProvider(orcaBrowser, { ttlMs: readinessTtlMs });
 readinessProviderRegistry.register("linkedin", new CamoufoxLinkedInReadinessProvider({
-  resolver: configuredExecutionSessionResolver,
+  resolver: configuredExecutionSessionResolver || autoCamoufoxExecutionResolver,
   fallbackProvider: legacyLinkedInReadiness,
   ttlMs: readinessTtlMs
 }));
+// Every Camoufox publication channel gets the same provider-bound readiness
+// gate. Publication adapters are registered below, but execution must first
+// prove exact identity, target rights, community rules, and composer state.
+registerCamoufoxReadinessProviders(readinessProviderRegistry, {
+  resolver: configuredExecutionSessionResolver || autoCamoufoxExecutionResolver,
+  ttlMs: readinessTtlMs
+});
 const service = new SeedingService(store, {
   readinessTtlMs,
   readinessProviderRegistry,
@@ -158,7 +205,11 @@ const service = new SeedingService(store, {
   }),
   sessionReadinessObservation: () => observeCamoufoxSessionMetadata(camoufoxSessionMetadataFile),
   ...(configuredOiBrowserProvider ? { oiBrowserProviders: [configuredOiBrowserProvider] } : {})
+  ,accountAgentRunner: configuredExecutionSessionResolver
+    ? ({ account }) => runCamoufoxAccountAgent({ account, resolver: configuredExecutionSessionResolver })
+    : autoCamoufoxRunner
 });
+serviceRef = service;
 const platformAdapterRegistry = new PlatformAdapterRegistry();
 // The production lane is fail-closed until an explicit, platform/runtime
 // scoped irreversible-submit certification record is supplied. Reversible
@@ -172,9 +223,18 @@ platformAdapterRegistry.register("linkedin", new LinkedInAdapter(orcaBrowser, {
   transportRuntime: { provider: "orca", providerVersion: orcaBrowser.runtimeVersion },
   requireCertifiedTransport: true
 }));
+// Threads and Reddit use the exact Camoufox execution session supplied by JEV
+// for both submit and independent permalink verification. Their adapters are
+// fixture-proven; live publication remains gated by the same authority/grant
+// and platform readiness checks.
+platformAdapterRegistry.register("threads", THREADS_ADAPTER);
+platformAdapterRegistry.register("reddit", REDDIT_ADAPTER);
+platformAdapterRegistry.register("facebook_group", FACEBOOK_GROUP_ADAPTER);
+platformAdapterRegistry.register("product_hunt", PRODUCT_HUNT_ADAPTER);
+platformAdapterRegistry.register("indie_hackers", INDIE_HACKERS_ADAPTER);
 const jevWorker = new JevExecutionWorker({
   service, adapterRegistry: platformAdapterRegistry,
-  executionSessionResolver: configuredExecutionSessionResolver || null,
+  executionSessionResolver: configuredExecutionSessionResolver || autoCamoufoxExecutionResolver,
   workerId: `jev-server-${process.pid}`
 });
 let initializedState;
@@ -206,6 +266,75 @@ let controlCycleTimer = null;
 let discoveryTimer = null;
 let campaignQueueTimer = null;
 let jevExecutionTimer = null;
+let accountAgentRecoveryTimer = null;
+let updateDiscoveryTimer = null;
+const updateRuntime = { enabled: updatePollMinutes > 0, intervalMinutes: updatePollMinutes || null, running: false, lastStartedAt: null, lastCompletedAt: null, nextRunAt: null, result: null };
+let contentRuntimeCache = null;
+let contentRuntimeCacheAt = 0;
+const contentRuntimeAutoProvision = process.env.SEEDING_CONTENT_AUTO_PROVISION === "true";
+
+async function safeDiscoverUpdate() {
+  try { return await discoverUpdate(); }
+  catch (error) { return unavailableUpdateResult(error); }
+}
+const contentRuntimeProvision = { enabled: contentRuntimeAutoProvision, attempted: false, running: false, startedAt: null, completedAt: null, error: null };
+function projectContentRuntime(runtime) {
+  return {
+    status: runtime.status,
+    ready: runtime.ready === true,
+    mode: runtime.mode,
+    failure: runtime.failure || null,
+    paths: {
+      storageRoot: runtime.paths?.storageRoot || null,
+      pythonPath: runtime.python?.path || runtime.paths?.pythonPath || null,
+      ffmpegPath: runtime.ffmpeg?.path || runtime.paths?.ffmpegPath || null,
+      chromePath: runtime.chrome?.path || null
+    },
+    python: runtime.python ? { status: runtime.python.status, source: runtime.python.source || null } : null,
+    ffmpeg: runtime.ffmpeg ? { status: runtime.ffmpeg.status, source: runtime.ffmpeg.source || null } : null,
+    chrome: runtime.chrome ? { status: runtime.chrome.status, source: runtime.chrome.source || null } : null,
+    repair: runtime.repair ? { attempted: runtime.repair.attempted === true, actions: runtime.repair.actions || [] } : { attempted: false, actions: [] },
+    provisioning: { ...contentRuntimeProvision },
+    checkedAt: new Date().toISOString()
+  };
+}
+async function startContentRuntimeProvisioning() {
+  if (!contentRuntimeAutoProvision || contentRuntimeProvision.attempted || contentRuntimeProvision.running) return;
+  contentRuntimeProvision.attempted = true;
+  contentRuntimeProvision.running = true;
+  contentRuntimeProvision.startedAt = new Date().toISOString();
+  try {
+    const runtime = await ensureContentRuntime({
+      mode: String(process.env.SEEDING_CONTENT_MODE || "PRODUCTION").toUpperCase(),
+      storageRoot: path.join(dataDir, "content-runtime"),
+      resourcesDir: process.resourcesPath || appRoot,
+      repair: true,
+      allowNetwork: true
+    });
+    contentRuntimeCache = projectContentRuntime(runtime);
+    contentRuntimeCacheAt = Date.now();
+  } catch (error) {
+    contentRuntimeProvision.error = String(error?.message || "content runtime provisioning failed").replace(/\s+/g, " ").slice(0, 300);
+  } finally {
+    contentRuntimeProvision.running = false;
+    contentRuntimeProvision.completedAt = new Date().toISOString();
+    if (contentRuntimeCache) contentRuntimeCache.provisioning = { ...contentRuntimeProvision };
+  }
+}
+async function readContentRuntimeStatus({ refresh = false } = {}) {
+  if (!refresh && contentRuntimeCache && Date.now() - contentRuntimeCacheAt < 60_000) return structuredClone(contentRuntimeCache);
+  const runtime = await ensureContentRuntime({
+    mode: String(process.env.SEEDING_CONTENT_MODE || (contentRuntimeAutoProvision ? "PRODUCTION" : "LOCAL")).toUpperCase(),
+    storageRoot: path.join(dataDir, "content-runtime"),
+    resourcesDir: process.resourcesPath || appRoot,
+    repair: false
+  });
+  const projection = projectContentRuntime(runtime);
+  contentRuntimeCache = projection;
+  contentRuntimeCacheAt = Date.now();
+  if (contentRuntimeAutoProvision && !runtime.ready && !contentRuntimeProvision.attempted) void startContentRuntimeProvisioning();
+  return structuredClone(projection);
+}
 let jevExecutionRunning = false;
 const jevExecutionStarted = new Set();
 let campaignQueueRunning = false;
@@ -315,7 +444,8 @@ function scheduleCampaignQueueEvaluation(delayMs = 30_000) {
         campaigns: results.length,
         decisions: results.reduce((count, item) => count + (Array.isArray(item?.decisions) ? item.decisions.length : 0), 0),
         failed: failed.length,
-        failureReasons
+        failureReasons,
+        scheduled: results.filter((item) => item?.scheduleId).map((item) => ({ scheduleId: item.scheduleId, campaignId: item.campaignId, status: item.scheduleStatus || "UNKNOWN", windowKey: item.scheduleWindowKey || null }))
       };
     } catch (error) {
       campaignQueueRuntime.lastSummary = {
@@ -334,6 +464,36 @@ function scheduleCampaignQueueEvaluation(delayMs = 30_000) {
   }, Math.max(1_000, delayMs));
   campaignQueueRuntime.nextRunAt = new Date(Date.now() + Math.max(1_000, delayMs)).toISOString();
   campaignQueueTimer.unref();
+}
+
+function scheduleAccountAgentRecovery(delayMs = 60_000) {
+  if (shuttingDown) return;
+  if (accountAgentRecoveryTimer) clearTimeout(accountAgentRecoveryTimer);
+  accountAgentRecoveryTimer = setTimeout(async () => {
+    try { await service.recoverAccountAgents(); } catch (error) { process.stderr.write(`Account Agent recovery stopped ${String(error?.code || "recovery_error")}\n`); }
+    scheduleAccountAgentRecovery();
+  }, Math.max(5_000, delayMs));
+  accountAgentRecoveryTimer.unref();
+}
+
+function scheduleUpdateDiscovery(delayMs = updatePollMinutes * 60_000) {
+  if (!updateRuntime.enabled || shuttingDown) return;
+  if (updateDiscoveryTimer) clearTimeout(updateDiscoveryTimer);
+  const boundedDelay = Math.max(1_000, delayMs);
+  updateRuntime.nextRunAt = new Date(Date.now() + boundedDelay).toISOString();
+  updateDiscoveryTimer = setTimeout(async () => {
+    if (updateRuntime.running || shuttingDown) return scheduleUpdateDiscovery();
+    updateRuntime.running = true;
+    updateRuntime.lastStartedAt = new Date().toISOString();
+    try { updateRuntime.result = await safeDiscoverUpdate(); }
+    catch (error) { updateRuntime.result = unavailableUpdateResult(error); }
+    finally {
+      updateRuntime.running = false;
+      updateRuntime.lastCompletedAt = new Date().toISOString();
+      scheduleUpdateDiscovery();
+    }
+  }, boundedDelay);
+  updateDiscoveryTimer.unref();
 }
 
 function scheduleJevExecution(delayMs = 5_000) {
@@ -506,6 +666,7 @@ function automationCanMutate(method, pathname) {
   if (/^\/api\/campaigns\/[^/]+\/queue-ready-jobs$/.test(pathname)) return true;
   if (/^\/api\/campaigns\/[^/]+\/readiness-check$/.test(pathname)) return true;
   if (/^\/api\/campaigns\/[^/]+\/product-factory$/.test(pathname)) return true;
+  if (/^\/api\/campaigns\/[^/]+\/content-pipeline$/.test(pathname)) return true;
   if (/^\/api\/campaigns\/[^/]+\/product-factory\/artifacts\/promote$/.test(pathname)) return false;
   if (/^\/api\/campaigns\/[^/]+\/product-intelligence\/inspect$/.test(pathname)) return true;
   if (pathname === "/api/campaigns/bootstrap") return true;
@@ -599,6 +760,7 @@ const server = http.createServer(async (request, response) => {
       const state = await service.snapshot();
       return sendJson(response, 200, {
         ok: true, service: "global-seeding", stateFile,
+        serviceOwnership: { service: "marketing-seeding", nonce: healthNonce || null, sourceCommit: sourceCommit || "unknown" },
         runtime: runtimeMetadata({ pid: process.pid, sourceCommit, sourceDirty, state }),
         executionRuntime: projectExecutionRuntime(state),
         productFactorySandbox: await service.productFactorySandboxCapability(),
@@ -610,6 +772,8 @@ const server = http.createServer(async (request, response) => {
         dailyProduction: await readDailyProductionAutomation(),
         browserTracking: await readBrowserTrafficAutomation(),
         fixtureWorker: fixtureWorker.runtime()
+        ,updateDiscovery: updateRuntime
+        ,contentRuntime: await readContentRuntimeStatus()
       });
     }
     if (request.method === "GET" && url.pathname === "/api/operator/session") {
@@ -693,8 +857,13 @@ const server = http.createServer(async (request, response) => {
       const autoGtm = await readAutoGtmFeed(autoGtmFeedFile);
       return sendJson(response, 200, {
         ...(await service.dashboard()),
+        coordinator: await readCoordinatorProjection(path.join(process.env.SEEDING_COORDINATOR_STATE_ROOT || path.join(agenticRoot, ".agentic", "marketing-seeding", "project-coordinator"), "state.json")),
         autoGtm,
         marketIntelligence: projectMarketDashboard(autoGtm),
+        nineRouter: await nineRouterStatus({ refresh: false }),
+        update: updateRuntime.result || await safeDiscoverUpdate(),
+        contentRuntime: await readContentRuntimeStatus(),
+        provisioning: await readDesktopProvisioningStatus(dataDir),
         automation: {
           trafficCollector: trafficRuntime,
           campaignQueue: campaignQueueRuntime,
@@ -706,6 +875,99 @@ const server = http.createServer(async (request, response) => {
           fixtureWorker: fixtureWorker.runtime()
         }
       });
+    }
+    if (request.method === "GET" && url.pathname === "/api/9router/status") {
+      return sendJson(response, 200, await nineRouterStatus({ refresh: true }));
+    }
+    if (request.method === "GET" && url.pathname === "/api/update/status") {
+      const result = await safeDiscoverUpdate();
+      updateRuntime.result = result;
+      updateRuntime.lastCompletedAt = new Date().toISOString();
+      return sendJson(response, 200, result);
+    }
+    if (request.method === "POST" && url.pathname === "/api/update/install") {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      const discovered = await safeDiscoverUpdate();
+      const installation = await installDiscoveredUpdate(discovered);
+      updateRuntime.result = { ...discovered, installation };
+      updateRuntime.lastCompletedAt = new Date().toISOString();
+      if (installation.status === "INSTALLED") setImmediate(shutdown);
+      return sendJson(response, installation.status === "INSTALLED" ? 202 : 200, updateRuntime.result);
+    }
+    if (request.method === "GET" && url.pathname === "/api/content-runtime/status") {
+      return sendJson(response, 200, await readContentRuntimeStatus({ refresh: true }));
+    }
+    if (request.method === "POST" && url.pathname === "/api/9router/connect") {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      const result = await connectNineRouter(await readJson(request));
+      // A submitted key is only connected after an authenticated /v1/models
+      // probe. Surface provider auth/entitlement failures as HTTP failures so
+      // the dashboard cannot display a false success for a rejected key.
+      const status = result.failureStatus === 401 || result.failureStatus === 403 ? result.failureStatus : 200;
+      return sendJson(response, status, result);
+    }
+    if (request.method === "POST" && url.pathname === "/api/9router/select-model") {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 200, await selectNineRouterModel(await readJson(request)));
+    }
+    if (request.method === "POST" && url.pathname === "/api/9router/chat") {
+      if (role !== "operator" && role !== "automation") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 200, await completeNineRouter(await readJson(request)));
+    }
+    if (request.method === "POST" && url.pathname === "/api/listening/run") {
+      if (!role) return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      const input = await readJson(request);
+      const urls = Array.isArray(input.urls) ? input.urls : String(input.urls || "").split(",").map((value) => value.trim()).filter(Boolean);
+      const backend = normalizeBackend(input.backend || process.env.SEEDING_LISTENING_BACKEND || "http");
+      const campaignId = String(input.campaignId || "").trim() || null;
+      const scope = input.scope && typeof input.scope === "object" ? input.scope : {};
+      const jobId = createListeningJobId({ campaignId, urls, backend, scope: { ...scope, campaignId: scope.campaignId || campaignId } });
+      const existingJob = await service.getListeningJob(jobId);
+      const run = await runListeningExtraction({ urls, backend, campaignId, scope, policies: input.policies || {}, keywords: input.keywords || [], blockedKeywords: input.blockedKeywords || [], jobId, resumeJob: existingJob, checkpoint: (job) => service.checkpointListeningJob(job), options: { python: process.env.SEEDING_LISTENING_PYTHON } });
+      const persisted = await persistListeningRun(service, run, { actor: `${actor}:listening` });
+      const latest = await service.getListeningJob(jobId);
+      await service.checkpointListeningJob({ ...latest, status: run.status, providerReceipt: persisted.providerReceipt, persistedSummary: persisted, persistenceStatus: "SUCCEEDED", completedAt: run.completedAt, updatedAt: new Date().toISOString() }, `${actor}:listening-finalize`);
+      return sendJson(response, 200, { run: { jobId: run.jobId, campaignId: run.campaignId, backend: run.backend, status: run.status, sourceUrls: run.sourceUrls, statuses: run.statuses, records: run.records.length, sourceHashes: run.sourceHashes, extractedHashes: run.extractedHashes }, persisted });
+    }
+    let fanoutMatch = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/fanout-plan$/);
+    if (request.method === "POST" && fanoutMatch) {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 200, await service.planCampaignFanout(fanoutMatch[1], await readJson(request), actor));
+    }
+    if (request.method === "POST" && url.pathname === "/api/account-credentials") {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      const input = await readJson(request);
+      const { platform, accountId, username, password, targetName, targetUrl, targetRulesStatus, ...metadata } = input || {};
+      const credential = await storeAccountCredentials({ platform, accountId, username, password });
+      const result = await service.onboardExecutionAccount({ ...metadata, platform, accountId, username, password, storeCredentials: async () => credential }, actor);
+      // A login proves only the account identity. A target is created only
+      // when the operator supplies its exact channel URL; readiness remains
+      // UNKNOWN/needs_review until the Account Agent observes target rights.
+      if (result?.login?.status === "READY" && targetUrl) {
+        const account = result.account || {};
+        try {
+          result.target = await service.createTarget({
+            channel: String(platform || "").trim().toLowerCase(),
+            name: String(targetName || `${platform} target for ${accountId}`).trim(),
+            url: targetUrl,
+            accountId: String(accountId || "").trim(),
+            profileId: account.profileId,
+            provider: account.provider || "camoufox",
+            providerProfileId: account.providerProfileId || account.profileId,
+            identityReference: account.identityReference || null,
+            status: "needs_review",
+            rulesStatus: targetRulesStatus || undefined
+          }, actor);
+        } catch (error) {
+          result.target = { status: "BLOCKED", code: String(error?.code || "TARGET_ONBOARDING_FAILED"), reason: String(error?.message || "target onboarding failed").replace(/\s+/g, " ").slice(0, 240) };
+        }
+      }
+      return sendJson(response, 201, result);
+    }
+    const credentialMatch = url.pathname.match(/^\/api\/account-credentials\/([^/]+)\/([^/]+)$/);
+    if (request.method === "GET" && credentialMatch) {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 200, await accountCredentialStatus({ platform: credentialMatch[1], accountId: credentialMatch[2] }));
     }
     let handoffMatch = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/distribution-handoffs$/);
     if (request.method === "GET" && handoffMatch) {
@@ -759,6 +1021,10 @@ const server = http.createServer(async (request, response) => {
     if (request.method === "POST" && match) {
       return sendJson(response, 200, await service.runProductFactory(match[1], await readJson(request), actor));
     }
+    match = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/content-pipeline$/);
+    if (request.method === "POST" && match) {
+      return sendJson(response, 200, await service.runProductContentPipeline(match[1], await readJson(request), actor));
+    }
     match = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/strategy$/);
     if (request.method === "POST" && match) {
       return sendJson(response, 200, await service.deriveStrategy(match[1], await readJson(request), actor));
@@ -780,6 +1046,9 @@ const server = http.createServer(async (request, response) => {
     }
     if (request.method === "POST" && url.pathname === "/api/campaigns/bootstrap") {
       return sendJson(response, 201, await service.bootstrapAutonomousCampaign(await readJson(request), actor));
+    }
+    if (request.method === "POST" && url.pathname === "/api/campaigns/bootstrap-fanout") {
+      return sendJson(response, 201, await service.bootstrapAutonomousCampaignFanout(await readJson(request), actor));
     }
     if (request.method === "POST" && url.pathname === "/api/execution-accounts") {
       return sendJson(response, 201, await service.registerExecutionAccount(await readJson(request), actor));
@@ -987,9 +1256,15 @@ server.listen(port, host, () => {
   process.stdout.write(`Jang Global Seeding dashboard: http://${host}:${address.port}\n`);
   fixtureWorker.start();
   scheduleCampaignQueueEvaluation();
+  scheduleAccountAgentRecovery(10_000);
+  scheduleUpdateDiscovery(1_000);
   scheduleJevExecution();
   scheduleControlCycle();
   scheduleDiscoveryCollection();
+  // Packaged first run provisions the pinned Crawl4AI/nodriver runtime in
+  // durable user storage. The server remains responsive while this bounded
+  // network install runs; Overview reports RUNNING/UNAVAILABLE truthfully.
+  if (contentRuntimeAutoProvision) void startContentRuntimeProvisioning();
 });
 
 if (trafficPollMinutes > 0) {
@@ -1007,6 +1282,8 @@ function shutdown() {
   if (discoveryTimer) clearTimeout(discoveryTimer);
   if (campaignQueueTimer) clearTimeout(campaignQueueTimer);
   if (jevExecutionTimer) clearTimeout(jevExecutionTimer);
+  if (accountAgentRecoveryTimer) clearTimeout(accountAgentRecoveryTimer);
+  if (updateDiscoveryTimer) clearTimeout(updateDiscoveryTimer);
   fixtureWorker.stop();
   server.close(() => {
     void (async () => {

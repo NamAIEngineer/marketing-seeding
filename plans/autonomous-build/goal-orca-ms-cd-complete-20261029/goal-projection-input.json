@@ -1,0 +1,49 @@
+{
+  "goalId": "ORCA_MS_CD_COMPLETE_20261029_01",
+  "goalRunId": "run_5c4c40ae690b",
+  "mode": "GOAL",
+  "nativeGoalMode": "UNAVAILABLE",
+  "status": "ACTIVE",
+  "owner": "session-c",
+  "consumer": "launchd:ai.marketing-seeding.project-coordinator",
+  "checkpoint": "bec96d672870099dea51752c6114d1237faa14f2",
+  "sourceRevision": "bec96d672870099dea51752c6114d1237faa14f2",
+  "nextAction": "Reconcile A/D native lifecycle fences; review Reddit artifact; integrate C projection after independent checks.",
+  "acceptanceMatrix": [
+    { "id": "A1-M0", "status": "PARTIAL", "classification": "RUNTIME_VERIFIED", "owner": "session-c", "detail": "Native Orca Run is bound and LaunchAgent consumer is running; native Goal API is unavailable." },
+    { "id": "A2-M1", "status": "PARTIAL", "classification": "RUNTIME_VERIFIED", "owner": "session-c", "detail": "B result accepted with lifecycle limit; A/D dispatch turns started, but native task completion is fenced and historical owner continuity is unproven." },
+    { "id": "A3-M2", "status": "PARTIAL", "classification": "IMPLEMENTED", "owner": "session-c", "detail": "Coordinator separates task, worker and acceptance state; live A/D acceptance is pending." },
+    { "id": "A4-M3", "status": "PASSED", "classification": "IMPLEMENTED", "owner": "session-c", "evidenceRefs": ["85913e984a4c45c2278be2fe644055426a1455c4"] },
+    { "id": "A5-M4", "status": "PARTIAL", "classification": "RUNTIME_VERIFIED", "owner": "session-d", "detail": "Public discovery artifact exists; direct Reddit is blocked and extraction dependencies are unavailable." },
+    { "id": "A6-M5", "status": "PASSED", "classification": "FIXTURE_VERIFIED", "owner": "session-c", "evidenceRefs": ["test/project-coordinator.test.mjs", "test/project-coordinator-projection.test.mjs"] },
+    { "id": "A7-M6", "status": "BLOCKED", "classification": "UNKNOWN", "owner": "session-a", "detail": "Authenticated Camoufox readiness, authority, publication and permalink remain unverified." },
+    { "id": "A8-M7", "status": "OPEN", "classification": "IMPLEMENTED", "owner": "session-c", "detail": "Candidate and PR metadata require refresh after this C-owned change." },
+    { "id": "A9-M8", "status": "OPEN", "classification": "IMPLEMENTED", "owner": "session-c", "detail": "Auto-GTM lead-feed is available; generation/media capability is not configured." }
+  ],
+  "taskRefs": [
+    { "taskId": "task_cff5dc0edd69", "dispatchId": "ctx_50526e8f8452", "owner": "session-b", "scope": "owner-handshake", "workspace": "/Users/nam/Documents/marketing-seeding-integration", "sourceRevision": "b675a98e6dd2da3c12133dff715eddea616c91f5", "status": "COMPLETED_WITH_LIFECYCLE_LIMIT", "deliveryStatus": "TURN_STARTED", "workerStatus": "RECEIVER_VERIFIED_FOR_B_SCOPE", "acceptanceStatus": "PARTIAL", "artifactPath": "reports/b-handshake-1.json", "evidenceRefs": ["reports/b-handshake-1.json", "ctx_50526e8f8452"] },
+    { "taskId": "task_c1654095b6f7", "dispatchId": "ctx_74841ca420db", "owner": "session-d", "scope": "reddit-public-discovery", "workspace": "/Users/nam/orca/workspaces/marketing-seeding/reddit-design-os-discovery-20261029", "sourceRevision": "bec96d672870099dea51752c6114d1237faa14f2", "status": "COMPLETED", "deliveryStatus": "WORKER_DONE_ACCEPTED", "workerStatus": "NATIVE_WORKER", "acceptanceStatus": "PARTIAL", "artifactPath": "plans/autonomous-build/goal-orca-ms-cd-complete-20261029/reports/reddit-discovery-20261029.json", "evidenceRefs": ["ctx_74841ca420db", "plans/autonomous-build/goal-orca-ms-cd-complete-20261029/reports/reddit-discovery-20261029.json"] },
+    { "taskId": "task_84d8a60ef560", "dispatchId": "ctx_186718077c67", "owner": "session-a", "scope": "camoufox-runtime-owner-handshake", "workspace": "/Users/nam/Documents/marketing-seeding-wave-13-bridge", "sourceRevision": "a145870bf683f68d996602cb7cceda4fbf81b520", "status": "DISPATCHED", "deliveryStatus": "TURN_STARTED", "workerStatus": "RECEIVER_IDENTITY_UNPROVEN", "acceptanceStatus": "PENDING", "blocker": "worker_done fenced by changed terminal identity", "nextAction": "Reattach or settle from exact native assignee; preserve dirty overlay", "evidenceRefs": ["ctx_186718077c67", "term_da5a17d2-05a7-4bdf-84a1-628e1e0a52fc"] },
+    { "taskId": "task_ca0c4c6cde24", "dispatchId": "ctx_0859797f9a5e", "owner": "session-d", "scope": "listening-owner-handshake", "workspace": "/Users/nam/Documents/marketing-seeding-session-d-crawl4ai", "sourceRevision": "f13c48a80733996ff8eb769e627f48bbadf8d9b8", "status": "DISPATCHED", "deliveryStatus": "TURN_STARTED", "workerStatus": "RECEIVER_IDENTITY_UNPROVEN", "acceptanceStatus": "PENDING", "blocker": "worker_done fenced by changed terminal identity", "nextAction": "Reattach or settle from exact native assignee; preserve dirty overlay", "evidenceRefs": ["ctx_0859797f9a5e", "term_47279cd3-c6b5-4ae6-b10a-69612ef0fc7f"] }
+  ],
+  "currentBlockers": [
+    "Native Goal API unavailable; lightweight Orca Run is the native control plane.",
+    "A worker_done is fenced because the assigned terminal identity changed; A receiver completion remains pending.",
+    "D worker_done is fenced because the assigned terminal identity changed; D owner continuity remains unproven.",
+    "LinkedIn live readiness, authority, publication, permalink and metrics are UNKNOWN.",
+    "Reddit first-party 403/login redirect and missing Crawl4AI/nodriver modules yield PARTIAL discovery.",
+    "Auto-GTM generation/media capability is not configured."
+  ],
+  "wake": {
+    "consumer": "launchd:ai.marketing-seeding.project-coordinator",
+    "condition": "native worker result, dependency event, or bounded coordinator tick",
+    "nextWakeAt": null,
+    "lastWakeAt": "2026-10-29T05:04:07.000Z"
+  },
+  "evidenceRefs": [
+    "run_5c4c40ae690b",
+    "bec96d672870099dea51752c6114d1237faa14f2",
+    "plans/autonomous-build/goal-orca-ms-cd-complete-20261029/reports/reddit-discovery-20261029.json"
+  ],
+  "observedAt": "2026-10-29T05:06:42.741Z"
+}

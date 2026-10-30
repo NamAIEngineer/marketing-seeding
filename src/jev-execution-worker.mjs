@@ -263,6 +263,10 @@ export class JevExecutionWorker {
         // level. Keep context metadata alongside it; never hide provider,
         // profile, account, or verified identity under a nested field.
         resolvedSessionEnvelope = await acquire({ ...initial.request, account: initial.account, context: initial, executionId });
+        if (resolvedSessionEnvelope?.ready === false) {
+          const code = String(resolvedSessionEnvelope.code || resolvedSessionEnvelope.status || "execution_session_not_ready").trim().toLowerCase();
+          throw Object.assign(new Error(resolvedSessionEnvelope.reason || "execution session is not ready"), { code: code || "execution_session_not_ready" });
+        }
         executionSession = resolvedSessionEnvelope?.session || resolvedSessionEnvelope;
         executionTransport = resolvedSessionEnvelope?.transport || executionSession?.transport || null;
         executionBrowserSurface = resolvedSessionEnvelope?.browserSurface || executionSession?.browserSurface || null;
@@ -530,16 +534,44 @@ export class JevExecutionWorker {
     const leaseResult = await this.service.acquireExecutionLease(executionId, this.workerId, { leaseMs: this.leaseMs, mode: "reconcile" });
     if (!leaseResult.acquired) return { status: "LEASE_BUSY", executionId, reason: leaseResult.reason };
     const lease = leaseResult.lease;
+    let resolvedSessionEnvelope = null;
+    let executionSession = null;
+    let executionTransport = null;
+    let executionBrowserSurface = null;
     try {
       await this.service.markExecutionReconciliationAttempt(executionId);
       const context = await this.service.executionContext(executionId);
+      // Reconciliation must inspect the exact account-owned Camoufox profile
+      // that crossed the submit boundary. Never fall back to a host browser
+      // surface: a permalink from another account cannot confirm this job.
+      if (canonicalProvider(context.request.provider, { allowLegacy: true }) === "camoufox") {
+        const resolver = this.executionSessionResolver;
+        const acquire = typeof resolver?.resolve === "function" ? resolver.resolve.bind(resolver) : resolver?.acquire?.bind(resolver);
+        if (typeof acquire !== "function") throw Object.assign(new Error("Camoufox execution session resolver is unavailable"), { code: "EXECUTION_SESSION_RESOLVER_UNAVAILABLE" });
+        resolvedSessionEnvelope = await acquire({ ...context.request, account: context.account, context, executionId, allowLoginBootstrap: false });
+        if (resolvedSessionEnvelope?.ready === false) throw Object.assign(new Error(resolvedSessionEnvelope.reason || "execution session is not ready"), { code: String(resolvedSessionEnvelope.code || "EXECUTION_SESSION_NOT_READY").toUpperCase() });
+        executionSession = resolvedSessionEnvelope?.session || resolvedSessionEnvelope;
+        executionTransport = resolvedSessionEnvelope?.transport || executionSession?.transport || null;
+        executionBrowserSurface = resolvedSessionEnvelope?.browserSurface || executionSession?.browserSurface || null;
+        if (!executionSession || !executionTransport || !executionBrowserSurface) throw Object.assign(new Error("exact Camoufox reconciliation surface is unavailable"), { code: "EXECUTION_SESSION_SURFACE_MISSING" });
+        if (String(executionSession.platform || "").toLowerCase() !== String(context.request.platform || "").toLowerCase() ||
+            String(executionSession.accountId || "") !== String(context.request.accountId || "") ||
+            (executionSession.expectedIdentity?.providerProfileId && String(executionSession.expectedIdentity.providerProfileId) !== String(context.request.providerProfileId || context.request.profileId)) ||
+            (executionSession.expectedIdentity?.identityReference && canonicalIdentityUrl(executionSession.expectedIdentity.identityReference) !== canonicalIdentityUrl(context.request.identityReference || context.request.target?.identityReference))) {
+          throw Object.assign(new Error("execution session binding does not match reconciliation request"), { code: "EXECUTION_SESSION_BINDING_MISMATCH" });
+        }
+      }
       const priorReceipt = (context.state.executionReceipts || [])
         .filter((item) => item.executionId === executionId && item.attempt === context.requestRow.attempt)
         .sort((left, right) => Date.parse(right.receivedAt || 0) - Date.parse(left.receivedAt || 0))[0];
       const result = await adapter.reconcile(context.request, {
         account: context.account,
         submittedAt: context.requestRow.submitIntentAt || context.requestRow.dispatchedAt || null,
-        preSubmitMediaIntegrity: priorReceipt?.receipt?.publicationEvidence?.preSubmitMediaIntegrity || null
+        preSubmitMediaIntegrity: priorReceipt?.receipt?.publicationEvidence?.preSubmitMediaIntegrity || null,
+        executionSession: executionSession || undefined,
+        browserSurface: executionBrowserSurface || undefined,
+        transport: executionTransport || undefined,
+        transportIdentity: executionSession?.transportIdentity || executionSession?.runtimeIdentity || executionTransport?.runtimeIdentity?.() || undefined
       });
       const receipt = this.#receipt(context.requestRow, context.request, result, { reconciliation: true });
       if (!(receipt.submitState === "UNKNOWN" && context.requestRow.state === "SUBMIT_RESULT_UNKNOWN")) {
@@ -547,6 +579,7 @@ export class JevExecutionWorker {
       }
       return { status: receipt.submitState, executionId, receipt };
     } finally {
+      try { await resolvedSessionEnvelope?.release?.(); } catch { /* release is best effort after reconciliation */ }
       await this.service.releaseExecutionLease(lease.id, lease.token);
     }
   }
