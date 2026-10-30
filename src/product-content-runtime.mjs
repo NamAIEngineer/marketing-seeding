@@ -118,6 +118,12 @@ function managedChromePath(root, provenance) {
   return path.join(root, 'browser', executable);
 }
 
+function managedFfmpegPath(root, provenance) {
+  const executable = provenance?.ffmpeg?.executable;
+  if (!executable) return null;
+  return path.join(root, 'toolchain-ffmpeg', executable);
+}
+
 function chromeCandidates({ root, resourcesDir, env, envPath }) {
   return [
     env.SEEDING_NODRIVER_CHROME,
@@ -133,7 +139,7 @@ function chromeCandidates({ root, resourcesDir, env, envPath }) {
 export function resolveContentRuntimePaths({ storageRoot, resourcesDir = APP_ROOT, env = process.env, appName, version, pathEnv, provenance = null, platform = process.platform, arch = process.arch } = {}) {
   const root = safePath(storageRoot, platformUserRoot({ appName, version }));
   const resources = safePath(resourcesDir, APP_ROOT);
-  const artifactProvenance = getContentRuntimeProvenance({ platform, arch });
+  const artifactProvenance = provenance || getContentRuntimeProvenance({ platform, arch });
   const envPath = String(pathEnv || env.PATH || process.env.PATH || '');
   const pythonCandidates = [
     { value: env.SEEDING_CONTENT_PYTHON || env.SEEDING_LISTENING_PYTHON, source: 'env' },
@@ -144,6 +150,7 @@ export function resolveContentRuntimePaths({ storageRoot, resourcesDir = APP_ROO
   ].filter((item) => item.value);
   const ffmpegCandidates = [
     { value: env.SEEDING_CONTENT_FFMPEG || env.FFMPEG_PATH, source: 'env' },
+    { value: managedFfmpegPath(root, artifactProvenance), source: 'managed-artifact' },
     { value: path.join(root, 'bin', process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg'), source: 'user-storage' },
     { value: path.join(resources, 'bin', process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg'), source: 'app-resources' },
     { value: 'ffmpeg', source: 'system-path' },
@@ -170,6 +177,7 @@ export function resolveContentRuntimePaths({ storageRoot, resourcesDir = APP_ROO
     pythonBootstrapPath: env.SEEDING_CONTENT_PYTHON_BOOTSTRAP || 'python3',
     managedPythonPath: managedPythonPath(root, artifactProvenance),
     managedChromePath: managedChrome,
+    managedFfmpegPath: managedFfmpegPath(root, artifactProvenance),
     provenance: artifactProvenance,
     runtimeManifestPath: path.join(root, 'runtime-manifest.json'),
     chromeCandidates: chrome,
@@ -317,7 +325,7 @@ async function provisionArtifact(kind, artifact, root, { downloadImpl = download
     return { status: 'FAILED', failure: failure('CONTENT_RUNTIME_PROVENANCE_REQUIRED', `${kind} artifact provenance is incomplete`) };
   }
   await fs.mkdir(root, { recursive: true, mode: 0o700 });
-  const destination = path.join(root, kind === 'python' ? 'toolchain-python' : 'browser');
+  const destination = path.join(root, kind === 'python' ? 'toolchain-python' : kind === 'chrome' ? 'browser' : 'toolchain-ffmpeg');
   await cleanStalePromotionPaths(root, kind, destination);
   const staging = await fs.mkdtemp(path.join(root, `.content-runtime-${kind}-`));
   const archivePath = path.join(staging, `artifact.${artifact.archiveType === 'zip' ? 'zip' : 'tar.gz'}`);
@@ -378,12 +386,31 @@ function modeRequirements(mode) {
 export async function probeContentRuntime({ mode = 'LOCAL', paths = null, storageRoot, resourcesDir, env = process.env, timeoutMs = DEFAULT_TIMEOUT_MS, spawnImpl = spawn } = {}) {
   const requirements = modeRequirements(mode);
   const resolved = paths || resolveContentRuntimePaths({ storageRoot, resourcesDir, env });
-  const [python, ffmpeg] = await Promise.all([
+  // Check managed bytes before attempting to execute any candidate. This
+  // prevents a tampered managed executable from being run for `-version`.
+  const managedFfmpeg = await verifyManagedArtifact(resolved.managedFfmpegPath, resolved.provenance?.ffmpeg?.executableSha256);
+  const [python, initialFfmpeg] = await Promise.all([
     requirements.python.length
       ? probeFirstCandidate(resolved.pythonCandidates || [{ value: resolved.pythonPath, source: resolved.pythonSource }], ['-c', `import sys; assert sys.version_info >= (3, 10), 'Python 3.10+ is required'; ${requirements.python.map((name) => `import ${name}`).join('; ')}; print('CONTENT_RUNTIME_IMPORTS_OK')`], { pathEnv: resolved.pathEnv, timeoutMs, spawnImpl })
       : Promise.resolve({ status: 'NOT_REQUIRED', path: resolved.pythonPath, imports: [] }),
-    requirements.ffmpeg ? probeFirstCandidate(resolved.ffmpegCandidates || [{ value: resolved.ffmpegPath, source: resolved.ffmpegSource }], ['-version'], { pathEnv: resolved.pathEnv, timeoutMs, spawnImpl }) : Promise.resolve({ status: 'NOT_REQUIRED', path: resolved.ffmpegPath }),
+    requirements.ffmpeg
+      ? managedFfmpeg.status === 'FAILED'
+        ? Promise.resolve({ status: 'FAILED', path: managedFfmpeg.path, source: 'managed-artifact', stderr: 'managed ffmpeg checksum does not match the reviewed pin', managed: managedFfmpeg })
+        : probeFirstCandidate(resolved.ffmpegCandidates || [{ value: resolved.ffmpegPath, source: resolved.ffmpegSource }], ['-version'], { pathEnv: resolved.pathEnv, timeoutMs, spawnImpl })
+      : Promise.resolve({ status: 'NOT_REQUIRED', path: resolved.ffmpegPath }),
   ]);
+  let ffmpeg = initialFfmpeg;
+  const managedFfmpegVersion = resolved.provenance?.ffmpeg?.version;
+  if (ffmpeg.status === 'READY' && ffmpeg.source === 'managed-artifact' && managedFfmpegVersion && !String(ffmpeg.version || '').includes(String(managedFfmpegVersion))) {
+    ffmpeg = {
+      ...ffmpeg,
+      status: 'FAILED',
+      stderr: `managed ffmpeg version does not match the reviewed ${managedFfmpegVersion} pin`,
+    };
+  }
+  // A managed file with the wrong immutable bytes must never fall through to
+  // a different candidate or be executed. A missing managed file may use the
+  // existing host fallback when that candidate is available.
   const managedPython = await verifyManagedArtifact(resolved.managedPythonPath, resolved.provenance?.python?.executableSha256);
   const managedChrome = await verifyManagedArtifact(resolved.managedChromePath, resolved.provenance?.chrome?.executableSha256);
   let chrome = { status: 'NOT_REQUIRED', path: null };
@@ -414,6 +441,7 @@ export async function probeContentRuntime({ mode = 'LOCAL', paths = null, storag
     ffmpeg,
     chrome,
     managedChrome,
+    managedFfmpeg,
     requirements,
     failure: runtimeFailure,
     readOnly: true,
@@ -538,12 +566,25 @@ export async function repairContentRuntime({ mode = 'LOCAL', storageRoot, resour
     }
   }
   if (!before.ffmpeg || before.ffmpeg.status !== 'READY') {
-    if (!ffmpegSourcePath) return { ...before, status: 'BLOCKED', ready: false, failure: failure('MEDIA_BACKEND_UNAVAILABLE', 'ffmpeg is unavailable and no checksum-pinned binary was supplied', { destination: path.join(resolved.storageRoot, 'bin', 'ffmpeg') }), repair: { attempted: true, actions, metadata } };
-    const staged = await stageVerifiedBinary({ sourcePath: ffmpegSourcePath, destinationPath: path.join(resolved.storageRoot, 'bin', process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg'), expectedSha256: ffmpegSha256 });
-    actions.push({ kind: 'ffmpeg', ...staged });
-    if (staged.status !== 'STAGED') return { ...before, status: 'BLOCKED', ready: false, failure: staged.failure, repair: { attempted: true, actions, metadata } };
+    let installed;
+    if (String(mode).toUpperCase() === 'PRODUCTION' && resolved.provenance?.ffmpeg) {
+      installed = await provisionArtifact('ffmpeg', resolved.provenance.ffmpeg, resolved.storageRoot, { downloadImpl: downloadImpl || ((artifact, options) => downloadArtifact(artifact, { ...options, fetchImpl })), extractImpl, timeoutMs, spawnImpl });
+    } else if (ffmpegSourcePath) {
+      const staged = await stageVerifiedBinary({ sourcePath: ffmpegSourcePath, destinationPath: path.join(resolved.storageRoot, 'bin', process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg'), expectedSha256: ffmpegSha256 });
+      installed = { kind: 'ffmpeg', ...staged };
+    } else {
+      return { ...before, status: 'BLOCKED', ready: false, failure: failure('MEDIA_BACKEND_UNAVAILABLE', 'ffmpeg is unavailable and no checksum-pinned binary was supplied', { destination: resolved.managedFfmpegPath || path.join(resolved.storageRoot, 'bin', 'ffmpeg') }), repair: { attempted: true, actions, metadata } };
+    }
+    if (!installed.kind) installed = { kind: 'ffmpeg-artifact', ...installed };
+    actions.push(installed);
+    if (installed.status !== 'PROVISIONED' && installed.status !== 'STAGED') {
+      const mediaFailure = installed.failure?.code === 'CONTENT_RUNTIME_CHECKSUM_MISMATCH'
+        ? failure('MEDIA_BACKEND_UNAVAILABLE', installed.failure.message, installed.failure.details)
+        : installed.failure;
+      return { ...before, status: 'BLOCKED', ready: false, failure: mediaFailure, repair: { attempted: true, actions, metadata } };
+    }
   }
-  const stagedFfmpeg = actions.find((action) => action.kind === 'ffmpeg' && action.status === 'STAGED')?.path;
+  const stagedFfmpeg = actions.find((action) => ['ffmpeg', 'ffmpeg-artifact'].includes(action.kind) && ['STAGED', 'PROVISIONED'].includes(action.status))?.path;
   const afterPaths = resolveContentRuntimePaths({
     storageRoot: resolved.storageRoot,
     resourcesDir: resolved.resourcesDir,

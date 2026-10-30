@@ -1,10 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
+import { createHash } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { runProductContentPipeline } from '../src/product-content-pipeline.mjs';
 import { probeContentRuntime, repairContentRuntime, resolveContentRuntimePaths, stageVerifiedBinary } from '../src/product-content-runtime.mjs';
+
+const digest = (value) => createHash('sha256').update(value).digest('hex');
 
 async function fixture() {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'product-content-pipeline-'));
@@ -143,4 +146,18 @@ test('checksum-pinned media staging rejects mismatch and accepts exact bytes', a
   assert.equal(staged.status, 'STAGED');
   assert.equal(staged.sha256, digest);
   assert.equal(await fs.readFile(destination, 'utf8'), 'binary fixture');
+});
+
+test('pipeline renders an MP4 through a checksum-staged managed ffmpeg fixture without host PATH', async () => {
+  const root = await fixture();
+  const source = path.join(root, 'ffmpeg-fixture.mjs');
+  const script = `#!/usr/bin/env node\nif (process.argv.includes('-version')) { console.log('ffmpeg version 7.1 fixture'); process.exit(0); }\nconst fs = require('node:fs'); const output = process.argv.at(-1); const bytes = Buffer.alloc(256); bytes.write('ftyp', 4); bytes.write('moov', 128); fs.writeFileSync(output, bytes);`;
+  await fs.writeFile(source, script, { mode: 0o700 });
+  const managed = path.join(root, 'runtime', 'toolchain-ffmpeg', 'imageio_ffmpeg', 'binaries', 'ffmpeg-macos-aarch64-v7.1');
+  const staged = await stageVerifiedBinary({ sourcePath: source, destinationPath: managed, expectedSha256: digest(Buffer.from(script)) });
+  assert.equal(staged.status, 'STAGED');
+  const result = await runProductContentPipeline(input(root, path.join(root, 'managed-out'), { ffmpegPath: managed }));
+  assert.equal(result.status, 'SUCCEEDED');
+  assert.equal(result.media.renderer, managed);
+  assert.equal((await fs.readFile(result.mp4Path)).subarray(4, 8).toString(), 'ftyp');
 });
