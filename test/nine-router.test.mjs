@@ -47,6 +47,7 @@ test("9Router projects authenticated capability objects and selects only compati
   };
   const status = await nineRouterStatus({ refresh: true });
   assert.equal(status.authenticated, true);
+  assert.equal(status.dashboardUrl, "http://fixture-9router.test/dashboard");
   assert.deepEqual(status.models.find((model) => model.id === "fixture-vision").capabilities, ["vision"]);
   assert.equal(status.models.find((model) => model.id === "fixture-vision").contextWindow, 12345);
   const selected = await selectNineRouterModel({ task: "media", preferredModel: "fixture-missing" });

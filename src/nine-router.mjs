@@ -61,6 +61,18 @@ function endpoint(value) {
   return raw;
 }
 
+function dashboardUrlFor(base) {
+  try {
+    const parsed = new URL(base);
+    parsed.pathname = "/dashboard";
+    parsed.search = "";
+    parsed.hash = "";
+    return parsed.toString().replace(/\/$/, "");
+  } catch {
+    return "http://127.0.0.1:20128/dashboard";
+  }
+}
+
 function classifyFailure(status, body = "") {
   if (status === 401 || status === 403) return { kind: "AUTH_OR_ENTITLEMENT", retryable: false, reason: "9Router authentication or provider entitlement required" };
   if (status === 429) return { kind: "RATE_LIMIT", retryable: true, reason: "9Router rate limit; model is cooling down" };
@@ -157,7 +169,7 @@ export async function nineRouterStatus({ refresh = true } = {}) {
   const cooldowns = [...state.failures.entries()].map(([model, failure]) => ({ model, ...failure })).filter((item) => item.until > Date.now());
   const usage = [...state.usage.entries()].map(([model, value]) => ({ model, ...value })).slice(-100);
   const output = {
-    provider: "9router", endpoint: configuredEndpoint, binary: { command: binary.command, version: binary.version, verified: binary.verified },
+    provider: "9router", endpoint: configuredEndpoint, dashboardUrl: dashboardUrlFor(configuredEndpoint), binary: { command: binary.command, version: binary.version, verified: binary.verified },
     expectedVersion: NINE_ROUTER_VERSION, installed: Boolean(binary.command), authenticated: Boolean(apiKey.value) && result.ok,
     connectRequired: !apiKey.value || result.failure?.kind === "AUTH_OR_ENTITLEMENT", catalogStatus: result.ok && apiKey.value ? "READY" : (!apiKey.value ? "CONNECT_REQUIRED" : (result.failure?.kind || "UNKNOWN")),
     quotaStatus: state.lastRequest?.quotaStatus || "UNVERIFIED",

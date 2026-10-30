@@ -30,8 +30,14 @@ installed-version mismatch and reports `UNAVAILABLE` without executing the
 package. The 9Router dashboard still owns provider login and API-key creation:
 the app cannot complete that human-authenticated step, so Overview reports
 `CONNECT_REQUIRED` until the user supplies an app-scoped API key through the
-operator connect action. The key is stored with mode `0600`; provider keys and
-dashboard passwords are never read or copied.
+operator connect action. On first run, Overview shows the verified provisioning
+status and opens `http://127.0.0.1:20128/dashboard` with a one-time flow: sign
+in to AI providers inside 9Router, create or copy an app-scoped key, then paste
+it into the authenticated Marketing Seeding form. The app stores only its own
+key with mode `0600`, probes authenticated `/v1/models`, and shows `READY` only
+after that evidence. No supported upstream zero-touch pairing exchange exists;
+provider keys, dashboard passwords/cookies, private 9Router tokens/databases are
+never read or copied.
 
 Model choices come only from the authenticated live `/v1/models` catalog. The
 catalog does not prove remaining quota, so quota is shown as `UNVERIFIED` until
