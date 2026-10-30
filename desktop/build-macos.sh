@@ -78,7 +78,10 @@ cat > "$APP/Contents/MacOS/launch" <<'LAUNCH'
 #!/bin/sh
 set -eu
 APP_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/../Resources/app" && pwd)
-DATA_ROOT="$HOME/Library/Application Support/Marketing Seeding OS"
+# Keep the durable runtime root overridable for packaged smoke/tests.  launchd
+# receives this exact value through EnvironmentVariables below; never derive a
+# second root from launchd's (potentially different) HOME.
+DATA_ROOT="${SEEDING_DATA_DIR:-$HOME/Library/Application Support/Marketing Seeding OS}"
 PORT=4321
 mkdir -p "$DATA_ROOT"
 chmod 700 "$DATA_ROOT"
@@ -89,7 +92,7 @@ if [ ! -s "$HEALTH_NONCE_FILE" ]; then
 fi
 HEALTH_NONCE=$(cat "$HEALTH_NONCE_FILE")
 SOURCE_COMMIT=$(cat "$APP_ROOT/source-commit.txt")
-for TOKEN in operator automation; do
+for TOKEN in operator automation control; do
   FILE="$DATA_ROOT/$TOKEN-token"
   if [ ! -s "$FILE" ]; then
     /usr/bin/openssl rand -hex 32 > "$FILE"
@@ -99,18 +102,50 @@ done
 export SEEDING_DATA_DIR="$DATA_ROOT"
 export SEEDING_OPERATOR_TOKEN=$(cat "$DATA_ROOT/operator-token")
 export SEEDING_AUTOMATION_TOKEN=$(cat "$DATA_ROOT/automation-token")
+export SEEDING_CONTROL_TOKEN=$(cat "$DATA_ROOT/control-token")
 export SEEDING_HOST=127.0.0.1
 export SEEDING_PORT=$PORT
 if ! "$APP_ROOT/../bin/node" "$APP_ROOT/health-probe.mjs" "http://127.0.0.1:$PORT/health" "$HEALTH_NONCE" "$SOURCE_COMMIT" >/dev/null 2>&1; then
   LABEL=ai.marketing-seeding.packaged
   PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
   mkdir -p "$HOME/Library/LaunchAgents"
+  # launchd does not inherit the environment of this launcher.  Escape values
+  # before writing XML so a custom HOME/data path cannot corrupt the plist.
+  xml_escape() {
+    printf '%s' "$1" | sed -e 's/&/\\&amp;/g' -e 's/</\\&lt;/g' -e 's/>/\\&gt;/g' -e 's/"/\\&quot;/g' -e "s/'/\\&apos;/g"
+  }
+  XML_HOME=$(xml_escape "$HOME")
+  XML_DATA_ROOT=$(xml_escape "$DATA_ROOT")
+  XML_OPERATOR_TOKEN=$(xml_escape "$SEEDING_OPERATOR_TOKEN")
+  XML_AUTOMATION_TOKEN=$(xml_escape "$SEEDING_AUTOMATION_TOKEN")
+  XML_CONTROL_TOKEN=$(xml_escape "$SEEDING_CONTROL_TOKEN")
+  XML_HEALTH_NONCE=$(xml_escape "$HEALTH_NONCE")
+  XML_BUILD_COMMIT=$(xml_escape "$SOURCE_COMMIT")
   cat > "$PLIST" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>Label</key><string>$LABEL</string>
 <key>ProgramArguments</key><array><string>/bin/sh</string><string>$APP_ROOT/../../MacOS/service</string></array>
+<key>EnvironmentVariables</key><dict>
+<key>HOME</key><string>$XML_HOME</string>
+<key>SEEDING_DATA_DIR</key><string>$XML_DATA_ROOT</string>
+<key>SEEDING_OPERATOR_TOKEN</key><string>$XML_OPERATOR_TOKEN</string>
+<key>SEEDING_AUTOMATION_TOKEN</key><string>$XML_AUTOMATION_TOKEN</string>
+<key>SEEDING_CONTROL_TOKEN</key><string>$XML_CONTROL_TOKEN</string>
+<key>SEEDING_HEALTH_NONCE</key><string>$XML_HEALTH_NONCE</string>
+<key>SEEDING_HOST</key><string>127.0.0.1</string>
+<key>SEEDING_PORT</key><string>4321</string>
+<key>SEEDING_BUILD_COMMIT</key><string>$XML_BUILD_COMMIT</string>
+<key>SEEDING_NODE_BIN</key><string>$APP_ROOT/../bin/node</string>
+<key>SEEDING_NPM_BIN</key><string>$APP_ROOT/../bin/npm</string>
+<key>SEEDING_9ROUTER_ENDPOINT</key><string>${SEEDING_9ROUTER_ENDPOINT:-http://127.0.0.1:20128/v1}</string>
+<key>SEEDING_CONTENT_AUTO_PROVISION</key><string>${SEEDING_CONTENT_AUTO_PROVISION:-true}</string>
+<key>SEEDING_CONTENT_MODE</key><string>${SEEDING_CONTENT_MODE:-PRODUCTION}</string>
+<key>SEEDING_JEV_WORKER_ENABLED</key><string>${SEEDING_JEV_WORKER_ENABLED:-true}</string>
+<key>SEEDING_JEV_LIVE_ENABLED</key><string>${SEEDING_JEV_LIVE_ENABLED:-true}</string>
+<key>SEEDING_JEV_AUTONOMOUS_LIVE_ENABLED</key><string>${SEEDING_JEV_AUTONOMOUS_LIVE_ENABLED:-true}</string>
+</dict>
 <key>RunAtLoad</key><true/>
 <key>KeepAlive</key><true/>
 <key>StandardOutPath</key><string>$DATA_ROOT/server.log</string>
@@ -118,6 +153,7 @@ if ! "$APP_ROOT/../bin/node" "$APP_ROOT/health-probe.mjs" "http://127.0.0.1:$POR
 </dict></plist>
 EOF
   /bin/launchctl bootout "gui/$(id -u)/$LABEL" >/dev/null 2>&1 || true
+  chmod 600 "$PLIST"
   /bin/launchctl bootstrap "gui/$(id -u)" "$PLIST"
   READY=0
   for ATTEMPT in 1 2 3 4 5 6 7 8 9 10; do
@@ -136,13 +172,24 @@ cat > "$APP/Contents/MacOS/service" <<'SERVICE'
 set -eu
 APP_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/../Resources/app" && pwd)
 NODE="$APP_ROOT/../bin/node"
-DATA_ROOT="$HOME/Library/Application Support/Marketing Seeding OS"
+DATA_ROOT="${SEEDING_DATA_DIR:-$HOME/Library/Application Support/Marketing Seeding OS}"
+mkdir -p "$DATA_ROOT"
+chmod 700 "$DATA_ROOT"
 export SEEDING_DATA_DIR="$DATA_ROOT"
-export SEEDING_OPERATOR_TOKEN=$(cat "$DATA_ROOT/operator-token")
-export SEEDING_AUTOMATION_TOKEN=$(cat "$DATA_ROOT/automation-token")
+if [ -z "${SEEDING_OPERATOR_TOKEN:-}" ]; then
+  export SEEDING_OPERATOR_TOKEN=$(cat "$DATA_ROOT/operator-token")
+fi
+if [ -z "${SEEDING_AUTOMATION_TOKEN:-}" ]; then
+  export SEEDING_AUTOMATION_TOKEN=$(cat "$DATA_ROOT/automation-token")
+fi
+if [ -z "${SEEDING_CONTROL_TOKEN:-}" ]; then
+  export SEEDING_CONTROL_TOKEN=$(cat "$DATA_ROOT/control-token")
+fi
 export SEEDING_HOST=127.0.0.1
 export SEEDING_PORT=4321
-export SEEDING_HEALTH_NONCE=$(cat "$DATA_ROOT/health-nonce")
+if [ -z "${SEEDING_HEALTH_NONCE:-}" ]; then
+  export SEEDING_HEALTH_NONCE=$(cat "$DATA_ROOT/health-nonce")
+fi
 export SEEDING_9ROUTER_ENDPOINT="${SEEDING_9ROUTER_ENDPOINT:-http://127.0.0.1:20128/v1}"
 export SEEDING_NODE_BIN="$APP_ROOT/../bin/node"
 export SEEDING_NPM_BIN="$APP_ROOT/../bin/npm"

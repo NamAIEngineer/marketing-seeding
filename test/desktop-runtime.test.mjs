@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, writeFile, mkdir, access } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile, mkdir, access, chmod, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { execFile, spawn } from "node:child_process";
@@ -9,6 +9,16 @@ import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 const root = path.resolve(new URL("..", import.meta.url).pathname);
+
+function embeddedDesktopScript(build, filename, marker) {
+  const start = `cat > \"$APP/Contents/MacOS/${filename}\" <<'${marker}'\n`;
+  const offset = build.indexOf(start);
+  assert.notEqual(offset, -1, `missing embedded ${filename} script`);
+  const bodyStart = offset + start.length;
+  const end = build.indexOf(`\n${marker}\n`, bodyStart);
+  assert.notEqual(end, -1, `unterminated embedded ${filename} script`);
+  return build.slice(bodyStart, end);
+}
 
 test("packaged launcher probes the server's /health route", async () => {
   const launcher = await readFile(path.join(root, "desktop/build-macos.sh"), "utf8");
@@ -23,9 +33,103 @@ test("packaged launcher probes the server's /health route", async () => {
   assert.match(launcher, /SEEDING_JEV_WORKER_ENABLED=.*true/);
   assert.match(launcher, /SEEDING_JEV_LIVE_ENABLED=.*true/);
   assert.match(launcher, /SEEDING_JEV_AUTONOMOUS_LIVE_ENABLED=.*true/);
+  assert.match(launcher, /<key>EnvironmentVariables<\/key><dict>/);
+  for (const key of [
+    "HOME",
+    "SEEDING_DATA_DIR",
+    "SEEDING_OPERATOR_TOKEN",
+    "SEEDING_AUTOMATION_TOKEN",
+    "SEEDING_CONTROL_TOKEN",
+    "SEEDING_HEALTH_NONCE",
+    "SEEDING_BUILD_COMMIT",
+    "SEEDING_NODE_BIN",
+    "SEEDING_NPM_BIN",
+    "SEEDING_9ROUTER_ENDPOINT",
+    "SEEDING_CONTENT_AUTO_PROVISION",
+    "SEEDING_CONTENT_MODE",
+    "SEEDING_JEV_WORKER_ENABLED",
+    "SEEDING_JEV_LIVE_ENABLED",
+    "SEEDING_JEV_AUTONOMOUS_LIVE_ENABLED"
+  ]) assert.match(launcher, new RegExp(`<key>${key}<\\/key>`));
   assert.equal(provenance.package, "9router");
   assert.equal(provenance.version, "0.5.109");
   assert.match(provenance.tarball, /^https:\/\/registry\.npmjs\.org\/9router\/-\/9router-0\.5\.109\.tgz$/);
+});
+
+test("packaged launchd scripts keep state and secrets inside the app-scoped data root", async (context) => {
+  const build = await readFile(path.join(root, "desktop/build-macos.sh"), "utf8");
+  const launch = embeddedDesktopScript(build, "launch", "LAUNCH");
+  const service = embeddedDesktopScript(build, "service", "SERVICE");
+  assert.match(launch, /DATA_ROOT=\"\$\{SEEDING_DATA_DIR:-\$HOME\/Library\/Application Support\/Marketing Seeding OS\}\"/);
+  assert.match(service, /DATA_ROOT=\"\$\{SEEDING_DATA_DIR:-\$HOME\/Library\/Application Support\/Marketing Seeding OS\}\"/);
+
+  const fixture = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-launchd-isolation-"));
+  context.after(() => rm(fixture, { recursive: true, force: true }));
+  const contents = path.join(fixture, "Contents");
+  const app = path.join(contents, "Resources", "app");
+  const bin = path.join(contents, "Resources", "bin");
+  const macos = path.join(contents, "MacOS");
+  await mkdir(app, { recursive: true });
+  await mkdir(bin, { recursive: true });
+  await mkdir(macos, { recursive: true });
+  await writeFile(path.join(app, "source-commit.txt"), "fixture-commit\n");
+  const fakeNode = `#!/bin/sh\nset -eu\nif [ -n \"${"$SEEDING_NODE_ENV_OUTPUT"}\" ]; then env | sort > \"$SEEDING_NODE_ENV_OUTPUT\"; fi\nexit 0\n`;
+  await writeFile(path.join(bin, "node"), fakeNode);
+  await chmod(path.join(bin, "node"), 0o755);
+  const fakeWebview = `#!/bin/sh\nset -eu\nenv | sort > \"$SEEDING_WEBVIEW_ENV_OUTPUT\"\nexit 0\n`;
+  await writeFile(path.join(macos, "webview"), fakeWebview);
+  await chmod(path.join(macos, "webview"), 0o755);
+  const launchPath = path.join(macos, "launch");
+  await writeFile(launchPath, launch);
+  await chmod(launchPath, 0o755);
+
+  const home = path.join(fixture, "home");
+  const dataRoot = path.join(fixture, "runtime-data");
+  const nodeOutput = path.join(fixture, "node-env.txt");
+  const webviewOutput = path.join(fixture, "webview-env.txt");
+  await mkdir(home, { recursive: true });
+  await execFileAsync("/bin/sh", [launchPath], {
+    env: {
+      ...process.env,
+      HOME: home,
+      SEEDING_DATA_DIR: dataRoot,
+      SEEDING_NODE_ENV_OUTPUT: nodeOutput,
+      SEEDING_WEBVIEW_ENV_OUTPUT: webviewOutput
+    }
+  });
+  for (const filename of ["health-nonce", "operator-token", "automation-token", "control-token"]) {
+    await access(path.join(dataRoot, filename));
+  }
+  await assert.rejects(access(path.join(home, "Library", "Application Support", "Marketing Seeding OS")));
+  const launcherEnv = await readFile(webviewOutput, "utf8");
+  assert.match(launcherEnv, new RegExp(`SEEDING_DATA_DIR=${dataRoot.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}`));
+  assert.match(launcherEnv, /SEEDING_OPERATOR_TOKEN=[0-9a-f]{64}/);
+  assert.match(launcherEnv, /SEEDING_AUTOMATION_TOKEN=[0-9a-f]{64}/);
+  assert.match(launcherEnv, /SEEDING_CONTROL_TOKEN=[0-9a-f]{64}/);
+
+  const servicePath = path.join(macos, "service");
+  await writeFile(servicePath, service);
+  await chmod(servicePath, 0o755);
+  const serviceDataRoot = path.join(fixture, "service-data");
+  const serviceHome = path.join(fixture, "service-home");
+  const serviceOutput = path.join(fixture, "service-env.txt");
+  await mkdir(serviceHome, { recursive: true });
+  await execFileAsync("/bin/sh", [servicePath], {
+    env: {
+      ...process.env,
+      HOME: serviceHome,
+      SEEDING_DATA_DIR: serviceDataRoot,
+      SEEDING_OPERATOR_TOKEN: "o".repeat(64),
+      SEEDING_AUTOMATION_TOKEN: "a".repeat(64),
+      SEEDING_CONTROL_TOKEN: "c".repeat(64),
+      SEEDING_HEALTH_NONCE: "fixture-nonce",
+      SEEDING_NODE_ENV_OUTPUT: serviceOutput
+    }
+  });
+  const serviceEnv = await readFile(serviceOutput, "utf8");
+  assert.match(serviceEnv, new RegExp(`SEEDING_DATA_DIR=${serviceDataRoot.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}`));
+  assert.match(serviceEnv, /SEEDING_CONTROL_TOKEN=c{64}/);
+  await assert.rejects(access(path.join(serviceHome, "Library", "Application Support", "Marketing Seeding OS")));
 });
 
 test('desktop build refuses dirty source unless explicitly overridden', async () => {
