@@ -116,6 +116,7 @@ if ! "$APP_ROOT/../bin/node" "$APP_ROOT/health-probe.mjs" "http://127.0.0.1:$POR
   }
   XML_HOME=$(xml_escape "$HOME")
   XML_DATA_ROOT=$(xml_escape "$DATA_ROOT")
+  XML_APP_ROOT=$(xml_escape "$APP_ROOT")
   XML_OPERATOR_TOKEN=$(xml_escape "$SEEDING_OPERATOR_TOKEN")
   XML_AUTOMATION_TOKEN=$(xml_escape "$SEEDING_AUTOMATION_TOKEN")
   XML_CONTROL_TOKEN=$(xml_escape "$SEEDING_CONTROL_TOKEN")
@@ -126,7 +127,7 @@ if ! "$APP_ROOT/../bin/node" "$APP_ROOT/health-probe.mjs" "http://127.0.0.1:$POR
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>Label</key><string>$LABEL</string>
-<key>ProgramArguments</key><array><string>/bin/sh</string><string>$APP_ROOT/../../MacOS/service</string></array>
+<key>ProgramArguments</key><array><string>/bin/sh</string><string>$XML_APP_ROOT/../../MacOS/service</string></array>
 <key>EnvironmentVariables</key><dict>
 <key>HOME</key><string>$XML_HOME</string>
 <key>SEEDING_DATA_DIR</key><string>$XML_DATA_ROOT</string>
@@ -150,8 +151,8 @@ if ! "$APP_ROOT/../bin/node" "$APP_ROOT/health-probe.mjs" "http://127.0.0.1:$POR
 </dict>
 <key>RunAtLoad</key><true/>
 <key>KeepAlive</key><true/>
-<key>StandardOutPath</key><string>$DATA_ROOT/server.log</string>
-<key>StandardErrorPath</key><string>$DATA_ROOT/server.log</string>
+<key>StandardOutPath</key><string>$XML_DATA_ROOT/server.log</string>
+<key>StandardErrorPath</key><string>$XML_DATA_ROOT/server.log</string>
 </dict></plist>
 EOF
   /bin/launchctl bootout "gui/$(id -u)/$LABEL" >/dev/null 2>&1 || true
