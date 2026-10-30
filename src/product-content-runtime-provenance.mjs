@@ -2,8 +2,8 @@
  * Immutable public artifacts used by the optional content-runtime bootstrap.
  *
  * These values are deliberately explicit.  They came from the official
- * Astral python-build-standalone release and Google's Chrome for Testing
- * known-good metadata on 2026-10-30.  A release must update the values and
+ * Astral python-build-standalone release, Google's Chrome for Testing
+ * known-good metadata, and the PyPI imageio-ffmpeg wheel on 2026-10-30.  A release must update the values and
  * the accompanying source audit together; user-writable metadata is never a
  * source of trust.
  */
@@ -31,6 +31,18 @@ const DARWIN_ARM64 = Object.freeze({
     sha256: '8bc590d1b1acac042a000234c768f31830f25a3983a83ed5e067114c87c4cad1',
     executable: 'chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing',
     executableSha256: 'c6279ef2230d17c6007ea1dc5342b67b0e6b0860741392de8eb0306aaeced292',
+  }),
+  ffmpeg: Object.freeze({
+    version: '7.1',
+    package: 'imageio-ffmpeg==0.6.0',
+    archiveType: 'zip',
+    url: 'https://files.pythonhosted.org/packages/40/5c/f3d8a657d362cc93b81aab8feda487317da5b5d31c0e1fdfd5e986e55d17/imageio_ffmpeg-0.6.0-py3-none-macosx_11_0_arm64.whl',
+    metadataUrl: 'https://pypi.org/pypi/imageio-ffmpeg/0.6.0/json',
+    source: 'PyPI imageio-ffmpeg 0.6.0 macOS arm64 wheel; bundled FFmpeg 7.1',
+    sha256: 'b1ae3173414b5fc5f538a726c4e48ea97edc0d2cdc11f103afee655c463fa742',
+    executable: 'imageio_ffmpeg/binaries/ffmpeg-macos-aarch64-v7.1',
+    executableSha256: '6d175a4743ca50256e89a8cdd731100f9cee33bd79aeea46894d209410dc6617',
+    license: 'BSD-2-Clause package; bundled FFmpeg GPL-3.0-or-later build',
   }),
 });
 

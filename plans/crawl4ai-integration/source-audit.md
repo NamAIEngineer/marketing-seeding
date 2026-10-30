@@ -19,3 +19,13 @@ Runtime observations:
 - nodriver owns a temporary unauthenticated profile per fetch. Cleanup evidence reports `browser_process_exited;profile_removed`.
 - The committed [python-dependencies.lock](python-dependencies.lock) records the installed editable source revisions and bounded runtime package pins; the ignored venv and source checkouts remain outside the product repository.
 - License handling is summarized in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Subprocess isolation is not treated as a license exemption.
+
+Managed media backend evidence (captured 2026-10-30): the PyPI
+`imageio-ffmpeg==0.6.0` macOS arm64 wheel is fetched from the immutable
+`files.pythonhosted.org` URL recorded in
+`src/product-content-runtime-provenance.mjs`, with wheel SHA-256
+`b1ae3173414b5fc5f538a726c4e48ea97edc0d2cdc11f103afee655c463fa742`.
+Its `imageio_ffmpeg/binaries/ffmpeg-macos-aarch64-v7.1` member has SHA-256
+`6d175a4743ca50256e89a8cdd731100f9cee33bd79aeea46894d209410dc6617`; the
+executable reports FFmpeg 7.1 and exposes `libx264` and MP4 muxer support.
+Registry metadata source: <https://pypi.org/pypi/imageio-ffmpeg/0.6.0/json>.
