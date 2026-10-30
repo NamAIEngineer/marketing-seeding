@@ -22,6 +22,14 @@ test('Darwin arm64 managed ffmpeg pin records the public wheel and immutable byt
   assert.equal(ffmpeg.sha256, 'b1ae3173414b5fc5f538a726c4e48ea97edc0d2cdc11f103afee655c463fa742');
   assert.equal(ffmpeg.executableSha256, '6d175a4743ca50256e89a8cdd731100f9cee33bd79aeea46894d209410dc6617');
   assert.match(ffmpeg.license, /BSD-2-Clause/);
+  assert.match(ffmpeg.license, /GPL-2\.0-or-later/);
+  assert.ok(ffmpeg.buildFlags.length >= 30);
+  assert.ok(ffmpeg.buildFlags.includes('--enable-libx265'));
+  assert.ok(ffmpeg.buildFlags.includes('--enable-libkvazaar'));
+  assert.equal(ffmpeg.externalLibraries.length, 20);
+  assert.ok(ffmpeg.externalLibraries.some((library) => library.name === 'libx265'));
+  assert.equal(ffmpeg.sourceOfferStatus, 'SOURCE_CORRESPONDENCE_REVIEW_REQUIRED');
+  assert.ok(ffmpeg.noticeFiles.includes('FFmpeg-COPYING.GPLv2'));
 });
 
 function fixtureArtifact(kind = 'python') {

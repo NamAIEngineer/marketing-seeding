@@ -28,6 +28,14 @@ test("packaged launcher probes the server's /health route", async () => {
   assert.match(provenance.tarball, /^https:\/\/registry\.npmjs\.org\/9router\/-\/9router-0\.5\.109\.tgz$/);
 });
 
+test('desktop build refuses dirty source unless explicitly overridden', async () => {
+  const build = await readFile(path.join(root, 'desktop/build-macos.sh'), 'utf8');
+  assert.match(build, /SEEDING_ALLOW_DIRTY_BUILD/);
+  assert.match(build, /git -C "\$SOURCE" status --porcelain/);
+  assert.match(build, /refusing dirty build/);
+  assert.match(build, /exit 2/);
+});
+
 test("updater rejects an unrelated app bundle before swap", async () => {
   const fixture = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-wrong-app-"));
   const app = path.join(fixture, "Wrong.app");

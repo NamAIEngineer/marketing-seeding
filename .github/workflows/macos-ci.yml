@@ -84,6 +84,9 @@ jobs:
           test -x "$app/Contents/Resources/app/provision-9router.sh"
           test -x "$app/Contents/Resources/app/update-macos.sh"
 
+      - name: Verify bundled FFmpeg notices and source status
+        run: SEEDING_REQUIRE_DESKTOP_ARTIFACT=true node --test test/desktop-license-notices.test.mjs
+
       - name: Report unsigned CI build
         if: env.SEEDING_CODESIGN_IDENTITY == ''
         run: |

@@ -10,6 +10,15 @@ SWIFT_BIN=$(command -v swiftc)
 NPM_BIN=$(command -v npm || true)
 NPM_ROOT=$(npm root -g 2>/dev/null || true)
 
+# A bundle records only the committed HEAD. Refuse to package an overlay that
+# would make the source stamp lie about the bytes in the app. Developers may
+# explicitly opt into a disposable dirty build, but it must be visible in the
+# command and is never accepted by release CI.
+if [ "${SEEDING_ALLOW_DIRTY_BUILD:-false}" != "true" ] && [ -n "$(git -C "$SOURCE" status --porcelain)" ]; then
+  echo 'refusing dirty build: commit all source changes or set SEEDING_ALLOW_DIRTY_BUILD=true for a local disposable build' >&2
+  exit 2
+fi
+
 test -f "$SOURCE/src/server.mjs"
 test -d "$SOURCE/public"
 test -f "$NODE_BIN"

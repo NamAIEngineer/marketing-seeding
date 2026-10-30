@@ -14,6 +14,11 @@ sh desktop/build-macos.sh
 open "desktop/dist/Marketing Seeding OS.app"
 ```
 
+The build refuses a dirty Git checkout because the bundle embeds only the
+committed source ID. Commit the intended changes before packaging. For a local
+disposable inspection build only, set `SEEDING_ALLOW_DIRTY_BUILD=true`; that
+override is not release-safe and CI does not use it.
+
 The package includes the server, public UI, listening worker entrypoints, and
 the exact source commit used to build it. Crawl4AI and nodriver remain optional
 local backends: the app never fabricates listening, Camoufox, media, or

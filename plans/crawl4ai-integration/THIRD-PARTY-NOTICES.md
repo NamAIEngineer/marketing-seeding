@@ -13,7 +13,29 @@ wheel URL and SHA-256
 `b1ae3173414b5fc5f538a726c4e48ea97edc0d2cdc11f103afee655c463fa742`; the
 bundled `ffmpeg-macos-aarch64-v7.1` executable is pinned to SHA-256
 `6d175a4743ca50256e89a8cdd731100f9cee33bd79aeea46894d209410dc6617`.
-The package is BSD-2-Clause; this wheel's FFmpeg build enables GPL components
-including libx264, so its FFmpeg distribution is GPL-3.0-or-later. Preserve
-the package and FFmpeg license texts when redistributing the managed backend.
-Metadata source: <https://pypi.org/pypi/imageio-ffmpeg/0.6.0/json>.
+The Python package is BSD-2-Clause. The bundled executable was observed with
+`--enable-gpl`, `--enable-libx264`, `--enable-libx265`, and the additional
+external-library flags recorded in `FFmpeg-LIBRARY-INVENTORY.md`. FFmpeg's
+official license guidance says that enabling GPL components changes the
+resulting FFmpeg binary to GPL-2.0-or-later; x264, x265, vid.stab and Kvazaar
+also require exact license/source review. The exact license texts and
+source-availability documents are shipped beside this notice:
+
+- [FFmpeg-DISTRIBUTION.md](FFmpeg-DISTRIBUTION.md) — build flags, provenance,
+  official license/source links, source-offer status and release checklist.
+- [FFmpeg-LIBRARY-INVENTORY.md](FFmpeg-LIBRARY-INVENTORY.md) — complete
+  observed configure flags and every enabled external library. Generic links
+  are not corresponding source for this binary.
+- [FFmpeg-LICENSE.md](FFmpeg-LICENSE.md) — FFmpeg's license summary.
+- [FFmpeg-COPYING.GPLv2](FFmpeg-COPYING.GPLv2) and
+  [FFmpeg-COPYING.LGPLv2.1](FFmpeg-COPYING.LGPLv2.1) — license texts used by
+  the FFmpeg source tree.
+- [x264-COPYING](x264-COPYING) — x264's GPL license text.
+- [imageio-ffmpeg-LICENSE.md](imageio-ffmpeg-LICENSE.md) — BSD-2-Clause
+  wrapper license.
+
+Metadata source: <https://pypi.org/pypi/imageio-ffmpeg/0.6.0/json>. Do not
+label this package a commercial distributable until the exact corresponding
+FFmpeg/x264 source and build scripts are mirrored or a release-specific,
+three-year written source offer is published. The current runnable artifact
+includes source links and license texts but retains this release blocker.

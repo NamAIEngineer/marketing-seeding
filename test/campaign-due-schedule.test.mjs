@@ -234,6 +234,52 @@ test("real standing schedule queue is idempotent and creates one guarded executi
   assert.equal(dashboardRun.executionControls[0].grantStatus, "ACTIVE");
   assert.equal(dashboardRun.executionControls[0].publicationStatus, "NOT_VERIFIED");
 
+  // The persisted schedule row is a queue-time audit record. Once an
+  // independent receipt arrives, Overview must reproject the current
+  // execution outcome instead of leaving REQUEST_READY/NOT_VERIFIED stale.
+  const execution = firstRequests[0];
+  const publicationUrl = "https://threads.net/@fixture/post/schedule-verified";
+  await service.store.mutate("fixture-verifier", "schedule_receipt_fixture", (state) => {
+    const request = state.executionRequests.find((item) => item.executionId === execution.executionId);
+    request.state = "CONFIRMED";
+    request.submitState = "CONFIRMED";
+    state.executionReceipts.push({
+      id: "schedule-verified-receipt",
+      executionId: execution.executionId,
+      jobId: post.id,
+      attempt: execution.attempt,
+      receivedAt: new Date().toISOString(),
+      receipt: {
+        submitState: "CONFIRMED",
+        publicationUrl,
+        publicationEvidence: {
+          verifiedAt: new Date().toISOString(),
+          verificationMethod: "fixture-independent-readback",
+          accountMatched: true,
+          targetMatched: true,
+          contentHashMatched: true,
+          verificationDetails: {
+            authorIdentity: { matched: true },
+            contentMatch: { matched: true },
+            candidate: {
+              postId: "schedule-verified",
+              permalink: publicationUrl,
+              timestamp: new Date().toISOString(),
+              timestampMatched: true
+            }
+          }
+        }
+      }
+    });
+    return state;
+  });
+  const dashboardAfterVerification = await service.dashboard();
+  const verifiedRun = dashboardAfterVerification.recentScheduleRuns.find((item) => item.scheduleId === scheduleRow.id);
+  assert.equal(verifiedRun.executionControls[0].requestState, "CONFIRMED");
+  assert.equal(verifiedRun.executionControls[0].submitState, "CONFIRMED");
+  assert.equal(verifiedRun.executionControls[0].publicationStatus, "VERIFIED");
+  assert.equal(verifiedRun.executionControls[0].reason, "independent_publication_receipt_verified");
+
   const second = await service.queueDueSchedules("standing-schedule-queue-repeat");
   const afterSecond = await service.snapshot();
   assert.equal(second.due.length, 0);
@@ -243,7 +289,9 @@ test("real standing schedule queue is idempotent and creates one guarded executi
   assert.equal(afterSecond.oneTimeExecutionWindows.filter((item) => item.jobId === post.id).length, 1);
   assert.equal(afterSecond.liveExecutionGrants.filter((item) => item.jobId === post.id).length, 1);
   assert.equal(afterSecond.publicationAttempts.length, 0);
-  assert.equal(afterSecond.executionReceipts.length, 0);
+  // The fixture verifier intentionally records one independent receipt above;
+  // the repeated scheduler tick must not create another one.
+  assert.equal(afterSecond.executionReceipts.length, 1);
 });
 
 test("concurrent due consumers reserve one window exactly once", async (t) => {

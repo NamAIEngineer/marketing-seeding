@@ -899,7 +899,12 @@ const server = http.createServer(async (request, response) => {
     }
     if (request.method === "POST" && url.pathname === "/api/9router/connect") {
       if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
-      return sendJson(response, 200, await connectNineRouter(await readJson(request)));
+      const result = await connectNineRouter(await readJson(request));
+      // A submitted key is only connected after an authenticated /v1/models
+      // probe. Surface provider auth/entitlement failures as HTTP failures so
+      // the dashboard cannot display a false success for a rejected key.
+      const status = result.failureStatus === 401 || result.failureStatus === 403 ? result.failureStatus : 200;
+      return sendJson(response, status, result);
     }
     if (request.method === "POST" && url.pathname === "/api/9router/select-model") {
       if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });

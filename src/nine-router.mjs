@@ -175,6 +175,7 @@ export async function nineRouterStatus({ refresh = true } = {}) {
     quotaStatus: state.lastRequest?.quotaStatus || "UNVERIFIED",
     catalogCheckedAt: state.checkedAt, models, cooldowns, usage, lastRequest: state.lastRequest, selection: state.selection,
     failure: result.failure || null,
+    failureStatus: Number.isInteger(result.status) ? result.status : null,
     security: { keyStored: Boolean(apiKey.value), keyStorage: apiKey.storage, keyPath: apiKey.storage === "macOS Keychain" ? "macOS Keychain" : "local protected runtime storage", providerCredentialsImported: false, accountCredentialsStoredInKeychain: true }
   };
   statusCache = output; statusCacheAt = Date.now();

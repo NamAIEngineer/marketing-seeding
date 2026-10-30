@@ -1435,7 +1435,11 @@ function projectScheduleExecutionControls(state, { campaignId, targetIds = null 
       submitState: String(request?.submitState || receipt?.receipt?.submitState || "NOT_STARTED").slice(0, 40),
       windowStatus: window ? String(oneTimeExecutionWindowStatus(window, new Date())).slice(0, 40) : "NOT_CREATED",
       grantStatus: grant ? String(liveGrantEffectiveStatus(grant)).slice(0, 40) : "NOT_CREATED",
-      publicationStatus
+      publicationStatus,
+      // Keep scheduler rows truthful after an independent publication
+      // receipt arrives. REQUEST_READY is a historical queue state, not the
+      // current outcome of the bound execution.
+      reason: publicationStatus === "VERIFIED" ? "independent_publication_receipt_verified" : null
     };
   }).filter((item) => item.executionRef || item.requestState !== "NOT_CREATED");
 }
@@ -8478,7 +8482,16 @@ export class SeedingService {
         runs: newest(state.fixtureAutomationRuns, "at")
       },
       schedules: state.schedules,
-      recentScheduleRuns: newest(state.scheduleRuns, "recordedAt"),
+      // Reproject controls from the current durable execution rows/receipts
+      // when the overview is read. Persisted schedule rows retain the
+      // queue-time audit record, while the dashboard must show the latest
+      // VERIFIED/UNKNOWN outcome rather than stale REQUEST_READY fields.
+      recentScheduleRuns: newest(state.scheduleRuns, "recordedAt").map((run) => ({
+        ...run,
+        executionControls: normalizeScheduleExecutionControls(
+          projectScheduleExecutionControls(state, { campaignId: run.campaignId })
+        ) || run.executionControls || []
+      })),
       flowGraph: buildMarketingFlowGraph(state)
     };
   }

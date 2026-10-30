@@ -27,5 +27,9 @@ Managed media backend evidence (captured 2026-10-30): the PyPI
 `b1ae3173414b5fc5f538a726c4e48ea97edc0d2cdc11f103afee655c463fa742`.
 Its `imageio_ffmpeg/binaries/ffmpeg-macos-aarch64-v7.1` member has SHA-256
 `6d175a4743ca50256e89a8cdd731100f9cee33bd79aeea46894d209410dc6617`; the
-executable reports FFmpeg 7.1 and exposes `libx264` and MP4 muxer support.
+executable reports FFmpeg 7.1 and exposes `libx264` and MP4 muxer support. Its
+complete `-buildconf` output and all 20 enabled external-library references are
+recorded in [FFmpeg-LIBRARY-INVENTORY.md](FFmpeg-LIBRARY-INVENTORY.md). Those
+references are not corresponding source: exact revisions, patches, compiler
+inputs and build scripts remain unresolved for this wheel.
 Registry metadata source: <https://pypi.org/pypi/imageio-ffmpeg/0.6.0/json>.
