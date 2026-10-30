@@ -444,7 +444,8 @@ function scheduleCampaignQueueEvaluation(delayMs = 30_000) {
         campaigns: results.length,
         decisions: results.reduce((count, item) => count + (Array.isArray(item?.decisions) ? item.decisions.length : 0), 0),
         failed: failed.length,
-        failureReasons
+        failureReasons,
+        scheduled: results.filter((item) => item?.scheduleId).map((item) => ({ scheduleId: item.scheduleId, campaignId: item.campaignId, status: item.scheduleStatus || "UNKNOWN", windowKey: item.scheduleWindowKey || null }))
       };
     } catch (error) {
       campaignQueueRuntime.lastSummary = {
@@ -931,9 +932,31 @@ const server = http.createServer(async (request, response) => {
     if (request.method === "POST" && url.pathname === "/api/account-credentials") {
       if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
       const input = await readJson(request);
-      const { platform, accountId, username, password, ...metadata } = input || {};
+      const { platform, accountId, username, password, targetName, targetUrl, targetRulesStatus, ...metadata } = input || {};
       const credential = await storeAccountCredentials({ platform, accountId, username, password });
       const result = await service.onboardExecutionAccount({ ...metadata, platform, accountId, username, password, storeCredentials: async () => credential }, actor);
+      // A login proves only the account identity. A target is created only
+      // when the operator supplies its exact channel URL; readiness remains
+      // UNKNOWN/needs_review until the Account Agent observes target rights.
+      if (result?.login?.status === "READY" && targetUrl) {
+        const account = result.account || {};
+        try {
+          result.target = await service.createTarget({
+            channel: String(platform || "").trim().toLowerCase(),
+            name: String(targetName || `${platform} target for ${accountId}`).trim(),
+            url: targetUrl,
+            accountId: String(accountId || "").trim(),
+            profileId: account.profileId,
+            provider: account.provider || "camoufox",
+            providerProfileId: account.providerProfileId || account.profileId,
+            identityReference: account.identityReference || null,
+            status: "needs_review",
+            rulesStatus: targetRulesStatus || undefined
+          }, actor);
+        } catch (error) {
+          result.target = { status: "BLOCKED", code: String(error?.code || "TARGET_ONBOARDING_FAILED"), reason: String(error?.message || "target onboarding failed").replace(/\s+/g, " ").slice(0, 240) };
+        }
+      }
       return sendJson(response, 201, result);
     }
     const credentialMatch = url.pathname.match(/^\/api\/account-credentials\/([^/]+)\/([^/]+)$/);
@@ -1018,6 +1041,9 @@ const server = http.createServer(async (request, response) => {
     }
     if (request.method === "POST" && url.pathname === "/api/campaigns/bootstrap") {
       return sendJson(response, 201, await service.bootstrapAutonomousCampaign(await readJson(request), actor));
+    }
+    if (request.method === "POST" && url.pathname === "/api/campaigns/bootstrap-fanout") {
+      return sendJson(response, 201, await service.bootstrapAutonomousCampaignFanout(await readJson(request), actor));
     }
     if (request.method === "POST" && url.pathname === "/api/execution-accounts") {
       return sendJson(response, 201, await service.registerExecutionAccount(await readJson(request), actor));

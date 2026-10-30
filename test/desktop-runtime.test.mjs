@@ -20,6 +20,9 @@ test("packaged launcher probes the server's /health route", async () => {
   assert.match(launcher, /health-probe\.mjs/);
   assert.match(launcher, /health-nonce/);
   assert.match(launcher, /9router-provenance\.json/);
+  assert.match(launcher, /SEEDING_JEV_WORKER_ENABLED=.*true/);
+  assert.match(launcher, /SEEDING_JEV_LIVE_ENABLED=.*true/);
+  assert.match(launcher, /SEEDING_JEV_AUTONOMOUS_LIVE_ENABLED=.*true/);
   assert.equal(provenance.package, "9router");
   assert.equal(provenance.version, "0.5.109");
   assert.match(provenance.tarball, /^https:\/\/registry\.npmjs\.org\/9router\/-\/9router-0\.5\.109\.tgz$/);

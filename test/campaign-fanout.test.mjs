@@ -8,7 +8,12 @@ import { SeedingService } from "../src/service.mjs";
 
 test("All Social fan-out isolates ready and blocked Camoufox account agents", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "campaign-fanout-"));
-  const repo = path.join(root, "repo"); await mkdir(repo); await writeFile(path.join(repo, "README.md"), "fixture\n");
+  const repo = path.join(root, "repo"); await mkdir(repo); await writeFile(path.join(repo, "README.md"), [
+    "Threads fixture is a local-first distribution runtime.",
+    "It solves slow browser workflows by keeping evidence local.",
+    "Deterministic rendering and verified evidence make it useful for design teams.",
+    "Designers and developers need a local workflow."
+  ].join(" "));
   const service = new SeedingService(new JsonStore(path.join(root, "state.json")));
   await service.init();
   const campaign = await service.createCampaign({ name: "Fanout", objective: "fixture", productRepo: repo });
@@ -87,5 +92,47 @@ test("All Social honors an explicit one-or-many account selection", async () => 
   assert.equal(plan.rows.length, 1);
   assert.equal(plan.rows[0].accountId, "two");
   assert.equal(plan.requestedAccountIds[0], "two");
+});
+
+test("All Social uses a ready later destination when the first selected account is blocked", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "campaign-fanout-blocked-first-"));
+  const repo = path.join(root, "repo"); await mkdir(repo); await writeFile(path.join(repo, "README.md"), [
+    "Threads fixture is a local-first distribution runtime.",
+    "It solves slow browser workflows by keeping evidence local.",
+    "Deterministic rendering and verified evidence make it useful for design teams.",
+    "Designers and developers need a local workflow."
+  ].join(" "));
+  const service = new SeedingService(new JsonStore(path.join(root, "state.json")), { productRepoRoots: [root] });
+  await service.init();
+  const campaign = await service.createCampaign({ name: "Fanout blocked first", objective: "fixture", productRepo: repo });
+  const checkedAt = new Date().toISOString();
+  const rows = [
+    { accountId: "blocked-first", profileId: "profile-blocked-first", identity: "https://threads.net/@blockedfirst", health: "human_required", loginStatus: "BLOCKED" },
+    { accountId: "ready-second", profileId: "profile-ready-second", identity: "https://threads.net/@readysecond", health: "healthy", loginStatus: "READY" }
+  ];
+  const targets = [];
+  for (const row of rows) {
+    await service.registerExecutionAccount({ platform: "threads", accountId: row.accountId, provider: "camoufox", providerProfileId: row.profileId, profileId: row.profileId, identityReference: row.identity, status: "enabled", health: row.health, loginStatus: row.loginStatus });
+    await service.store.mutate("fixture", "set_fanout_account_state", (state) => {
+      const account = state.executionAccounts.find((item) => item.accountId === row.accountId);
+      Object.assign(account, { health: row.health, loginStatus: row.loginStatus, agentStatus: row.loginStatus });
+      return account;
+    });
+    targets.push(await service.createTarget({
+      channel: "threads", name: row.accountId, url: row.identity, accountId: row.accountId, profileId: row.profileId,
+      provider: "camoufox", providerProfileId: row.profileId, identityReference: row.identity, status: "active",
+      readiness: { state: "ready", checkedAt, expiresAt: new Date(Date.now() + 180_000).toISOString(), checks: { sessionValid: true, composerCapable: true, platformAvailable: true } }
+    }));
+  }
+  const calls = [];
+  service.materializeAuthorizedContentCandidates = async (_campaignId, _actor, options) => { calls.push(["materialize", options]); return { materialized: [{ postId: "ready-second-post" }] }; };
+  service.queueAuthorizedCampaignJobs = async (_campaignId, _actor, options) => { calls.push(["queue", options]); return [{ postId: "ready-second-post", status: "queued" }]; };
+  const result = await service.bootstrapAutonomousCampaignFanout({ productRepo: repo, name: campaign.name, objective: campaign.objective, audience: ["builders"], targetIds: targets.map((item) => item.id), authorizationReference: "fanout-blocked-first", timezone: "UTC", validityHours: 24, quota: 1, concurrency: 1 }, "local-human-operator");
+  assert.equal(result.status, "READY_FOR_AUTONOMOUS_EXECUTION");
+  assert.deepEqual(result.fanout.ready, [{ targetId: targets[1].id, accountId: "ready-second", platform: "threads" }]);
+  assert.equal(result.fanout.blocked[0].targetId, targets[0].id);
+  assert.equal(result.fanout.blocked[0].reason, "account_human_required");
+  assert.deepEqual(calls.at(-2)[1], { targetIds: [targets[1].id] });
+  assert.deepEqual(calls.at(-1)[1], { targetIds: [targets[1].id] });
 });
 

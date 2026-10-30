@@ -200,6 +200,31 @@ test("zero-touch bootstrap fails closed when account or target authority is miss
   assert.equal((await ambiguous.service.snapshot()).campaigns.length, 0);
 });
 
+test("autonomous bootstrap accepts a non-LinkedIn Camoufox account without changing its binding", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "campaign-bootstrap-threads-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const productRepo = path.join(root, "product");
+  await mkdir(productRepo);
+  await writeFile(path.join(productRepo, "README.md"), [
+    "Design OS Studio is a local-first design application.",
+    "It solves slow browser design workflows by keeping the design file local.",
+    "Native deterministic rendering and verified evidence make it useful for design teams.",
+    "Designers and Figma users need a local design workflow."
+  ].join(" "));
+  const service = new SeedingService(new JsonStore(path.join(root, "state.json")), { productRepoRoots: [root], readinessTtlMs: 300_000 });
+  await service.init();
+  const accountId = "threads-bootstrap";
+  const profileId = "threads-profile";
+  const identityReference = "https://threads.net/@owner";
+  await service.registerExecutionAccount({ platform: "threads", accountId, provider: "camoufox", providerProfileId: profileId, profileId, identityReference, status: "enabled", health: "healthy" }, "operator");
+  const target = await service.createTarget({ channel: "threads", name: "Threads owner", url: identityReference, accountId, profileId, provider: "camoufox", providerProfileId: profileId, identityReference, status: "active", readiness: { state: "ready", checkedAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 240_000).toISOString(), checks: { sessionValid: true, composerCapable: true, platformAvailable: true } } }, "operator");
+  const result = await service.bootstrapAutonomousCampaign({ productRepo, name: "Threads launch", objective: "Reach builders", audience: ["builders"], platform: "threads", targetId: target.id, accountId, profileId, provider: "camoufox", providerProfileId: profileId, identityReference, authorizationReference: "threads-bootstrap-authority", now: new Date() });
+  assert.notEqual(result.code, "Autonomous bootstrap currently supports LinkedIn only");
+  assert.equal(result.platform, undefined);
+  assert.equal(result.accountId, accountId);
+  assert.equal(result.targetId, target.id);
+});
+
 test("bootstrap reports authorization quota blockers instead of readiness reason", async (t) => {
   const { service, productRepo, now } = await fixture(t, { readinessProvider: true });
   await service.store.mutate("quota-fixture", "install_same_day_account_activity", (state) => {

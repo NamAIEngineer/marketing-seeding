@@ -7,6 +7,11 @@ import {
   evaluateDueSchedules,
   scheduleWindowKey
 } from "../src/campaign-due-schedule.mjs";
+import { JsonStore } from "../src/store.mjs";
+import { SeedingService } from "../src/service.mjs";
+import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 
 function schedule(overrides = {}) {
   return {
@@ -79,5 +84,124 @@ test("summary partitions decisions without granting execution authority", () => 
   assert.equal(result.invalid.length, 1);
   assert.equal(result.due[0].published, undefined);
   assert.equal(result.due[0].authorized, undefined);
+});
+
+test("service schedule consumer records due window and does not claim publication", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "campaign-schedule-consumer-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const repo = path.join(root, "product");
+  await mkdir(repo);
+  await writeFile(path.join(repo, "README.md"), "fixture product evidence\n");
+  const service = new SeedingService(new JsonStore(path.join(root, "state.json")), { productRepoRoots: [root] });
+  await service.init();
+  const campaign = await service.createCampaign({ name: "Scheduled fixture", objective: "Exercise due consumer", productRepo: repo });
+  const scheduleRow = await service.createSchedule(campaign.id, { name: "Due", localTime: "00:00", timezone: "UTC", channels: ["threads"], mode: "draft_only" });
+  const result = await service.queueDueSchedules("test-schedule-consumer");
+  assert.equal(result.due.length, 1);
+  assert.equal(result.due[0].status, "blocked");
+  assert.equal(result.due[0].reason, "standing_autonomous_authorization_not_uniquely_active");
+  assert.equal(result.due[0].publicationVerified, undefined);
+  const state = await service.snapshot();
+  const runs = state.scheduleRuns.filter((item) => item.scheduleId === scheduleRow.id);
+  assert.equal(runs.length, 1);
+  assert.equal(runs[0].status, "blocked");
+  assert.equal(runs[0].externalSideEffects, false);
+  assert.equal(runs[0].windowKey, scheduleWindowKey(scheduleRow, runs[0].localDate));
+});
+
+test("concurrent due consumers reserve one window exactly once", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "campaign-schedule-concurrency-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const repo = path.join(root, "product");
+  await mkdir(repo);
+  await writeFile(path.join(repo, "README.md"), "fixture product evidence\n");
+  const service = new SeedingService(new JsonStore(path.join(root, "state.json")), { productRepoRoots: [root] });
+  await service.init();
+  const campaign = await service.createCampaign({ name: "Concurrent fixture", objective: "Exercise reservation", productRepo: repo });
+  const scheduleRow = await service.createSchedule(campaign.id, { name: "Due", localTime: "00:00", timezone: "UTC", channels: ["threads"], mode: "draft_only" });
+  const [first, second] = await Promise.all([
+    service.queueDueSchedules("scheduler-a"),
+    service.queueDueSchedules("scheduler-b")
+  ]);
+  const state = await service.snapshot();
+  const runs = state.scheduleRuns.filter((item) => item.scheduleId === scheduleRow.id);
+  assert.equal(runs.length, 1);
+  assert.equal(first.due.length + second.due.length, 2);
+  assert.ok([first.due[0].status, second.due[0].status].includes("recorded"));
+});
+
+test("dashboard projects blocked schedule runs separately from publication evidence", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "campaign-schedule-dashboard-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const repo = path.join(root, "product");
+  await mkdir(repo);
+  await writeFile(path.join(repo, "README.md"), "fixture product evidence\n");
+  const service = new SeedingService(new JsonStore(path.join(root, "state.json")), { productRepoRoots: [root] });
+  await service.init();
+  const campaign = await service.createCampaign({ name: "Dashboard fixture", objective: "Exercise projection", productRepo: repo });
+  const scheduleRow = await service.createSchedule(campaign.id, { name: "Due", localTime: "00:00", timezone: "UTC", channels: ["threads"], mode: "draft_only" });
+  await service.queueDueSchedules("dashboard-scheduler");
+  const dashboard = await service.dashboard();
+  const run = dashboard.recentScheduleRuns.find((item) => item.scheduleId === scheduleRow.id);
+  assert.equal(run.status, "blocked");
+  assert.equal(run.externalSideEffects, false);
+  assert.equal(dashboard.posts.some((post) => post.status === "published"), false);
+});
+
+test("due consumer queues only exact ready destinations and records blocked accounts", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "campaign-schedule-target-gates-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const repo = path.join(root, "product");
+  await mkdir(repo);
+  await writeFile(path.join(repo, "README.md"), "fixture product evidence\n");
+  const service = new SeedingService(new JsonStore(path.join(root, "state.json")), { productRepoRoots: [root] });
+  await service.init();
+  const campaign = await service.createCampaign({ name: "Target gates", objective: "Exercise per-account schedule gates", productRepo: repo });
+  const checkedAt = new Date().toISOString();
+  const accounts = [
+    { id: "healthy", identity: "https://threads.net/@healthy", health: "healthy", loginStatus: "READY" },
+    { id: "blocked", identity: "https://threads.net/@blocked", health: "human_required", loginStatus: "BLOCKED" }
+  ];
+  const targets = [];
+  for (const item of accounts) {
+    const profileId = `profile-${item.id}`;
+    await service.registerExecutionAccount({ platform: "threads", accountId: item.id, provider: "camoufox", providerProfileId: profileId, profileId, identityReference: item.identity, status: "enabled", health: item.health });
+    await service.store.mutate("fixture", "set_schedule_agent_state", (state) => {
+      const account = state.executionAccounts.find((row) => row.accountId === item.id);
+      Object.assign(account, { health: item.health, loginStatus: item.loginStatus, agentStatus: item.loginStatus });
+      return account;
+    });
+    targets.push(await service.createTarget({
+      channel: "threads", name: item.id, url: item.identity, accountId: item.id, profileId,
+      provider: "camoufox", providerProfileId: profileId, identityReference: item.identity, status: "active",
+      readiness: { state: "ready", checkedAt, expiresAt: new Date(Date.now() + 180_000).toISOString(), checks: { sessionValid: true, composerCapable: true, platformAvailable: true } }
+    }));
+  }
+  await service.store.mutate("fixture", "set_schedule_authority", (state) => {
+    state.campaignAuthorizations = [{
+      id: "schedule-target-gates-auth", campaignId: campaign.id, status: "active", executionMode: "standing_autonomous", allowLiveExecution: true,
+      destinations: targets.map((target) => ({ platform: target.channel, accountId: target.accountId, targetId: target.id, targetUrl: target.url, profileId: target.profileId, provider: "camoufox", providerProfileId: target.providerProfileId, identityReference: target.identityReference }))
+    }];
+    return state.campaignAuthorizations[0];
+  });
+  const scheduleRow = await service.createSchedule(campaign.id, { name: "Due target gates", localTime: "00:00", timezone: "UTC", channels: ["threads"] });
+  const calls = [];
+  service.materializeAuthorizedContentCandidates = async (_campaignId, _actor, options) => { calls.push(["materialize", options]); return { results: [], materialized: [{ postId: "ready-post" }] }; };
+  service.queueAuthorizedCampaignJobs = async (_campaignId, _actor, options) => { calls.push(["queue", options]); return [{ postId: "ready-post", status: "queued" }]; };
+  const result = await service.queueDueSchedules("schedule-target-gates");
+  assert.equal(result.due.length, 1);
+  assert.equal(result.due[0].status, "blocked");
+  assert.equal(result.due[0].reason, "one_or_more_schedule_targets_blocked");
+  assert.deepEqual(result.due[0].targetIds, [targets[0].id]);
+  assert.equal(result.due[0].blockedTargets.length, 1);
+  assert.equal(result.due[0].blockedTargets[0].targetId, targets[1].id);
+  assert.equal(result.due[0].blockedTargets[0].reason, "account_human_required");
+  assert.deepEqual(calls.map(([name]) => name), ["materialize", "queue"]);
+  assert.deepEqual(calls[0][1], { targetIds: [targets[0].id] });
+  const state = await service.snapshot();
+  const run = state.scheduleRuns.find((item) => item.scheduleId === scheduleRow.id);
+  assert.equal(run.status, "blocked");
+  assert.equal(run.blockedTargets[0].reason, "account_human_required");
+  assert.equal(run.externalSideEffects, false);
 });
 

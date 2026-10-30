@@ -143,6 +143,12 @@ export SEEDING_BUILD_DIRTY=false
 export SEEDING_9ROUTER_ENDPOINT="${SEEDING_9ROUTER_ENDPOINT:-http://127.0.0.1:20128/v1}"
 export SEEDING_CONTENT_AUTO_PROVISION="${SEEDING_CONTENT_AUTO_PROVISION:-true}"
 export SEEDING_CONTENT_MODE="${SEEDING_CONTENT_MODE:-PRODUCTION}"
+# The packaged worker is on by default. Live submission remains fail-closed
+# inside JevExecutionWorker until the exact standing authority, account agent,
+# readiness, grant, adapter and independent verification contracts pass.
+export SEEDING_JEV_WORKER_ENABLED="${SEEDING_JEV_WORKER_ENABLED:-true}"
+export SEEDING_JEV_LIVE_ENABLED="${SEEDING_JEV_LIVE_ENABLED:-true}"
+export SEEDING_JEV_AUTONOMOUS_LIVE_ENABLED="${SEEDING_JEV_AUTONOMOUS_LIVE_ENABLED:-true}"
 if [ -x "$APP_ROOT/provision-9router.sh" ]; then
   : >"$DATA_ROOT/9router-provision-status"
   if ! "$APP_ROOT/provision-9router.sh" "$DATA_ROOT" >"$DATA_ROOT/9router-provision-command" 2>"$DATA_ROOT/9router-provision-error"; then

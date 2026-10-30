@@ -43,6 +43,7 @@ import { projectAccountAgentMissionControl } from "./account-agent-registry.mjs"
 import { normalizeListeningJob } from "./listening-contract.mjs";
 import { runProductContentPipeline as executeProductContentPipeline } from "./product-content-pipeline.mjs";
 import { ensureContentRuntime } from "./product-content-runtime.mjs";
+import { evaluateDueSchedules } from "./campaign-due-schedule.mjs";
 
 export async function pollConfiguredDiscoveries(service, { actor = "scheduled-discovery-observer", shuttingDown = false } = {}) {
   const state = await service.snapshot();
@@ -1323,7 +1324,10 @@ function optionalHttpUrl(value, label) {
 }
 
 function normalizeScheduleMode(value) {
-  const requested = String(value || "draft_only");
+  // New schedules participate in fully automatic posting once a separate
+  // standing campaign authority exists. Keep the legacy string as the
+  // persisted compatibility value, but never make draft-only the default.
+  const requested = String(value || "publish_with_standing_approval");
   // Legacy callers may still send this value. Owner standing approval now
   // replaces the Telegram product-review gate, so normalize it permanently.
   if (requested === "publish_with_product_review") return "publish_with_standing_approval";
@@ -3592,7 +3596,9 @@ export class SeedingService {
    */
   async bootstrapAutonomousCampaign(input = {}, actor = "autonomous-campaign-bootstrap") {
     const platform = String(input.platform || "linkedin").trim().toLowerCase();
-    if (platform !== "linkedin") throw new Error("Autonomous bootstrap currently supports LinkedIn only");
+    if (!CHANNELS[platform] || platform === "email") {
+      throw new Error(`Autonomous bootstrap does not support platform: ${platform || "unknown"}`);
+    }
     const bootstrapState = await this.store.read();
     const resolvedProduct = await resolveBootstrapProductRepo(input, {
       state: bootstrapState,
@@ -3698,7 +3704,8 @@ export class SeedingService {
       .sort((left, right) => String(left.target.id).localeCompare(String(right.target.id)));
 
     if (candidates.length !== 1) {
-      const code = candidates.length === 0 ? "AUTHORIZED_LINKEDIN_TARGET_MISSING" : "AUTHORIZED_LINKEDIN_TARGET_AMBIGUOUS";
+      const platformCode = platform.toUpperCase();
+      const code = candidates.length === 0 ? `AUTHORIZED_${platformCode}_TARGET_MISSING` : `AUTHORIZED_${platformCode}_TARGET_AMBIGUOUS`;
       const classification = candidates.length > 1
         ? "ACCOUNT_BLOCKER"
         : configuredAccounts.length === 0 || matchingTargets.length === 0
@@ -3713,11 +3720,11 @@ export class SeedingService {
           classification,
           message: candidates.length === 0
             ? configuredAccounts.length === 0
-              ? "No enabled LinkedIn account is registered in the authorized account registry"
+            ? `No enabled ${platform} account is registered in the authorized account registry`
               : matchingTargets.length === 0
-                ? "No active LinkedIn target is registered for the requested campaign destination"
-                : "The registered LinkedIn account/profile is not healthy and exactly bound to one active target"
-            : "More than one enabled LinkedIn account/profile/active target is registered"
+                ? `No active ${platform} target is registered for the requested campaign destination`
+                : `The registered ${platform} account/profile is not healthy and exactly bound to one active target`
+            : `More than one enabled ${platform} account/profile/active target is registered`
         }],
         externalSideEffects: false,
         authoritySideEffects: false
@@ -3737,7 +3744,7 @@ export class SeedingService {
         blockers: [{
           code: account.health === "human_required" ? "ACCOUNT_HUMAN_REQUIRED" : "ACCOUNT_NOT_HEALTHY",
           classification: account.health === "human_required" ? "EXTERNAL_HARD_BLOCKER" : "RUNTIME_BLOCKER",
-          message: "The exact registered LinkedIn account is not currently healthy for execution"
+          message: `The exact registered ${platform} account is not currently healthy for execution`
         }],
         externalSideEffects: false,
         authoritySideEffects: false
@@ -3851,7 +3858,7 @@ export class SeedingService {
     const candidateTargets = [target];
     const candidatesForContent = deriveContentCandidates({ productIntelligence: campaign.productIntelligence, story, targets: candidateTargets });
     const contentCandidate = candidatesForContent[0];
-    if (!contentCandidate) throw new Error("Autonomous bootstrap could not derive a LinkedIn content candidate");
+    if (!contentCandidate) throw new Error(`Autonomous bootstrap could not derive a ${platform} content candidate`);
     const contentHash = campaignContentHash(contentCandidate.content);
     let authorizationId = deriveBootstrapAuthorizationId({
       campaignId: identity.campaignId,
@@ -4122,6 +4129,129 @@ export class SeedingService {
         classification: "RUNTIME_BLOCKER",
         message: "Fresh readiness did not produce the complete execution controls"
       })],
+      externalSideEffects: false,
+      authoritySideEffects: true
+    };
+  }
+
+  /**
+   * Bootstrap one campaign across an explicit set of exact destinations.
+   * The first destination uses the canonical bootstrap path; the resulting
+   * campaign scope is then re-authorized once with every selected target and
+   * account binding. All target rows remain independently gated by readiness,
+   * rules, quotas, grants, UNKNOWN quarantine and the kill switch.
+   */
+  async bootstrapAutonomousCampaignFanout(input = {}, actor = "autonomous-campaign-bootstrap") {
+    const requestedIds = [...new Set((Array.isArray(input.targetIds) ? input.targetIds : []).map((value) => String(value || "").trim()).filter(Boolean))];
+    if (!requestedIds.length) return { status: "BLOCKED", code: "FANOUT_TARGETS_REQUIRED", blockers: [{ code: "FANOUT_TARGETS_REQUIRED", classification: "INPUT_BLOCKER", message: "At least one exact targetId is required" }], externalSideEffects: false, authoritySideEffects: false };
+    const initial = await this.store.read();
+    const selected = requestedIds.map((id) => (initial.targets || []).find((target) => target.id === id)).filter(Boolean);
+    if (selected.length !== requestedIds.length) return { status: "BLOCKED", code: "FANOUT_TARGET_NOT_FOUND", blockers: [{ code: "FANOUT_TARGET_NOT_FOUND", classification: "INPUT_BLOCKER", message: "Every selected targetId must exist" }], externalSideEffects: false, authoritySideEffects: false };
+    const fanoutEligibility = (target, account) => {
+      if (!account || account.status !== "enabled" || !exactProviderBinding(target, account, { requireTarget: true })) return "target_account_binding_not_ready";
+      if (account.health !== "healthy") return account.health === "human_required" ? "account_human_required" : "account_not_healthy";
+      const loginState = String(account.loginStatus || account.agentStatus || "").trim().toUpperCase();
+      if (loginState && loginState !== "READY") return `account_session_${loginState.toLowerCase()}`;
+      if (target.status !== "active") return "target_not_active";
+      if (!isReadinessFresh(target.readiness, readinessContextForTarget(target, account), new Date(), this.readinessTtlMs)) {
+        return `target_readiness_${String(target.readiness?.reasonCode || target.readiness?.state || "unknown").toLowerCase()}`;
+      }
+      if (CHANNELS[target.channel]?.requiresRulesReview && target.rulesStatus !== "accepted") return "target_rules_not_accepted";
+      return null;
+    };
+    // Pick the first currently eligible destination as the canonical campaign
+    // bootstrap. A blocked first selection must not prevent independent ready
+    // accounts from receiving the same All Social campaign.
+    const initialBindings = selected.map((target) => {
+      const account = (initial.executionAccounts || []).find((item) => item.id === executionAccountKey(target.channel, target.accountId));
+      return { target, account, blocker: fanoutEligibility(target, account) };
+    });
+    const firstBinding = initialBindings.find((item) => !item.blocker);
+    if (!firstBinding) {
+      return {
+        status: "BLOCKED",
+        code: "FANOUT_NO_READY_DESTINATIONS",
+        blockers: [{ code: "FANOUT_NO_READY_DESTINATIONS", classification: "ACCOUNT_BLOCKER", message: "No selected destination currently has a healthy authenticated Account Agent and fresh target readiness" }],
+        fanout: { requestedTargetIds: requestedIds, ready: [], blocked: initialBindings.map((item) => ({ targetId: item.target.id, accountId: item.target.accountId, platform: item.target.channel, reason: item.blocker || "blocked" })) },
+        externalSideEffects: false,
+        authoritySideEffects: false
+      };
+    }
+    const firstTarget = firstBinding.target;
+    const firstAccount = firstBinding.account;
+    const first = await this.bootstrapAutonomousCampaign({
+      ...input,
+      platform: firstTarget.channel,
+      targetIds: undefined,
+      targetId: firstTarget.id,
+      accountId: firstTarget.accountId,
+      profileId: firstTarget.profileId,
+      provider: firstAccount.provider || "camoufox",
+      providerProfileId: firstAccount.providerProfileId || firstAccount.profileId,
+      identityReference: firstAccount.identityReference || firstTarget.identityReference || firstTarget.expectedIdentityUrl
+    }, actor);
+    if (first.status !== "READY_FOR_AUTONOMOUS_EXECUTION") {
+      return {
+        ...first,
+        fanout: {
+          requestedTargetIds: requestedIds,
+          ready: [],
+          blocked: initialBindings.map((item) => ({ targetId: item.target.id, accountId: item.target.accountId, platform: item.target.channel, reason: item.target.id === firstTarget.id ? String(first.blockers?.[0]?.code || first.code || "bootstrap_blocked") : (item.blocker || "blocked") }))
+        }
+      };
+    }
+    const state = await this.store.read();
+    const campaign = requireItem(state.campaigns, first.campaignId, "Campaign");
+    const story = (state.stories || []).filter((item) => item.campaignId === campaign.id).sort((a, b) => String(b.updatedAt || b.createdAt || "").localeCompare(String(a.updatedAt || a.createdAt || "")))[0];
+    const selectedBindings = selected.map((target) => {
+      const account = (state.executionAccounts || []).find((item) => item.id === executionAccountKey(target.channel, target.accountId));
+      return { target, account, blocker: fanoutEligibility(target, account) };
+    });
+    const blocked = selectedBindings.filter((item) => item.blocker);
+    const ready = selectedBindings.filter((item) => !item.blocker);
+    if (!ready.length) return { ...first, fanout: { requestedTargetIds: requestedIds, ready: [], blocked: blocked.map((item) => ({ targetId: item.target.id, reason: item.blocker })) } };
+    const contentHash = first.content?.contentHash;
+    const schedule = first.schedule;
+    const destinations = ready.map(({ target, account }) => ({
+      platform: target.channel,
+      accountId: target.accountId,
+      profileId: account.profileId,
+      provider: canonicalProvider(account.provider, { allowLegacy: true }),
+      providerProfileId: account.providerProfileId || account.profileId,
+      identityReference: canonicalIdentityUrl(account.identityReference || account.expectedIdentityUrl),
+      targetId: target.id,
+      targetUrl: target.url
+    }));
+    const fanoutAuthorization = await this.authorizeCampaign(campaign.id, {
+      id: `${first.authorizationId}-fanout-${createHash("sha256").update(requestedIds.join("\u0000")).digest("hex").slice(0, 16)}`,
+      validFrom: schedule.validFrom,
+      validUntil: schedule.validUntil,
+      destinations,
+      approvedAssets: [],
+      contentBoundary: { mode: "approved_copy_set", contentHashes: [contentHash] },
+      audienceRules: { allowedAudiences: [canonicalAudienceSerialization(normalizeBootstrapAudience(input.audience || campaign.audience || []))] },
+      publicationVisibilityRules: { allowedVisibilities: [String(input.visibility || "PUBLIC").toUpperCase()] },
+      schedule: { timezone: schedule.timezone, weekdays: schedule.weekdays, startLocal: schedule.startLocal, endLocal: schedule.endLocal },
+      rateLimits: { maxJobsPerAccountPerDay: schedule.quota, maxJobsPerCampaignPerDay: schedule.quota, maxConcurrency: schedule.concurrency, minIntervalMinutes: 0 },
+      allowLiveExecution: true,
+      executionMode: "standing_autonomous",
+      standingAuthorizationReference: String(input.authorizationReference || "").trim()
+    }, actor);
+    const candidateTargets = ready.map((item) => item.target);
+    if (story) await this.deriveContentCandidates(campaign.id, { storyId: story.id, targetIds: candidateTargets.map((target) => target.id) }, actor);
+    const materialization = await this.materializeAuthorizedContentCandidates(campaign.id, actor, { targetIds: candidateTargets.map((target) => target.id) });
+    const decisions = await this.queueAuthorizedCampaignJobs(campaign.id, actor, { targetIds: candidateTargets.map((target) => target.id) });
+    return {
+      ...first,
+      authorizationId: fanoutAuthorization.id,
+      targetId: null,
+      fanout: {
+        requestedTargetIds: requestedIds,
+        ready: ready.map((item) => ({ targetId: item.target.id, accountId: item.target.accountId, platform: item.target.channel })),
+        blocked: blocked.map((item) => ({ targetId: item.target.id, accountId: item.target.accountId, platform: item.target.channel, reason: item.blocker })),
+        materialization,
+        decisions
+      },
       externalSideEffects: false,
       authoritySideEffects: true
     };
@@ -5423,6 +5553,134 @@ export class SeedingService {
   }
 
   /**
+   * Consume ordinary daily schedules through the existing guarded campaign
+   * queue. A schedule decision only creates a durable scheduler run; it never
+   * implies submission or publication. Each window is recorded before the
+   * next tick so retries cannot duplicate the same local-time window.
+   */
+  async queueDueSchedules(actor = "campaign-queue-scheduler") {
+    const snapshot = await this.store.read();
+    const evaluated = evaluateDueSchedules({
+      schedules: snapshot.schedules || [],
+      scheduleRuns: snapshot.scheduleRuns || [],
+      now: new Date()
+    });
+    const results = [];
+    for (const decision of evaluated.due) {
+      const schedule = (snapshot.schedules || []).find((item) => item.id === decision.scheduleId);
+      if (!schedule) continue;
+      const base = {
+        scheduleId: decision.scheduleId,
+        campaignId: decision.campaignId,
+        windowKey: decision.windowKey,
+        localDate: decision.localDate,
+        status: "blocked",
+        externalSideEffects: false
+      };
+      try {
+        const reservation = await this.reserveScheduleRun(schedule.id, {
+          status: "running",
+          note: `Due window ${decision.windowKey}; guarded queue evaluation started; publication remains unverified`,
+          windowKey: decision.windowKey,
+          localDate: decision.localDate,
+          externalSideEffects: false
+        }, actor);
+        if (!reservation.created) {
+          results.push({ ...base, status: "recorded", code: "SCHEDULE_WINDOW_ALREADY_RESERVED", reason: "schedule window was already reserved by another queue evaluation", recorded: true, publicationVerified: false });
+          continue;
+        }
+        const current = await this.store.read();
+        const authorizations = (current.campaignAuthorizations || []).filter((item) =>
+          item.campaignId === schedule.campaignId && item.status === "active" &&
+          item.executionMode === "standing_autonomous" && item.allowLiveExecution === true
+        );
+        // Legacy schedule rows defaulted to draft_only before standing
+        // authorization became the product mode. Once an exact standing
+        // authority exists, consume either persisted mode through the same
+        // autonomous guarded queue; an absent authority remains blocked.
+        if (authorizations.length !== 1) {
+          const reason = "standing_autonomous_authorization_not_uniquely_active";
+          await this.recordScheduleRun(schedule.id, {
+            status: "blocked",
+            note: `${reason}; no publication attempted`,
+            windowKey: decision.windowKey,
+            localDate: decision.localDate,
+            externalSideEffects: false
+          }, actor);
+          results.push({ ...base, status: "blocked", reason });
+          continue;
+        }
+        // A due window is consumed only for exact authorized destinations that
+        // currently have an isolated healthy Account Agent and fresh bound
+        // platform readiness. Keep blocked targets in the result so one
+        // account's UNKNOWN/challenge/rules state cannot be mistaken for a
+        // campaign-wide publish success or silently fan out to another
+        // account.
+        const blockedTargets = [];
+        const targetIds = [];
+        for (const target of (current.targets || []).filter((item) => schedule.channels.includes(item.channel))) {
+          const account = (current.executionAccounts || []).find((item) => item.id === executionAccountKey(target.channel, target.accountId));
+          const destination = authorizations[0].destinations?.find((item) => destinationBindingMatches(item, target, account, { requireTarget: true }));
+          let reason = null;
+          if (!destination) reason = "standing_authority_missing";
+          else if (target.status !== "active") reason = "target_not_active";
+          else if (!account || account.status !== "enabled") reason = "account_not_enabled";
+          else if (account.health !== "healthy") reason = account.health === "human_required" ? "account_human_required" : "account_not_healthy";
+          else {
+            const loginState = String(account.loginStatus || account.agentStatus || "").trim().toUpperCase();
+            if (account.provider === "camoufox" && loginState && loginState !== "READY") reason = `account_session_${loginState.toLowerCase()}`;
+          }
+          if (!reason && !isReadinessFresh(target.readiness, readinessContextForTarget(target, account), new Date(), this.readinessTtlMs)) {
+            reason = `target_readiness_${String(target.readiness?.reasonCode || target.readiness?.state || "unknown").toLowerCase()}`;
+          }
+          if (!reason && CHANNELS[target.channel]?.requiresRulesReview && target.rulesStatus !== "accepted") {
+            reason = "target_rules_not_accepted";
+          }
+          if (reason) blockedTargets.push({ targetId: target.id, accountId: target.accountId, platform: target.channel, status: "BLOCKED", reason });
+          else targetIds.push(target.id);
+        }
+        const materialization = targetIds.length
+          ? await this.materializeAuthorizedContentCandidates(schedule.campaignId, actor, { targetIds })
+          : { campaignId: schedule.campaignId, materialized: [], results: [] };
+        const decisions = targetIds.length
+          ? await this.queueAuthorizedCampaignJobs(schedule.campaignId, actor, { targetIds })
+          : [];
+        const materializationBlocked = (materialization.results || []).some((item) => ["blocked", "UNKNOWN"].includes(String(item?.status || "")));
+        const queueBlocked = decisions.length === 0 || decisions.some((item) => !["queued", "READY", "prepared", "REQUEST_READY"].includes(String(item?.status || "")));
+        const terminalStatus = !targetIds.length || blockedTargets.length || materializationBlocked || queueBlocked ? "blocked" : "succeeded";
+        const terminalReason = !targetIds.length
+          ? (blockedTargets.length ? "all_schedule_targets_blocked" : "no_authorized_ready_targets_for_schedule_channels")
+          : blockedTargets.length
+            ? "one_or_more_schedule_targets_blocked"
+          : materializationBlocked
+            ? "content_materialization_blocked"
+            : queueBlocked
+              ? "one_or_more_target_jobs_blocked_or_unknown"
+              : null;
+        await this.recordScheduleRun(schedule.id, {
+          status: terminalStatus,
+          note: `${terminalReason ? `${terminalReason}; ` : ""}Guarded queue evaluated ${decisions.length} target jobs; publication evidence is not established by scheduling`,
+          windowKey: decision.windowKey,
+          localDate: decision.localDate,
+          blockedTargets,
+          externalSideEffects: false
+        }, actor);
+        results.push({ ...base, status: terminalStatus, ...(terminalReason ? { reason: terminalReason } : {}), targetIds, blockedTargets, materialization, decisions, publicationVerified: false });
+      } catch (error) {
+        const reason = String(error?.code || error?.message || "schedule_queue_failed").replace(/\s+/g, " ").slice(0, 200);
+        try {
+          await this.recordScheduleRun(schedule.id, {
+            status: "failed", note: `${reason}; publication not established`, windowKey: decision.windowKey,
+            localDate: decision.localDate, externalSideEffects: false
+          }, actor);
+        } catch { /* preserve the original failure result */ }
+        results.push({ ...base, status: "failed", reason });
+      }
+    }
+    return { evaluatedAt: evaluated.evaluatedAt, decisions: evaluated.decisions, due: results };
+  }
+
+  /**
    * Re-derive one bounded standing campaign authority from the high-level
    * bootstrap policy that is already persisted on the campaign.  This is the
    * scheduler bridge for zero-touch operation: it reuses the existing
@@ -5604,6 +5862,16 @@ export class SeedingService {
     await this.expireLiveExecutionGrants(actor);
     await this.expireOneTimeExecutionWindows(actor);
     await this.expireCampaignAuthorizations(actor);
+    // Ordinary daily schedules are consumed here as advisory queue work. The
+    // schedule bridge records each local-time window, then reuses the exact
+    // campaign materialization/readiness/authority path below. It never marks
+    // a post published; only an independent JEV receipt can do that.
+    let scheduled = { due: [] };
+    try {
+      scheduled = await this.queueDueSchedules(actor);
+    } catch (error) {
+      scheduled = { due: [{ status: "failed", reason: boundedQueueFailureReason(error) }] };
+    }
     const renewalFailures = await this.#renewPersistedBootstrapCampaigns(actor);
     const candidateSnapshot = await this.store.read();
     const candidateFailures = new Map(renewalFailures);
@@ -5669,6 +5937,17 @@ export class SeedingService {
       } catch (error) {
         results.push({ campaignId, decisions: [], failed: true, reason: boundedQueueFailureReason(error) });
       }
+    }
+    for (const item of scheduled.due || []) {
+      if (!item?.campaignId) continue;
+      results.push({
+        campaignId: item.campaignId,
+        scheduleId: item.scheduleId || null,
+        scheduleStatus: item.status || "UNKNOWN",
+        scheduleWindowKey: item.windowKey || null,
+        decisions: Array.isArray(item.decisions) ? item.decisions : [],
+        ...(item.reason ? { failed: true, reason: item.reason } : {})
+      });
     }
     return results;
   }
@@ -6818,7 +7097,7 @@ export class SeedingService {
         requiresHumanPublishApproval: false,
         approvalPolicy: "campaign_authorization",
         approvalReference: mode === "publish_with_standing_approval"
-          ? requiredText(input.approvalReference, "schedule approvalReference")
+          ? (input.approvalReference ? requiredText(input.approvalReference, "schedule approvalReference") : null)
           : null,
         createdAt: nowIso()
       };
@@ -6857,7 +7136,7 @@ export class SeedingService {
         schedule.requiresHumanPublishApproval = false;
         schedule.approvalPolicy = "campaign_authorization";
         schedule.approvalReference = normalizedMode === "publish_with_standing_approval"
-          ? requiredText(input.approvalReference || schedule.approvalReference, "schedule approvalReference")
+          ? (input.approvalReference || schedule.approvalReference ? requiredText(input.approvalReference || schedule.approvalReference, "schedule approvalReference") : null)
           : null;
       } else if (input.approvalReference !== undefined && schedule.mode === "publish_with_standing_approval") {
         schedule.approvalReference = requiredText(input.approvalReference, "schedule approvalReference");
@@ -6883,19 +7162,94 @@ export class SeedingService {
         if (story.campaignId !== schedule.campaignId) throw new Error("Schedule run story must belong to the campaign");
       }
       state.scheduleRuns ||= [];
+      const windowKey = input.windowKey ? String(input.windowKey).slice(0, 300) : "";
+      const blockedTargets = Array.isArray(input.blockedTargets)
+        ? input.blockedTargets.slice(0, 128).map((item) => ({
+          targetId: String(item?.targetId || "").slice(0, 200) || null,
+          accountId: String(item?.accountId || "").slice(0, 200) || null,
+          platform: String(item?.platform || "").slice(0, 80) || null,
+          status: String(item?.status || "BLOCKED").slice(0, 40),
+          reason: String(item?.reason || "blocked").replace(/\s+/g, " ").slice(0, 200)
+        }))
+        : undefined;
+      const existing = windowKey
+        ? state.scheduleRuns.find((item) => item.scheduleId === scheduleId && item.windowKey === windowKey)
+        : null;
+      const run = existing || {
+        id: randomUUID(),
+        scheduleId,
+        campaignId: schedule.campaignId,
+        status,
+        ...(windowKey ? { windowKey } : {}),
+        ...(input.localDate ? { localDate: String(input.localDate).slice(0, 40) } : {}),
+        artifactId: input.artifactId || null,
+        storyId: input.storyId || null,
+        note: String(input.note || "").slice(0, 1000),
+        ...(blockedTargets ? { blockedTargets } : {}),
+        externalSideEffects: input.externalSideEffects === true,
+        recordedAt: nowIso()
+      };
+      if (existing) {
+        Object.assign(existing, {
+          status,
+          ...(windowKey ? { windowKey } : {}),
+          ...(input.localDate ? { localDate: String(input.localDate).slice(0, 40) } : {}),
+          ...(input.artifactId !== undefined ? { artifactId: input.artifactId || null } : {}),
+          ...(input.storyId !== undefined ? { storyId: input.storyId || null } : {}),
+          ...(input.note !== undefined ? { note: String(input.note || "").slice(0, 1000) } : {}),
+          ...(blockedTargets ? { blockedTargets } : {}),
+          externalSideEffects: input.externalSideEffects === true,
+          updatedAt: nowIso()
+        });
+      } else {
+        state.scheduleRuns.push(run);
+      }
+      return run;
+    });
+    return result.result;
+  }
+
+  /**
+   * Atomically reserve one local schedule window. The JsonStore mutation
+   * queue makes the existence check and insert one operation, so concurrent
+   * scheduler ticks cannot both queue the same window. A caller that receives
+   * `created: false` must treat the window as already consumed.
+   */
+  async reserveScheduleRun(scheduleId, input, actor = "scheduler") {
+    if (!input?.windowKey) throw new Error("Schedule reservation requires windowKey");
+    const allowed = new Set(["due", "running", "succeeded", "failed", "blocked"]);
+    const status = String(input.status || "");
+    if (!allowed.has(status)) throw new Error("Invalid schedule run status");
+    const result = await this.store.mutate(actor, "schedule_run_reserved", (state) => {
+      const schedule = requireItem(state.schedules || [], scheduleId, "Schedule");
+      const windowKey = String(input.windowKey).slice(0, 300);
+      const existing = (state.scheduleRuns || []).find((item) => item.scheduleId === scheduleId && item.windowKey === windowKey);
+      if (existing) return { created: false, run: existing };
+      const blockedTargets = Array.isArray(input.blockedTargets)
+        ? input.blockedTargets.slice(0, 128).map((item) => ({
+          targetId: String(item?.targetId || "").slice(0, 200) || null,
+          accountId: String(item?.accountId || "").slice(0, 200) || null,
+          platform: String(item?.platform || "").slice(0, 80) || null,
+          status: String(item?.status || "BLOCKED").slice(0, 40),
+          reason: String(item?.reason || "blocked").replace(/\s+/g, " ").slice(0, 200)
+        }))
+        : undefined;
       const run = {
         id: randomUUID(),
         scheduleId,
         campaignId: schedule.campaignId,
         status,
+        windowKey,
+        ...(input.localDate ? { localDate: String(input.localDate).slice(0, 40) } : {}),
         artifactId: input.artifactId || null,
         storyId: input.storyId || null,
         note: String(input.note || "").slice(0, 1000),
+        ...(blockedTargets ? { blockedTargets } : {}),
         externalSideEffects: input.externalSideEffects === true,
         recordedAt: nowIso()
       };
       state.scheduleRuns.push(run);
-      return run;
+      return { created: true, run };
     });
     return result.result;
   }

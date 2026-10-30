@@ -2403,24 +2403,101 @@ function FanoutPlannerPanel({ data, refresh }: { data: R, refresh: () => void })
   return <section className="panel full-span"><div className="panel-head"><div><h2>Campaign fan-out</h2><p>All Social fan-out và queue tự động qua từng Account Agent đủ session, identity, target readiness và standing authority. Mọi post vẫn qua readiness, quota, kill switch và UNKNOWN quarantine.</p></div></div><form onSubmit={plan} className="scope-selects"><select required value={campaignId} onChange={event => setCampaignId(event.target.value)}><option value="">Chọn campaign</option>{campaigns.map((campaign: R) => <option key={String(campaign.id)} value={String(campaign.id)}>{String(campaign.name || campaign.id)}</option>)}</select><label><input type="checkbox" checked={allSocial} onChange={event => setAllSocial(event.target.checked)} /> All Social</label>{!allSocial && channels.map((channel: R) => <label key={String(channel.id)}><input type="checkbox" checked={selectedChannels.includes(String(channel.id))} onChange={event => setSelectedChannels(current => event.target.checked ? [...new Set([...current, String(channel.id)])] : current.filter(item => item !== String(channel.id)))} /> {String(channel.label || channel.id)}</label>)}{accounts.length ? <fieldset className="account-picker"><legend>Accounts (chọn một hoặc nhiều; bỏ trống = tất cả account phù hợp)</legend>{accounts.map((account: R) => { const id = String(account.accountId || account.id || ""); const key = `${String(account.platform || "")}/${id}`; return <label key={key}><input type="checkbox" checked={selectedAccounts.includes(id)} onChange={event => setSelectedAccounts(current => event.target.checked ? [...new Set([...current, id])] : current.filter(item => item !== id))} /> {key} · {String(account.loginStatus || account.agentStatus || account.sessionHealth || "UNKNOWN")}</label> })}<button type="button" className="secondary-button" onClick={() => setSelectedAccounts(selectedAccounts.length === accounts.length ? [] : accounts.map((account: R) => String(account.accountId || account.id || "")))}>{selectedAccounts.length === accounts.length ? "Bỏ chọn tất cả" : "Chọn tất cả account"}</button></fieldset> : <small>Chưa có Camoufox Account Agent nào.</small>}<button className="primary-button" type="submit">Fan-out và queue tự động</button></form>{accounts.length ? <small>Accounts: {accounts.map((account: R) => `${account.platform}/${account.accountId}`).join(" · ")}</small> : null}{status ? <small>{status}</small> : null}</section>
 }
 
+function StandingAuthorizationPanel({ data, refresh }: { data: R, refresh: () => void }) {
+  const campaigns = Array.isArray(data?.campaigns) ? data.campaigns : []
+  const accounts = Array.isArray(data?.executionAccounts) ? data.executionAccounts.filter((item: R) => item?.provider === "camoufox" && item?.status === "enabled") : []
+  const targets = Array.isArray(data?.targets) ? data.targets.filter((item: R) => item?.status === "active" && item?.channel !== "email") : []
+  const [campaignId, setCampaignId] = useState("")
+  const [targetIds, setTargetIds] = useState<string[]>([])
+  const [authorizationReference, setAuthorizationReference] = useState("")
+  const [audience, setAudience] = useState("")
+  const [timezone, setTimezone] = useState("Asia/Saigon")
+  const [status, setStatus] = useState("")
+  const selectedCampaign = campaigns.find((item: R) => String(item.id) === campaignId)
+  const selectedTargets = targets.filter((item: R) => targetIds.includes(String(item.id)))
+  const target = selectedTargets[0]
+  const targetAccount = accounts.find((item: R) => String(item.accountId) === String(target?.accountId) && String(item.platform) === String(target?.channel))
+  const authorize = async (event: React.FormEvent) => {
+    event.preventDefault()
+    const token = sessionStorage.getItem("seedingOperatorToken") || ""
+    if (!token || !selectedCampaign || !selectedTargets.length || !targetAccount) { setStatus("Chọn campaign, ít nhất một target và account Agent trước"); return }
+    if (!authorizationReference.trim() || !audience.trim()) { setStatus("Nhập standing authorization reference và audience"); return }
+    try {
+      const multi = selectedTargets.length > 1
+      const payload = multi ? {
+        productRepo: selectedCampaign.productRepo,
+        name: selectedCampaign.name,
+        objective: selectedCampaign.objective,
+        audience: audience.split(",").map(item => item.trim()).filter(Boolean),
+        targetIds: selectedTargets.map((item: R) => String(item.id)),
+        authorizationReference: authorizationReference.trim(),
+        timezone,
+        validityHours: 24,
+        quota: 1,
+        concurrency: 1,
+        visibility: "PUBLIC"
+      } : {
+        productRepo: selectedCampaign.productRepo,
+        name: selectedCampaign.name,
+        objective: selectedCampaign.objective,
+        audience: audience.split(",").map(item => item.trim()).filter(Boolean),
+        platform: target.channel,
+        targetId: target.id,
+        accountId: target.accountId,
+        profileId: target.profileId,
+        provider: targetAccount.provider || "camoufox",
+        providerProfileId: targetAccount.providerProfileId || targetAccount.profileId,
+        identityReference: targetAccount.identityReference || target.identityReference || target.expectedIdentityUrl,
+        authorizationReference: authorizationReference.trim(),
+        timezone,
+        validityHours: 24,
+        quota: 1,
+        concurrency: 1,
+        visibility: "PUBLIC"
+      }
+      const response = await fetch(multi ? "/api/campaigns/bootstrap-fanout" : "/api/campaigns/bootstrap", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      })
+      const body = await response.json()
+      if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`)
+      setStatus(`${body.status || "UNKNOWN"}: ${body.blockers?.[0]?.code || body.authorizationId || "authority evaluated"}`)
+      refresh()
+    } catch (error) { setStatus(error instanceof Error ? error.message : "Không thể thiết lập standing authorization") }
+  }
+  return <section className="panel full-span"><div className="panel-head"><div><h2>Standing authorization / Account Agent</h2><p>Chủ tài khoản xác nhận phạm vi đăng tự động một lần. Mỗi target/account vẫn giữ identity, readiness, rules, quota, UNKNOWN quarantine và kill switch riêng.</p></div><span className="status">{String(targetAccount?.loginStatus || targetAccount?.agentStatus || "CHỌN ACCOUNT")}</span></div><form onSubmit={authorize} className="scope-selects"><select required value={campaignId} onChange={event => setCampaignId(event.target.value)}><option value="">Chọn campaign</option>{campaigns.map((campaign: R) => <option key={String(campaign.id)} value={String(campaign.id)}>{String(campaign.name || campaign.id)}</option>)}</select><fieldset className="account-picker"><legend>Targets/accounts (chọn một hoặc nhiều; All Social fan-out vẫn giữ từng binding)</legend>{targets.map((item: R) => <label key={String(item.id)}><input type="checkbox" checked={targetIds.includes(String(item.id))} onChange={event => setTargetIds(current => event.target.checked ? [...new Set([...current, String(item.id)])] : current.filter(id => id !== String(item.id)))} /> {String(item.channel)}/{String(item.accountId)} · {String(item.name || item.id)}</label>)}</fieldset><input required value={authorizationReference} onChange={event => setAuthorizationReference(event.target.value)} placeholder="standing authorization reference" /><input required value={audience} onChange={event => setAudience(event.target.value)} placeholder="audience segments, comma separated" /><input value={timezone} onChange={event => setTimezone(event.target.value)} placeholder="IANA timezone" /><button className="primary-button" type="submit">Authorize autonomous campaign</button></form>{status ? <small>{status}</small> : null}</section>
+}
+
+function ScheduleStatusPanel({ data }: { data: R }) {
+  const schedules = Array.isArray(data?.schedules) ? data.schedules : []
+  const runs = Array.isArray(data?.recentScheduleRuns) ? data.recentScheduleRuns : []
+  const latestBySchedule = new Map<string, R>()
+  runs.forEach((run: R) => { const id = String(run.scheduleId || ""); if (id && !latestBySchedule.has(id)) latestBySchedule.set(id, run) })
+  const labels: Record<string, string> = { running: "RUNNING", blocked: "BLOCKED", failed: "FAILED", succeeded: "QUEUED / EVALUATED", recorded: "RECORDED" }
+  return <section className="panel full-span" aria-label="Lịch tự động và trạng thái queue"><div className="panel-head"><div><h2>Lịch tự động</h2><p>Queue chỉ ghi nhận cửa sổ và chuyển qua standing authority/readiness. BLOCKED, UNKNOWN và publication evidence hiển thị riêng; queued không đồng nghĩa đã đăng.</p></div><span className="status">{schedules.length} lịch</span></div>{schedules.length ? <div className="scope-summary">{schedules.map((schedule: R) => { const run = latestBySchedule.get(String(schedule.id)); const state = String(run?.status || (schedule.status === "active" ? "not_due" : "blocked")).toLowerCase(); const blockedTargets = Array.isArray(run?.blockedTargets) ? run.blockedTargets : []; return <div key={String(schedule.id)}><strong>{String(schedule.name || schedule.id)}</strong><span>{String(schedule.localTime || "")} {String(schedule.timezone || "")}</span><span className={`status ${state}`}>{labels[state] || state.toUpperCase()}</span>{run?.windowKey ? <span>window {String(run.windowKey)}</span> : null}{run?.note ? <small>{String(run.note)}</small> : null}{blockedTargets.slice(0, 8).map((item: R, index: number) => <small key={`${String(item.targetId || item.accountId || "blocked")}:${index}`}>BLOCKED {String(item.platform || "")}/{String(item.accountId || "")}: {String(item.reason || "unknown")}</small>)}</div>})}</div> : <div className="empty-state">Chưa có lịch tự động.</div>}</section>
+}
+
 function AccountOnboardingPanel({ refresh }: { refresh: () => void }) {
   const [platform, setPlatform] = useState("linkedin")
   const [accountId, setAccountId] = useState("")
   const [profileId, setProfileId] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [targetName, setTargetName] = useState("")
+  const [targetUrl, setTargetUrl] = useState("")
   const [status, setStatus] = useState("")
   const submit = async (event: React.FormEvent) => {
     event.preventDefault(); setStatus("Đang lưu Keychain và chạy Account Agent…")
     try {
       const token = sessionStorage.getItem("seedingOperatorToken") || ""
       if (!token) throw new Error("Kết nối token vận hành trước khi thêm account")
-      const response = await fetch("/api/account-credentials", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}`, "x-agentic-actor": "dashboard-operator" }, body: JSON.stringify({ platform, accountId, profileId, username, password }) })
+      const response = await fetch("/api/account-credentials", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}`, "x-agentic-actor": "dashboard-operator" }, body: JSON.stringify({ platform, accountId, profileId, username, password, ...(targetUrl.trim() ? { targetName: targetName.trim() || undefined, targetUrl: targetUrl.trim() } : {}) }) })
       const body = await response.json(); if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`)
-      setStatus(`Agent ${body?.login?.status || "UNKNOWN"}: ${body?.login?.reason || "đã ghi nhận"}`); setPassword(""); refresh()
+      setStatus(`Agent ${body?.login?.status || "UNKNOWN"}: ${body?.login?.reason || "đã ghi nhận"}${body?.target?.status ? ` · target ${body.target.status}` : ""}`); setPassword(""); refresh()
     } catch (error) { setStatus(error instanceof Error ? error.message : "Không thể onboard account") }
   }
-  return <section className="panel full-span"><div className="panel-head"><div><h2>Thêm social account</h2><p>Credential lưu Keychain; Account Agent tự mở Camoufox, đăng nhập, rồi lấy identity trực tiếp từ trang đã xác thực. Profile để trống sẽ dùng profile bền vững do app tạo.</p></div></div><form onSubmit={submit} className="scope-selects"><input required value={platform} onChange={event => setPlatform(event.target.value)} placeholder="platform" /><input required value={accountId} onChange={event => setAccountId(event.target.value)} placeholder="account ID" /><input value={profileId} onChange={event => setProfileId(event.target.value)} placeholder="Camoufox profile (optional)" /><input required value={username} onChange={event => setUsername(event.target.value)} placeholder="username" autoComplete="username" /><input required type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="password" autoComplete="current-password" /><button className="primary-button" type="submit">Lưu và chạy Agent</button></form>{status ? <small>{status}</small> : null}</section>
+  return <section className="panel full-span"><div className="panel-head"><div><h2>Thêm social account</h2><p>Credential lưu Keychain; Account Agent tự mở Camoufox, đăng nhập, rồi lấy identity trực tiếp từ trang đã xác thực. Profile để trống sẽ dùng profile bền vững do app tạo. Target URL tùy chọn; app không tự đoán target.</p></div></div><form onSubmit={submit} className="scope-selects"><input required value={platform} onChange={event => setPlatform(event.target.value)} placeholder="platform" /><input required value={accountId} onChange={event => setAccountId(event.target.value)} placeholder="account ID" /><input value={profileId} onChange={event => setProfileId(event.target.value)} placeholder="Camoufox profile (optional)" /><input required value={username} onChange={event => setUsername(event.target.value)} placeholder="username" autoComplete="username" /><input required type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="password" autoComplete="current-password" /><input value={targetName} onChange={event => setTargetName(event.target.value)} placeholder="target name (optional)" /><input type="url" value={targetUrl} onChange={event => setTargetUrl(event.target.value)} placeholder="exact target URL (optional)" /><button className="primary-button" type="submit">Lưu và chạy Agent</button></form>{status ? <small>{status}</small> : null}</section>
 }
 function savedScope(key: string, fallback: string) {
   try {
@@ -2649,6 +2726,8 @@ export default function App() {
         <AccountOnboardingPanel refresh={load} />
         <NineRouterPanel data={data} refresh={load} />
         <UpdatePanel data={data} refresh={load} />
+        <StandingAuthorizationPanel data={data} refresh={load} />
+        <ScheduleStatusPanel data={data} />
         <FanoutPlannerPanel data={data} refresh={load} />
         {Object.keys(data).length > 0 && !error ? (
           <DashboardScopeBar
