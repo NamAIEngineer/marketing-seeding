@@ -169,6 +169,23 @@ test("final provider fence fails closed for consumed, expired, revoked and sibli
   }
   {
     const f = fixture();
+    exactConsumedIntent(f);
+    f.post.status = "queued";
+    const result = derive(f);
+    assert.equal(result.allowed, false);
+    assert.ok(result.reasons.includes("post_submit_lifecycle_mismatch"));
+  }
+  {
+    const f = fixture();
+    exactConsumedIntent(f);
+    f.post.status = "published";
+    const result = derive(f);
+    assert.equal(result.allowed, false);
+    assert.ok(result.reasons.includes("post_already_active_or_published"));
+    assert.ok(result.reasons.includes("post_submit_lifecycle_mismatch"));
+  }
+  {
+    const f = fixture();
     f.state.executionRequests.push({
       executionId: "sibling-execution",
       request: { idempotencyKey: f.post.idempotencyKey },

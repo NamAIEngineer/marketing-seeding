@@ -39,18 +39,21 @@ export function deriveStandingExecutionControlPlan({ authorization, state, post,
   const eligibility = evaluateCampaignAuthorization(post, { ...state, campaigns: campaign ? [campaign] : state.campaigns, targets: [target], executionAccounts: [account], campaignAuthorizations: [authorization] }, at, { mode: "live", executionId });
   reasons.push(...eligibility.reasons);
   if (!oneTimeWindow) reasons.push("one_time_execution_window_missing");
-  else {
+  let windowConsumedByExecution = false;
+  if (oneTimeWindow) {
     if (oneTimeWindow.jobId !== post.id || oneTimeWindow.campaignId !== post.campaignId || oneTimeWindow.campaignAuthorizationId !== authorization.id) reasons.push("one_time_execution_window_binding_mismatch");
     if (oneTimeWindow.authorizationFingerprint !== authorization.binding || oneTimeWindow.binding !== oneTimeExecutionWindowFingerprint(oneTimeWindow)) reasons.push("one_time_execution_window_binding_stale");
     const windowStatus = oneTimeExecutionWindowStatus(oneTimeWindow, at);
     if (!oneTimeExecutionWindowInBounds(oneTimeWindow, at) || !["ACTIVE", "RESERVED", "CONSUMED"].includes(windowStatus)) reasons.push("one_time_execution_window_unavailable");
     if (oneTimeWindow.status === "RESERVED" && oneTimeWindow.reservedExecutionId !== executionId) reasons.push("one_time_execution_window_reserved_elsewhere");
+    windowConsumedByExecution = oneTimeWindow.status === "CONSUMED" && oneTimeWindow.consumedExecutionId === executionId && Number.isFinite(Date.parse(oneTimeWindow.consumedAt || ""));
     if (oneTimeWindow.status === "CONSUMED" && oneTimeWindow.consumedExecutionId !== executionId) reasons.push("one_time_execution_window_consumed_elsewhere");
     if (oneTimeWindow.maxExecutions !== 1) reasons.push("one_time_execution_window_not_exactly_once");
   }
+  let grantConsumedByExecution = false;
   if (!liveGrant) reasons.push("live_execution_grant_missing");
   else {
-    const grantConsumedByExecution = liveGrant.status === "CONSUMED" && liveGrant.consumedExecutionId === executionId && Number.isFinite(Date.parse(liveGrant.consumedAt || ""));
+    grantConsumedByExecution = liveGrant.status === "CONSUMED" && liveGrant.consumedExecutionId === executionId && Number.isFinite(Date.parse(liveGrant.consumedAt || ""));
     if ((!grantConsumedByExecution && liveGrantEffectiveStatus(liveGrant, at) !== "ACTIVE") ||
         (!grantConsumedByExecution && liveGrant.status !== "ACTIVE") ||
         ((!grantConsumedByExecution && (liveGrant.consumedAt || liveGrant.consumedExecutionId)) || liveGrant.revokedAt)) reasons.push("live_execution_grant_unavailable");
@@ -82,6 +85,11 @@ export function deriveStandingExecutionControlPlan({ authorization, state, post,
     Array.isArray(post.jobLifecycle) &&
     post.jobLifecycle.some((item) => item?.state === "EXECUTING" && item?.executionId === executionId);
   if (ACTIVE_POSTS.has(post.status) && post.status !== "queued" && !activePostOwnedByExecution) reasons.push("post_already_active_or_published");
+  // A consumed window alone is the expected EXECUTING phase before durable
+  // submit intent. Once the grant is consumed, both controls must be in the
+  // submit-intent phase and the post must still be owned by this execution.
+  if (grantConsumedByExecution && !windowConsumedByExecution) reasons.push("live_execution_grant_window_phase_mismatch");
+  if (grantConsumedByExecution && !activePostOwnedByExecution) reasons.push("post_submit_lifecycle_mismatch");
   if (reasons.length) return fail(reasons);
   return { allowed: true, reasons: [], control: Object.freeze({ executionId, campaignId: post.campaignId, campaignAuthorizationId: authorization.id, campaignAuthorizationBinding: authorization.binding, postId: post.id, platform: target.channel, targetId: target.id, accountId: target.accountId, profileId: target.profileId, contentId: post.contentId, contentHash: campaignContentHash(post.content), rawContentHash: contentSha256(post.content), idempotencyKey: post.idempotencyKey, publicationVisibility: String(post.publicationVisibility || "PUBLIC").toUpperCase(), oneTimeWindowId: oneTimeWindow.windowId, liveGrantId: liveGrant.grantId }) };
 }
