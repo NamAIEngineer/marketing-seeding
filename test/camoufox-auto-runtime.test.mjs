@@ -6,6 +6,8 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import { createAutoCamoufoxExecutionSessionResolver, createAutoCamoufoxProvisioner } from "../src/camoufox-auto-runtime.mjs";
+import { CAMOUFOX_OFFICIAL_RELEASE, camoufoxOfficialAsset, downloadOfficialCamoufoxArchive, verifyCamoufoxArchiveBytes } from "../src/camoufox-official-release.mjs";
+import { createHash } from "node:crypto";
 
 const execFileAsync = promisify(execFile);
 const provisionScript = path.resolve(new URL("../desktop/provision-camoufox.sh", import.meta.url).pathname);
@@ -89,7 +91,7 @@ export function launchPath(browser) { return path.join(browser, 'Camoufox.app', 
 test("auto provisioner resolves camoufox@0.5.8 package-manager exports into managed cache", async () => {
   const root = await fixturePackage();
   try {
-    const provision = createAutoCamoufoxProvisioner({ root, profiles: path.join(root, "profiles") });
+    const provision = createAutoCamoufoxProvisioner({ root, profiles: path.join(root, "profiles"), officialReleaseFallback: false });
     const runtime = await provision();
     assert.equal(runtime.packageVersion, "0.5.8");
     assert.equal(runtime.browserPath.startsWith(path.join(root, ".camoufox-home")), true);
@@ -104,7 +106,7 @@ test("auto provisioner resolves camoufox@0.5.8 package-manager exports into mana
 test("auto provisioner maps browser download failure to a typed unavailable error", async () => {
   const root = await fixturePackage({ mode: "offline" });
   try {
-    const provision = createAutoCamoufoxProvisioner({ root, profiles: path.join(root, "profiles") });
+    const provision = createAutoCamoufoxProvisioner({ root, profiles: path.join(root, "profiles"), officialReleaseFallback: false });
     await assert.rejects(provision(), { code: "CAMOUFOX_BROWSER_INSTALL_FAILED" });
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -114,8 +116,138 @@ test("auto provisioner maps browser download failure to a typed unavailable erro
 test("auto provisioner rejects a browser path outside the per-user managed cache", async () => {
   const root = await fixturePackage({ mode: "escape" });
   try {
-    const provision = createAutoCamoufoxProvisioner({ root, profiles: path.join(root, "profiles") });
-    await assert.rejects(provision(), { code: "CAMOUFOX_BROWSER_INSTALL_FAILED" });
+    const provision = createAutoCamoufoxProvisioner({ root, profiles: path.join(root, "profiles"), officialReleaseFallback: false });
+    await assert.rejects(provision(), { code: "CAMOUFOX_BROWSER_PATH_UNMANAGED" });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("official Camoufox metadata is pinned to the published release for both macOS architectures", () => {
+  assert.equal(CAMOUFOX_OFFICIAL_RELEASE.repository, "daijro/camoufox");
+  assert.equal(CAMOUFOX_OFFICIAL_RELEASE.tag, "v156.0.1-beta.36");
+  assert.match(camoufoxOfficialAsset({ platform: "darwin", arch: "arm64" }).url, /mac\.arm64\.zip$/);
+  assert.match(camoufoxOfficialAsset({ platform: "darwin", arch: "x64" }).url, /mac\.x86_64\.zip$/);
+  assert.throws(() => camoufoxOfficialAsset({ platform: "linux", arch: "x64" }), { code: "CAMOUFOX_OFFICIAL_RELEASE_UNSUPPORTED" });
+});
+
+test("official Camoufox archive verification rejects mutation before extraction", () => {
+  const bytes = Buffer.from("official-camoufox-fixture");
+  const digest = createHash("sha256").update(bytes).digest("hex");
+  assert.equal(verifyCamoufoxArchiveBytes(bytes, { expectedSha256: digest }).sha256, digest);
+  const mutated = Buffer.from(bytes);
+  mutated[0] ^= 1;
+  assert.throws(() => verifyCamoufoxArchiveBytes(mutated, { expectedSha256: digest }), { code: "CAMOUFOX_OFFICIAL_CHECKSUM_MISMATCH" });
+});
+
+test("official Camoufox downloader retries transient HTTP failures, never retries 403", async () => {
+  const asset = camoufoxOfficialAsset({ platform: "darwin", arch: "arm64" });
+  let transientAttempts = 0;
+  const response = (status) => ({ status, ok: status >= 200 && status < 300, url: asset.url, headers: new Map([["content-length", "4"]]), body: { async *[Symbol.asyncIterator]() { yield Buffer.from("noop"); } } });
+  const fakeFetch = async () => {
+    transientAttempts += 1;
+    return transientAttempts < 3 ? response(503) : response(200);
+  };
+  assert.deepEqual(await downloadOfficialCamoufoxArchive(asset, { fetchImpl: fakeFetch, retryDelaysMs: [0, 0] }), Buffer.from("noop"));
+  assert.equal(transientAttempts, 3);
+  let forbiddenAttempts = 0;
+  await assert.rejects(() => downloadOfficialCamoufoxArchive(asset, { fetchImpl: async () => { forbiddenAttempts += 1; return response(403); }, retryDelaysMs: [0, 0] }), { code: "CAMOUFOX_OFFICIAL_HTTP_403" });
+  assert.equal(forbiddenAttempts, 1);
+});
+
+test("official browser download enforces the archive cap before extraction", async () => {
+  const asset = camoufoxOfficialAsset({ platform: "darwin", arch: "arm64" });
+  const oversized = { status: 200, ok: true, url: asset.url, headers: new Map([["content-length", "101"]]), async arrayBuffer() { return Buffer.alloc(101); } };
+  await assert.rejects(() => downloadOfficialCamoufoxArchive(asset, { fetchImpl: async () => oversized, maxBytes: 100, retryDelaysMs: [0] }), { code: "CAMOUFOX_OFFICIAL_ARCHIVE_TOO_LARGE" });
+});
+
+test("auto provisioner falls back to the pinned official release after pkgman API/network failure", async () => {
+  const root = await fixturePackage({ mode: "offline" });
+  const zipRoot = path.join(root, "zip-root", "Camoufox.app", "Contents", "MacOS");
+  await mkdir(zipRoot, { recursive: true });
+  const executable = path.join(zipRoot, "camoufox");
+  await writeFile(executable, "#!/bin/sh\nexit 0\n");
+  await chmod(executable, 0o755);
+  const archivePath = path.join(root, "camoufox-fixture.zip");
+  await execFileAsync("zip", ["-q", "-r", archivePath, "Camoufox.app"], { cwd: path.join(root, "zip-root") });
+  const archive = await readFile(archivePath);
+  const digest = createHash("sha256").update(archive).digest("hex");
+  try {
+    const runtime = await createAutoCamoufoxProvisioner({
+      root,
+      profiles: path.join(root, "profiles"),
+      officialAssetOverride: {
+        url: "https://github.com/daijro/camoufox/releases/download/v156.0.1-beta.36/camoufox-fixture.zip",
+        sha256: digest,
+        arch: "arm64",
+        browserVersion: "156.0.1",
+        browserBuild: "beta.36",
+        tag: "v156.0.1-beta.36",
+        commit: CAMOUFOX_OFFICIAL_RELEASE.commit,
+      },
+      officialFetch: async (url) => ({
+        status: 200,
+        ok: true,
+        url,
+        headers: { get: (name) => name.toLowerCase() === "content-length" ? String(archive.length) : null },
+        body: {
+          async *[Symbol.asyncIterator]() {
+            yield archive.subarray(0, Math.floor(archive.length / 2));
+            yield archive.subarray(Math.floor(archive.length / 2));
+          }
+        }
+      }),
+    })();
+    assert.equal(runtime.executablePath.endsWith("Camoufox.app/Contents/MacOS/camoufox"), true);
+    assert.equal((await readFile(runtime.executablePath, "utf8")).startsWith("#!/bin/sh"), true);
+    const metadata = JSON.parse(await readFile(path.join(runtime.browserPath, "camoufox-official-release.json"), "utf8"));
+    assert.equal(metadata.archiveSha256, digest);
+    assert.equal(metadata.source, "official-github-release");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("official fallback remains usable when a clean host has no npm", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "marketing-seeding-camoufox-no-npm-"));
+  const zipRoot = path.join(root, "zip-root", "Camoufox.app", "Contents", "MacOS");
+  await mkdir(zipRoot, { recursive: true });
+  const executable = path.join(zipRoot, "camoufox");
+  await writeFile(executable, "#!/bin/sh\nexit 0\n");
+  await chmod(executable, 0o755);
+  const archivePath = path.join(root, "camoufox-fixture.zip");
+  await execFileAsync("zip", ["-q", "-r", archivePath, "Camoufox.app"], { cwd: path.join(root, "zip-root") });
+  const archive = await readFile(archivePath);
+  const digest = createHash("sha256").update(archive).digest("hex");
+  try {
+    const runtime = await createAutoCamoufoxProvisioner({
+      root,
+      profiles: path.join(root, "profiles"),
+      npmBin: path.join(root, "missing-npm"),
+      officialAssetOverride: {
+        url: "https://github.com/daijro/camoufox/releases/download/v156.0.1-beta.36/camoufox-no-npm-fixture.zip",
+        sha256: digest,
+        arch: "arm64",
+        browserVersion: "156.0.1",
+        browserBuild: "beta.36",
+        tag: "v156.0.1-beta.36",
+        commit: CAMOUFOX_OFFICIAL_RELEASE.commit,
+      },
+      officialFetch: async (url) => ({
+        status: 200,
+        ok: true,
+        url,
+        headers: { get: (name) => name.toLowerCase() === "content-length" ? String(archive.length) : null },
+        body: {
+          async *[Symbol.asyncIterator]() {
+            yield archive.subarray(0, Math.floor(archive.length / 2));
+            yield archive.subarray(Math.floor(archive.length / 2));
+          }
+        }
+      }),
+    })();
+    assert.equal(runtime.executablePath.endsWith("Camoufox.app/Contents/MacOS/camoufox"), true);
+    assert.equal((await readFile(runtime.executablePath, "utf8")).startsWith("#!/bin/sh"), true);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

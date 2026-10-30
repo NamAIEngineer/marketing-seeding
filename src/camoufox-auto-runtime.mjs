@@ -7,6 +7,7 @@ import { CamoufoxProfileCoordinator } from './camoufox-profile-coordinator.mjs';
 import { runCamoufoxAccountAgent } from './camoufox-account-agent.mjs';
 import { CamoufoxExecutionSessionResolver } from './camoufox-execution-session-resolver.mjs';
 import { createAccountRuntimeRegistry } from './account-runtime-registry.mjs';
+import { provisionOfficialCamoufoxBrowser } from './camoufox-official-release.mjs';
 
 const execFileAsync = promisify(execFile);
 const PINNED_CAMOUFOX = '0.5.8';
@@ -38,7 +39,7 @@ function managedPath(candidate, parent) {
  * Running this probe in a child keeps the package's HOME-derived cache scoped
  * to the app runtime and avoids mutating the server process environment.
  */
-async function provisionManagedBrowser({ root, cacheHome }) {
+async function provisionManagedBrowser({ root, cacheHome, officialReleaseFallback = true, officialDownload = null, officialFetch = globalThis.fetch, officialAssetOverride = null } = {}) {
   const packageRoot = path.join(root, 'node_modules', 'camoufox');
   const indexFile = path.join(packageRoot, 'dist', 'index.js');
   const packageManagerFile = path.join(packageRoot, 'dist', 'pkgman.js');
@@ -87,7 +88,34 @@ process.stdout.write(JSON.stringify({ browserPath, executablePath, cacheRoot: ca
     }
     return Object.freeze(payload);
   } catch (error) {
-    if (error?.code && String(error.code).startsWith('CAMOUFOX_')) throw error;
+    const childOutput = `${String(error?.stderr || '')}\n${String(error?.stdout || '')}`;
+    const childCode = childOutput.match(/CAMOUFOX_[A-Z0-9_]+/)?.[0] || '';
+    const code = String(error?.code || '').startsWith('CAMOUFOX_') ? String(error.code) : childCode;
+    const validationFailure = new Set([
+      'CAMOUFOX_BROWSER_PATH_UNMANAGED',
+      'CAMOUFOX_EXECUTABLE_INVALID',
+      'CAMOUFOX_PROVISION_OUTPUT_INVALID',
+    ]).has(code);
+    // Any package-manager installation/discovery failure is safe to recover
+    // through the pinned official asset.  Validation failures remain terminal
+    // so an escaped/untrusted pkgman path can never be replaced silently.
+    if (officialReleaseFallback && !validationFailure) {
+      try {
+        return await provisionOfficialCamoufoxBrowser({
+          cacheHome,
+          assetOverride: officialAssetOverride,
+          downloadImpl: officialDownload,
+          fetchImpl: officialFetch,
+        });
+      } catch (officialError) {
+        throw Object.assign(new Error('Camoufox browser installation failed; official release fallback unavailable'), {
+          code: officialError?.code || 'CAMOUFOX_BROWSER_INSTALL_FAILED',
+          cause: officialError,
+          pkgmanError: error,
+        });
+      }
+    }
+    if (code.startsWith('CAMOUFOX_')) throw Object.assign(error, { code });
     throw Object.assign(new Error('Camoufox browser installation failed'), { code: 'CAMOUFOX_BROWSER_INSTALL_FAILED', cause: error });
   }
 }
@@ -110,7 +138,7 @@ export function createAutoCamoufoxAccountAgentRunner({ dataRoot, runtimeRoot, pr
   return runner;
 }
 
-export function createAutoCamoufoxProvisioner({ root, profiles, npmBin = '', headless = true, statusFile = '' } = {}) {
+export function createAutoCamoufoxProvisioner({ root, profiles, npmBin = '', headless = true, statusFile = '', officialReleaseFallback = true, officialDownload = null, officialFetch = globalThis.fetch, officialAssetOverride = null } = {}) {
   let ready = null;
   const statusPath = path.resolve(String(statusFile || path.join(root, 'provision-status.json')));
   return async function provision() {
@@ -125,6 +153,7 @@ export function createAutoCamoufoxProvisioner({ root, profiles, npmBin = '', hea
       const packageManifest = path.join(root, 'node_modules', 'camoufox', 'package.json');
       let packageVersion = '';
       try { packageVersion = JSON.parse(await readFile(packageManifest, 'utf8')).version || ''; } catch {}
+      let packageInstallError = null;
       if (!await exists(packageEntry) || packageVersion !== PINNED_CAMOUFOX) {
         const npm = text(npmBin, 1_000) || process.env.SEEDING_NPM_BIN || 'npm';
         try {
@@ -134,10 +163,24 @@ export function createAutoCamoufoxProvisioner({ root, profiles, npmBin = '', hea
             windowsHide: true
           });
         } catch (error) {
-          throw Object.assign(new Error('Camoufox package installation failed'), { code: 'CAMOUFOX_PACKAGE_INSTALL_FAILED', cause: error });
+          // The package is an optimization path.  Continue to the child probe,
+          // which will fail closed on the missing pkgman module and then use the
+          // pinned official release asset.  Preserve the npm error as context so
+          // an eventual official failure remains diagnosable without exposing
+          // credentials or command-line secrets.
+          packageInstallError = error;
         }
       }
-      const { browserPath: installedPath, executablePath } = await provisionManagedBrowser({ root, cacheHome });
+      let installed;
+      try {
+        installed = await provisionManagedBrowser({ root, cacheHome, officialReleaseFallback, officialDownload, officialFetch, officialAssetOverride });
+      } catch (error) {
+        if (packageInstallError) {
+          throw Object.assign(error, { packageInstallError });
+        }
+        throw error;
+      }
+      const { browserPath: installedPath, executablePath } = installed;
       const coordinator = new CamoufoxProfileCoordinator({ profileRoot: profiles, runtimePath: root, executablePath, headless });
       const result = Object.freeze({ coordinator, executablePath, packageVersion: PINNED_CAMOUFOX, browserPath: installedPath, cacheRoot: cacheHome });
       await writeProvisionStatus(statusPath, { status: 'READY', packageVersion: PINNED_CAMOUFOX, playwrightVersion: PINNED_PLAYWRIGHT, executablePath, browserPath: installedPath, cacheRoot: cacheHome });

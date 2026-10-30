@@ -25,6 +25,21 @@ local backends: the app never fabricates listening, Camoufox, media, or
 publication evidence when those runtimes are unavailable. All existing account,
 authority, UNKNOWN quarantine, and final publication gates remain in force.
 
+Camoufox browser provisioning first tries the pinned `camoufox@0.5.8` package
+manager. If its GitHub release API discovery is unavailable (including shared-IP
+HTTP 403/429/5xx responses), the app uses only the pinned official
+`daijro/camoufox` release `v156.0.1-beta.36` asset for the host architecture.
+The release URL, tag, commit, and SHA-256 are immutable in
+`src/camoufox-official-release.mjs`; redirects are restricted to GitHub release
+hosts. The roughly 1.2 GB ZIP streams into a mode-0600 app-local temporary file,
+is SHA-256 checked before extraction, rejects traversal entries, and is atomically
+installed under the managed Camoufox cache. Downloads retry only transient
+network/429/5xx failures with two bounded delays; 403 and checksum/layout errors
+fail closed as typed `UNAVAILABLE` status. No GitHub token, private release data,
+mirror, or provider credential is read. If both package manager and direct
+official download are unavailable, Overview keeps Camoufox `UNAVAILABLE` and
+the Account Agent does not claim a ready browser.
+
 On first service start, the bundle looks for the pinned `9router@0.5.109`
 binary. It uses an existing verified binary when present; otherwise it provisions
 that exact npm version in the app's protected runtime directory. Provisioning
