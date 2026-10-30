@@ -254,13 +254,45 @@ async function downloadArtifact(artifact, { fetchImpl = globalThis.fetch, timeou
   try {
     const response = await fetchImpl(artifact.url, { signal: controller.signal, redirect: 'follow' });
     if (!response.ok) throw new Error(`artifact download returned HTTP ${response.status}`);
-    const body = Buffer.from(await response.arrayBuffer());
-    if (body.byteLength > maxBytes) throw new Error('artifact exceeds byte bound');
-    return body;
+    const declaredLength = Number(response.headers?.get?.('content-length'));
+    if (Number.isFinite(declaredLength) && declaredLength > maxBytes) throw new Error('artifact exceeds byte bound');
+    const body = response.body;
+    if (!body) throw new Error('artifact download returned no body');
+    const chunks = [];
+    let total = 0;
+    const append = (chunk) => {
+      const bytes = Buffer.from(chunk);
+      total += bytes.byteLength;
+      if (total > maxBytes) throw new Error('artifact exceeds byte bound');
+      chunks.push(bytes);
+    };
+    if (typeof body.getReader === 'function') {
+      const reader = body.getReader();
+      try {
+        while (true) {
+          const next = await reader.read();
+          if (next.done) break;
+          append(next.value);
+        }
+      } catch (error) {
+        await reader.cancel().catch(() => {});
+        throw error;
+      } finally {
+        reader.releaseLock?.();
+      }
+    } else if (typeof body[Symbol.asyncIterator] === 'function') {
+      for await (const chunk of body) append(chunk);
+    } else {
+      throw new Error('artifact download body is not streamable');
+    }
+    return Buffer.concat(chunks, total);
   } finally {
     clearTimeout(timer);
   }
 }
+
+/** Checksum bootstrap download with bounded streaming response handling. */
+export const downloadVerifiedArtifact = downloadArtifact;
 
 async function extractArtifact(artifact, archivePath, destination, { timeoutMs = DEFAULT_DOWNLOAD_TIMEOUT_MS, spawnImpl = spawn } = {}) {
   await fs.mkdir(destination, { recursive: true, mode: 0o700 });
@@ -270,17 +302,30 @@ async function extractArtifact(artifact, archivePath, destination, { timeoutMs =
   if (result.status !== 'OK') throw new Error(`${command} extraction failed: ${clean(result.stderr || result.stdout, 500)}`);
 }
 
-async function provisionArtifact(kind, artifact, root, { downloadImpl = downloadArtifact, extractImpl = extractArtifact, timeoutMs = DEFAULT_DOWNLOAD_TIMEOUT_MS, spawnImpl = spawn } = {}) {
+async function cleanStalePromotionPaths(root, kind, destination) {
+  const stagingPrefix = `.content-runtime-${kind}-`;
+  const backupPrefix = `${path.basename(destination)}.previous-`;
+  let entries = [];
+  try { entries = await fs.readdir(root); } catch { return; }
+  await Promise.all(entries
+    .filter((entry) => entry.startsWith(stagingPrefix) || entry.startsWith(backupPrefix))
+    .map((entry) => fs.rm(path.join(root, entry), { recursive: true, force: true }).catch(() => {})));
+}
+
+async function provisionArtifact(kind, artifact, root, { downloadImpl = downloadArtifact, extractImpl = extractArtifact, timeoutMs = DEFAULT_DOWNLOAD_TIMEOUT_MS, spawnImpl = spawn, renameImpl = fs.rename } = {}) {
   if (!artifact || !artifact.url || !/^[a-f0-9]{64}$/i.test(artifact.sha256 || '') || !artifact.executable || !/^[a-f0-9]{64}$/i.test(artifact.executableSha256 || '')) {
     return { status: 'FAILED', failure: failure('CONTENT_RUNTIME_PROVENANCE_REQUIRED', `${kind} artifact provenance is incomplete`) };
   }
   await fs.mkdir(root, { recursive: true, mode: 0o700 });
+  const destination = path.join(root, kind === 'python' ? 'toolchain-python' : 'browser');
+  await cleanStalePromotionPaths(root, kind, destination);
   const staging = await fs.mkdtemp(path.join(root, `.content-runtime-${kind}-`));
   const archivePath = path.join(staging, `artifact.${artifact.archiveType === 'zip' ? 'zip' : 'tar.gz'}`);
   const extractRoot = path.join(staging, 'extract');
   try {
     const result = await downloadImpl(artifact, { timeoutMs, maxBytes: MAX_DOWNLOAD_BYTES });
     const bytes = Buffer.isBuffer(result) ? result : Buffer.from(result);
+    if (bytes.byteLength > MAX_DOWNLOAD_BYTES) throw new Error('artifact exceeds byte bound');
     const archiveSha256 = sha256(bytes);
     if (archiveSha256 !== artifact.sha256.toLowerCase()) return { status: 'FAILED', failure: failure('CONTENT_RUNTIME_CHECKSUM_MISMATCH', `${kind} archive checksum does not match the pinned digest`, { expectedSha256: artifact.sha256, actualSha256: archiveSha256 }) };
     await fs.writeFile(archivePath, bytes, { mode: 0o600 });
@@ -288,16 +333,23 @@ async function provisionArtifact(kind, artifact, root, { downloadImpl = download
     const executable = path.join(extractRoot, artifact.executable);
     const verified = await verifyManagedArtifact(executable, artifact.executableSha256.toLowerCase());
     if (verified.status !== 'READY') return { status: 'FAILED', failure: failure('CONTENT_RUNTIME_CHECKSUM_MISMATCH', `${kind} executable checksum does not match the pinned digest`, { expectedSha256: artifact.executableSha256, actualSha256: verified.sha256 }) };
-    const destination = path.join(root, kind === 'python' ? 'toolchain-python' : 'browser');
     const previous = `${destination}.previous-${process.pid}-${Date.now()}`;
-    await fs.rename(extractRoot, destination).catch(async (error) => {
-      if (error.code !== 'EEXIST') throw error;
-      await fs.rename(destination, previous);
-      try { await fs.rename(extractRoot, destination); } catch (promoteError) {
-        await fs.rename(previous, destination).catch(() => {});
+    let previousMoved = false;
+    try {
+      await renameImpl(extractRoot, destination);
+    } catch (error) {
+      if (!['EEXIST', 'ENOTEMPTY'].includes(error.code)) throw error;
+      await renameImpl(destination, previous);
+      previousMoved = true;
+      try {
+        await renameImpl(extractRoot, destination);
+      } catch (promoteError) {
+        await renameImpl(previous, destination).catch(() => {});
+        previousMoved = false;
         throw promoteError;
       }
-    });
+    }
+    if (previousMoved) await fs.rm(previous, { recursive: true, force: true }).catch(() => {});
     try { await fs.chmod(path.join(destination, artifact.executable), 0o700); } catch {}
     return { status: 'PROVISIONED', path: path.join(destination, artifact.executable), archiveSha256, executableSha256: verified.sha256, version: artifact.version };
   } catch (error) {

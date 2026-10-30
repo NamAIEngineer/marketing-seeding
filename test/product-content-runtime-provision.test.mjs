@@ -5,6 +5,7 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
+  downloadVerifiedArtifact,
   provisionVerifiedArtifact,
   repairContentRuntime,
   resolveContentRuntimePaths,
@@ -59,6 +60,74 @@ test('artifact checksum mismatch fails closed before extraction', async () => {
   assert.equal(result.status, 'FAILED');
   assert.equal(result.failure.code, 'CONTENT_RUNTIME_CHECKSUM_MISMATCH');
   assert.equal(extracted, false);
+});
+
+test('streaming artifact download stops at the byte bound before buffering the whole response', async () => {
+  const artifact = fixtureArtifact();
+  const oversized = Buffer.alloc(32, 7);
+  let cancelled = false;
+  const response = {
+    ok: true,
+    body: {
+      getReader() {
+        let sent = false;
+        return {
+          async read() {
+            if (sent) return { done: true, value: undefined };
+            sent = true;
+            return { done: false, value: oversized };
+          },
+          async cancel() { cancelled = true; },
+          releaseLock() {},
+        };
+      },
+    },
+  };
+  await assert.rejects(
+    downloadVerifiedArtifact(artifact, { fetchImpl: async () => response, maxBytes: 8 }),
+    /exceeds byte bound/,
+  );
+  assert.equal(cancelled, true);
+});
+
+test('existing managed destination is replaced after verification and old tree is removed', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'content-runtime-replace-'));
+  const destination = path.join(root, 'toolchain-python');
+  await fs.mkdir(path.join(destination, 'old'), { recursive: true });
+  await fs.writeFile(path.join(destination, 'old', 'marker'), 'old');
+  const artifact = fixtureArtifact();
+  const result = await provisionVerifiedArtifact('python', artifact, root, {
+    downloadImpl: async () => artifact.archive,
+    extractImpl: extractorFor(artifact),
+  });
+  assert.equal(result.status, 'PROVISIONED');
+  assert.equal(await fs.readFile(result.path, 'utf8'), 'python executable fixture');
+  assert.equal(await fs.stat(path.join(destination, 'old')).then(() => true).catch(() => false), false);
+});
+
+test('promotion failure rolls back the old managed tree and cleans staging/backup paths', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'content-runtime-rollback-'));
+  const destination = path.join(root, 'toolchain-python');
+  await fs.mkdir(path.join(destination, 'old'), { recursive: true });
+  await fs.writeFile(path.join(destination, 'old', 'marker'), 'old');
+  const artifact = fixtureArtifact();
+  let calls = 0;
+  const renameImpl = async (source, target) => {
+    calls += 1;
+    if (calls === 1) throw Object.assign(new Error('destination exists'), { code: 'ENOTEMPTY' });
+    if (calls === 3) throw Object.assign(new Error('promotion failed'), { code: 'EIO' });
+    return fs.rename(source, target);
+  };
+  const result = await provisionVerifiedArtifact('python', artifact, root, {
+    downloadImpl: async () => artifact.archive,
+    extractImpl: extractorFor(artifact),
+    renameImpl,
+  });
+  assert.equal(result.status, 'FAILED');
+  assert.equal(result.failure.code, 'CONTENT_RUNTIME_DOWNLOAD_FAILED');
+  assert.equal(await fs.readFile(path.join(destination, 'old', 'marker'), 'utf8'), 'old');
+  const entries = await fs.readdir(root);
+  assert.deepEqual(entries, ['toolchain-python']);
 });
 
 test('production repair reports unsupported platform without downloading', async () => {
