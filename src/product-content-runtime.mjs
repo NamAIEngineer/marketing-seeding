@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { CONTENT_RUNTIME_PROVENANCE_VERSION, getContentRuntimeProvenance } from './product-content-runtime-provenance.mjs';
 
 /**
  * Provisioning and preflight for the content lane's local backends.
@@ -25,6 +26,9 @@ export const CONTENT_RUNTIME_FAILURE_CODES = Object.freeze([
   'CONTENT_RUNTIME_CHECKSUM_REQUIRED',
   'CONTENT_RUNTIME_CHECKSUM_MISMATCH',
   'CONTENT_RUNTIME_INSTALL_FAILED',
+  'CONTENT_RUNTIME_PLATFORM_UNSUPPORTED',
+  'CONTENT_RUNTIME_PROVENANCE_REQUIRED',
+  'CONTENT_RUNTIME_DOWNLOAD_FAILED',
 ]);
 
 const APP_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -36,6 +40,7 @@ const MAX_LOCK_BYTES = 256 * 1024;
 const MAX_DOWNLOAD_BYTES = 256 * 1024 * 1024;
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_INSTALL_TIMEOUT_MS = 180_000;
+const DEFAULT_DOWNLOAD_TIMEOUT_MS = 120_000;
 // SHA-256 of plans/crawl4ai-integration/python-dependencies.lock at the
 // checked-in backend revisions. Update this constant only with a reviewed pin
 // and matching third-party notice change.
@@ -101,6 +106,18 @@ function pythonStoragePath(root) {
   return process.platform === 'win32' ? path.join(root, 'python', 'Scripts', 'python.exe') : path.join(root, 'python', 'bin', 'python');
 }
 
+function managedPythonPath(root, provenance) {
+  const executable = provenance?.python?.executable;
+  if (!executable) return null;
+  return path.join(root, 'toolchain-python', executable);
+}
+
+function managedChromePath(root, provenance) {
+  const executable = provenance?.chrome?.executable;
+  if (!executable) return null;
+  return path.join(root, 'browser', executable);
+}
+
 function chromeCandidates({ root, resourcesDir, env, envPath }) {
   return [
     env.SEEDING_NODRIVER_CHROME,
@@ -113,13 +130,15 @@ function chromeCandidates({ root, resourcesDir, env, envPath }) {
 }
 
 /** Resolve every path the pipeline may use. This function does no I/O. */
-export function resolveContentRuntimePaths({ storageRoot, resourcesDir = APP_ROOT, env = process.env, appName, version, pathEnv } = {}) {
+export function resolveContentRuntimePaths({ storageRoot, resourcesDir = APP_ROOT, env = process.env, appName, version, pathEnv, provenance = null, platform = process.platform, arch = process.arch } = {}) {
   const root = safePath(storageRoot, platformUserRoot({ appName, version }));
   const resources = safePath(resourcesDir, APP_ROOT);
+  const artifactProvenance = getContentRuntimeProvenance({ platform, arch });
   const envPath = String(pathEnv || env.PATH || process.env.PATH || '');
   const pythonCandidates = [
     { value: env.SEEDING_CONTENT_PYTHON || env.SEEDING_LISTENING_PYTHON, source: 'env' },
     { value: pythonStoragePath(root), source: 'user-storage' },
+    { value: managedPythonPath(root, artifactProvenance), source: 'managed-artifact' },
     { value: path.join(resources, 'python', process.platform === 'win32' ? 'python.exe' : 'bin/python'), source: 'app-resources' },
     { value: 'python3', source: 'system-path' },
   ].filter((item) => item.value);
@@ -131,6 +150,11 @@ export function resolveContentRuntimePaths({ storageRoot, resourcesDir = APP_ROO
   ].filter((item) => item.value);
   const pick = (candidates) => candidates[0];
   const chrome = chromeCandidates({ root, resourcesDir: resources, env, envPath });
+  const managedChrome = managedChromePath(root, artifactProvenance);
+  if (managedChrome) {
+    const envIndex = chrome.findIndex((candidate) => candidate.source === 'env');
+    chrome.splice(envIndex >= 0 ? envIndex : 0, 0, { candidate: managedChrome, path: managedChrome, source: 'managed-artifact' });
+  }
   return Object.freeze({
     version: CONTENT_RUNTIME_VERSION,
     storageRoot: root,
@@ -144,6 +168,10 @@ export function resolveContentRuntimePaths({ storageRoot, resourcesDir = APP_ROO
     ffmpegSource: pick(ffmpegCandidates)?.source || 'system-path',
     ffmpegCandidates: ffmpegCandidates.map((item) => ({ ...item })),
     pythonBootstrapPath: env.SEEDING_CONTENT_PYTHON_BOOTSTRAP || 'python3',
+    managedPythonPath: managedPythonPath(root, artifactProvenance),
+    managedChromePath: managedChrome,
+    provenance: artifactProvenance,
+    runtimeManifestPath: path.join(root, 'runtime-manifest.json'),
     chromeCandidates: chrome,
     extractorScript: path.join(resources, 'scripts', 'crawl4ai_extract.py'),
     fetcherScript: path.join(resources, 'scripts', 'nodriver_fetcher.py'),
@@ -207,6 +235,86 @@ async function probeFirstCandidate(candidates, args, options = {}) {
   return { ...(attempts[attempts.length - 1] || { status: 'MISSING', path: null }), attempts };
 }
 
+async function verifyManagedArtifact(filePath, expectedSha256) {
+  if (!filePath || !expectedSha256) return { status: 'NOT_CONFIGURED', path: filePath || null, sha256: null };
+  try {
+    const stat = await fs.stat(filePath);
+    if (!stat.isFile()) return { status: 'MISSING', path: filePath, sha256: null };
+    const digest = sha256(await fs.readFile(filePath));
+    return { status: digest === expectedSha256 ? 'READY' : 'FAILED', path: filePath, sha256: digest, expectedSha256 };
+  } catch (error) {
+    return { status: 'MISSING', path: filePath, sha256: null, error: error.code || 'ENOENT' };
+  }
+}
+
+async function downloadArtifact(artifact, { fetchImpl = globalThis.fetch, timeoutMs = DEFAULT_DOWNLOAD_TIMEOUT_MS, maxBytes = MAX_DOWNLOAD_BYTES } = {}) {
+  if (typeof fetchImpl !== 'function') throw new Error('fetch is unavailable');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetchImpl(artifact.url, { signal: controller.signal, redirect: 'follow' });
+    if (!response.ok) throw new Error(`artifact download returned HTTP ${response.status}`);
+    const body = Buffer.from(await response.arrayBuffer());
+    if (body.byteLength > maxBytes) throw new Error('artifact exceeds byte bound');
+    return body;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function extractArtifact(artifact, archivePath, destination, { timeoutMs = DEFAULT_DOWNLOAD_TIMEOUT_MS, spawnImpl = spawn } = {}) {
+  await fs.mkdir(destination, { recursive: true, mode: 0o700 });
+  const command = artifact.archiveType === 'zip' ? 'unzip' : 'tar';
+  const args = artifact.archiveType === 'zip' ? ['-q', archivePath, '-d', destination] : ['-xzf', archivePath, '-C', destination];
+  const result = await runBounded(command, args, { cwd: destination, env: sanitizedEnv(process.env.PATH), timeoutMs, spawnImpl });
+  if (result.status !== 'OK') throw new Error(`${command} extraction failed: ${clean(result.stderr || result.stdout, 500)}`);
+}
+
+async function provisionArtifact(kind, artifact, root, { downloadImpl = downloadArtifact, extractImpl = extractArtifact, timeoutMs = DEFAULT_DOWNLOAD_TIMEOUT_MS, spawnImpl = spawn } = {}) {
+  if (!artifact || !artifact.url || !/^[a-f0-9]{64}$/i.test(artifact.sha256 || '') || !artifact.executable || !/^[a-f0-9]{64}$/i.test(artifact.executableSha256 || '')) {
+    return { status: 'FAILED', failure: failure('CONTENT_RUNTIME_PROVENANCE_REQUIRED', `${kind} artifact provenance is incomplete`) };
+  }
+  await fs.mkdir(root, { recursive: true, mode: 0o700 });
+  const staging = await fs.mkdtemp(path.join(root, `.content-runtime-${kind}-`));
+  const archivePath = path.join(staging, `artifact.${artifact.archiveType === 'zip' ? 'zip' : 'tar.gz'}`);
+  const extractRoot = path.join(staging, 'extract');
+  try {
+    const result = await downloadImpl(artifact, { timeoutMs, maxBytes: MAX_DOWNLOAD_BYTES });
+    const bytes = Buffer.isBuffer(result) ? result : Buffer.from(result);
+    const archiveSha256 = sha256(bytes);
+    if (archiveSha256 !== artifact.sha256.toLowerCase()) return { status: 'FAILED', failure: failure('CONTENT_RUNTIME_CHECKSUM_MISMATCH', `${kind} archive checksum does not match the pinned digest`, { expectedSha256: artifact.sha256, actualSha256: archiveSha256 }) };
+    await fs.writeFile(archivePath, bytes, { mode: 0o600 });
+    await extractImpl(artifact, archivePath, extractRoot, { timeoutMs, spawnImpl });
+    const executable = path.join(extractRoot, artifact.executable);
+    const verified = await verifyManagedArtifact(executable, artifact.executableSha256.toLowerCase());
+    if (verified.status !== 'READY') return { status: 'FAILED', failure: failure('CONTENT_RUNTIME_CHECKSUM_MISMATCH', `${kind} executable checksum does not match the pinned digest`, { expectedSha256: artifact.executableSha256, actualSha256: verified.sha256 }) };
+    const destination = path.join(root, kind === 'python' ? 'toolchain-python' : 'browser');
+    const previous = `${destination}.previous-${process.pid}-${Date.now()}`;
+    await fs.rename(extractRoot, destination).catch(async (error) => {
+      if (error.code !== 'EEXIST') throw error;
+      await fs.rename(destination, previous);
+      try { await fs.rename(extractRoot, destination); } catch (promoteError) {
+        await fs.rename(previous, destination).catch(() => {});
+        throw promoteError;
+      }
+    });
+    try { await fs.chmod(path.join(destination, artifact.executable), 0o700); } catch {}
+    return { status: 'PROVISIONED', path: path.join(destination, artifact.executable), archiveSha256, executableSha256: verified.sha256, version: artifact.version };
+  } catch (error) {
+    return { status: 'FAILED', failure: failure('CONTENT_RUNTIME_DOWNLOAD_FAILED', `${kind} artifact provisioning failed`, { cause: clean(error.message, 500) }) };
+  } finally {
+    await fs.rm(staging, { recursive: true, force: true }).catch(() => {});
+  }
+}
+
+/**
+ * Checksum-first artifact installation primitive. Callers may inject a
+ * deterministic downloader/extractor for tests; production defaults use
+ * fetch plus the platform archive tool. The returned path is promoted only
+ * after both archive and executable bytes match immutable pins.
+ */
+export const provisionVerifiedArtifact = provisionArtifact;
+
 function modeRequirements(mode) {
   const normalized = String(mode || 'LOCAL').toUpperCase();
   if (normalized === 'FIXTURE') return { python: [], chrome: false, ffmpeg: true };
@@ -224,6 +332,8 @@ export async function probeContentRuntime({ mode = 'LOCAL', paths = null, storag
       : Promise.resolve({ status: 'NOT_REQUIRED', path: resolved.pythonPath, imports: [] }),
     requirements.ffmpeg ? probeFirstCandidate(resolved.ffmpegCandidates || [{ value: resolved.ffmpegPath, source: resolved.ffmpegSource }], ['-version'], { pathEnv: resolved.pathEnv, timeoutMs, spawnImpl }) : Promise.resolve({ status: 'NOT_REQUIRED', path: resolved.ffmpegPath }),
   ]);
+  const managedPython = await verifyManagedArtifact(resolved.managedPythonPath, resolved.provenance?.python?.executableSha256);
+  const managedChrome = await verifyManagedArtifact(resolved.managedChromePath, resolved.provenance?.chrome?.executableSha256);
   let chrome = { status: 'NOT_REQUIRED', path: null };
   if (requirements.chrome) {
     const chromeCandidates = Array.isArray(resolved.chromeCandidates) ? resolved.chromeCandidates : [];
@@ -231,9 +341,12 @@ export async function probeContentRuntime({ mode = 'LOCAL', paths = null, storag
       ? await probeFirstCandidate(chromeCandidates.map((item) => ({ value: item.path, source: item.source || null })), ['--version'], { pathEnv: resolved.pathEnv, timeoutMs, spawnImpl })
       : { status: 'MISSING', path: null, stderr: 'Chrome executable not configured' };
   }
-  const missingPython = requirements.python.length > 0 && python.status !== 'READY';
+  const managedRequired = String(mode).toUpperCase() === 'PRODUCTION' && Boolean(resolved.provenance);
+  const artifactPythonInvalid = requirements.python.length > 0 && managedRequired && managedPython.status !== 'READY';
+  const artifactChromeInvalid = requirements.chrome && managedRequired && managedChrome.status !== 'READY';
+  const missingPython = requirements.python.length > 0 && (python.status !== 'READY' || artifactPythonInvalid);
   const missingMedia = requirements.ffmpeg && ffmpeg.status !== 'READY';
-  const missingChrome = requirements.chrome && chrome.status !== 'READY';
+  const missingChrome = requirements.chrome && (chrome.status !== 'READY' || artifactChromeInvalid);
   const status = !missingPython && !missingMedia && !missingChrome ? 'READY' : 'UNAVAILABLE';
   let runtimeFailure = null;
   if (missingPython || missingChrome) runtimeFailure = failure('RESEARCH_BACKEND_UNAVAILABLE', 'content research backend is unavailable', { python, chrome, mode: String(mode).toUpperCase() });
@@ -245,8 +358,10 @@ export async function probeContentRuntime({ mode = 'LOCAL', paths = null, storag
     mode: String(mode).toUpperCase(),
     paths: resolved,
     python,
+    managedPython,
     ffmpeg,
     chrome,
+    managedChrome,
     requirements,
     failure: runtimeFailure,
     readOnly: true,
@@ -333,7 +448,7 @@ export async function stageVerifiedBinary({ sourcePath, destinationPath, expecte
  * `repair:false`; no files are written in that mode. Network installation is
  * opt-in and always uses the checked-in, hashed lock metadata.
  */
-export async function repairContentRuntime({ mode = 'LOCAL', storageRoot, resourcesDir, env = process.env, paths = null, repair = false, allowNetwork = false, pythonBootstrap = null, ffmpegSourcePath = null, ffmpegSha256 = null, timeoutMs = DEFAULT_INSTALL_TIMEOUT_MS, spawnImpl = spawn } = {}) {
+export async function repairContentRuntime({ mode = 'LOCAL', storageRoot, resourcesDir, env = process.env, paths = null, repair = false, allowNetwork = false, pythonBootstrap = null, ffmpegSourcePath = null, ffmpegSha256 = null, timeoutMs = DEFAULT_INSTALL_TIMEOUT_MS, spawnImpl = spawn, fetchImpl = globalThis.fetch, downloadImpl = null, extractImpl = extractArtifact } = {}) {
   const resolved = paths || resolveContentRuntimePaths({ storageRoot, resourcesDir, env });
   const before = await probeContentRuntime({ mode, paths: resolved, timeoutMs: Math.min(timeoutMs, DEFAULT_TIMEOUT_MS), spawnImpl });
   const metadata = await readPinnedMetadata(resolved.lockPath, resolved.noticesPath);
@@ -344,9 +459,27 @@ export async function repairContentRuntime({ mode = 'LOCAL', storageRoot, resour
     return { ...before, status: 'BLOCKED', ready: false, failure: failure('CONTENT_RUNTIME_INSTALL_FAILED', 'pinned dependency lock is unavailable; repair was not attempted', metadata), repair: { attempted: false, actions: [], metadata } };
   }
   if (!repair) return { ...before, repair: { attempted: false, actions: [], metadata } };
+  if (!allowNetwork) {
+    return { ...before, status: 'BLOCKED', ready: false, failure: failure('CONTENT_RUNTIME_NETWORK_REQUIRED', 'content runtime repair requires allowNetwork: true', { mode: String(mode).toUpperCase() }), repair: { attempted: true, actions: [], metadata } };
+  }
+  if (String(mode).toUpperCase() === 'PRODUCTION' && !resolved.provenance) {
+    return { ...before, status: 'BLOCKED', ready: false, failure: failure('CONTENT_RUNTIME_PLATFORM_UNSUPPORTED', 'no verified content-runtime artifacts are published for this platform', { platform: `${process.platform}-${process.arch}` }), repair: { attempted: true, actions: [], metadata } };
+  }
   const actions = [];
-  if (!before.python || before.python.status !== 'READY') {
-    const installed = await installPythonRuntime(resolved, { pythonBootstrap, timeoutMs, allowNetwork, spawnImpl });
+  if (String(mode).toUpperCase() === 'PRODUCTION' && (!before.managedPython || before.managedPython.status !== 'READY')) {
+    const installed = await provisionArtifact('python', resolved.provenance.python, resolved.storageRoot, { downloadImpl: downloadImpl || ((artifact, options) => downloadArtifact(artifact, { ...options, fetchImpl })), extractImpl, timeoutMs, spawnImpl });
+    actions.push({ kind: 'python-artifact', ...installed });
+    if (installed.status !== 'PROVISIONED') return { ...before, status: 'BLOCKED', ready: false, failure: installed.failure, repair: { attempted: true, actions, metadata } };
+  }
+  if (String(mode).toUpperCase() === 'PRODUCTION' && (!before.managedChrome || before.managedChrome.status !== 'READY')) {
+    const installed = await provisionArtifact('chrome', resolved.provenance.chrome, resolved.storageRoot, { downloadImpl: downloadImpl || ((artifact, options) => downloadArtifact(artifact, { ...options, fetchImpl })), extractImpl, timeoutMs, spawnImpl });
+    actions.push({ kind: 'chrome-artifact', ...installed });
+    if (installed.status !== 'PROVISIONED') return { ...before, status: 'BLOCKED', ready: false, failure: installed.failure, repair: { attempted: true, actions, metadata } };
+  }
+  const artifactPython = resolved.managedPythonPath && (await existsExecutable(resolved.managedPythonPath)) ? resolved.managedPythonPath : null;
+  const pythonProvisioned = actions.some((action) => action.kind === 'python-artifact' && action.status === 'PROVISIONED');
+  if (pythonProvisioned || !before.python || before.python.status !== 'READY') {
+    const installed = await installPythonRuntime(resolved, { pythonBootstrap: artifactPython || pythonBootstrap, timeoutMs, allowNetwork, spawnImpl });
     actions.push({ kind: 'python', ...installed });
     if (installed.status === 'BLOCKED' || installed.status === 'FAILED' || installed.status === 'UNAVAILABLE') {
       return { ...before, status: 'BLOCKED', ready: false, failure: installed.failure, repair: { attempted: true, actions, metadata } };
@@ -362,6 +495,7 @@ export async function repairContentRuntime({ mode = 'LOCAL', storageRoot, resour
   const afterPaths = resolveContentRuntimePaths({
     storageRoot: resolved.storageRoot,
     resourcesDir: resolved.resourcesDir,
+    provenance: resolved.provenance,
     env: {
       ...env,
       SEEDING_CONTENT_PYTHON: pythonStoragePath(resolved.storageRoot),
@@ -374,6 +508,7 @@ export async function repairContentRuntime({ mode = 'LOCAL', storageRoot, resour
     createdAt: new Date().toISOString(),
     paths: { pythonPath: after.paths.pythonPath, ffmpegPath: after.paths.ffmpegPath, chromePath: after.chrome?.path || null },
     packagePins: PYTHON_PACKAGES,
+    provenance: resolved.provenance,
     lock: metadata.lock,
     notices: metadata.notices,
     actions: actions.map(({ kind, status, path: stagedPath, bytes, sha256: digest }) => ({ kind, status, path: stagedPath || null, bytes: bytes || null, sha256: digest || null })),
@@ -386,6 +521,7 @@ export const ensureContentRuntime = repairContentRuntime;
 
 export const contentRuntimeManifest = Object.freeze({
   version: CONTENT_RUNTIME_VERSION,
+  provenanceVersion: CONTENT_RUNTIME_PROVENANCE_VERSION,
   packagePins: PYTHON_PACKAGES,
   lockPath: DEFAULT_LOCK_PATH,
   noticesPath: DEFAULT_NOTICES_PATH,
