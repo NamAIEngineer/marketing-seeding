@@ -185,8 +185,8 @@ fi
 if [ -z "${SEEDING_CONTROL_TOKEN:-}" ]; then
   export SEEDING_CONTROL_TOKEN=$(cat "$DATA_ROOT/control-token")
 fi
-export SEEDING_HOST=127.0.0.1
-export SEEDING_PORT=4321
+export SEEDING_HOST="${SEEDING_HOST:-127.0.0.1}"
+export SEEDING_PORT="${SEEDING_PORT:-4321}"
 if [ -z "${SEEDING_HEALTH_NONCE:-}" ]; then
   export SEEDING_HEALTH_NONCE=$(cat "$DATA_ROOT/health-nonce")
 fi
