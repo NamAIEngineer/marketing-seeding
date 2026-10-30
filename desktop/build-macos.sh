@@ -222,7 +222,13 @@ if [ "${SEEDING_9ROUTER_PROVISION:-true}" = "true" ] && [ -x "$APP_ROOT/provisio
 fi
 if [ "${SEEDING_CAMOUFOX_PROVISION:-true}" = "true" ] && [ -x "$APP_ROOT/provision-camoufox.sh" ]; then
   if ! "$APP_ROOT/provision-camoufox.sh" "$DATA_ROOT" >"$DATA_ROOT/camoufox-provision-command" 2>"$DATA_ROOT/camoufox-provision-error"; then
-    printf '%s\n' 'unavailable:provision_script_failed' >"$DATA_ROOT/camoufox-provision-status"
+    # Preserve a typed status emitted by the provisioner (including the
+    # lowercase form used by the shell wrapper).  Replace it only when the
+    # helper failed before writing any status, so Overview retains the actual
+    # unavailable reason instead of a generic provisioning_failed marker.
+    if ! /usr/bin/grep -Eq '^(UNAVAILABLE|unavailable):' "$DATA_ROOT/camoufox-provision-status" 2>/dev/null; then
+      printf '%s\n' 'unavailable:provision_script_failed' >"$DATA_ROOT/camoufox-provision-status"
+    fi
   fi
 fi
 cd "$APP_ROOT"

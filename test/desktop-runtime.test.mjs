@@ -182,6 +182,13 @@ test("packaged service preserves typed 9Router provisioning failures", async () 
   assert.doesNotMatch(build, /printf '%s\\n' "provision_failed"/);
 });
 
+test("packaged service preserves typed Camoufox provisioning failures", async () => {
+  const build = await readFile(path.join(root, "desktop/build-macos.sh"), "utf8");
+  assert.match(build, /camoufox-provision-status/);
+  assert.match(build, /grep -Eq '\^\(UNAVAILABLE\|unavailable\):'/);
+  assert.match(build, /unavailable:provision_script_failed/);
+});
+
 test("launcher health probe rejects a foreign service collision on the fixed port", async (context) => {
   const server = http.createServer((_request, response) => {
     response.writeHead(200, { "content-type": "application/json" });
