@@ -42,11 +42,17 @@ const DARWIN_ARM64 = Object.freeze({
     sha256: 'b1ae3173414b5fc5f538a726c4e48ea97edc0d2cdc11f103afee655c463fa742',
     executable: 'imageio_ffmpeg/binaries/ffmpeg-macos-aarch64-v7.1',
     executableSha256: '6d175a4743ca50256e89a8cdd731100f9cee33bd79aeea46894d209410dc6617',
-    license: 'BSD-2-Clause wrapper; bundled FFmpeg GPL-2.0-or-later build with x264 GPL-2.0-or-later',
+    license: 'BSD-2-Clause wrapper; bundled FFmpeg built with GPL components; final GPL/LGPL classification requires component review',
+    licenseReviewStatus: 'GPL_CLASSIFICATION_REVIEW_REQUIRED',
     licenseUrl: 'https://ffmpeg.org/legal.html',
     sourceUrl: 'https://ffmpeg.org/releases/ffmpeg-7.1.tar.xz',
     x264SourceUrl: 'https://code.videolan.org/videolan/x264',
     sourceOfferStatus: 'SOURCE_CORRESPONDENCE_REVIEW_REQUIRED',
+    packageSourceUrl: 'https://github.com/imageio/imageio-ffmpeg/tree/ae47d8028c237ca5507ceef1b843ee427b442887',
+    packageSourceCommit: 'ae47d8028c237ca5507ceef1b843ee427b442887',
+    binarySourceUrl: 'https://github.com/imageio/imageio-binaries/raw/f8f64710ea88e7e4a352c0f7d8c0deac9f5fd685/ffmpeg/ffmpeg-macos-aarch64-v7.1',
+    binarySourceCommit: 'f8f64710ea88e7e4a352c0f7d8c0deac9f5fd685',
+    binarySourceStatus: 'PREBUILT_BLOB_NO_BUILD_SOURCES',
     // Captured from the pinned executable with `ffmpeg -buildconf`. This is
     // provenance only: it does not prove that corresponding source, patches,
     // compiler inputs, or an offer are available to recipients.

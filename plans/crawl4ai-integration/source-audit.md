@@ -33,3 +33,25 @@ recorded in [FFmpeg-LIBRARY-INVENTORY.md](FFmpeg-LIBRARY-INVENTORY.md). Those
 references are not corresponding source: exact revisions, patches, compiler
 inputs and build scripts remain unresolved for this wheel.
 Registry metadata source: <https://pypi.org/pypi/imageio-ffmpeg/0.6.0/json>.
+
+## Upstream source-resolution result
+
+The wheel member is byte-identical to the separately published
+`imageio-binaries` blob at commit
+`f8f64710ea88e7e4a352c0f7d8c0deac9f5fd685`:
+
+<https://github.com/imageio/imageio-binaries/raw/f8f64710ea88e7e4a352c0f7d8c0deac9f5fd685/ffmpeg/ffmpeg-macos-aarch64-v7.1>
+
+The Python wrapper source is pinned to `imageio-ffmpeg` tag `v0.6.0`, commit
+`ae47d8028c237ca5507ceef1b843ee427b442887`:
+
+<https://github.com/imageio/imageio-ffmpeg/tree/ae47d8028c237ca5507ceef1b843ee427b442887>
+
+That release task copies a prebuilt file from the sibling binary repository;
+neither repository contains the FFmpeg source checkout, the 20 enabled
+dependency source revisions, configure/build scripts, compiler inputs, or
+patches that produced this executable. The exact blob and wrapper are now
+reproducibly identified, but corresponding source is still unavailable.
+The provenance status remains `PREBUILT_BLOB_NO_BUILD_SOURCES` and
+`SOURCE_CORRESPONDENCE_REVIEW_REQUIRED`; this evidence does not constitute a
+written offer or release approval.

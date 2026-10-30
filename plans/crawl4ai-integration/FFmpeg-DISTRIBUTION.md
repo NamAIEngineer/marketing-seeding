@@ -30,6 +30,13 @@ for a release review.
   `--enable-neon`, `--enable-runtime-cpudetect`, `--disable-indev=qtkit`,
   `--disable-indev=x11grab_xcb`.
 
+The wheel member is byte-identical to the upstream `imageio-binaries` prebuilt
+blob at commit `f8f64710ea88e7e4a352c0f7d8c0deac9f5fd685`; the wrapper source is
+`imageio-ffmpeg` `v0.6.0` at commit
+`ae47d8028c237ca5507ceef1b843ee427b442887`. Those repositories identify the
+wrapper and blob only. They do not provide the exact FFmpeg/dependency source,
+patches, compiler inputs or build scripts for this executable.
+
 The executable is staged only after archive and executable hash checks. A
 wrong hash or version fails closed before media rendering.
 
@@ -37,12 +44,14 @@ wrong hash or version fails closed before media rendering.
 
 FFmpeg's official legal guidance states that most FFmpeg code is LGPL-2.1-or-
 later, while `--enable-gpl` activates GPL components and changes the resulting
-binary's license to GPL-2-or-later. The observed executable includes
+binary's baseline classification to GPL-2-or-later. The observed executable includes
 `libx264`, `libx265`, `libvidstab`, and `libkvazaar`, plus the other libraries
 listed in `FFmpeg-LIBRARY-INVENTORY.md`. FFmpeg's official legal page identifies
 the x264/x265 family as GPL-compatible; the executable therefore requires GPL
-notices and corresponding-source handling for every enabled component. The
-Python `imageio-ffmpeg` wrapper remains BSD-2-Clause; that wrapper license does
+notices and corresponding-source handling for every enabled component. Final
+GPL/LGPL classification remains a release review item because the exact
+dependency source/license combination is unavailable. The Python
+`imageio-ffmpeg` wrapper remains BSD-2-Clause; that wrapper license does
 not change the FFmpeg executable's copyleft obligations.
 
 Relevant texts are included in this directory:
@@ -86,4 +95,5 @@ must either:
 
 Until one of those actions is completed and reviewed, this artifact remains a
 runnable/internal package. The app and CI intentionally preserve this
-fail-closed release status.
+fail-closed release status. The source-offer checklist does not itself satisfy
+the corresponding-source or written-offer requirement.

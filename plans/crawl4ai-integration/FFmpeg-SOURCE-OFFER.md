@@ -18,6 +18,23 @@ The complete observed configure flags and enabled-library inventory are in
 contains upstream references only; exact revisions and corresponding source
 for this executable have not been recovered.
 
+## What the upstream trace proves
+
+The wheel member is byte-identical to the `imageio-binaries` prebuilt blob at
+commit `f8f64710ea88e7e4a352c0f7d8c0deac9f5fd685`:
+
+<https://github.com/imageio/imageio-binaries/raw/f8f64710ea88e7e4a352c0f7d8c0deac9f5fd685/ffmpeg/ffmpeg-macos-aarch64-v7.1>
+
+The Python wrapper is pinned to `imageio-ffmpeg` `v0.6.0` at commit
+`ae47d8028c237ca5507ceef1b843ee427b442887`:
+
+<https://github.com/imageio/imageio-ffmpeg/tree/ae47d8028c237ca5507ceef1b843ee427b442887>
+
+The wrapper release copies the prebuilt blob; the traced repositories do not
+contain the exact FFmpeg/dependency source trees, configure/build scripts,
+compiler inputs or patches. Reproducible blob identity is therefore proven,
+but corresponding source is not.
+
 Upstream source locations:
 
 - FFmpeg 7.1: <https://ffmpeg.org/releases/ffmpeg-7.1.tar.xz>
@@ -33,4 +50,7 @@ would need a release-specific URL, contact/procedure, exact artifact identity,
 and a minimum three-year validity period. This file has no such offer URL or
 contact procedure. The current package deliberately retains a
 `SOURCE_CORRESPONDENCE_REVIEW_REQUIRED` blocker and must not be described as a
-completed GPL-compliant commercial release.
+completed GPL-compliant commercial release. The additional
+`PREBUILT_BLOB_NO_BUILD_SOURCES` and `GPL_CLASSIFICATION_REVIEW_REQUIRED`
+statuses remain release blockers; this checklist is not a written offer and
+does not satisfy corresponding-source requirements.

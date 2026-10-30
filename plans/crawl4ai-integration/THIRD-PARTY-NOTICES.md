@@ -16,10 +16,10 @@ bundled `ffmpeg-macos-aarch64-v7.1` executable is pinned to SHA-256
 The Python package is BSD-2-Clause. The bundled executable was observed with
 `--enable-gpl`, `--enable-libx264`, `--enable-libx265`, and the additional
 external-library flags recorded in `FFmpeg-LIBRARY-INVENTORY.md`. FFmpeg's
-official license guidance says that enabling GPL components changes the
-resulting FFmpeg binary to GPL-2.0-or-later; x264, x265, vid.stab and Kvazaar
-also require exact license/source review. The exact license texts and
-source-availability documents are shipped beside this notice:
+official license guidance describes the GPL-enabled baseline as GPL-2-or-later;
+x264, x265, vid.stab, Kvazaar and the other enabled components still require
+exact license/source review before a final classification. The exact license
+texts and source-availability documents are shipped beside this notice:
 
 - [FFmpeg-DISTRIBUTION.md](FFmpeg-DISTRIBUTION.md) — build flags, provenance,
   official license/source links, source-offer status and release checklist.
