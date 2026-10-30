@@ -10,6 +10,10 @@ import {
 import { JsonStore } from "../src/store.mjs";
 import { SeedingService } from "../src/service.mjs";
 import { campaignContentHash } from "../src/campaign-authorization.mjs";
+import { JevExecutionWorker } from "../src/jev-execution-worker.mjs";
+import { PlatformAdapterRegistry } from "../src/platform-registries.mjs";
+import { THREADS_ADAPTER } from "../src/threads-reddit-publication-adapters.mjs";
+import { isReadinessFresh, readinessBinding, readinessContextForTarget } from "../src/readiness.mjs";
 import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -190,6 +194,11 @@ test("real standing schedule queue is idempotent and creates one guarded executi
   await service.store.mutate("schedule-integration-fixture", "reset_pre_submit_controls", (state) => {
     const currentPost = state.posts.find((item) => item.id === post.id);
     currentPost.status = "queued";
+    currentPost.readinessState = "READY";
+    currentPost.readinessReasonCode = "fixture_camoufox_ready";
+    currentPost.readinessAttempts = 0;
+    currentPost.readinessRetryAt = null;
+    currentPost.authorizationDecision = { evaluatedAt: new Date().toISOString(), allowed: true, reasons: [] };
     currentPost.executionState = null;
     currentPost.executionId = null;
     state.executionRequests = state.executionRequests.filter((item) => item.jobId !== post.id);
@@ -292,6 +301,223 @@ test("real standing schedule queue is idempotent and creates one guarded executi
   // The fixture verifier intentionally records one independent receipt above;
   // the repeated scheduler tick must not create another one.
   assert.equal(afterSecond.executionReceipts.length, 1);
+});
+
+test("due schedule reaches the real Threads adapter through an exact Camoufox session and independent receipt", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "campaign-schedule-real-adapter-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const repo = path.join(root, "product");
+  await mkdir(repo);
+  await writeFile(path.join(repo, "README.md"), "Real adapter schedule fixture evidence.\n");
+
+  const accountId = "threads-real-adapter-account";
+  const profileId = "threads-real-adapter-profile";
+  const identityReference = "https://threads.net/@fixture-owner";
+  const targetUrl = "https://threads.net/@fixture-topic";
+  const now = new Date();
+  const content = "Real adapter schedule fixture copy.";
+  const service = new SeedingService(new JsonStore(path.join(root, "state.json")), {
+    productRepoRoots: [root],
+    readinessProviders: {
+      threads: {
+        async checkReadiness() {
+          return {
+            state: "READY", reasonCode: "fixture_camoufox_ready", checkedAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 4 * 60_000).toISOString(),
+            capabilities: { sessionAuthenticated: true, identityVerified: true, composerAvailable: true, feedReachable: true, platformAvailable: true, targetMatched: true, postingRights: true }
+          };
+        }
+      }
+    }
+  });
+  await service.init();
+  const campaign = await service.createCampaign({
+    name: "Real adapter schedule fixture",
+    objective: "Exercise the guarded schedule to adapter path",
+    productRepo: repo
+  }, "operator");
+  await service.updateCampaign(campaign.id, { status: "active" }, "operator");
+  await service.registerExecutionAccount({
+    platform: "threads", accountId, profileId, provider: "camoufox", providerProfileId: profileId,
+    identityReference, status: "enabled", health: "healthy", loginStatus: "READY", agentStatus: "READY"
+  }, "operator");
+  const target = await service.createTarget({
+    channel: "threads", name: "Real adapter schedule target", url: targetUrl,
+    accountId, profileId, provider: "camoufox", providerProfileId: profileId,
+    identityReference, status: "active", readiness: {
+      state: "ready", checkedAt: new Date(now.getTime() - 5_000).toISOString(),
+      expiresAt: new Date(now.getTime() + 5 * 60_000).toISOString(),
+      reasonCode: "fixture_camoufox_ready",
+      binding: readinessBinding({ platform: "threads", accountId, profileId, targetId: "pending", provider: "camoufox", providerProfileId: profileId, identityReference, targetUrl })
+    }
+  }, "operator");
+  // createTarget allocates the ID; bind readiness to that exact target.
+  await service.updateTarget(target.id, {
+    readiness: {
+      state: "ready", checkedAt: new Date(now.getTime() - 5_000).toISOString(),
+      expiresAt: new Date(now.getTime() + 5 * 60_000).toISOString(), reasonCode: "fixture_camoufox_ready"
+    }
+  }, "fixture-readiness");
+  await service.store.mutate("real-adapter-fixture", "restore_ready_account", (state) => {
+    const account = state.executionAccounts.find((item) => item.accountId === accountId && item.platform === "threads");
+    Object.assign(account, { status: "enabled", health: "healthy", loginStatus: "READY", agentStatus: "READY", identityReference, expectedIdentityUrl: identityReference });
+    return account;
+  });
+  const authorization = await service.authorizeCampaign(campaign.id, {
+    id: "real-adapter-standing-authorization",
+    validFrom: new Date(now.getTime() - 60_000).toISOString(),
+    validUntil: new Date(now.getTime() + 60 * 60_000).toISOString(),
+    destinations: [{ platform: "threads", accountId, profileId, provider: "camoufox", providerProfileId: profileId, identityReference, targetId: target.id, targetUrl }],
+    approvedAssets: [],
+    contentBoundary: { mode: "approved_copy_set", contentHashes: [campaignContentHash(content)] },
+    audienceRules: { allowedAudiences: ["operators"] },
+    publicationVisibilityRules: { allowedVisibilities: ["PUBLIC"] },
+    schedule: { timezone: "UTC", weekdays: [now.getUTCDay()], startLocal: "00:00", endLocal: "23:59" },
+    rateLimits: { maxJobsPerAccountPerDay: 3, maxJobsPerCampaignPerDay: 3, maxConcurrency: 1, minIntervalMinutes: 0 },
+    allowLiveExecution: true,
+    executionMode: "standing_autonomous",
+    standingAuthorizationReference: "real-adapter-standing-reference"
+  }, "operator");
+  assert.equal(authorization.status, "active");
+  const post = await service.createPost({ campaignId: campaign.id, targetId: target.id, content, audience: "operators" }, "operator");
+  const minute = now.getUTCMinutes();
+  const scheduleRow = await service.createSchedule(campaign.id, {
+    name: "Real adapter due window", localTime: `${String(now.getUTCHours()).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+    timezone: "UTC", channels: ["threads"]
+  }, "operator");
+  // Model a restart before the scheduler tick. The queue must rebuild the
+  // exact controls from the standing authority, without a second post.
+  await service.store.mutate("real-adapter-fixture", "reset_pre_submit_controls", (state) => {
+    const currentPost = state.posts.find((item) => item.id === post.id);
+    currentPost.status = "queued";
+    currentPost.executionState = null;
+    currentPost.executionId = null;
+    state.executionRequests = state.executionRequests.filter((item) => item.jobId !== post.id);
+    state.executionLeases = state.executionLeases.filter((item) => item.jobId !== post.id);
+    state.executionReceipts = state.executionReceipts.filter((item) => item.jobId !== post.id);
+    state.oneTimeExecutionWindows = state.oneTimeExecutionWindows.filter((item) => item.jobId !== post.id);
+    state.liveExecutionGrants = state.liveExecutionGrants.filter((item) => item.jobId !== post.id);
+    state.publicationAttempts = state.publicationAttempts.filter((item) => item.postId !== post.id);
+    state.scheduleRuns = state.scheduleRuns.filter((item) => item.scheduleId !== scheduleRow.id);
+    return state;
+  });
+  await service.store.mutate("real-adapter-fixture", "restore_ready_account_after_queue_setup", (state) => {
+    const account = state.executionAccounts.find((item) => item.accountId === accountId && item.platform === "threads");
+    Object.assign(account, { status: "enabled", health: "healthy", loginStatus: "READY", agentStatus: "READY", identityReference, expectedIdentityUrl: identityReference });
+    const row = state.targets.find((item) => item.id === target.id);
+    row.readiness = {
+      state: "ready", reasonCode: "fixture_camoufox_ready", summary: "Fixture exact Camoufox identity and target rights",
+      checkedAt: new Date(now.getTime() - 5_000).toISOString(), expiresAt: new Date(now.getTime() + 4 * 60_000).toISOString(),
+      checks: { sessionValid: true, composerCapable: true, platformAvailable: true },
+      capabilities: { sessionAuthenticated: true, identityVerified: true, composerAvailable: true, feedReachable: true, platformAvailable: true, targetMatched: true, postingRights: true },
+      binding: readinessBinding({ platform: "threads", accountId, profileId, targetId: row.id, provider: "camoufox", providerProfileId: profileId, identityReference, targetUrl: row.url }),
+      platform: "threads", accountId, profileId, provider: "camoufox", providerProfileId: profileId, identityReference, targetUrl: row.url, targetId: row.id,
+      outcome: "READY", retryable: false, recoveryClassification: "NONE"
+    };
+    return account;
+  });
+
+  const publicationUrl = "https://threads.net/@fixture-topic/post/real-adapter-proof";
+  const browserCalls = [];
+  const browserSurface = {
+    async listTabs() { browserCalls.push("listTabs"); return [{ id: "threads-page", pageId: "threads-page", profileId, url: targetUrl }]; },
+    async showTab(pageId) { browserCalls.push(["showTab", pageId]); return { id: pageId, pageId, profileId, url: targetUrl }; },
+    async navigate(pageId, url) { browserCalls.push(["navigate", pageId, url]); },
+    async snapshot(pageId) { browserCalls.push(["snapshot", pageId]); return '- button "Post" [ref=submit]'; },
+    async resolve(pageId, query) {
+      browserCalls.push(["resolve", pageId, String(query)]);
+      const value = String(query);
+      if (/textbox|post|body|content|title/i.test(value)) return "editor-ref";
+      if (/submit|post|share|publish|send/i.test(value)) return "submit-ref";
+      return "submit-ref";
+    },
+    async fill(pageId, ref, value) { browserCalls.push(["fill", pageId, ref, value]); },
+    async evaluate(pageId, expression) {
+      browserCalls.push(["evaluate", pageId, expression.slice(0, 40)]);
+      if (expression.includes("owner_identity")) return {
+        authenticated: true, authenticatedSurface: true, ownerSurface: true,
+        identityReference, source: "threads-owner-profile-surface", candidateCount: 1, ambiguous: false
+      };
+      if (expression.includes("posting_rights")) return {
+        targetMatched: true, canPost: true, authenticatedSurface: true,
+        submitControlEnabled: true, source: "threads-composer", rulesEvidenceAccepted: true
+      };
+      if (expression.includes("composer_state")) return {
+        composerCount: 1, editorCount: 1, editorText: content, submitCount: 1,
+        submitControls: [{ enabled: true, name: "Post" }], fileInputCount: 0, mediaPreviewReady: false
+      };
+      if (expression.includes("publication_candidates")) return [{
+        postId: "real-adapter-proof", permalink: publicationUrl, authorMatched: true,
+        authorPath: "/@fixture-owner", targetMatched: true, contentMatched: true,
+        timestamp: new Date(now.getTime() + 2_000).toISOString(), timestampMatched: true
+      }];
+      throw new Error("unexpected fixture expression");
+    }
+  };
+  const transport = {
+    runtimeIdentity: () => ({ transport: "fixture-camoufox", provider: "camoufox", providerVersion: "0.5.8-fixture" }),
+    async click(targetRef) { browserCalls.push(["click", targetRef.targetRef]); return { status: "COMMAND_COMPLETED" }; }
+  };
+  const resolver = {
+    async resolve(request) {
+      assert.equal(request.platform, "threads");
+      assert.equal(request.accountId, accountId);
+      assert.equal(request.providerProfileId, profileId);
+      return {
+        ready: true, transport, browserSurface,
+        session: {
+          lifecycle: "READY", platform: "threads", accountId, provider: "camoufox", profileReference: profileId,
+          expectedIdentity: { providerProfileId: profileId, identityReference },
+          transport, browserSurface, transportIdentity: transport.runtimeIdentity(),
+          assertUsable() {}, async release() {}
+        },
+        async release() {}
+      };
+    }
+  };
+  const registry = new PlatformAdapterRegistry({ threads: THREADS_ADAPTER });
+  const worker = new JevExecutionWorker({
+    service, adapterRegistry: registry, executionSessionResolver: resolver,
+    workerId: "real-adapter-schedule-worker",
+    env: { SEEDING_JEV_LIVE_ENABLED: "true", SEEDING_JEV_AUTONOMOUS_LIVE_ENABLED: "true" }
+  });
+  const beforeQueue = await service.snapshot();
+  const beforeTarget = beforeQueue.targets.find((item) => item.id === target.id);
+  const beforeAccount = beforeQueue.executionAccounts.find((item) => item.accountId === accountId);
+  assert.equal(beforeAccount.health, "healthy", JSON.stringify(beforeAccount));
+  assert.equal(isReadinessFresh(beforeTarget.readiness, readinessContextForTarget(beforeTarget, beforeAccount), new Date(), 5 * 60_000), true, JSON.stringify({ target: beforeTarget, account: beforeAccount }));
+  const first = await service.queueDueSchedules("campaign-queue-scheduler");
+  assert.equal(first.due.length, 1, JSON.stringify({ first, state: await service.snapshot() }));
+  assert.equal(first.due[0].status, "succeeded", JSON.stringify({ due: first.due[0], state: await service.snapshot() }));
+  const queued = await service.snapshot();
+  const execution = queued.executionRequests.find((item) => item.jobId === post.id && item.request?.dryRun !== true);
+  assert.ok(execution);
+  assert.equal(queued.oneTimeExecutionWindows.filter((item) => item.jobId === post.id).length, 1);
+  assert.equal(queued.liveExecutionGrants.filter((item) => item.jobId === post.id).length, 1);
+  const workerResult = await worker.runReadyOnce({ dryRun: false });
+  assert.equal(workerResult.length, 1);
+  assert.equal(workerResult[0].status, "CONFIRMED", JSON.stringify(workerResult[0]));
+  assert.equal(workerResult[0].receipt.publicationUrl, publicationUrl);
+  assert.equal(workerResult[0].receipt.publicationEvidence.verificationMethod, "threads_read_only_activity_dom");
+  const afterWorker = await service.snapshot();
+  assert.equal(afterWorker.executionRequests.filter((item) => item.jobId === post.id && item.request?.dryRun !== true).length, 1);
+  assert.equal(afterWorker.liveExecutionGrants.filter((item) => item.jobId === post.id).length, 1);
+  assert.equal(afterWorker.oneTimeExecutionWindows.filter((item) => item.jobId === post.id).length, 1);
+  assert.equal(afterWorker.scheduleRuns.filter((item) => item.scheduleId === scheduleRow.id).length, 1);
+  assert.equal(afterWorker.executionReceipts.filter((item) => item.executionId === execution.executionId).length, 1);
+  assert.equal(afterWorker.posts.find((item) => item.id === post.id).status, "published");
+  assert.ok(browserCalls.some((item) => Array.isArray(item) && item[0] === "click"));
+  assert.ok(browserCalls.some((item) => Array.isArray(item) && item[0] === "evaluate" && item[2].includes("publication_candidates")));
+
+  const second = await service.queueDueSchedules("campaign-queue-scheduler-repeat");
+  const finalState = await service.snapshot();
+  assert.equal(second.due.length, 0);
+  assert.equal(second.decisions.find((item) => item.scheduleId === scheduleRow.id)?.status, "RECORDED");
+  assert.equal(finalState.scheduleRuns.filter((item) => item.scheduleId === scheduleRow.id).length, 1);
+  assert.equal(finalState.executionRequests.filter((item) => item.jobId === post.id && item.request?.dryRun !== true).length, 1);
+  assert.equal(finalState.liveExecutionGrants.filter((item) => item.jobId === post.id).length, 1);
+  assert.equal(finalState.oneTimeExecutionWindows.filter((item) => item.jobId === post.id).length, 1);
+  assert.equal(finalState.executionReceipts.filter((item) => item.executionId === execution.executionId).length, 1);
 });
 
 test("concurrent due consumers reserve one window exactly once", async (t) => {

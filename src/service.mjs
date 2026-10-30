@@ -6680,7 +6680,7 @@ export class SeedingService {
     const expectedGates = ["authorizationValid", "readinessFresh", "accountMatch", "profileMatch", "targetMatch", "contentHashMatch", "mediaHashMatch", "audienceMatch", "composerConfirmed", "mediaPreviewConfirmed", "noDuplicateReceipt", "noExistingConfirmedPublication"];
     const failedGate = expectedGates.find((key) => verifiedGates[key] !== true);
     if (failedGate) {
-      const readinessExpired = Number.isFinite(Date.parse(target?.readiness?.expiresAt || "")) && Date.parse(target.readiness.expiresAt) <= this.now().getTime();
+      const readinessExpired = Number.isFinite(Date.parse(target?.readiness?.expiresAt || "")) && Date.parse(target.readiness.expiresAt) <= Date.now();
       const reasonCode = failedGate === "readinessFresh" ? (readinessExpired ? "READINESS_EXPIRED" : "READINESS_NOT_READY")
         : failedGate === "authorizationValid" ? "AUTHORIZATION_INVALID"
           : failedGate === "mediaHashMatch" ? "ARTIFACT_INTEGRITY_FAILED"

@@ -437,13 +437,15 @@ export class ThreadsRedditPublicationAdapter {
       postingRights: target.observed.canPost === true && target.observed.submitControlEnabled === true,
       authorizationValid: Boolean(request.authorization?.authorizationId && request.authorization?.binding),
       liveGrantValid: dryRun || Boolean(request.liveGrant?.grantId),
+      audienceMatch: typeof request.audience === "string" && request.audience.trim().length > 0,
       readinessFresh: request.readiness?.state === "READY" && Number.isFinite(checkedAt) && Number.isFinite(expiresAt) && checkedAt <= this.now().getTime() && expiresAt > this.now().getTime(),
       readinessBindingMatch: request.readiness?.binding === expectedReadinessBinding,
       contentHashMatch: composer.contentMatched === true && request.content.sha256 === contentSha256(request.content.payload),
       mediaHashMatch: media.mediaHashMatched === true,
       mediaPreviewConfirmed: media.mediaPreviewConfirmed === true,
       composerConfirmed: true,
-      noDuplicateReceipt: !this._attempts.has(request.idempotencyKey)
+      noDuplicateReceipt: !this._attempts.has(request.idempotencyKey),
+      noExistingConfirmedPublication: !this._attempts.has(request.idempotencyKey)
     };
     if (!Object.values(gates).every(Boolean)) {
       const failedGate = Object.entries(gates).find(([, value]) => value !== true)?.[0] || "submit";

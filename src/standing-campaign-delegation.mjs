@@ -50,7 +50,10 @@ export function deriveStandingExecutionControlPlan({ authorization, state, post,
   }
   if (!liveGrant) reasons.push("live_execution_grant_missing");
   else {
-    if (liveGrantEffectiveStatus(liveGrant, at) !== "ACTIVE" || liveGrant.status !== "ACTIVE" || liveGrant.consumedAt || liveGrant.revokedAt) reasons.push("live_execution_grant_unavailable");
+    const grantConsumedByExecution = liveGrant.status === "CONSUMED" && liveGrant.consumedExecutionId === executionId;
+    if ((!grantConsumedByExecution && liveGrantEffectiveStatus(liveGrant, at) !== "ACTIVE") ||
+        (!grantConsumedByExecution && liveGrant.status !== "ACTIVE") ||
+        ((!grantConsumedByExecution && (liveGrant.consumedAt || liveGrant.consumedExecutionId)) || liveGrant.revokedAt)) reasons.push("live_execution_grant_unavailable");
     if (liveGrant.boundExecutionId !== executionId) reasons.push("live_execution_grant_execution_mismatch");
     if (liveGrant.campaignAuthorizationId !== authorization.id || liveGrant.campaignAuthorizationBinding !== authorization.binding || liveGrant.campaignId !== post.campaignId || liveGrant.jobId !== post.id || liveGrant.platform !== target.channel || liveGrant.provider !== provider || liveGrant.providerProfileId !== accountBinding.providerProfileId || liveGrant.identityReference !== accountBinding.identityReference || liveGrant.accountId !== target.accountId || liveGrant.profileId !== target.profileId || liveGrant.targetId !== target.id || liveGrant.targetUrl !== target.url) reasons.push("live_execution_grant_scope_mismatch");
     if (liveGrant.idempotencyKey !== post.idempotencyKey || liveGrant.content?.contentId !== post.contentId || liveGrant.content?.canonicalSha256 !== campaignContentHash(post.content) || liveGrant.content?.rawSha256 !== contentSha256(post.content) || (liveGrant.publicationVisibility || "PUBLIC") !== String(post.publicationVisibility || "PUBLIC").toUpperCase()) reasons.push("live_execution_grant_content_mismatch");
@@ -66,7 +69,7 @@ export function deriveStandingExecutionControlPlan({ authorization, state, post,
         authorization: { authorizationId: authorization.id, binding: authorization.binding },
         content: { contentId: post.contentId, sha256: contentSha256(post.content) }, media: liveGrant.media || [],
         liveGrant: { grantId: liveGrant.grantId }
-      }, authorization, at);
+      }, authorization, at, { allowConsumedForExecution: true });
     } catch { reasons.push("live_execution_grant_exact_binding_invalid"); }
   }
   reasons.push(...killSwitchReasons(post, state));
@@ -74,7 +77,11 @@ export function deriveStandingExecutionControlPlan({ authorization, state, post,
   const existing = requests.filter((item) => item.executionId !== executionId && item.request?.idempotencyKey === post.idempotencyKey && TERMINAL_OR_UNCERTAIN.has(item.state));
   if (existing.length) reasons.push("idempotency_blocked");
   if ((state.submissionUncertainties || []).some((item) => item.status === "UNKNOWN" && (item.jobId === post.id || item.idempotencyKeys?.includes(post.idempotencyKey)))) reasons.push("submission_uncertain");
-  if (ACTIVE_POSTS.has(post.status) && post.status !== "queued") reasons.push("post_already_active_or_published");
+  const activePostOwnedByExecution = post.status === "publishing" &&
+    post.executionState === "SUBMIT_SENT_INTENT" &&
+    Array.isArray(post.jobLifecycle) &&
+    post.jobLifecycle.some((item) => item?.state === "EXECUTING" && item?.executionId === executionId);
+  if (ACTIVE_POSTS.has(post.status) && post.status !== "queued" && !activePostOwnedByExecution) reasons.push("post_already_active_or_published");
   if (reasons.length) return fail(reasons);
   return { allowed: true, reasons: [], control: Object.freeze({ executionId, campaignId: post.campaignId, campaignAuthorizationId: authorization.id, campaignAuthorizationBinding: authorization.binding, postId: post.id, platform: target.channel, targetId: target.id, accountId: target.accountId, profileId: target.profileId, contentId: post.contentId, contentHash: campaignContentHash(post.content), rawContentHash: contentSha256(post.content), idempotencyKey: post.idempotencyKey, publicationVisibility: String(post.publicationVisibility || "PUBLIC").toUpperCase(), oneTimeWindowId: oneTimeWindow.windowId, liveGrantId: liveGrant.grantId }) };
 }
