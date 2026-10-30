@@ -45,6 +45,8 @@ test("packaged launcher probes the server's /health route", async () => {
     "SEEDING_NODE_BIN",
     "SEEDING_NPM_BIN",
     "SEEDING_9ROUTER_ENDPOINT",
+    "SEEDING_9ROUTER_PROVISION",
+    "SEEDING_CAMOUFOX_PROVISION",
     "SEEDING_CONTENT_AUTO_PROVISION",
     "SEEDING_CONTENT_MODE",
     "SEEDING_JEV_WORKER_ENABLED",

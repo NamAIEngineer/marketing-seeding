@@ -140,6 +140,8 @@ if ! "$APP_ROOT/../bin/node" "$APP_ROOT/health-probe.mjs" "http://127.0.0.1:$POR
 <key>SEEDING_NODE_BIN</key><string>$APP_ROOT/../bin/node</string>
 <key>SEEDING_NPM_BIN</key><string>$APP_ROOT/../bin/npm</string>
 <key>SEEDING_9ROUTER_ENDPOINT</key><string>${SEEDING_9ROUTER_ENDPOINT:-http://127.0.0.1:20128/v1}</string>
+<key>SEEDING_9ROUTER_PROVISION</key><string>${SEEDING_9ROUTER_PROVISION:-true}</string>
+<key>SEEDING_CAMOUFOX_PROVISION</key><string>${SEEDING_CAMOUFOX_PROVISION:-true}</string>
 <key>SEEDING_CONTENT_AUTO_PROVISION</key><string>${SEEDING_CONTENT_AUTO_PROVISION:-true}</string>
 <key>SEEDING_CONTENT_MODE</key><string>${SEEDING_CONTENT_MODE:-PRODUCTION}</string>
 <key>SEEDING_JEV_WORKER_ENABLED</key><string>${SEEDING_JEV_WORKER_ENABLED:-true}</string>
@@ -191,6 +193,8 @@ if [ -z "${SEEDING_HEALTH_NONCE:-}" ]; then
   export SEEDING_HEALTH_NONCE=$(cat "$DATA_ROOT/health-nonce")
 fi
 export SEEDING_9ROUTER_ENDPOINT="${SEEDING_9ROUTER_ENDPOINT:-http://127.0.0.1:20128/v1}"
+export SEEDING_9ROUTER_PROVISION="${SEEDING_9ROUTER_PROVISION:-true}"
+export SEEDING_CAMOUFOX_PROVISION="${SEEDING_CAMOUFOX_PROVISION:-true}"
 export SEEDING_NODE_BIN="${SEEDING_NODE_BIN:-$APP_ROOT/../bin/node}"
 export SEEDING_NPM_BIN="${SEEDING_NPM_BIN:-$APP_ROOT/../bin/npm}"
 export PATH="$APP_ROOT/../bin:$APP_ROOT/../lib/node_modules/npm/bin:$PATH"
@@ -205,7 +209,7 @@ export SEEDING_CONTENT_MODE="${SEEDING_CONTENT_MODE:-PRODUCTION}"
 export SEEDING_JEV_WORKER_ENABLED="${SEEDING_JEV_WORKER_ENABLED:-true}"
 export SEEDING_JEV_LIVE_ENABLED="${SEEDING_JEV_LIVE_ENABLED:-true}"
 export SEEDING_JEV_AUTONOMOUS_LIVE_ENABLED="${SEEDING_JEV_AUTONOMOUS_LIVE_ENABLED:-true}"
-if [ -x "$APP_ROOT/provision-9router.sh" ]; then
+if [ "${SEEDING_9ROUTER_PROVISION:-true}" = "true" ] && [ -x "$APP_ROOT/provision-9router.sh" ]; then
   : >"$DATA_ROOT/9router-provision-status"
   if ! "$APP_ROOT/provision-9router.sh" "$DATA_ROOT" >"$DATA_ROOT/9router-provision-command" 2>"$DATA_ROOT/9router-provision-error"; then
     if ! /usr/bin/grep -q '^UNAVAILABLE:' "$DATA_ROOT/9router-provision-status" 2>/dev/null; then
@@ -215,7 +219,7 @@ if [ -x "$APP_ROOT/provision-9router.sh" ]; then
     printf '%s\n' "ready" >"$DATA_ROOT/9router-provision-status"
   fi
 fi
-if [ -x "$APP_ROOT/provision-camoufox.sh" ]; then
+if [ "${SEEDING_CAMOUFOX_PROVISION:-true}" = "true" ] && [ -x "$APP_ROOT/provision-camoufox.sh" ]; then
   if ! "$APP_ROOT/provision-camoufox.sh" "$DATA_ROOT" >"$DATA_ROOT/camoufox-provision-command" 2>"$DATA_ROOT/camoufox-provision-error"; then
     printf '%s\n' 'unavailable:provision_script_failed' >"$DATA_ROOT/camoufox-provision-status"
   fi
