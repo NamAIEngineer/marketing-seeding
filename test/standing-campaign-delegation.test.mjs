@@ -65,3 +65,20 @@ test("standing delegation fails closed when the bound account is unhealthy", () 
   assert.equal(result.allowed, false);
   assert.ok(result.reasons.includes("account_profile_binding_mismatch"));
 });
+
+test("standing delegation permits the exact execution after its grant and post cross the durable intent boundary", () => {
+  const f = fixture();
+  f.window.status = "CONSUMED";
+  f.window.consumedExecutionId = "exec-1";
+  f.window.consumedAt = f.now.toISOString();
+  f.grant.status = "CONSUMED";
+  f.grant.consumedExecutionId = "exec-1";
+  f.grant.consumedAt = f.now.toISOString();
+  f.post.status = "publishing";
+  f.post.executionState = "SUBMIT_SENT_INTENT";
+  f.post.jobLifecycle = [{ state: "EXECUTING", executionId: "exec-1" }];
+  assert.equal(deriveStandingExecutionControlPlan({ ...f, oneTimeWindow: f.window, liveGrant: f.grant, executionId: "exec-1" }).allowed, true);
+
+  f.grant.consumedExecutionId = "other-execution";
+  assert.equal(deriveStandingExecutionControlPlan({ ...f, oneTimeWindow: f.window, liveGrant: f.grant, executionId: "exec-1" }).allowed, false);
+});

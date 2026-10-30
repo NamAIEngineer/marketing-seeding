@@ -50,7 +50,7 @@ export function deriveStandingExecutionControlPlan({ authorization, state, post,
   }
   if (!liveGrant) reasons.push("live_execution_grant_missing");
   else {
-    const grantConsumedByExecution = liveGrant.status === "CONSUMED" && liveGrant.consumedExecutionId === executionId;
+    const grantConsumedByExecution = liveGrant.status === "CONSUMED" && liveGrant.consumedExecutionId === executionId && Number.isFinite(Date.parse(liveGrant.consumedAt || ""));
     if ((!grantConsumedByExecution && liveGrantEffectiveStatus(liveGrant, at) !== "ACTIVE") ||
         (!grantConsumedByExecution && liveGrant.status !== "ACTIVE") ||
         ((!grantConsumedByExecution && (liveGrant.consumedAt || liveGrant.consumedExecutionId)) || liveGrant.revokedAt)) reasons.push("live_execution_grant_unavailable");

@@ -95,7 +95,7 @@ export function assertLiveGrantMatchesExecution(grant, request, authorization, n
   const provider = canonicalProvider(grant.provider, { allowLegacy: true });
   const providerProfileId = grant.providerProfileId || grant.profileId;
   const requestIdentity = canonicalIdentityUrl(request?.identityReference || request?.expectedIdentityUrl || request?.target?.identityReference || request?.target?.expectedIdentityUrl);
-  const consumedForRequest = allowConsumedForExecution === true && grant.status === "CONSUMED" && grant.consumedExecutionId === request?.executionId;
+  const consumedForRequest = allowConsumedForExecution === true && grant.status === "CONSUMED" && grant.consumedExecutionId === request?.executionId && Number.isFinite(Date.parse(grant.consumedAt || ""));
   if ((!consumedForRequest && grant.status !== "ACTIVE") || (!consumedForRequest && (grant.consumedAt || grant.consumedExecutionId)) ||
       (checkWindow && (now.getTime() < Date.parse(grant.validFrom) || now.getTime() > Date.parse(grant.validUntil)))) {
     throw new Error("Live execution grant is inactive, consumed or expired");
