@@ -1369,6 +1369,77 @@ function newest(items, timestampField, limit = 20) {
     .slice(0, limit);
 }
 
+function normalizeScheduleExecutionControls(value) {
+  if (!Array.isArray(value)) return undefined;
+  return value.slice(0, 128).map((item) => ({
+    targetId: String(item?.targetId || "").slice(0, 200) || null,
+    accountId: String(item?.accountId || "").slice(0, 200) || null,
+    platform: String(item?.platform || "").slice(0, 80) || null,
+    postRef: String(item?.postRef || "").slice(0, 80) || null,
+    executionRef: String(item?.executionRef || "").slice(0, 80) || null,
+    requestState: String(item?.requestState || "UNKNOWN").slice(0, 40),
+    submitState: String(item?.submitState || "UNKNOWN").slice(0, 40),
+    windowStatus: String(item?.windowStatus || "UNKNOWN").slice(0, 40),
+    grantStatus: String(item?.grantStatus || "UNKNOWN").slice(0, 40),
+    publicationStatus: String(item?.publicationStatus || "NOT_VERIFIED").slice(0, 40),
+    reason: String(item?.reason || "").replace(/\s+/g, " ").slice(0, 200) || null
+  }));
+}
+
+/**
+ * Project the durable scheduler controls for a run without exposing request
+ * payloads, profile material, credentials, or publication claims. References
+ * are bounded fingerprints; state/status fields remain exact and truthful.
+ */
+function projectScheduleExecutionControls(state, { campaignId, targetIds = null } = {}) {
+  const targetFilter = targetIds instanceof Set
+    ? targetIds
+    : Array.isArray(targetIds)
+      ? new Set(targetIds.map(String).filter(Boolean))
+      : null;
+  const targets = Array.isArray(state?.targets) ? state.targets : [];
+  const posts = (Array.isArray(state?.posts) ? state.posts : []).filter((post) =>
+    post?.campaignId === campaignId && (!targetFilter || targetFilter.has(String(post.targetId)))
+  );
+  const requests = Array.isArray(state?.executionRequests) ? state.executionRequests : [];
+  const windows = Array.isArray(state?.oneTimeExecutionWindows) ? state.oneTimeExecutionWindows : [];
+  const grants = Array.isArray(state?.liveExecutionGrants) ? state.liveExecutionGrants : [];
+  const receipts = Array.isArray(state?.executionReceipts) ? state.executionReceipts : [];
+  return posts.map((post) => {
+    const target = targets.find((item) => item.id === post.targetId);
+    const request = requests
+      .filter((item) => item.jobId === post.id)
+      .sort((left, right) => (Number(right.attempt) || 0) - (Number(left.attempt) || 0) || String(right.createdAt || "").localeCompare(String(left.createdAt || "")))[0];
+    const executionId = request?.executionId || null;
+    const windowId = request?.request?.oneTimeWindow?.windowId || null;
+    const grantId = request?.request?.liveGrant?.grantId || request?.liveGrantId || null;
+    const window = windowId ? windows.find((item) => item.windowId === windowId) : null;
+    const grant = grantId ? grants.find((item) => item.grantId === grantId) : null;
+    const receipt = executionId
+      ? receipts.filter((item) => item.executionId === executionId).sort((left, right) => String(right.receivedAt || "").localeCompare(String(left.receivedAt || "")))[0]
+      : null;
+    const publicationStatus = executionRuntimeVerifiedPublication(receipt)
+      ? "VERIFIED"
+      : request?.state === "SUBMIT_RESULT_UNKNOWN" || request?.submitState === "UNKNOWN" || receipt?.receipt?.submitState === "UNKNOWN"
+        ? "UNKNOWN"
+        : request?.request?.dryRun === true || request?.dryRun === true
+          ? "DRY_RUN_ONLY"
+          : "NOT_VERIFIED";
+    return {
+      targetId: target?.id ? String(target.id).slice(0, 200) : null,
+      accountId: target?.accountId ? String(target.accountId).slice(0, 200) : null,
+      platform: target?.channel ? String(target.channel).slice(0, 80) : null,
+      postRef: executionRuntimeFingerprint(post.id),
+      executionRef: executionId ? executionRuntimeFingerprint(executionId) : null,
+      requestState: String(request?.state || "NOT_CREATED").slice(0, 40),
+      submitState: String(request?.submitState || receipt?.receipt?.submitState || "NOT_STARTED").slice(0, 40),
+      windowStatus: window ? String(oneTimeExecutionWindowStatus(window, new Date())).slice(0, 40) : "NOT_CREATED",
+      grantStatus: grant ? String(liveGrantEffectiveStatus(grant)).slice(0, 40) : "NOT_CREATED",
+      publicationStatus
+    };
+  }).filter((item) => item.executionRef || item.requestState !== "NOT_CREATED");
+}
+
 function accountProfileFingerprint(profileId) {
   return createHash("sha256").update(String(profileId || "")).digest("hex");
 }
@@ -5657,12 +5728,16 @@ export class SeedingService {
             : queueBlocked
               ? "one_or_more_target_jobs_blocked_or_unknown"
               : null;
+        const executionControls = normalizeScheduleExecutionControls(
+          projectScheduleExecutionControls(await this.store.read(), { campaignId: schedule.campaignId, targetIds })
+        );
         await this.recordScheduleRun(schedule.id, {
           status: terminalStatus,
           note: `${terminalReason ? `${terminalReason}; ` : ""}Guarded queue evaluated ${decisions.length} target jobs; publication evidence is not established by scheduling`,
           windowKey: decision.windowKey,
           localDate: decision.localDate,
           blockedTargets,
+          ...(executionControls?.length ? { executionControls } : {}),
           externalSideEffects: false
         }, actor);
         results.push({ ...base, status: terminalStatus, ...(terminalReason ? { reason: terminalReason } : {}), targetIds, blockedTargets, materialization, decisions, publicationVerified: false });
@@ -7172,6 +7247,7 @@ export class SeedingService {
           reason: String(item?.reason || "blocked").replace(/\s+/g, " ").slice(0, 200)
         }))
         : undefined;
+      const executionControls = normalizeScheduleExecutionControls(input.executionControls);
       const existing = windowKey
         ? state.scheduleRuns.find((item) => item.scheduleId === scheduleId && item.windowKey === windowKey)
         : null;
@@ -7186,6 +7262,7 @@ export class SeedingService {
         storyId: input.storyId || null,
         note: String(input.note || "").slice(0, 1000),
         ...(blockedTargets ? { blockedTargets } : {}),
+        ...(executionControls ? { executionControls } : {}),
         externalSideEffects: input.externalSideEffects === true,
         recordedAt: nowIso()
       };
@@ -7198,6 +7275,7 @@ export class SeedingService {
           ...(input.storyId !== undefined ? { storyId: input.storyId || null } : {}),
           ...(input.note !== undefined ? { note: String(input.note || "").slice(0, 1000) } : {}),
           ...(blockedTargets ? { blockedTargets } : {}),
+          ...(executionControls ? { executionControls } : {}),
           externalSideEffects: input.externalSideEffects === true,
           updatedAt: nowIso()
         });
@@ -7234,6 +7312,7 @@ export class SeedingService {
           reason: String(item?.reason || "blocked").replace(/\s+/g, " ").slice(0, 200)
         }))
         : undefined;
+      const executionControls = normalizeScheduleExecutionControls(input.executionControls);
       const run = {
         id: randomUUID(),
         scheduleId,
@@ -7245,6 +7324,7 @@ export class SeedingService {
         storyId: input.storyId || null,
         note: String(input.note || "").slice(0, 1000),
         ...(blockedTargets ? { blockedTargets } : {}),
+        ...(executionControls ? { executionControls } : {}),
         externalSideEffects: input.externalSideEffects === true,
         recordedAt: nowIso()
       };

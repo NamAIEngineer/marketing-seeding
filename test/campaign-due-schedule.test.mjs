@@ -9,6 +9,7 @@ import {
 } from "../src/campaign-due-schedule.mjs";
 import { JsonStore } from "../src/store.mjs";
 import { SeedingService } from "../src/service.mjs";
+import { campaignContentHash } from "../src/campaign-authorization.mjs";
 import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -107,6 +108,142 @@ test("service schedule consumer records due window and does not claim publicatio
   assert.equal(runs[0].status, "blocked");
   assert.equal(runs[0].externalSideEffects, false);
   assert.equal(runs[0].windowKey, scheduleWindowKey(scheduleRow, runs[0].localDate));
+});
+
+test("real standing schedule queue is idempotent and creates one guarded execution set", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "campaign-schedule-standing-integration-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const repo = path.join(root, "product");
+  await mkdir(repo);
+  await writeFile(path.join(repo, "README.md"), "Durable schedule integration fixture evidence.\n");
+
+  const service = new SeedingService(new JsonStore(path.join(root, "state.json")), { productRepoRoots: [root] });
+  await service.init();
+  const campaign = await service.createCampaign({
+    name: "Standing schedule integration",
+    objective: "Prove one durable queue window",
+    productRepo: repo
+  }, "operator");
+  const now = new Date();
+  const accountId = "threads-schedule-integration";
+  const profileId = "threads-schedule-integration-profile";
+  await service.registerExecutionAccount({
+    platform: "threads",
+    accountId,
+    profileId,
+    status: "enabled",
+    health: "healthy"
+  }, "operator");
+  const target = await service.createTarget({
+    channel: "threads",
+    name: "Standing schedule target",
+    url: "https://www.threads.net/@schedule-integration",
+    accountId,
+    profileId,
+    status: "active",
+    readiness: {
+      state: "ready",
+      checkedAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 5 * 60_000).toISOString(),
+      checks: { sessionValid: true, composerCapable: true, platformAvailable: true }
+    }
+  }, "operator");
+  const content = "Durable queue fixture copy.";
+  const authorization = await service.authorizeCampaign(campaign.id, {
+    id: "standing-schedule-integration-authorization",
+    validFrom: new Date(now.getTime() - 60_000).toISOString(),
+    validUntil: new Date(now.getTime() + 60 * 60_000).toISOString(),
+    destinations: [{ platform: "threads", accountId, profileId, targetId: target.id }],
+    approvedAssets: [],
+    contentBoundary: { mode: "approved_copy_set", contentHashes: [campaignContentHash(content)] },
+    audienceRules: { allowedAudiences: ["operators"] },
+    publicationVisibilityRules: { allowedVisibilities: ["PUBLIC"] },
+    schedule: {
+      timezone: "UTC",
+      weekdays: [now.getUTCDay()],
+      startLocal: "00:00",
+      endLocal: "23:59"
+    },
+    rateLimits: { maxJobsPerAccountPerDay: 3, maxJobsPerCampaignPerDay: 3, maxConcurrency: 1, minIntervalMinutes: 0 },
+    allowLiveExecution: true,
+    executionMode: "standing_autonomous",
+    standingAuthorizationReference: "standing-schedule-integration-reference"
+  }, "operator");
+  assert.equal(authorization.status, "active");
+
+  // The post is created through the normal authorized service path, then the
+  // pre-submit controls are removed to model a restart before the scheduler
+  // tick. queueDueSchedules must derive them exactly once from standing
+  // authority/readiness; no adapter or external click is invoked here.
+  const post = await service.createPost({
+    campaignId: campaign.id,
+    targetId: target.id,
+    content,
+    audience: "operators"
+  }, "operator");
+  const scheduleRow = await service.createSchedule(campaign.id, {
+    name: "Standing due window",
+    localTime: "00:00",
+    timezone: "UTC",
+    channels: ["threads"]
+  }, "operator");
+  await service.store.mutate("schedule-integration-fixture", "reset_pre_submit_controls", (state) => {
+    const currentPost = state.posts.find((item) => item.id === post.id);
+    currentPost.status = "queued";
+    currentPost.executionState = null;
+    currentPost.executionId = null;
+    state.executionRequests = state.executionRequests.filter((item) => item.jobId !== post.id);
+    state.executionLeases = state.executionLeases.filter((item) => item.jobId !== post.id);
+    state.executionReceipts = state.executionReceipts.filter((item) => item.jobId !== post.id);
+    state.oneTimeExecutionWindows = state.oneTimeExecutionWindows.filter((item) => item.jobId !== post.id);
+    state.liveExecutionGrants = state.liveExecutionGrants.filter((item) => item.jobId !== post.id);
+    state.publicationAttempts = state.publicationAttempts.filter((item) => item.postId !== post.id);
+    state.scheduleRuns = state.scheduleRuns.filter((item) => item.scheduleId !== scheduleRow.id);
+    return state;
+  });
+
+  const first = await service.queueDueSchedules("standing-schedule-queue");
+  const afterFirst = await service.snapshot();
+  const firstRun = afterFirst.scheduleRuns.filter((item) => item.scheduleId === scheduleRow.id);
+  const firstRequests = afterFirst.executionRequests.filter((item) => item.jobId === post.id && item.request?.dryRun !== true);
+  const firstWindows = afterFirst.oneTimeExecutionWindows.filter((item) => item.jobId === post.id);
+  const firstGrants = afterFirst.liveExecutionGrants.filter((item) => item.jobId === post.id);
+  assert.equal(first.due.length, 1);
+  assert.equal(first.due[0].status, "succeeded");
+  assert.equal(first.due[0].publicationVerified, false);
+  assert.equal(first.due[0].externalSideEffects, false);
+  assert.equal(firstRun.length, 1);
+  assert.match(firstRun[0].windowKey, /^daily:/);
+  assert.equal(firstRequests.length, 1);
+  assert.equal(firstRequests[0].state, "REQUEST_READY");
+  assert.equal(firstRequests[0].submitState, "NOT_STARTED");
+  assert.equal(firstWindows.length, 1);
+  assert.equal(firstWindows[0].status, "RESERVED");
+  assert.equal(firstWindows[0].reservedExecutionId, firstRequests[0].executionId);
+  assert.equal(firstGrants.length, 1);
+  assert.equal(firstGrants[0].status, "ACTIVE");
+  assert.equal(firstGrants[0].boundExecutionId, firstRequests[0].executionId);
+  assert.equal(afterFirst.publicationAttempts.length, 0);
+  assert.equal(afterFirst.executionReceipts.length, 0);
+  assert.equal(afterFirst.posts.find((item) => item.id === post.id).status, "queued");
+  const dashboardAfterFirst = await service.dashboard();
+  const dashboardRun = dashboardAfterFirst.recentScheduleRuns.find((item) => item.scheduleId === scheduleRow.id);
+  assert.equal(dashboardRun.executionControls.length, 1);
+  assert.equal(dashboardRun.executionControls[0].requestState, "REQUEST_READY");
+  assert.equal(dashboardRun.executionControls[0].windowStatus, "RESERVED");
+  assert.equal(dashboardRun.executionControls[0].grantStatus, "ACTIVE");
+  assert.equal(dashboardRun.executionControls[0].publicationStatus, "NOT_VERIFIED");
+
+  const second = await service.queueDueSchedules("standing-schedule-queue-repeat");
+  const afterSecond = await service.snapshot();
+  assert.equal(second.due.length, 0);
+  assert.equal(second.decisions.find((item) => item.scheduleId === scheduleRow.id)?.status, "RECORDED");
+  assert.equal(afterSecond.scheduleRuns.filter((item) => item.scheduleId === scheduleRow.id).length, 1);
+  assert.equal(afterSecond.executionRequests.filter((item) => item.jobId === post.id && item.request?.dryRun !== true).length, 1);
+  assert.equal(afterSecond.oneTimeExecutionWindows.filter((item) => item.jobId === post.id).length, 1);
+  assert.equal(afterSecond.liveExecutionGrants.filter((item) => item.jobId === post.id).length, 1);
+  assert.equal(afterSecond.publicationAttempts.length, 0);
+  assert.equal(afterSecond.executionReceipts.length, 0);
 });
 
 test("concurrent due consumers reserve one window exactly once", async (t) => {
