@@ -191,8 +191,8 @@ if [ -z "${SEEDING_HEALTH_NONCE:-}" ]; then
   export SEEDING_HEALTH_NONCE=$(cat "$DATA_ROOT/health-nonce")
 fi
 export SEEDING_9ROUTER_ENDPOINT="${SEEDING_9ROUTER_ENDPOINT:-http://127.0.0.1:20128/v1}"
-export SEEDING_NODE_BIN="$APP_ROOT/../bin/node"
-export SEEDING_NPM_BIN="$APP_ROOT/../bin/npm"
+export SEEDING_NODE_BIN="${SEEDING_NODE_BIN:-$APP_ROOT/../bin/node}"
+export SEEDING_NPM_BIN="${SEEDING_NPM_BIN:-$APP_ROOT/../bin/npm}"
 export PATH="$APP_ROOT/../bin:$APP_ROOT/../lib/node_modules/npm/bin:$PATH"
 export SEEDING_BUILD_COMMIT=$(cat "$APP_ROOT/source-commit.txt")
 export SEEDING_BUILD_DIRTY=false
