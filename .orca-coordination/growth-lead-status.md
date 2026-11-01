@@ -502,3 +502,29 @@ lanes: account=READY_CANONICAL; runtime=SMOKE_PASS; pilot=ARMED_GATES_CLOSED; pu
 CẦN NAM: none for account readiness; no credential/CAPTCHA/MFA action required
 blockers: VIDEO_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
 next_30m: retain READY state; review content commit; keep 4321/4318 unchanged; no publication until explicit dual approval
+
+updated: 2026-11-02T06:31:00+07:00
+phase: PACKAGED_CONTENT_REBUILD_SWAP
+runtime: candidate built at 1df2802 via detached checkout; app bundle swapped at packaged 4321 seam; LaunchAgent restart pending; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam READY; facebook_group/facebook_nam READY; app-owned Chrome evidence retained
+pilot: armed=10 slots; scheduled=0 published_verified=0; no live submit while approval gates closed
+videos: v4 prototype FAIL; no media binding; require full HTTPS end card, A/V alignment, 10 unique 30–40s artifacts, audio license evidence, CLAUDE_APPROVED
+content: drafts-2026-11-02-v2 commit=1df2802; 16 drafts validator PASS; build-in-public team voice; Free/mã nguồn mở only; Facebook timeline/group distinct; CONTENT_PENDING_CLAUDE
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: runtime=SWAP_RESTART_PENDING; pilot=ARMED_GATES_CLOSED; publish=PAUSED_APPROVAL_GATES; video=V4_FAIL_REWORK; content=M18_V2_INDEPENDENT_VERIFY; community=PUBLIC_30_READY_AUTH_UNKNOWN
+CẦN NAM: none for account readiness; no credential/CAPTCHA/MFA action required
+blockers: VIDEO_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: kickstart packaged LaunchAgent; verify health 200/sourceDirty=false/source SHA/state revision/dashboard; keep 4318 unchanged
+
+updated: 2026-11-02T06:37:00+07:00
+phase: PACKAGED_RUNTIME_VERIFIED_CONTENT_GATED
+runtime: packaged 4321 source=1df2802f5a117481a8192006dd044442844da473 dirty=false health=200 pid=22556 stateRevision=454; LaunchAgent plist aligned; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam READY; facebook_group/facebook_nam READY; credential GETs HTTP 200 JSON with credentialStored=true and no secret fields; identity evidence retained
+pilot: armed=10 slots; scheduled=0 published_verified=0; no live submit while content/video gates closed
+videos: ready=10 qaFail=10 bufferTomorrow=0; artifacts remain BLOCKED_VISUAL_COMPOSITION_GATE; v4 FAIL; no media binding
+content: drafts-2026-11-02-v2 commit=1df2802; 16 drafts validator PASS; build-in-public team voice; Free/mã nguồn mở only; Facebook timeline/group distinct; CONTENT_PENDING_CLAUDE
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: runtime=SMOKE_PASS; pilot=ARMED_GATES_CLOSED; publish=PAUSED_APPROVAL_GATES; video=V4_FAIL_REWORK; content=M18_V2_INDEPENDENT_VERIFY; community=PUBLIC_30_READY_AUTH_UNKNOWN
+CẦN NAM: none for account readiness; no credential/CAPTCHA/MFA action required
+blockers: VIDEO_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN | BUILD_DEPENDENCY_SYMLINK_LIMITATION
+next_30m: collect independent runtime/content verifier reports; keep 4321 source pinned and 4318 unchanged; no publication until explicit dual approval
