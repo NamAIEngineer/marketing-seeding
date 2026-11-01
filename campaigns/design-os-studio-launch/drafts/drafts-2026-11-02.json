@@ -1,0 +1,460 @@
+{
+  "campaign": "Design OS Studio — daily distribution",
+  "date": "2026-11-02",
+  "product": "design-os-studio",
+  "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+  "eligibleSurfaces": [
+    "linkedin_personal",
+    "linkedin_page",
+    "facebook_timeline",
+    "facebook_page",
+    "facebook_member_group"
+  ],
+  "pausedSurfaces": [
+    "threads",
+    "reddit",
+    "product_hunt",
+    "indie_hackers",
+    "x"
+  ],
+  "drafts": [
+    {
+      "id": "dos-1102-01",
+      "locale": "en",
+      "channel": "linkedin_personal",
+      "cap": {
+        "perDay": 2,
+        "spacingHours": 4
+      },
+      "opening": "Open and save a Figma .fig file locally.",
+      "body": "DESIGN:OS Studio reads and writes Figma .fig files on disk. Its canvas uses wgpu, and the workflow stays local-first. Try it and star the repo if it helps your work.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=linkedin&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:40-46"
+      ],
+      "videoSlot": "dos-video-slot-01",
+      "videoArtifactStatus": "BOUND_PENDING_CAPTURE",
+      "videoSha256": "713b735e5dfc8341b680171f0c34955fb5a05d6c468c320427f85b6a44481692",
+      "state": "DRAFT",
+      "validation": {
+        "status": "NOT_APPLICABLE",
+        "report": null
+      },
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-01-linkedin-personal.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-01-linkedin-personal.jpg",
+      "videoQuality": "B",
+      "videoQa": "PASS_BOUNDED_DERIVED_QUALITY_B"
+    },
+    {
+      "id": "dos-1102-02",
+      "locale": "en",
+      "channel": "linkedin_page",
+      "cap": {
+        "perDay": 2,
+        "spacingHours": 4
+      },
+      "opening": "Give an agent a live view of the design file already open.",
+      "body": "The Agents panel runs Claude Code, Codex, Grok, Antigravity or Gemini CLI on the open file. Each CLI uses its own sign-in, so Studio needs no API key. Try it and star the repo if it helps your work.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=linkedin&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-48"
+      ],
+      "videoSlot": "dos-video-slot-02",
+      "videoArtifactStatus": "BOUND_PENDING_CAPTURE",
+      "videoSha256": "797cb56bb8feeab6604d00650a6ff42ca749b98ba56e601d29d947b893a8c64a",
+      "state": "DRAFT",
+      "validation": {
+        "status": "NOT_APPLICABLE",
+        "report": null
+      },
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-02-linkedin-page.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-02-linkedin-page.jpg",
+      "videoQuality": "B",
+      "videoQa": "PASS_BOUNDED_DERIVED_QUALITY_B"
+    },
+    {
+      "id": "dos-1102-03",
+      "locale": "en",
+      "channel": "linkedin_personal",
+      "cap": {
+        "perDay": 2,
+        "spacingHours": 4
+      },
+      "opening": "Read a selected layer in the language your team ships.",
+      "body": "Dev Mode lists CSS, Tailwind, React, SwiftUI, UIKit, Compose, Android XML and HTML. Select a layer and inspect the generated code. Try it and star the repo if it helps your work.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=linkedin&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:README.md:13",
+        "product:README.md:49-50"
+      ],
+      "videoSlot": "dos-video-slot-03",
+      "videoArtifactStatus": "BOUND_PENDING_CAPTURE",
+      "videoSha256": "8d19bb55f8ff14e7cdb429d2edffbf2241b90ce2c5fa5a2f7f541fd0080a6833",
+      "state": "DRAFT",
+      "validation": {
+        "status": "NOT_APPLICABLE",
+        "report": null
+      },
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-03-facebook-timeline.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-03-facebook-timeline.jpg",
+      "videoQuality": "B",
+      "videoQa": "PASS_BOUNDED_DERIVED_QUALITY_B"
+    },
+    {
+      "id": "dos-1102-04",
+      "locale": "en",
+      "channel": "linkedin_page",
+      "cap": {
+        "perDay": 2,
+        "spacingHours": 4
+      },
+      "opening": "Keep a large design file responsive by limiting work to the viewport.",
+      "body": "The README describes a 2048-unit SceneIndex grid and shared GeomCache. It documents a 336 MB Untitled UI PRO kit opening as one document with 207,601 nodes. Try it and star the repo if it helps your work.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=linkedin&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:README.md:42-46"
+      ],
+      "videoSlot": "dos-video-slot-04",
+      "videoArtifactStatus": "BOUND_PENDING_CAPTURE",
+      "videoSha256": "00922075b3c407169695ec90af2d4f2c9cc53c6f3f565346f9a57eb5e131bb5d",
+      "state": "DRAFT",
+      "validation": {
+        "status": "NOT_APPLICABLE",
+        "report": null
+      },
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-04-facebook-page.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-04-facebook-page.jpg",
+      "videoQuality": "B",
+      "videoQa": "PASS_BOUNDED_DERIVED_QUALITY_B"
+    },
+    {
+      "id": "dos-1102-05",
+      "locale": "en",
+      "channel": "facebook_timeline",
+      "cap": {
+        "perDay": 2,
+        "spacingHours": 2
+      },
+      "opening": "Export PNG or SVG without replacing the file you already made.",
+      "body": "In 0.7.0, PNG and SVG exports expand bounds for shadows, strokes and groups. The export toast shows the destination, and existing files get a new name instead of being overwritten. Try it and star the repo if it helps your work.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=facebook&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:CHANGELOG.md:33-37"
+      ],
+      "videoSlot": "dos-video-slot-05",
+      "videoArtifactStatus": "BOUND_PENDING_CAPTURE",
+      "videoSha256": "e72b59b9caba7f8b47ed7c44f5feff275a04d2aafbcbc3f029be92405ce2ef90",
+      "state": "DRAFT",
+      "validation": {
+        "status": "NOT_APPLICABLE",
+        "report": null
+      },
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-05-facebook-group-a.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-05-facebook-group-a.jpg",
+      "videoQuality": "B",
+      "videoQa": "PASS_BOUNDED_DERIVED_QUALITY_B"
+    },
+    {
+      "id": "dos-1102-06",
+      "locale": "en",
+      "channel": "facebook_page",
+      "cap": {
+        "perDay": 3,
+        "spacingHours": 2
+      },
+      "opening": "Make style folders match the naming system your team uses.",
+      "body": "Version 0.7.0 groups styles by slash prefixes, keeps Figma order across .designos and .fig round trips, and lets you rename a folder in one undo step. Try it and star the repo if it helps your work.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=facebook&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:CHANGELOG.md:9-14"
+      ],
+      "videoSlot": "dos-video-slot-06",
+      "videoArtifactStatus": "BOUND_PENDING_CAPTURE",
+      "videoSha256": "498e3ae834c619a64026e1c9ed79185ebcecd9732db09c4472b892ca80f0ef82",
+      "state": "DRAFT",
+      "validation": {
+        "status": "NOT_APPLICABLE",
+        "report": null
+      },
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-06-facebook-group-b.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-06-facebook-group-b.jpg",
+      "videoQuality": "B",
+      "videoQa": "PASS_BOUNDED_DERIVED_QUALITY_B"
+    },
+    {
+      "id": "dos-1102-07",
+      "locale": "en",
+      "channel": "facebook_member_group",
+      "cap": {
+        "perDay": 4,
+        "spacingHours": 2,
+        "onePerGroup": true
+      },
+      "opening": "Tune a shadow blend mode and keep the effect in the file.",
+      "body": "The 0.7.0 changelog lists blend modes for drop and inner shadows, with rendering in the canvas and exports and preservation through .fig round trips. Try it and star the repo if it helps your work.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=facebook&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:CHANGELOG.md:15-17"
+      ],
+      "videoSlot": "dos-video-slot-07",
+      "videoArtifactStatus": "BOUND_PENDING_CAPTURE",
+      "videoSha256": "292886e1ce2c79d9eae0a591574c9a5128e5bbf5bdb6b341a76d4d935c749f82",
+      "state": "DRAFT",
+      "validation": {
+        "status": "NOT_APPLICABLE",
+        "report": null
+      },
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-07-facebook-group-c.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-07-facebook-group-c.jpg",
+      "videoQuality": "B",
+      "videoQa": "PASS_BOUNDED_DERIVED_QUALITY_B"
+    },
+    {
+      "id": "dos-1102-08",
+      "locale": "en",
+      "channel": "facebook_member_group",
+      "cap": {
+        "perDay": 4,
+        "spacingHours": 2,
+        "onePerGroup": true
+      },
+      "opening": "Resize the Pages and Layers split and reopen with that layout remembered.",
+      "body": "The left panel separator is draggable, remembers its height across launches, resets with double-click or Enter, and supports keyboard resizing. Try it and star the repo if it helps your work.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=facebook&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:CHANGELOG.md:18-20"
+      ],
+      "videoSlot": "dos-video-slot-08",
+      "videoArtifactStatus": "BOUND_PENDING_CAPTURE",
+      "videoSha256": "8b1423ee42c43f7ca7927e2fea5fbf0a42c8390e5e90ee53d3d9d9568eb367fa",
+      "state": "DRAFT",
+      "validation": {
+        "status": "NOT_APPLICABLE",
+        "report": null
+      },
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-08-facebook-group-d.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-08-facebook-group-d.jpg",
+      "videoQuality": "B",
+      "videoQa": "PASS_BOUNDED_DERIVED_QUALITY_B"
+    },
+    {
+      "id": "dos-1102-09",
+      "locale": "vi",
+      "channel": "facebook_timeline",
+      "cap": {
+        "perDay": 2,
+        "spacingHours": 2
+      },
+      "opening": "Mở và lưu file Figma `.fig` ngay trên máy.",
+      "body": "Anh/chị có thể mở và lưu file Figma `.fig` ngay trên máy với DESIGN:OS Studio. Studio đọc và ghi file `.fig` trên đĩa, dùng canvas GPU native và giữ quy trình local-first. Thử repo và star nếu thấy hữu ích.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=facebook&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:40-46"
+      ],
+      "videoSlot": "dos-video-slot-09",
+      "videoArtifactStatus": "BOUND_PENDING_CAPTURE",
+      "videoSha256": "589e095960647f45a22d24a5d3cced7b56fe55507e7c1f7c03d65e905d311a24",
+      "state": "DRAFT",
+      "validation": {
+        "status": "PASS",
+        "report": "plans/growth-lead-20261102/evidence/content-vietnamese-validate-2026-11-02.json"
+      },
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-09-linkedin-square.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-09-linkedin-square.jpg",
+      "videoQuality": "B",
+      "videoQa": "PASS_BOUNDED_DERIVED_QUALITY_B"
+    },
+    {
+      "id": "dos-1102-10",
+      "locale": "vi",
+      "channel": "facebook_page",
+      "cap": {
+        "perDay": 3,
+        "spacingHours": 2
+      },
+      "opening": "Cho agent xem đúng file đang mở.",
+      "body": "Agent CLI của anh/chị có thể làm việc trên file đang mở qua Agents panel. Studio chạy Claude Code, Codex, Grok, Antigravity hoặc Gemini CLI bằng thông tin đăng nhập riêng. Thử repo và star nếu thấy hữu ích.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=facebook&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-48"
+      ],
+      "videoSlot": "dos-video-slot-10",
+      "videoArtifactStatus": "BOUND_PENDING_CAPTURE",
+      "videoSha256": "fdfba104fef9a1fa7978e32b780caceed526973871e52536738b64c037cd482a",
+      "state": "DRAFT",
+      "validation": {
+        "status": "PASS",
+        "report": "plans/growth-lead-20261102/evidence/content-vietnamese-validate-2026-11-02.json"
+      },
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-10-facebook-portrait.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-10-facebook-portrait.jpg",
+      "videoQuality": "B",
+      "videoQa": "PASS_BOUNDED_DERIVED_QUALITY_B"
+    },
+    {
+      "id": "dos-1102-11",
+      "locale": "vi",
+      "channel": "facebook_member_group",
+      "cap": {
+        "perDay": 4,
+        "spacingHours": 2,
+        "onePerGroup": true
+      },
+      "opening": "Lấy mã giao diện từ layer đang chọn.",
+      "body": "Từ layer đang chọn, anh/chị có thể đọc mã Dev Mode bằng CSS, Tailwind, React, SwiftUI, UIKit, Compose, Android XML hoặc HTML. Thử repo và star nếu thấy hữu ích.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=facebook&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:README.md:13",
+        "product:README.md:49-50"
+      ],
+      "videoSlot": "dos-video-slot-11",
+      "videoArtifactStatus": "MISSING_PENDING_FACTORY",
+      "videoSha256": null,
+      "state": "DRAFT",
+      "validation": {
+        "status": "PENDING_GATE",
+        "report": "evidence/vietnamese-validate-copy.json"
+      }
+    },
+    {
+      "id": "dos-1102-12",
+      "locale": "vi",
+      "channel": "facebook_member_group",
+      "cap": {
+        "perDay": 4,
+        "spacingHours": 2,
+        "onePerGroup": true
+      },
+      "opening": "Giữ file ở máy và kiểm tra bằng terminal.",
+      "body": "Anh/chị có thể giữ workflow local-first và chụp screenshot headless từ terminal hoặc CI. README ghi Studio không cần API key cho Agents panel vì CLI dùng thông tin đăng nhập riêng. Thử repo và star nếu thấy hữu ích.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=facebook&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:README.md:13",
+        "product:README.md:40-48"
+      ],
+      "videoSlot": "dos-video-slot-12",
+      "videoArtifactStatus": "MISSING_PENDING_FACTORY",
+      "videoSha256": null,
+      "state": "DRAFT",
+      "validation": {
+        "status": "PENDING_GATE",
+        "report": "evidence/vietnamese-validate-copy.json"
+      }
+    },
+    {
+      "id": "dos-1102-13",
+      "locale": "vi",
+      "channel": "linkedin_personal",
+      "cap": {
+        "perDay": 2,
+        "spacingHours": 4
+      },
+      "opening": "Xuất file mà không ghi đè bản cũ.",
+      "body": "Khi xuất PNG hoặc SVG, Studio mở rộng vùng xuất theo shadow, stroke và group như Figma. Bản 0.7.0 hiển thị nơi lưu và không ghi đè file đã có. Thử repo và star nếu thấy hữu ích.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=linkedin&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:CHANGELOG.md:33-37"
+      ],
+      "videoSlot": "dos-video-slot-13",
+      "videoArtifactStatus": "MISSING_PENDING_FACTORY",
+      "videoSha256": null,
+      "state": "DRAFT",
+      "validation": {
+        "status": "PENDING_GATE",
+        "report": "evidence/vietnamese-validate-copy.json"
+      }
+    },
+    {
+      "id": "dos-1102-14",
+      "locale": "vi",
+      "channel": "linkedin_page",
+      "cap": {
+        "perDay": 2,
+        "spacingHours": 4
+      },
+      "opening": "Quản lý style theo thư mục quen thuộc.",
+      "body": "Anh/chị có thể nhóm style theo tiền tố slash và đổi tên cả thư mục trong style picker. Changelog 0.7.0 ghi các style giữ thứ tự qua vòng `.designos` và `.fig`. Thử repo và star nếu thấy hữu ích.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=linkedin&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:CHANGELOG.md:9-14"
+      ],
+      "videoSlot": "dos-video-slot-14",
+      "videoArtifactStatus": "MISSING_PENDING_FACTORY",
+      "videoSha256": null,
+      "state": "DRAFT",
+      "validation": {
+        "status": "PENDING_GATE",
+        "report": "evidence/vietnamese-validate-copy.json"
+      }
+    },
+    {
+      "id": "dos-1102-15",
+      "locale": "en",
+      "channel": "linkedin_personal",
+      "cap": {
+        "perDay": 2,
+        "spacingHours": 4
+      },
+      "opening": "See a selected layer in a headless screenshot from terminal or CI.",
+      "body": "The README lists headless screenshot capture as part of the local workflow. Keep the file on disk and inspect the result in automation. Try it and star the repo if it helps your work.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=linkedin&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:README.md:11-13"
+      ],
+      "videoSlot": "dos-video-slot-15",
+      "videoArtifactStatus": "MISSING_PENDING_FACTORY",
+      "videoSha256": null,
+      "state": "DRAFT",
+      "validation": {
+        "status": "NOT_APPLICABLE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-16",
+      "locale": "en",
+      "channel": "facebook_page",
+      "cap": {
+        "perDay": 3,
+        "spacingHours": 2
+      },
+      "opening": "Round-trip a variable mode through the design file and token export.",
+      "body": "Studio supports color, number, string and boolean variables with modes. The README documents Figma JSON and W3C Design Tokens import and export. Try it and star the repo if it helps your work.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio?utm_source=facebook&utm_campaign=star1000",
+      "sourceRefs": [
+        "product:README.md:48-50"
+      ],
+      "videoSlot": "dos-video-slot-16",
+      "videoArtifactStatus": "MISSING_PENDING_FACTORY",
+      "videoSha256": null,
+      "state": "DRAFT",
+      "validation": {
+        "status": "NOT_APPLICABLE",
+        "report": null
+      }
+    }
+  ],
+  "queuePolicy": {
+    "activeCount": 10,
+    "backlogCount": 6,
+    "videoOneToOne": true,
+    "videoQualityGate": "A required before publish"
+  },
+  "validationGate": {
+    "status": "PASS",
+    "report": "plans/growth-lead-20261102/evidence/content-vietnamese-validate-2026-11-02.json",
+    "checkedFiles": [
+      "campaigns/design-os-studio-launch/drafts/vietnamese-copy-2026-11-02.md"
+    ],
+    "register": "ux-microcopy",
+    "domains": [
+      "ux",
+      "biz",
+      "tech"
+    ]
+  }
+}
