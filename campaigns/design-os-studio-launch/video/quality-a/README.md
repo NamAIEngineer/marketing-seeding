@@ -1,9 +1,7 @@
-# Quality-A intake
+# Quality-A replacement attempt
 
-Status: `BLOCKED_INCOMPLETE`.
+Status: **BLOCKED_CAPTURE_TARGET_UNAVAILABLE**.
 
-Only `raw/test-screen.mp4` is present in this checkout. It is not bound to a
-post, has no capture provenance/QA receipt, and cannot replace the ten-video
-manifest. Keep publication media on the verified one-to-one manifest until ten
-quality-A captures arrive with hashes, thumbnails, ffprobe, and freeze/black/
-loudness evidence.
+`ffmpeg -f avfoundation` was verified at 30 fps with cursor capture, but the physical screen devices expose the Claude and Orca desktops. Design OS Studio is visible only through the isolated computer-use app surface and is not present on either avfoundation display device. `raw/foreground-check.jpg` is the decoded proof frame showing the wrong desktop. No quality-A artifact is claimed or placed in `quality-a.json`; prior quality-B variants remain untouched.
+
+Reference geometry, timing, audio levels, and observed music credit are recorded in `template-spec.json`; reference proof images are `reference-proof-grid.png` and `reference-feature-frame.png`.

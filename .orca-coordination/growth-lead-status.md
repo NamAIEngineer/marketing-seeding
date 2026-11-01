@@ -328,3 +328,17 @@ lanes: runtime=REBUILD_PENDING; canonical-projection=FAIL_CLOSED_VIDEO_INTAKE; u
 CẦN NAM: Hai cửa sổ stable Google Chrome app-owned vẫn chờ Nam xử lý CAPTCHA/2FA/checkpoint; không retry account thật. Không cần dán password/token vào terminal/chat.
 blockers: NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | VIDEO_CAPTURE_TARGET_UNAVAILABLE | AUTHENTICATED_COMMUNITY_UNKNOWN
 next_30m: commit reconciliation and pilot evidence, clean build, preserve state/Keychain/Chrome profiles, swap LaunchAgent 4321, verify health/source/dashboard; keep 4318 untouched.
+
+updated: 2026-11-02T03:10:30+07:00
+phase: PACKAGED_REBUILD_SWAP
+runtime: bundle seam swapped for source=9278aa47b4e8d39fb59b27fcb246071ae022aca0; LaunchAgent restart pending; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam BLOCKED CHROME_LOGIN_CHALLENGE (attempt=1; no retry) | facebook_group/facebook_nam BLOCKED CHROME_LOGIN_CONTROLS_NOT_FOUND (attempt=1; no retry)
+today_posts: target=10 pilot=armed slots=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=10 buffer_tomorrow=0; current quality-A intake BLOCKED_CAPTURE_TARGET_UNAVAILABLE
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: runtime=SWAPPED_RESTART_PENDING; canonical-projection=COMMITTED_9278aa4; pilot=ARMED; comments=GUARDS_COMMITTED_4_TESTS_PASS; community=PUBLIC_30_READY_AUTH_UNKNOWN; publish=PAUSED_NO_READY_ACCOUNT
+CẦN NAM: Hai cửa sổ stable Google Chrome app-owned vẫn chờ Nam xử lý CAPTCHA/2FA/checkpoint; không retry account thật.
+blockers: NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | VIDEO_CAPTURE_TARGET_UNAVAILABLE | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: restart ai.marketing-seeding.packaged, wait health 200/sourceDirty=false, verify state revision/canonical dashboard/credential JSON route, keep 4318 untouched.
+2026-11-02T03:09:58+0700 PREDICT: backup state/bundle, swap only 4321 seam, preserve 4318 and Keychain/Chrome profiles.
+2026-11-02T03:09:59+0700 BACKUP_OK path=/Users/nam/Library/Application Support/Marketing Seeding OS/update-backups/20261102T030958+0700-growth-9278aa4 state_sha=0b98796846e9f9e508c22d5e9655a52e7d065f9ad9eb26e15b6ee97baa1a45bd old_source=a00214be09c7c60edf06a967a25654b1a263779e new_source=9278aa47b4e8d39fb59b27fcb246071ae022aca0
