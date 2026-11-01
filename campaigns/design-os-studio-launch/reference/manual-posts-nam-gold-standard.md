@@ -56,3 +56,27 @@ Mình vẫn muốn xin feedback thật từ anh em Figma hơn là chỉ vote: n�
 9. 5–9 hashtag.
 10. Bài sau trong cùng group: KHÔNG giới thiệu lại dài, chỉ update mới, share lại bài gốc, hỏi câu feedback khác.
 11. Video: đúng phong cách release-recap mẫu (nhãn cam nhỏ + headline 1–2 từ to + UI thật crop/zoom + mở/đóng bằng khung selection), bản 30–40s theo mục 16.
+
+## SỬA BỞI NAM (06:03 2/11) — BẮT BUỘC, ghi đè các điểm trên
+1. Free là free: chỉ ghi "Free, mã nguồn mở". KHÔNG nhắc gì tới thu phí / kế hoạch thu phí / giá.
+2. User không quan tâm tính năng; user quan tâm làm xong thì RA ĐƯỢC CÁI GÌ, ÁP DỤNG VÀO VIỆC GÌ. Mỗi bullet viết dạng "tình huống/việc thật → kết quả nhận được", tính năng chỉ là phương tiện, đặt sau hoặc bỏ. Hook và dòng đậm cũng nói kết quả, không nói tên tính năng.
+3. Câu minh bạch giữ: "Mình đang làm cùng team project này..." (không giả làm người ngoài).
+
+## BÀI MẪU ĐÃ ĐƯỢC NAM DUYỆT HƯỚNG (dùng làm khuôn, không copy nguyên)
+Có bác nào đang làm Design System mà mỗi lần mở file Figma bên ngoài là sợ vỡ style, mất component thì xem thử cái này:
+**DESIGN:OS Studio v0.7 — nhận file .fig, sửa, giao lại mà không hỏng gì.**
+Mình đang làm cùng team project này, nên share thẳng nó giúp được gì nhé 😄
+Điểm mình thấy hay là nó giúp làm xong việc thật trên file mà không phải ngồi dọn hậu quả:
+• Nhận file Figma của khách → mở ngay trên máy, sửa xong lưu lại .fig, gửi trả vẫn đúng style, đúng thứ tự
+• Muốn đổi cả bộ màu/typography theo naming của team → làm một lần là xong, lỡ tay thì undo một phát
+• Làm card, modal có shadow → export PNG/SVG ra đủ bóng, không bị cắt mép
+• Export bao nhiêu lần cũng không đè file cũ → không bao giờ mất bản đã gửi khách
+• Cần dựng nhanh một màn hình → nhờ agent (Claude Code, Codex...) làm ngay trong file, xem lại rồi giữ hoặc bỏ cả lượt
+Nôm na là từ **"mở được file Figma"** sang **"nhận file, sửa, giao lại cho khách mà không sợ hỏng"**.
+Free, mã nguồn mở: https://github.com/jangtrinh/design-os-studio
+Anh em thử rồi cho mình xin feedback: khi làm file cho khách, mọi người mất thời gian nhất ở khâu **sửa style, dựng layout hay export bàn giao**?
+#DesignOS #Figma #DesignSystems #AIDesign #BuildInPublic
+
+## SỬA BỞI NAM (06:05 2/11) — BẮT BUỘC
+4. Giọng build-in-public: "mình và team đang build ra ..." (nói rõ team đang làm ra cái gì, giúp người dùng làm ra cái gì). Thay câu minh bạch cũ bằng kiểu này, vd: "Mình và team đang build DESIGN:OS Studio — một app để nhận file Figma, sửa, giao lại cho khách mà không sợ hỏng."
+5. Kênh Facebook: đăng cả trang cá nhân (facebook_timeline) VÀ các cộng đồng/group Facebook liên quan (facebook_member_group), mỗi nơi 1 bài khác nhau, theo cap.
