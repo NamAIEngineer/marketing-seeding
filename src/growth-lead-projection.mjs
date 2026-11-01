@@ -5,6 +5,7 @@ import { appRoot } from "./paths.mjs";
 const campaignRoot = path.join(appRoot, "campaigns", "design-os-studio-launch");
 const manifestPath = path.join(campaignRoot, "video", "video-manifest.json");
 const draftsPath = path.join(campaignRoot, "drafts", "drafts-2026-11-02.json");
+const draftsV2Path = path.join(campaignRoot, "drafts", "drafts-2026-11-02-v2.json");
 const northStarPath = path.join(appRoot, "plans", "growth-lead-20261102", "evidence", "north-star-2026-11-02.md");
 const communityReceiptPath = path.join(appRoot, "plans", "growth-lead-20261102", "evidence", "community-receipt-20261101.json");
 
@@ -59,12 +60,17 @@ function mapArtifact(artifact, index) {
 }
 
 export async function loadGrowthLeadProjection({ dashboard = null } = {}) {
-  const [manifest, drafts, northStar, community] = await Promise.all([
+  const [manifest, draftsV2, draftsLegacy, northStar, community] = await Promise.all([
     readJson(manifestPath, { reference: null, artifacts: [] }),
+    readJson(draftsV2Path, null),
     readJson(draftsPath, { campaign: "Design OS Studio — daily distribution", date: "2026-11-02", drafts: [] }),
     readText(northStarPath),
     readJson(communityReceiptPath, { dashboard: {}, discoveries: [], membershipChecks: [], joinProjection: null }),
   ]);
+  // Mission 17/18 v2 drafts are the only reviewable content surface. Prefer
+  // them in Overview while preserving the legacy queue file for audit and
+  // keeping CONTENT_PENDING_CLAUDE fail-closed for publication.
+  const drafts = draftsV2 && Array.isArray(draftsV2.drafts) ? draftsV2 : draftsLegacy;
   const artifacts = (Array.isArray(manifest.artifacts) ? manifest.artifacts : []).map(mapArtifact).filter(Boolean);
   // A manifest entry is eligible only when capture and composition QA both
   // pass. Visual composition is a hard gate: ffprobe/hash alone cannot
@@ -121,8 +127,8 @@ export async function loadGrowthLeadProjection({ dashboard = null } = {}) {
     campaign: drafts.campaign || "Design OS Studio — daily distribution",
     date: drafts.date || "2026-11-02",
     targetPosts: 10,
-    eligibleSurfaces: ["linkedin_personal", "linkedin_page", "facebook_timeline", "facebook_page", "facebook_member_group"],
-    pausedSurfaces: ["threads", "reddit", "product_hunt", "indie_hackers", "x"],
+    eligibleSurfaces: ["linkedin_personal", "facebook_timeline", "facebook_member_group"],
+    pausedSurfaces: ["linkedin_page", "facebook_page", "threads", "reddit", "product_hunt", "indie_hackers", "x"],
     posts,
     pilot: {
       status: canonicalPilot.at(-1)?.status || "UNKNOWN",
