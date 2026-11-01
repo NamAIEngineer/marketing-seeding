@@ -256,3 +256,15 @@ lanes: runtime=SMOKE_PASS; account=BLOCKED_WITH_EVIDENCE; content=INTEGRATED; vi
 CẦN NAM: Hai cửa sổ stable Google Chrome đã mở: `linkedin-linkedin_nam` tại LinkedIn login và `facebook-facebook_nam` tại Facebook login. Xử lý CAPTCHA/2FA/checkpoint thủ công nếu nền tảng yêu cầu; hệ thống không retry hoặc tự submit thêm.
 blockers: NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | SCHEDULE_DISABLED (0 schedules; no live side effects)
 next_30m: preserve both app-owned windows/profiles; no automatic account action; next hourly status check.
+
+updated: 2026-11-02T01:10:03+0700
+phase: P0 AUTO-LOGIN
+runtime: packaged 4321 source=edf61853d397397e4d8e9c018f85b9859a2fbc9c dirty=false health=200 pid=68623; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam BLOCKED CHROME_LOGIN_CHALLENGE (Chrome attempt=1; stable profile process live; no retry) | facebook_group/facebook_nam BLOCKED CHROME_LOGIN_CONTROLS_NOT_FOUND (Chrome attempt=1; stable profile process live; no retry)
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (authenticated state UNKNOWN)
+lanes: runtime=SMOKE_PASS; account=BLOCKED_WITH_EVIDENCE; content=INTEGRATED; video=INTEGRATED; publish=PAUSED_NO_READY_ACCOUNT; comments=PAUSED; community=READY_WITH_AUTH_UNKNOWN; threads_reddit_ph_ih_x=PAUSED
+CẦN NAM: Stable Chrome profile `linkedin-linkedin_nam` mở tại LinkedIn login, profile `facebook-facebook_nam` mở tại Facebook login. Xử lý CAPTCHA/2FA/checkpoint thủ công nếu có. Không retry/tự submit thêm.
+blockers: NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | SCHEDULE_DISABLED (0 schedules; no live side effects)
+next_30m: preserve profile processes; no account retry; next hourly check.
