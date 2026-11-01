@@ -7161,7 +7161,9 @@ export class SeedingService {
     const snapshot = await this.store.read();
     const account = (snapshot.executionAccounts || []).find((item) => item.platform === platform && item.accountId === accountId);
     if (!account) throw Object.assign(new Error("account not found"), { code: "ACCOUNT_NOT_FOUND" });
-    if (Number(account.chromeLoginAttempts || 0) >= 1) {
+    // A legacy blocked record may predate the persistent Chrome counter. Its
+    // blocked login outcome still consumes the one-shot retry budget.
+    if (Number(account.chromeLoginAttempts || 0) >= 1 || (account.provider !== "chrome" && String(account.loginStatus || "").toUpperCase() === "BLOCKED")) {
       return { account: projectOnboardedAccount(account), login: { status: account.loginStatus === "READY" ? "READY" : "BLOCKED", code: "CHROME_RETRY_LIMIT_REACHED", reason: "Tài khoản đã được thử tự đăng nhập một lần; không thử lại tự động", platform, accountId } };
     }
     if (this.chromeAccountProfileManager && ["linkedin", "facebook", "facebook_group"].includes(platform)) {
