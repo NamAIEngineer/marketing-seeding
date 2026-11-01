@@ -62,3 +62,7 @@
 
 - 2026-11-02T05:45:17+0700 ICT — Canonical account verification uses the already-open app-owned stable Chrome profiles only. No credential submission, Keychain read, cookie copy, or new login. Runtime bundle must include the verify-session seam before promotion; 4318 remains untouched.
 - 2026-11-02T05:45:17+0700 ICT — MISSION 15/16 media gate supersedes prior quality-A labels: v2 is excluded; pilot slots stay armed but inactive until a 30–40s v3 video has  evidence. No publication side effect is allowed before that gate.
+
+- 2026-11-02 06:08 ICT — Both app-owned Chrome sessions are canonically READY after runtime-bound verify-session. LinkedIn identity evidence hash `ba1217b4dc16d14285b7a74c3ddb12b8aeb340017a38203c1adad90a2f9378a5`; Facebook identity evidence hash `c9eba1b3f86aba212976e4324c92a841b6161ac0ff738b5ace3e75c6684bedeb`. No credential submission, Keychain read, cookie copy, or new login.
+- 2026-11-02 06:08 ICT — Content v2 commit `c512f75` incorporates Mission 18 gold standard plus Nam 06:05 rules: Free/mã nguồn mở only, result-first work-to-outcome bullets, build-in-public team voice, Facebook timeline and member groups as distinct surfaces. Validator receipt remains `PASS`; status remains `CONTENT_PENDING_CLAUDE`.
+- 2026-11-02 06:08 ICT — Video v4 long prototype is retained for Claude review only. MISSION 16/18 gate requires explicit `CLAUDE_APPROVED`; no v2/v3/prototype media may enter pilot slots or publication.
