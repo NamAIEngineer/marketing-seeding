@@ -1595,6 +1595,8 @@ function projectExecutionAccountRuntime(state, { now = new Date() } = {}) {
       platform: String(account.platform || ""),
       accountId: String(account.accountId || ""),
       provider: canonicalProvider(account.provider, { allowLegacy: true }),
+      source: account.source || (account.provider && account.accountId ? `${account.provider}-account:${account.accountId}` : null),
+      evidenceHash: account.identityEvidenceHash || null,
       profileFingerprint: accountProfileFingerprint(account.profileId),
       sessionMode: "SESSION_REUSE",
       authMode: account.provider === "camoufox" ? "AUTOMATED_CREDENTIAL_LOGIN" : "MANUAL_AUTH",
@@ -7295,6 +7297,33 @@ export class SeedingService {
     return result.result;
   }
 
+  async recordCommunityDiscoveries(input = {}, actor = "community-public-discovery") {
+    const rows = Array.isArray(input.discoveries) ? input.discoveries : [];
+    const normalized = rows.slice(0, 256).map((row) => ({
+      id: String(row?.id || "").slice(0, 240),
+      platform: String(row?.platform || "").slice(0, 80),
+      name: String(row?.name || "").slice(0, 240),
+      url: String(row?.url || "").slice(0, 2000),
+      score: Number.isFinite(Number(row?.score)) ? Number(row.score) : null,
+      rules: row?.rules && typeof row.rules === "object" ? row.rules : { classification: "unknown" },
+      status: String(row?.status || "UNKNOWN").slice(0, 40),
+      eligible: row?.eligible === true,
+      source: String(row?.source || "camoufox-public").toLowerCase() === "crawl4ai" ? "crawl4ai" : "camoufox-public",
+      evidenceHash: String(row?.evidenceHash || row?.publicEvidence?.evidenceHash || "").slice(0, 200) || null,
+      capturedAt: String(row?.capturedAt || input.capturedAt || nowIso()).slice(0, 80),
+      authenticated: row?.authenticated === true || row?.publicEvidence?.authenticated === true,
+      externalSideEffect: row?.externalSideEffect === true
+    })).filter((row) => row.id && row.url);
+    const result = await this.store.mutate(actor, "community_public_discoveries_recorded", (state) => {
+      state.communityDiscoveries ||= [];
+      const byId = new Map(state.communityDiscoveries.map((row) => [row.id, row]));
+      for (const row of normalized) byId.set(row.id, row);
+      state.communityDiscoveries = [...byId.values()].slice(-512);
+      return { count: normalized.length, total: state.communityDiscoveries.length, source: "camoufox-public", externalSideEffects: false };
+    });
+    return result.result;
+  }
+
   async recordGrowthPilotReport(experimentId, input = {}, actor = "pilot-reporter") {
     const result = await this.store.mutate(actor, "growth_pilot_report_recorded", (state) => {
       const experiment = requireItem(state.pilotExperiments || [], experimentId, "Pilot experiment");
@@ -8305,11 +8334,14 @@ export class SeedingService {
     state.scheduleRuns ||= [];
     state.publicationAttempts ||= [];
     state.fixtureAutomationRuns ||= [];
+    state.communityDiscoveries ||= [];
     state.communityMemberships ||= [];
     state.memoryItems ||= [];
     state.browserSnapshots ||= [];
     state.browserExecutions ||= [];
     state.providerDecisions ||= [];
+    state.pilotExperiments ||= [];
+    state.pilotReports ||= [];
     const accountRuntime = projectExecutionAccountRuntime(state);
     const accountAgents = projectDashboardAccountAgents(state);
     const authorizedAccountCandidates = projectAuthorizedAccountCandidates(state, { readinessTtlMs: this.readinessTtlMs });
@@ -8503,6 +8535,7 @@ export class SeedingService {
       camoufoxSession: camoufoxSessionObservation,
       gpmSessionCapability,
       communityMemberships: state.communityMemberships,
+      communityDiscoveries: state.communityDiscoveries,
       oiBrowser: projectOiBrowserIntegration(state),
       statuses,
       totals,
@@ -8602,6 +8635,8 @@ export class SeedingService {
         runs: newest(state.fixtureAutomationRuns, "at")
       },
       schedules: state.schedules,
+      pilotExperiments: state.pilotExperiments,
+      pilotReports: newest(state.pilotReports, "generatedAt"),
       // Reproject controls from the current durable execution rows/receipts
       // when the overview is read. Persisted schedule rows retain the
       // queue-time audit record, while the dashboard must show the latest

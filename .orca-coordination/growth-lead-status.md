@@ -280,3 +280,27 @@ lanes: schedule=IMPLEMENTING_ARMED; comments-pilot=IMPLEMENTING_GUARDS_REPORTS; 
 CẦN NAM: Hai cửa sổ stable Google Chrome vẫn chờ xử lý CAPTCHA/2FA/checkpoint; không retry account thật. Không cần dán password/token vào terminal/chat.
 blockers: NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
 next_30m: integrate pilot/community checkpoints, run targeted tests, commit, update task graph/status.
+
+updated: 2026-11-02T02:12:00+07:00
+phase: NON_ACCOUNT_LANES_CHECKPOINT
+runtime: packaged 4321 source=edf61853d397397e4d8e9c018f85b9859a2fbc9c dirty=false health=200; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam BLOCKED CHROME_LOGIN_CHALLENGE (attempt=1; no retry) | facebook_group/facebook_nam BLOCKED CHROME_LOGIN_CONTROLS_NOT_FOUND (attempt=1; no retry)
+today_posts: target=10 armed=0 published_verified=0 unknown=10; live schedule intentionally not materialized before READY/permalink/media proof
+videos: ready=10 qa_fail=0 buffer_tomorrow=10
+community: public_candidates=30 (Facebook=15, LinkedIn=15), score/rule fields present, authenticated_reads=0, join_requested_today=0, approved=0, postable=0
+lanes: ui=COMMITTED_69c4da0; schedule-comments=COMMITTED_4521dc9; community=COMMITTED_e7c4997; facebook-fixture=COMMITTED_7a8c68f; publish=PAUSED_NO_READY_ACCOUNT
+CẦN NAM: Hai cửa sổ stable Google Chrome app-owned vẫn chờ Nam xử lý CAPTCHA/2FA/checkpoint. Mở Overview > Tài khoản > Đăng nhập thủ công đúng account; không dùng profile Chrome cá nhân; giữ cửa sổ mở để hệ thống tự xác minh. Không nhập password/token vào terminal/chat.
+blockers: NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: independent verification of commits/tests; do not retry real accounts; preserve 4318 and runtime state.
+
+updated: 2026-11-02T02:28:00+07:00
+phase: NON_ACCOUNT_LANES_INTEGRATION
+runtime: packaged 4321 source=edf61853d397397e4d8e9c018f85b9859a2fbc9c dirty=false health=200; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam BLOCKED CHROME_LOGIN_CHALLENGE (attempt=1; no retry) | facebook_group/facebook_nam BLOCKED CHROME_LOGIN_CONTROLS_NOT_FOUND (attempt=1; no retry)
+today_posts: target=10 pilot=ARMING campaign=aaaa7144-4186-4f95-adef-425b9f9d056a scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10; manifest PASS_REAL_SCREEN_CAPTURE_BOUNDED
+community: public_candidates=30 prepared; canonical_recording=WAITING_REBUILD; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: canonical-projection=IMPLEMENTED; ui-bundle=STAGED_PUBLIC_IGNORED_ASSET; pilot=WAITING_REBUILD; community=WAITING_REBUILD; comments=GUARDS_COMMITTED; publish=PAUSED_NO_READY_ACCOUNT
+CẦN NAM: Hai cửa sổ stable Google Chrome app-owned vẫn chờ Nam xử lý CAPTCHA/2FA/checkpoint. Không retry account thật. Mở đúng cửa sổ account khi Nam thức dậy; không dùng profile Chrome cá nhân.
+blockers: PACKAGED-REBUILD (controller) | NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: force-track new UI assets, commit source checkpoint, build clean package with sh desktop/build-macos.sh, backup state, swap 4321, persist 30 discovery rows + arm pilot, verify dashboard canonical fields.

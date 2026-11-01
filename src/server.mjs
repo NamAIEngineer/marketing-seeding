@@ -890,9 +890,10 @@ const server = http.createServer(async (request, response) => {
     }
     if (request.method === "GET" && url.pathname === "/api/dashboard") {
       const autoGtm = await readAutoGtmFeed(autoGtmFeedFile);
+      const dashboard = await service.dashboard();
       return sendJson(response, 200, {
-        ...(await service.dashboard()),
-        growth: await loadGrowthLeadProjection(),
+        ...dashboard,
+        growth: await loadGrowthLeadProjection({ dashboard }),
         coordinator: await readCoordinatorProjection(path.join(process.env.SEEDING_COORDINATOR_STATE_ROOT || path.join(agenticRoot, ".agentic", "marketing-seeding", "project-coordinator"), "state.json")),
         autoGtm,
         marketIntelligence: projectMarketDashboard(autoGtm),
@@ -1129,6 +1130,15 @@ const server = http.createServer(async (request, response) => {
     }
     if (request.method === "POST" && url.pathname === "/api/community-memberships") {
       return sendJson(response, 201, await service.createCommunityMembership(await readJson(request), actor));
+    }
+    if (request.method === "POST" && url.pathname === "/api/community-discoveries") {
+      if (role !== "operator" && role !== "automation") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 201, await service.recordCommunityDiscoveries(await readJson(request), actor));
+    }
+    match = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/pilot$/);
+    if (request.method === "POST" && match) {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 201, await service.armGrowthPilot(match[1], await readJson(request), actor));
     }
     if (request.method === "POST" && url.pathname === "/api/posts") {
       return sendJson(response, 201, await service.createPost(await readJson(request), actor));

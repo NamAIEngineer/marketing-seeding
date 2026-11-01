@@ -58,7 +58,7 @@ function mapArtifact(artifact, index) {
   };
 }
 
-export async function loadGrowthLeadProjection() {
+export async function loadGrowthLeadProjection({ dashboard = null } = {}) {
   const [manifest, drafts, northStar, community] = await Promise.all([
     readJson(manifestPath, { reference: null, artifacts: [] }),
     readJson(draftsPath, { campaign: "Design OS Studio — daily distribution", date: "2026-11-02", drafts: [] }),
@@ -67,7 +67,10 @@ export async function loadGrowthLeadProjection() {
   ]);
   const artifacts = (Array.isArray(manifest.artifacts) ? manifest.artifacts : []).map(mapArtifact).filter(Boolean);
   const draftRows = Array.isArray(drafts.drafts) ? drafts.drafts : [];
-  const posts = draftRows.slice(0, 10).map((draft, index) => ({
+  const canonicalPosts = Array.isArray(dashboard?.posts) ? dashboard.posts : [];
+  const posts = draftRows.slice(0, 10).map((draft, index) => {
+    const canonical = canonicalPosts.find((item) => item.id === draft.id) || null;
+    return {
     id: draft.id || `growth-draft-${index + 1}`,
     channel: draft.channel || "UNKNOWN",
     locale: draft.locale || "UNKNOWN",
@@ -76,12 +79,19 @@ export async function loadGrowthLeadProjection() {
     repoUrl: draft.repoUrl || drafts.repoUrl || "https://github.com/jangtrinh/design-os-studio",
     videoSlot: draft.videoSlot || `dos-video-slot-${String(index + 1).padStart(2, "0")}`,
     video: artifacts[index] || null,
-    publicationStatus: "UNKNOWN",
-    permalink: null,
-    latestMetric: null,
-  }));
+    publicationStatus: canonical?.status === "published" && canonical.publicationUrl ? "PUBLISHED_UNVERIFIED" : "UNKNOWN",
+    permalink: canonical?.publicationUrl || null,
+    latestMetric: canonical ? (dashboard?.latestMetrics?.[canonical.id] || null) : null,
+    source: canonical?.source || null,
+    evidenceHash: canonical?.evidenceHash || null,
+    };
+  });
   const qaFail = artifacts.filter((item) => !String(item.qa).startsWith("PASS")).length;
-  const dashboard = community.dashboard && typeof community.dashboard === "object" ? community.dashboard : {};
+  const communityDashboard = community.dashboard && typeof community.dashboard === "object" ? community.dashboard : {};
+  const discoveries = Array.isArray(dashboard?.communityDiscoveries) && dashboard.communityDiscoveries.length
+    ? dashboard.communityDiscoveries
+    : (Array.isArray(community.discoveries) ? community.discoveries : []);
+  const canonicalPilot = Array.isArray(dashboard?.pilotExperiments) ? dashboard.pilotExperiments : [];
   return {
     campaign: drafts.campaign || "Design OS Studio — daily distribution",
     date: drafts.date || "2026-11-02",
@@ -89,6 +99,18 @@ export async function loadGrowthLeadProjection() {
     eligibleSurfaces: ["linkedin_personal", "linkedin_page", "facebook_timeline", "facebook_page", "facebook_member_group"],
     pausedSurfaces: ["threads", "reddit", "product_hunt", "indie_hackers", "x"],
     posts,
+    pilot: {
+      status: canonicalPilot.at(-1)?.status || "UNKNOWN",
+      experiments: canonicalPilot,
+      reports: Array.isArray(dashboard?.pilotReports) ? dashboard.pilotReports : [],
+      schedule: canonicalPilot.at(-1) ? {
+        slots: canonicalPilot.at(-1).slots || [],
+        timezone: canonicalPilot.at(-1).timezone || "Asia/Ho_Chi_Minh",
+        readinessGate: canonicalPilot.at(-1).readinessGate || "account_ready",
+        firstPostWithinMinutes: canonicalPilot.at(-1).firstPostWithinMinutes || 15,
+        missedSlotPolicy: canonicalPilot.at(-1).missedSlotPolicy || "shift_to_next_slot_no_burst"
+      } : null
+    },
     videos: {
       ready: artifacts.length,
       qaFail,
@@ -98,8 +120,9 @@ export async function loadGrowthLeadProjection() {
     },
     northStar: northStarProjection(northStar),
     community: {
-      ...dashboard,
-      discoveries: Array.isArray(community.discoveries) ? community.discoveries : [],
+      ...communityDashboard,
+      discovered: Number(dashboard?.communityDiscoveries?.length || communityDashboard.discovered || discoveries.length || 0),
+      discoveries,
       membershipChecks: Array.isArray(community.membershipChecks) ? community.membershipChecks : [],
       joinProjection: community.joinProjection || null,
     },

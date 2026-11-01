@@ -45,6 +45,7 @@ export function createInitialState(now = new Date()) {
     conversions: [],
     collectorRuns: [],
     fixtureAutomationRuns: [],
+    communityDiscoveries: [],
     communityMemberships: [],
     memoryItems: [],
     browserSnapshots: [],
@@ -57,7 +58,7 @@ export function createInitialState(now = new Date()) {
 
 const STATE_COLLECTIONS = Object.freeze([
   "campaigns", "campaignAuthorizations", "liveExecutionGrants", "submissionUncertainties", "oneTimeExecutionWindows", "executionAccounts", "executionRequests", "executionReceipts", "executionLeases", "artifacts", "stories", "publicationAttempts", "schedules", "scheduleRuns", "pilotExperiments", "pilotReports", "targets", "posts",
-  "metricSnapshots", "keywordSnapshots", "interactions", "replies", "conversions", "collectorRuns", "fixtureAutomationRuns", "communityMemberships", "memoryItems", "browserSnapshots", "browserExecutions", "providerDecisions", "listeningJobs", "auditLog"
+  "metricSnapshots", "keywordSnapshots", "interactions", "replies", "conversions", "collectorRuns", "fixtureAutomationRuns", "communityDiscoveries", "communityMemberships", "memoryItems", "browserSnapshots", "browserExecutions", "providerDecisions", "listeningJobs", "auditLog"
 ]);
 
 export function migrateState(input, now = new Date()) {

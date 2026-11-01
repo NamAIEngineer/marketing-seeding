@@ -1977,7 +1977,9 @@ function GrowthOverviewPanel({ data }: { data: R }) {
   const videos = growth.videos && typeof growth.videos === "object" ? growth.videos : {}
   const northStar = growth.northStar && typeof growth.northStar === "object" ? growth.northStar : {}
   const community = growth.community && typeof growth.community === "object" ? growth.community : {}
-  const communityCounts = community.dashboard && typeof community.dashboard === "object" ? community.dashboard : {}
+  const communityCounts = community.dashboard && typeof community.dashboard === "object" ? community.dashboard : community
+  const pilot = growth.pilot && typeof growth.pilot === "object" ? growth.pilot : {}
+  const verifiedPosts = posts.filter((post: R) => String(post.publicationStatus || "").toUpperCase() === "VERIFIED").length
   const surfaceLabel = (value: unknown) => String(value || "UNKNOWN").replaceAll("_", " ")
   const unknown = (value: unknown) => value === null || value === undefined || value === "" ? "UNKNOWN" : String(value)
   return (
@@ -1988,8 +1990,9 @@ function GrowthOverviewPanel({ data }: { data: R }) {
             <h2>Hôm nay · {String(growth.date || "UNKNOWN")}</h2>
           <p>Kết quả trước tính năng: 10 bài khác nhau trên LinkedIn + Facebook, mỗi bài có MP4 riêng và permalink xác minh độc lập.</p>
           </div>
-          <span className="status pending">target {Number(growth.targetPosts || 10)} · verified 0 · UNKNOWN</span>
+          <span className={`status ${verifiedPosts ? "ready" : "pending"}`}>target {Number(growth.targetPosts || 10)} · verified {verifiedPosts} · {String(pilot.status || "UNKNOWN")}</span>
         </div>
+        {pilot.schedule ? <p className="growth-pilot-note">Lịch pilot đã {String(pilot.status || "UNKNOWN").toLowerCase()}: {Array.isArray(pilot.schedule.slots) ? pilot.schedule.slots.join(" · ") : "10 khung giờ"}. Chỉ chạy khi account Sẵn sàng; bài trễ chuyển sang khung kế tiếp.</p> : null}
         <div className="growth-post-grid">
           {posts.map((post: R, index: number) => (
             <article className="growth-post-card" key={String(post.id || index)}>
@@ -2002,7 +2005,7 @@ function GrowthOverviewPanel({ data }: { data: R }) {
                 <div className="growth-post-meta"><b>#{String(index + 1).padStart(2, "0")}</b><span>{surfaceLabel(post.channel)}</span><span>{String(post.locale || "UNKNOWN")}</span></div>
                 <strong>{unknown(post.opening)}</strong>
                 <small>Video: {unknown(post.video?.sha256)} · QA: {unknown(post.video?.qa)} · {unknown(post.video?.eligibleSurfaceAspectRatio)}</small>
-                <small>Permalink: <b>UNKNOWN</b> · publication chưa xác minh</small>
+                <small>Permalink: <b>{unknown(post.permalink)}</b> · {String(post.publicationStatus || "UNKNOWN")}</small>
                 {post.repoUrl ? <a href={String(post.repoUrl)} target="_blank" rel="noreferrer">Repo + star ↗</a> : null}
               </div>
             </article>
