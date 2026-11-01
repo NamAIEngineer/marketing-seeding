@@ -7147,6 +7147,21 @@ export class SeedingService {
     return { account: projectOnboardedAccount(persisted.result), login };
   }
 
+  async verifyChromeAccountSession(input = {}, actor = "chrome-account-verify") {
+    const platform = String(input.platform || "").trim().toLowerCase();
+    const accountId = String(input.accountId || "").trim();
+    if (!platform || !accountId) throw new Error("platform and accountId are required");
+    if (!this.chromeAccountProfileManager?.verifyExistingProfile) return { status: "UNKNOWN", code: "CHROME_PROFILE_MANAGER_UNAVAILABLE" };
+    const result = await this.chromeAccountProfileManager.verifyExistingProfile({ platform: platform === "facebook_group" ? "facebook" : platform, accountId, sessionId: input.sessionId || null });
+    if (result.status === "READY") {
+      await this.store.mutate(actor, "chrome_account_session_verified", (state) => {
+        const row = (state.executionAccounts || []).find((item) => item.platform === platform && item.accountId === accountId);
+        if (row) Object.assign(row, { provider: "chrome", identityReference: result.identityReference, expectedIdentityUrl: result.identityReference, agentStatus: "READY", loginStatus: "READY", sessionHealth: "ready", health: "healthy", loginEvidenceAt: nowIso(), identityEvidenceHash: result.evidenceHash, lastFailureCode: null, lastFailureReason: null, updatedAt: nowIso() });
+      });
+    }
+    return result;
+  }
+
   async pollChromeAccountLogin(sessionId, actor = "chrome-account-login") {
     if (!this.chromeAccountProfileManager) return { status: "UNKNOWN", code: "CHROME_PROFILE_MANAGER_UNAVAILABLE" };
     const result = await this.chromeAccountProfileManager.poll(sessionId);

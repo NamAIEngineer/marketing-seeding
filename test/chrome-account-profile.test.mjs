@@ -64,6 +64,30 @@ test("Chrome manager launches one visible persistent app profile and leaves logi
   await rm(homeDir, { recursive: true, force: true });
 });
 
+test("Chrome manager can verify an attached existing session without credential submission", async () => {
+  const homeDir = await mkdtemp(path.join(os.tmpdir(), "chrome-profile-verify-"));
+  let currentUrl = "https://www.linkedin.com/feed/";
+  let fills = 0;
+  const page = {
+    url: () => currentUrl,
+    goto: async (url) => { currentUrl = url === "https://www.linkedin.com/in/me/" ? "https://www.linkedin.com/in/nam-dev/" : url; },
+    title: async () => "Nam Dev | LinkedIn",
+    locator: () => ({ innerText: async () => "Nam Dev" })
+  };
+  const context = { pages: () => [page], newPage: async () => page, close: async () => {} };
+  const manager = new ChromeAccountProfileManager({
+    homeDir, executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    playwright: { chromium: { launchPersistentContext: async () => context } }, ttlMs: 60_000
+  });
+  const started = await manager.start({ platform: "linkedin", accountId: "linkedin_nam" });
+  const verified = await manager.verifyExistingProfile({ platform: "linkedin", accountId: "linkedin_nam", sessionId: started.sessionId });
+  assert.equal(verified.status, "READY");
+  assert.equal(verified.identityReference, "https://www.linkedin.com/in/nam-dev");
+  assert.equal(fills, 0);
+  await manager.close(started.sessionId);
+  await rm(homeDir, { recursive: true, force: true });
+});
+
 test("Chrome identity proof rejects a profile shell that still shows an auth surface", () => {
   const result = verifyChromeIdentity({ platform: "facebook", url: "https://www.facebook.com/nam.dev", title: "Sign in to Facebook" });
   assert.equal(result.status, "BLOCKED");

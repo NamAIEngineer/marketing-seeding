@@ -273,6 +273,39 @@ export class ChromeAccountProfileManager {
     this.#sessions.set(sessionId, { sessionId, platform: normalized, accountId: account, profilePath: resolvedProfilePath, context, page, loginUrl, startedAt, expiresAt: new Date(Date.now() + this.#ttlMs).toISOString(), status: "WAITING_FOR_USER", identityReference: null, evidenceHash: null });
     return this.status(sessionId);
   }
+  /**
+   * Re-verify a browser session already owned by this manager. This path never
+   * reads Keychain credentials, fills login controls, or starts a new login.
+   * A missing/expired in-memory session fails closed so callers cannot promote
+   * a profile based on stale state.
+   */
+  async verifySession(sessionId, options = {}) {
+    const session = this.#sessions.get(String(sessionId));
+    if (!session) return { status: "UNKNOWN", code: "CHROME_LOGIN_SESSION_NOT_FOUND", reason: "Chrome session is not attached to this runtime" };
+    return this.poll(sessionId, { navigateToIdentityProbe: options.navigateToIdentityProbe !== false });
+  }
+
+  /**
+   * Verify an app-owned profile without credential submission. If an attached
+   * session exists, reuse it. Otherwise return a bounded busy/not-found result;
+   * attaching to an arbitrary Chrome process is intentionally unsupported unless
+   * the process was created by this manager.
+   */
+  async verifyExistingProfile({ platform, accountId, sessionId = null } = {}) {
+    const normalized = normalizedPlatform(platform);
+    const account = normalizedAccountId(accountId);
+    const attached = sessionId
+      ? this.#sessions.get(String(sessionId))
+      : [...this.#sessions.values()].find((item) => item.platform === normalized && item.accountId === account);
+    if (!attached) {
+      return { status: "UNKNOWN", code: "CHROME_PROFILE_SESSION_NOT_ATTACHED", reason: "App-owned Chrome profile exists but no live manager session is attached; no login or credential action was attempted", platform: normalized, accountId: account, profilePath: this.profilePath(normalized, account), source: chromeAccountSource(account) };
+    }
+    if (attached.platform !== normalized || attached.accountId !== account) {
+      return { status: "UNKNOWN", code: "CHROME_PROFILE_BINDING_MISMATCH", reason: "Attached Chrome session does not match requested account", platform: normalized, accountId: account };
+    }
+    return this.verifySession(attached.sessionId, { navigateToIdentityProbe: true });
+  }
+
   async poll(sessionId, { navigateToIdentityProbe = true } = {}) {
     const session = this.#sessions.get(String(sessionId));
     if (!session) return { status: "UNKNOWN", code: "CHROME_LOGIN_SESSION_NOT_FOUND" };

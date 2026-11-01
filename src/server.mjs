@@ -1026,6 +1026,10 @@ const server = http.createServer(async (request, response) => {
       if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
       return sendJson(response, 202, await service.startChromeAccountLogin(await readJson(request), actor));
     }
+    if (request.method === "POST" && url.pathname === "/api/account-credentials/verify-session") {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 200, await service.verifyChromeAccountSession(await readJson(request), actor));
+    }
     const chromeLoginMatch = url.pathname.match(/^\/api\/account-credentials\/chrome-login\/([^/]+)$/);
     if (request.method === "GET" && chromeLoginMatch) {
       if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
