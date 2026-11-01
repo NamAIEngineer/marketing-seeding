@@ -1,0 +1,16 @@
+pinned_at=20261101T113726Z
+workspace=/Users/nam/orca/workspaces/marketing-seeding/ms-growth-lead-20261101
+head=34a62a0dff6253ecb81abfc46480556370b7487c
+branch=NamAIEngineer/ms-growth-lead-20261101
+status_begin
+?? .orca-coordination/MISSION-GROWTH-LEAD-20261102.md
+?? .orca-coordination/ORCA-BRIEF-autonomous-growth-os.md
+?? .orca-coordination/growth-lead-status.md
+?? campaigns/design-os-studio-launch/reference/
+?? plans/growth-lead-20261102/
+status_end
+reference_sha256=a7014b242aca885b221fc6f1a8d93199176dcf4797b03f9af17b20a23ebafa95
+reference_size=1546751
+mission_sha256=6527696f51a4a249a11d2428746a12c53162ece7d33840a763190447c4c301c6
+brief_sha256=d8c3a71e26338fcb6a79ed6e1f706b5497efc9d7906c40a7be046b777150a685
+acceptance_sha256=40ed959e6529448714958b7f84dff07d7e884954255f232f7e0fd7edbd36a022

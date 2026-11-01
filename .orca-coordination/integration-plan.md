@@ -42,3 +42,11 @@
 ## Integration rule
 
 Only C-owned files are written in this worktree. A/B dirty files remain owner-controlled. Candidate integration uses committed checkpoints and verified behavior; it does not mutate, stash, reset, clean, restart, or commit A/B worktrees.
+
+## Growth Lead integration checkpoint — 2026-11-01 19:27 ICT
+
+- Controller integrated serially in `ms-growth-lead-20261101` after T-runtime/T-content/T-video/T-community receipts. Runtime report copied from `ms-growth-runtime-20261101`; no runtime cutover.
+- `src/growth-lead-projection.mjs` projects 10 queue posts, manifest-bound video/hash/thumbnail/QA metadata, North Star evidence, and community receipt counts. `src/server.mjs` exposes projection on `/api/dashboard` and loopback-only registered media routes.
+- `ui/src/App.tsx` + `ui/src/index.css` render required Overview panels. `corepack pnpm build` succeeded and `ui/dist` was copied into `public`; server serves the packaged frontend.
+- Bounded checks: server/projection syntax pass; community tests 4/4 pass; draft/manifest validation pass (`drafts=16`, `mapped=10`, `unique_sha256=10`, file hashes 10/10); video report retains ffprobe/ffmpeg 10/10 evidence. Live auth/publication/permalinks/star refresh remain UNKNOWN.
+- Next: fresh read-only verifier task on a snapshot worktree. Verifier must inspect after this last change and write `plans/growth-lead-20261102/reports/verify-*.md`; builder/controller does not author verdict.

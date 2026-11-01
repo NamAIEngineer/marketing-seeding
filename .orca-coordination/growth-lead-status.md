@@ -1,0 +1,36 @@
+updated: 2026-11-01T19:27:00+07:00
+phase: P0
+runtime: b1dc560ea9957415bde4592f9879e8bfc338ad05 dirty=true health=200 (historical bounded observation) port=4318
+accounts: linkedin/linkedin_primary: UNKNOWN (stale/expired session; no fresh credential)
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10 (all unique SHA-256; PASS_BOUNDED_DERIVED_QUALITY_B; no real screen capture)
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (Facebook Groups + LinkedIn Groups; fixture/public discovery only; live auth UNKNOWN)
+lifecycle: run=run_6a12be5c1b06; delivery_b57cf88667b0 acknowledged; runtime/content released; video/community settled DONE_WITH_CONCERNS, release requested but retained=user_takeover; failed scope-error dispatches retained for audit
+lanes: runtime=DONE_WITH_CONCERNS evidence=plans/growth-lead-20261102/reports/runtime.md; content=DONE_WITH_CONCERNS evidence=plans/growth-lead-20261102/reports/content.md; video=DONE_WITH_CONCERNS evidence=plans/growth-lead-20261102/reports/video.md; community=DONE_WITH_CONCERNS evidence=plans/growth-lead-20261102/reports/community.md; overview=INTEGRATED_BOUNDED growth projection + loopback media routes + public build; publish=PAUSED until READY accounts; accounts=PAUSED until credential onboarding; threads_reddit_ph_ih_x=PAUSED by MISSION-9
+CẦN NAM: 1) Mở Overview > Accounts, nhập credential cho từng account được phép dùng; không gửi credential qua terminal/chat. 2) Tự nhập MFA/CAPTCHA/OTP/checkpoint khi dashboard yêu cầu. 3) Bổ sung API token nếu nền tảng chính thức yêu cầu. 4) Nếu cap an toàn thiếu 10 slot/ngày, thêm account LinkedIn/Facebook hoặc quyền admin Page; không vượt cap. Không cần quyết định group: engine tự score/rule/join trong cap.
+blockers: P0-RUNTIME-CUTOVER: live 4318 vẫn là b1dc560 dirty, chưa thay port; owner=runtime + human approval gate | CAMOUFOX-LIVE-AUTH: credential/challenge unknown, owner=Nam for input | LIVE-PUBLICATION-METRICS: 0 verified permalink, owner=publish after READY account | VIDEO-QUALITY-A: real screen capture unavailable; current 10 are derived quality-B fallback, do not describe as capture | COMMUNITY-AUTH: no authenticated join/rule/warm-up evidence; no external join side effect
+next_30m: create fresh read-only verifier worktree from integrated snapshot; rerun final bounded checks; write verify report; inspect foreign changes and retained worker resources
+
+updated: 2026-11-01T20:16:00+07:00
+phase: P0
+runtime: 9dff92b8462b3ffff98255f9632d7f79c57ed791 dirty=false health=200 port=4321 (packaged baseline; growth build pending)
+accounts: linkedin/linkedin_nam: BLOCKED (CAMOUFOX_LAUNCH_TIMEOUT 45000ms; retry/warm-up required); facebook_group/facebook_nam: BLOCKED (EXPECTED_IDENTITY_REQUIRED; /me redirect discovery required)
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10 (quality-B fallback pending real capture)
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (live auth UNKNOWN)
+lanes: account-manual-login=BUILDING (visible retained profile + re-login); runtime=BUILDING (warm-up/timeout/retry); ui=BUILDING (Mission 11); video=PAUSED for P0; publish=PAUSED until READY
+CẦN NAM: Khi nút Đăng nhập thủ công xuất hiện, nhập Google/SSO/2FA/CAPTCHA trong cửa sổ Camoufox riêng; không dùng Chrome. | Không gửi lại mật khẩu: nút Đăng nhập lại sẽ dùng credential đã lưu Keychain.
+blockers: CAMOUFOX-LAUNCH-TIMEOUT (runtime lane, retry/warm-up); FACEBOOK-IDENTITY-DISCOVERY (runtime lane, /me redirect); LIVE-PUBLICATION (chờ READY)
+next_30m: integrate account fixes, verify source, build packaged app, preserve state, restart/re-login both accounts, record resulting READY/BLOCKED.
+
+updated: 2026-11-01T21:41:00+07:00
+phase: P0
+runtime: 9dff92b8462b3ffff98255f9632d7f79c57ed791 dirty=false health=200 port=4321 (packaged baseline; growth checkpoint pending)
+accounts: linkedin/linkedin_nam: BLOCKED (LOGIN_CONTROLS_NOT_FOUND on packaged 9dff92b); facebook_group/facebook_nam: BLOCKED (LOGIN_CONTROLS_NOT_FOUND on packaged 9dff92b)
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 existing artifacts; quality-A worker output not yet located in lead worktree; verify before release
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (live auth UNKNOWN)
+lanes: runtime=DISPATCHING (snapshot/selector/consent + /me discovery); content=CHECKPOINTED (16 drafts, 10 active LinkedIn/Facebook); video=CHECKPOINTED (worker commit integrated pending quality-A reconciliation); ui=CHECKPOINTED (launcher/service fix pending); publish=PAUSED until READY
+CẦN NAM: Chỉ khi cửa sổ Camoufox hiện CAPTCHA/MFA/OTP/checkpoint: nhập mã trong chính cửa sổ đó; không dùng Chrome/copy session. | Nếu cap không đủ 10 slot, thêm account/quyền Page; không vượt cap.
+blockers: CAMOUFOX-LOGIN-CONTROLS (runtime worker; snapshot required; ETA before 23:00) | LIVE-PUBLICATION (chờ READY; no external publish yet)
+next_30m: commit checkpoint, dispatch runtime/content verification workers, reconcile quality-A assets, build clean app, restart 4321 with state backup.

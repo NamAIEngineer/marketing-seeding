@@ -145,6 +145,7 @@ const navGroups = [
   {
     label: "",
     items: [
+      ["Hệ thống", "settings", "/system"],
       ["Báo cáo", "report", "/reports"],
       ["Tích hợp", "integration", "/integrations"],
       ["Cài đặt", "settings", "/settings"],
@@ -1969,6 +1970,72 @@ function ContentPipelinePanel({ data }: { data: R }) {
   )
 }
 
+function GrowthOverviewPanel({ data }: { data: R }) {
+  const growth = data?.growth && typeof data.growth === "object" ? data.growth : null
+  if (!growth) return null
+  const posts = Array.isArray(growth.posts) ? growth.posts : []
+  const videos = growth.videos && typeof growth.videos === "object" ? growth.videos : {}
+  const northStar = growth.northStar && typeof growth.northStar === "object" ? growth.northStar : {}
+  const community = growth.community && typeof growth.community === "object" ? growth.community : {}
+  const communityCounts = community.dashboard && typeof community.dashboard === "object" ? community.dashboard : {}
+  const surfaceLabel = (value: unknown) => String(value || "UNKNOWN").replaceAll("_", " ")
+  const unknown = (value: unknown) => value === null || value === undefined || value === "" ? "UNKNOWN" : String(value)
+  return (
+    <>
+      <section className="panel growth-today-panel full-span" aria-label="Growth hôm nay">
+        <div className="panel-head">
+          <div>
+            <h2>Hôm nay · {String(growth.date || "UNKNOWN")}</h2>
+            <p>10 bài khác nhau trên LinkedIn + Facebook. Mỗi bài có một MP4 riêng, permalink chỉ hiện khi xác minh được.</p>
+          </div>
+          <span className="status pending">target {Number(growth.targetPosts || 10)} · verified 0 · UNKNOWN</span>
+        </div>
+        <div className="growth-post-grid">
+          {posts.map((post: R, index: number) => (
+            <article className="growth-post-card" key={String(post.id || index)}>
+              <div className="growth-post-media">
+                {post.video?.videoUrl ? (
+                  <video controls preload="metadata" poster={post.video.thumbnailUrl || undefined} src={post.video.videoUrl} aria-label={`Video ${index + 1}`} />
+                ) : <div className="growth-media-missing">MP4 UNKNOWN</div>}
+              </div>
+              <div className="growth-post-copy">
+                <div className="growth-post-meta"><b>#{String(index + 1).padStart(2, "0")}</b><span>{surfaceLabel(post.channel)}</span><span>{String(post.locale || "UNKNOWN")}</span></div>
+                <strong>{unknown(post.opening)}</strong>
+                <small>Video: {unknown(post.video?.sha256)} · QA: {unknown(post.video?.qa)} · {unknown(post.video?.eligibleSurfaceAspectRatio)}</small>
+                <small>Permalink: <b>UNKNOWN</b> · publication chưa xác minh</small>
+                {post.repoUrl ? <a href={String(post.repoUrl)} target="_blank" rel="noreferrer">Repo + star ↗</a> : null}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+      <section className="panel growth-video-panel" aria-label="Video panel">
+        <div className="panel-head">
+          <div><h2>Video</h2><p>Artifact đã đăng ký loopback; quality B là derived từ reference, chưa phải screen capture thật.</p></div>
+          <span className={`status ${Number(videos.qaFail || 0) ? "failed" : "ready"}`}>{Number(videos.ready || 0)} ready · {Number(videos.qaFail || 0)} QA fail</span>
+        </div>
+        <div className="growth-kpi-row"><span><b>{Number(videos.ready || 0)}</b> hôm nay</span><span><b>{Number(videos.bufferTomorrow || 0)}</b> buffer ngày mai</span><span><b>{Number(videos.qaFail || 0)}</b> fail</span></div>
+        <div className="growth-video-list">
+          {(Array.isArray(videos.artifacts) ? videos.artifacts : []).slice(0, 10).map((item: R) => <a className="growth-video-item" key={String(item.postId)} href={String(item.videoUrl || "#")} target="_blank" rel="noreferrer"><img src={String(item.thumbnailUrl || "")} alt="" /><span><b>{String(item.postId || "UNKNOWN")}</b><small>{String(item.spec?.durationSeconds || "?")}s · {String(item.eligibleSurfaceAspectRatio || "UNKNOWN")} · {String(item.qa || "UNKNOWN")}</small></span></a>)}
+        </div>
+      </section>
+      <section className="panel growth-star-panel" aria-label="1000 stars panel">
+        <div className="panel-head"><div><h2>1000★</h2><p><a href={String(northStar.repoUrl || "https://github.com/jangtrinh/design-os-studio")} target="_blank" rel="noreferrer">design-os-studio ↗</a></p></div><span className="status pending">{String(northStar.status || "UNKNOWN")}</span></div>
+        <div className="growth-star-number">{northStar.current === null || northStar.current === undefined ? "UNKNOWN" : String(northStar.current)} <small>/ 1000 stars</small></div>
+        <div className="growth-progress"><span style={{ width: `${Math.min(100, Math.max(0, Number(northStar.current || 0) / 10))}%` }} /></div>
+        <div className="growth-star-facts"><span>+ hôm nay: <b>UNKNOWN</b></span><span>Quan sát: <b>{String(northStar.observedAt || "UNKNOWN")}</b></span></div>
+      </section>
+      <section className="panel growth-community-panel full-span" aria-label="Cộng đồng engine">
+        <div className="panel-head"><div><h2>Cộng đồng</h2><p>Facebook Groups + LinkedIn Groups · crawl, score, join capped; chỉ credential/MFA/CAPTCHA/OTP cần Nam.</p></div><span className="status pending">live auth UNKNOWN</span></div>
+        <div className="growth-kpi-row"><span>discovered <b>{String(communityCounts.discovered ?? 0)}</b></span><span>join hôm nay <b>{String(communityCounts.join_requested_today ?? 0)}</b></span><span>approved <b>{String(communityCounts.approved ?? 0)}</b></span><span>postable <b>{String(communityCounts.postable ?? 0)}</b></span></div>
+        <div className="growth-community-list">
+          {(Array.isArray(community.discoveries) ? community.discoveries : []).map((item: R) => <article key={String(item.id)}><div><b>{String(item.name || item.id || "UNKNOWN")}</b><small>{String(item.platform || "UNKNOWN")} · score {String(item.score ?? "UNKNOWN")} · rule {String(item.rules?.classification || "UNKNOWN")}</small></div><span className={`status ${item.eligible ? "ready" : "blocked"}`}>{item.eligible ? "eligible" : "blocked"}</span><a href={String(item.url || "#")} target="_blank" rel="noreferrer">Mở ↗</a></article>)}
+        </div>
+      </section>
+    </>
+  )
+}
+
 function Overview({
   data,
   select,
@@ -1980,39 +2047,77 @@ function Overview({
 }) {
   return (
     <>
-      <KpiRow data={data} />
-      <div className="filterbar">
-        <span className="sync-text">
-          Phạm vi chung: {periodLabel} · {data.postCount} bài ·{" "}
-          {data.latestMetricSnapshots?.length || 0} snapshot mới nhất theo bài ·
-          số liệu thiếu hiển thị “—”
-        </span>
-      </div>
       <div className="dashboard-grid">
-        <MissionControlPanel data={data} />
-        <ExecutionEvidencePanel data={data} />
-        <ProductFactorySafetyPanel data={data} />
-        <ProductEvidencePanel data={data} />
-        <ContentPipelinePanel data={data} />
-        <TrafficChart data={data} />
-        <TrafficSourcesPanel data={data} />
-        <ReadinessPanel data={data} />
-        <SourcesPanel data={data} />
-        <LifecycleFunnel data={data} />
-        <UserActions data={data} />
-        <ChannelTable data={data} />
-        <CommunityOverview data={data} />
-        <LeadSummary integration={data.autoGtm} />
-        <TopContent data={data} select={select} />
-        <Intelligence data={data} />
-        <SignalsAndLive data={data} />
+        <GrowthOverviewPanel data={data} />
+        <AccountSummaryPanel data={data} refresh={() => undefined} />
+        <NeedsNamPanel data={data} />
       </div>
     </>
   )
 }
 
+function accountRows(data: R): R[] {
+  const rows = Array.isArray(data?.executionAccounts) ? data.executionAccounts : []
+  return rows.length ? rows : (Array.isArray(data?.accountAgents) ? data.accountAgents : [])
+}
+
+function AccountSummaryPanel({ data, refresh }: { data: R; refresh: () => void }) {
+  const [busy, setBusy] = useState<string | null>(null)
+  const [message, setMessage] = useState("")
+  const rows = accountRows(data)
+  const statusLabel = (row: R) => {
+    const state = String(row.loginStatus || row.agentStatus || row.health || "UNKNOWN").toUpperCase()
+    return state === "READY" ? "Sẵn sàng" : state === "BLOCKED" ? "Cần mã xác minh" : state === "RUNNING" ? "Đang kiểm tra" : "Chưa kết nối"
+  }
+  const manualLogin = async (row: R) => {
+    const platform = String(row.platform || "linkedin"); const accountId = String(row.accountId || "")
+    if (!accountId) return
+    setBusy(`${platform}/${accountId}`); setMessage("Đang mở cửa sổ đăng nhập riêng…")
+    try {
+      const headers: Record<string, string> = { "content-type": "application/json" }
+      const token = sessionStorage.getItem("seedingOperatorToken") || ""; if (token) headers.authorization = `Bearer ${token}`
+      const response = await fetch("/api/account-credentials/manual-login", { method: "POST", headers, body: JSON.stringify({ platform, accountId, profileId: row.profileId || row.providerProfileId || row.profileRef }) })
+      const body = await response.json(); if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`)
+      const sessionId = String(body.sessionId || ""); if (!sessionId) throw new Error("Không tạo được phiên đăng nhập")
+      const deadline = Date.now() + 10 * 60_000
+      while (Date.now() < deadline) {
+        await new Promise(resolve => window.setTimeout(resolve, 2000))
+        const statusResponse = await fetch(`/api/account-credentials/manual-login/${encodeURIComponent(sessionId)}`, { headers: token ? { authorization: `Bearer ${token}` } : {} })
+        const status = await statusResponse.json(); if (!statusResponse.ok) throw new Error(status?.error || `HTTP ${statusResponse.status}`)
+        const state = String(status.status || "UNKNOWN").toUpperCase()
+        if (state === "READY") { setMessage(`${platform}/${accountId}: đã xác minh danh tính`); refresh(); return }
+        if (state === "BLOCKED") { setMessage(`${platform}/${accountId}: cần hoàn tất mã xác minh trong cửa sổ Camoufox`); return }
+      }
+      setMessage("Phiên đăng nhập hết thời gian chờ; có thể bấm lại để tiếp tục")
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Không mở được đăng nhập thủ công") }
+    finally { setBusy(null); refresh() }
+  }
+  const retryLogin = async (row: R) => {
+    const platform = String(row.platform || "linkedin"); const accountId = String(row.accountId || "")
+    setBusy(`${platform}/${accountId}`); setMessage("Đang thử lại bằng thông tin đã lưu an toàn…")
+    try {
+      const token = sessionStorage.getItem("seedingOperatorToken") || ""; const headers: Record<string, string> = { "content-type": "application/json" }; if (token) headers.authorization = `Bearer ${token}`
+      const response = await fetch("/api/account-credentials/retry-login", { method: "POST", headers, body: JSON.stringify({ platform, accountId }) }); const body = await response.json(); if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`)
+      setMessage(`${platform}/${accountId}: ${body?.login?.status || body?.status || "đã ghi nhận"}`); refresh()
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Không thể thử lại") }
+    finally { setBusy(null) }
+  }
+  return <section className="panel growth-account-panel" aria-label="Tài khoản"><div className="panel-head"><div><h2>Tài khoản</h2><p>Trạng thái đăng nhập của LinkedIn và Facebook. Đăng nhập thủ công mở Camoufox riêng, không dùng dữ liệu Chrome.</p></div><span className="status">{rows.length} account</span></div><div className="account-list">{rows.length ? rows.map((row: R) => { const key = `${String(row.platform || "")}/${String(row.accountId || "")}`; return <div className="account-row" key={key}><div><b>{key}</b><small>{statusLabel(row)}</small></div><div className="account-actions"><button type="button" className="secondary-button" disabled={busy === key} onClick={() => retryLogin(row)}>Đăng nhập lại</button><button type="button" className="primary-button" disabled={busy === key} onClick={() => manualLogin(row)}>{busy === key ? "Đang mở…" : "Đăng nhập thủ công"}</button></div></div> }) : <div className="empty-state">Chưa có account. Chọn “Thêm account” trong Hệ thống.</div>}</div>{message ? <small className="account-message">{message}</small> : null}</section>
+}
+
+function NeedsNamPanel({ data }: { data: R }) {
+  const rows = accountRows(data).filter((row: R) => ["BLOCKED", "UNKNOWN", "CHALLENGE", "MFA_REQUIRED"].includes(String(row.loginStatus || row.agentStatus || "UNKNOWN").toUpperCase()))
+  if (!rows.length) return null
+  return <section className="panel needs-nam-panel" aria-label="Cần Nam"><div className="panel-head"><div><h2>Cần Nam</h2><p>Chỉ hiện việc cần thao tác trực tiếp.</p></div></div><ul>{rows.map((row: R) => <li key={`${row.platform}/${row.accountId}`}>Mở <b>Tài khoản</b> → <b>Đăng nhập thủ công</b>, hoàn tất Google/SSO/2FA trong cửa sổ Camoufox riêng.</li>)}</ul></section>
+}
+
+function SystemPage({ data, refresh }: { data: R; refresh: () => void }) {
+  return <div className="page-shell"><Header data={data} title="Hệ thống" loading={false} refresh={refresh} /><OperatorSessionPanel refresh={refresh} /><AccountOnboardingPanel refresh={refresh} /><NineRouterPanel data={data} refresh={refresh} /><UpdatePanel data={data} refresh={refresh} /><StandingAuthorizationPanel data={data} refresh={refresh} /><ScheduleStatusPanel data={data} /><FanoutPlannerPanel data={data} refresh={refresh} /></div>
+}
+
 const titles: Record<string, string> = {
-  "/": "Growth intelligence",
+  "/": "Tổng quan",
+  "/system": "Hệ thống",
   "/traffic": "Phân tích traffic",
   "/engagement": "Phân tích tương tác",
   "/actions": "Phân tích hành động",
@@ -2728,14 +2833,7 @@ export default function App() {
         }
       />
       <main className="main">
-        <OperatorSessionPanel refresh={load} />
-        <AccountOnboardingPanel refresh={load} />
-        <NineRouterPanel data={data} refresh={load} />
-        <UpdatePanel data={data} refresh={load} />
-        <StandingAuthorizationPanel data={data} refresh={load} />
-        <ScheduleStatusPanel data={data} />
-        <FanoutPlannerPanel data={data} refresh={load} />
-        {Object.keys(data).length > 0 && !error ? (
+        {Object.keys(data).length > 0 && !error && path !== "/" && path !== "/system" ? (
           <DashboardScopeBar
             data={scopedData}
             sourceData={data}
@@ -2772,6 +2870,8 @@ export default function App() {
               <div />
             </div>
           </div>
+        ) : path === "/system" ? (
+          <SystemPage data={data} refresh={load} />
         ) : path === "/" ? (
           <div className="page-shell">
             <Header

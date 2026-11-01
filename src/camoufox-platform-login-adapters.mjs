@@ -395,6 +395,7 @@ function identityFromValue(rule, value) {
     ownerSurface,
     identityVerified,
     challengeDetected: value.challengeDetected === true || value.securityChallenge === true || ["challenge", "challenged", "mfa", "security_challenge"].includes(state),
+    loginDetected: value.loginDetected === true || ["login_required", "auth_required"].includes(state),
     platform: key(value.platform || evidence.platform) || null,
     accountId: text(value.accountId || value.account, 160) || null
   };
@@ -425,9 +426,18 @@ function safeIdentityEvidence(identity) {
 async function observeIdentity({ adapter, protocol, pageId, accountId, expectedIdentity }) {
   let observed = null;
   let evaluateError = null;
-  if (typeof protocol.evaluate === "function") {
-    try { observed = await protocol.evaluate(pageId, adapter.identityExpression); }
+  // The concrete Camoufox protocol performs the bounded /me or /in/me
+  // redirect before returning identity evidence. Prefer it when available;
+  // injected fixture protocols continue through the expression fallback.
+  if (typeof protocol.observeIdentity === "function") {
+    try { observed = await protocol.observeIdentity({ pageId, platform: adapter.platform, expectedIdentity }); }
     catch (error) { evaluateError = error; }
+  }
+  if (typeof protocol.evaluate === "function") {
+    if (!observed || typeof observed !== "object") {
+      try { observed = await protocol.evaluate(pageId, adapter.identityExpression); }
+      catch (error) { evaluateError = error; }
+    }
   }
   // A protocol supplied identity observation is accepted only after the same
   // descriptor-specific proof checks below. It is a fallback for injected
@@ -461,6 +471,13 @@ function identityResult(adapter, { accountId, expectedIdentity, identity, loginE
     return result("BLOCKED", "ACCOUNT_SECURITY_CHALLENGE", "Camoufox login reached a security challenge requiring owner action", {
       platform: adapter.platform, accountId, identityReference: null, identityVerified: false, authenticated: false,
       postingRights: { status: "UNKNOWN", targetId: null, reason: "login_challenge", evidence: null }, evidence,
+      nextAction: "HUMAN_REQUIRED"
+    });
+  }
+  if (identity?.loginDetected) {
+    return result("BLOCKED", "AUTH_REQUIRED", "Camoufox returned to the platform login page; owner action is required", {
+      platform: adapter.platform, accountId, identityReference: null, identityVerified: false, authenticated: false,
+      postingRights: { status: "UNKNOWN", targetId: null, reason: "login_required", evidence: null }, evidence,
       nextAction: "HUMAN_REQUIRED"
     });
   }

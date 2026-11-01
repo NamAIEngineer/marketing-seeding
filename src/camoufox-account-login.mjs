@@ -1,6 +1,6 @@
 import { readAccountCredentials } from "./account-credentials.mjs";
 
-const LOGIN_URLS = Object.freeze({ linkedin: "https://www.linkedin.com/login" });
+const LOGIN_URLS = Object.freeze({ linkedin: "https://www.linkedin.com/login", facebook: "https://www.facebook.com/login/", facebook_group: "https://www.facebook.com/login/" });
 const CHALLENGE = /captcha|verify|security check|two-factor|mfa|challenge/i;
 const AUTHENTICATED = /feed|sign out|log out/i;
 

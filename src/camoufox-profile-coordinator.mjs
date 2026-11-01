@@ -136,7 +136,7 @@ export class CamoufoxProfileCoordinator {
   #config;
   #leases = new Map();
 
-  constructor({ profileRoot, runtimePath, executablePath, runtimeMetadataPath = null, headless = true, launchOptions = {}, staleLockMs = 10 * 60 * 1000, launchTimeoutMs = 45_000, clock = () => new Date() } = {}) {
+  constructor({ profileRoot, runtimePath, executablePath, runtimeMetadataPath = null, headless = true, launchOptions = {}, staleLockMs = 10 * 60 * 1000, launchTimeoutMs = 180_000, clock = () => new Date() } = {}) {
     rejectSecrets({ profileRoot, runtimePath, executablePath, runtimeMetadataPath, headless, launchOptions, staleLockMs, launchTimeoutMs });
     if (!profileRoot || !runtimePath || !executablePath) throw fail("CAMOUFOX_COORDINATOR_CONFIG_REQUIRED", "profileRoot, runtimePath and executablePath are required");
     this.#config = Object.freeze({
@@ -182,7 +182,19 @@ export class CamoufoxProfileCoordinator {
         executable_path: this.#config.executablePath,
         user_data_dir: profileDir
       });
-      context = await boundedLaunch(() => withLaunchSlot(launch), this.#config.launchTimeoutMs, (lateContext) => lateContext.close?.());
+      let launchError;
+      for (let attempt = 1; attempt <= 2; attempt += 1) {
+        try {
+          context = await boundedLaunch(() => withLaunchSlot(launch), this.#config.launchTimeoutMs, (lateContext) => lateContext.close?.());
+          launchError = null;
+          break;
+        } catch (error) {
+          launchError = error;
+          if (String(error?.code || "") !== "CAMOUFOX_LAUNCH_TIMEOUT" || attempt === 2) break;
+          await new Promise((resolve) => setTimeout(resolve, 250));
+        }
+      }
+      if (launchError) throw launchError;
       const lease = {
         profileReference: profile,
         profileDir,

@@ -2088,6 +2088,7 @@ export class SeedingService {
     // Optional credential-backed runtime hook. The hook owns Camoufox profile
     // acquisition and returns only a bounded result (never credentials).
     this.accountAgentRunner = typeof options.accountAgentRunner === "function" ? options.accountAgentRunner : null;
+    this.manualLoginManager = options.manualLoginManager || null;
     const explicitProductRoots = options.productRepoRoots !== undefined || Boolean(String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").trim());
     this.productRepoRoots = (options.productRepoRoots || String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").split(path.delimiter))
       .map((value) => String(value || "").trim())
@@ -7110,6 +7111,14 @@ export class SeedingService {
       try { result = await this.accountAgentRunner({ account: baseline.result, platform, accountId }); }
       catch (error) { result = { status: "UNKNOWN", code: String(error?.code || "ACCOUNT_AGENT_ERROR"), reason: String(error?.message || "account agent failed") }; }
     }
+    let manualLogin = null;
+    if (result?.status === "BLOCKED" && ["ACCOUNT_SECURITY_CHALLENGE", "AUTH_REQUIRED", "SECURITY_CHALLENGE"].includes(String(result?.code || "")) && this.manualLoginManager) {
+      try {
+        manualLogin = await this.manualLoginManager.start({ platform, accountId, profileId, identityReference: baseline.result.identityReference || null });
+      } catch (error) {
+        manualLogin = { status: "UNKNOWN", code: String(error?.code || "MANUAL_LOGIN_UNAVAILABLE"), reason: "Không mở được cửa sổ đăng nhập thủ công" };
+      }
+    }
     const finishedAt = nowIso();
     const final = await this.store.mutate(actor, "account_agent_login_finished", (state) => {
       const row = state.executionAccounts.find((item) => item.id === account.id);
@@ -7118,7 +7127,53 @@ export class SeedingService {
       Object.assign(row, { ...(discoveredIdentity ? { identityReference: discoveredIdentity, expectedIdentityUrl: discoveredIdentity } : {}), agentStatus: status === "READY" ? "READY" : status === "BLOCKED" ? "BLOCKED" : "UNKNOWN", loginStatus: status, sessionHealth: status === "READY" ? "ready" : status === "BLOCKED" ? "blocked" : "unknown", health: status === "READY" ? "healthy" : status === "BLOCKED" ? "human_required" : "unknown", lastLoginAt: status === "READY" ? finishedAt : row.lastLoginAt || null, lastFailureCode: status === "READY" ? null : String(result?.code || "UNKNOWN").slice(0, 80), lastFailureReason: status === "READY" ? null : String(result?.reason || "UNKNOWN").replace(/\s+/g, " ").slice(0, 300), loginEvidenceAt: finishedAt, updatedAt: finishedAt });
       return row;
     });
-    return { account: projectOnboardedAccount(final.result), login: { status: result.status, code: result.code, reason: result.reason } };
+    return { account: projectOnboardedAccount(final.result), login: { status: result.status, code: result.code, reason: result.reason }, ...(manualLogin ? { manualLogin } : {}) };
+  }
+
+  async startManualAccountLogin(input = {}, actor = "operator") {
+    const platform = String(input.platform || "").trim().toLowerCase();
+    const accountId = String(input.accountId || "").trim();
+    if (!platform || !accountId) throw new Error("platform and accountId are required");
+    const profileId = String(input.profileId || input.providerProfileId || `camoufox-${platform}-${accountId}`).trim();
+    const account = await this.registerExecutionAccount({ platform, accountId, provider: "camoufox", providerProfileId: profileId, profileId, status: "enabled", health: "unknown", authMode: "MANUAL_AUTH" }, actor);
+    if (!this.manualLoginManager) return { account: projectOnboardedAccount(account), login: { status: "UNKNOWN", code: "MANUAL_LOGIN_UNAVAILABLE", reason: "Manual Camoufox session manager is not configured" } };
+    const session = await this.manualLoginManager.start({ platform, accountId, profileId, identityReference: account.identityReference || null });
+    await this.store.mutate(actor, "manual_account_login_started", (state) => {
+      const row = state.executionAccounts.find((item) => item.id === account.id);
+      if (row) Object.assign(row, { agentStatus: "RUNNING", loginStatus: "UNKNOWN", sessionRecoveryStatus: "HUMAN_REQUIRED", loginAttemptAt: nowIso(), lastFailureCode: null, lastFailureReason: "Đang chờ đăng nhập trong cửa sổ Camoufox", updatedAt: nowIso() });
+    });
+    return { account: projectOnboardedAccount(account), login: session };
+  }
+
+  async retryExecutionAccountLogin(input = {}, actor = "operator") {
+    const platform = String(input.platform || "").trim().toLowerCase();
+    const accountId = String(input.accountId || "").trim();
+    const snapshot = await this.store.read();
+    const account = (snapshot.executionAccounts || []).find((item) => item.platform === platform && item.accountId === accountId);
+    if (!account) throw Object.assign(new Error("account not found"), { code: "ACCOUNT_NOT_FOUND" });
+    if (!this.accountAgentRunner) return { account: projectOnboardedAccount(account), login: { status: "UNKNOWN", code: "ACCOUNT_AGENT_UNAVAILABLE", reason: "Account Agent chưa sẵn sàng" } };
+    let result;
+    try { result = await this.accountAgentRunner({ account }); } catch (error) { result = { status: "UNKNOWN", code: String(error?.code || "ACCOUNT_AGENT_ERROR"), reason: "Không thể chạy lại Account Agent" }; }
+    const status = ["READY", "BLOCKED", "UNKNOWN"].includes(result?.status) ? result.status : "UNKNOWN";
+    const at = nowIso();
+    const saved = await this.store.mutate(actor, "account_agent_retry_finished", (state) => {
+      const row = (state.executionAccounts || []).find((item) => item.platform === platform && item.accountId === accountId);
+      if (row) Object.assign(row, { ...(result?.identityReference ? { identityReference: result.identityReference, expectedIdentityUrl: result.identityReference } : {}), agentStatus: status, loginStatus: status, sessionHealth: status === "READY" ? "ready" : status === "BLOCKED" ? "blocked" : "unknown", health: status === "READY" ? "healthy" : status === "BLOCKED" ? "human_required" : "unknown", lastLoginAt: status === "READY" ? at : row.lastLoginAt || null, lastFailureCode: status === "READY" ? null : String(result?.code || "UNKNOWN").slice(0, 80), lastFailureReason: status === "READY" ? null : String(result?.reason || "UNKNOWN").slice(0, 300), updatedAt: at });
+      return row || account;
+    });
+    return { account: projectOnboardedAccount(saved.result), login: { status, code: result?.code || "UNKNOWN", reason: result?.reason || "UNKNOWN" } };
+  }
+
+  async pollManualAccountLogin(sessionId, actor = "account-manual-login") {
+    if (!this.manualLoginManager) return { status: "UNKNOWN", code: "MANUAL_LOGIN_UNAVAILABLE" };
+    const result = await this.manualLoginManager.poll(sessionId);
+    if (result.status === "READY") {
+      await this.store.mutate(actor, "manual_account_login_ready", (state) => {
+        const row = (state.executionAccounts || []).find((item) => item.platform === result.platform && item.accountId === result.accountId);
+        if (row) Object.assign(row, { identityReference: result.identityReference || row.identityReference || null, expectedIdentityUrl: result.identityReference || row.expectedIdentityUrl || null, agentStatus: "READY", loginStatus: "READY", sessionHealth: "ready", health: "healthy", lastLoginAt: nowIso(), loginEvidenceAt: nowIso(), lastFailureCode: null, lastFailureReason: null, updatedAt: nowIso() });
+      });
+    }
+    return result;
   }
 
   /** Retry only recoverable/unknown accounts. Human-required challenges stay

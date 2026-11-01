@@ -1,0 +1,11 @@
+{
+  "capturedAt": "2026-11-01T11:42:25Z",
+  "source": "/Users/nam/build-agentic-AI/.agentic/marketing-seeding/state.json",
+  "backup": "plans/growth-lead-20261102/pin/runtime-state-backup-20261101T114225Z.json",
+  "sizeBytes": 2019269,
+  "sha256": "aa7270d79dcd0eb703820d5eff4c4e0e3243785bac8bada5f1455bb49f26888b",
+  "sourceSha256AtCapture": "aa7270d79dcd0eb703820d5eff4c4e0e3243785bac8bada5f1455bb49f26888b",
+  "copyMode": "additive_copy_only",
+  "secretsAccessed": false,
+  "cutoverPerformed": false
+}

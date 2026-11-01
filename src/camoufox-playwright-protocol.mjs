@@ -129,6 +129,38 @@ function stableIdentityId(platform, value) {
   } catch { return null; }
 }
 
+function redirectIdentity(platform, value) {
+  let url;
+  try { url = new URL(String(value)); } catch { return { status: "UNKNOWN", reason: "CAMOUFOX_IDENTITY_REDIRECT_INVALID" }; }
+  const host = url.hostname.toLowerCase().replace(/^www\./, "");
+  const pathname = (url.pathname.replace(/\/{2,}/g, "/").replace(/\/$/, "") || "/").toLowerCase();
+  const challenged = /(?:checkpoint|challenge|captcha|security[-_]?check|verify)/i.test(pathname);
+  const login = /(?:^|\/)(?:login|authwall|uas\/login|recover)(?:\/|$)/i.test(pathname);
+  if (challenged) return { status: "CHALLENGED", url: url.toString() };
+  if (login) return { status: "LOGIN_REQUIRED", url: url.toString() };
+  if (platform === "linkedin") {
+    if (host !== "linkedin.com") return { status: "UNKNOWN", reason: "CAMOUFOX_IDENTITY_REDIRECT_HOST_MISMATCH", url: url.toString() };
+    const match = pathname.match(/^\/in\/([a-z0-9][a-z0-9-]{1,119})$/i);
+    if (!match || match[1].toLowerCase() === "me") return null;
+    const reference = `https://linkedin.com/in/${match[1].toLowerCase()}`;
+    return { status: "READY", identityReference: reference, stableId: match[1].toLowerCase(), source: "linkedin-me-redirect", url: url.toString() };
+  }
+  if (platform === "facebook_group") {
+    if (host !== "facebook.com") return { status: "UNKNOWN", reason: "CAMOUFOX_IDENTITY_REDIRECT_HOST_MISMATCH", url: url.toString() };
+    if (pathname === "/profile.php") {
+      const id = url.searchParams.get("id") || "";
+      if (/^\d{3,80}$/.test(id)) return { status: "READY", identityReference: `https://facebook.com/profile.php?id=${id}`, stableId: id, source: "facebook-me-redirect", url: url.toString() };
+      return null;
+    }
+    const match = pathname.match(/^\/([a-z0-9][a-z0-9._-]{2,99})$/i);
+    const reserved = new Set(["home", "groups", "pages", "watch", "marketplace", "login", "settings", "friends", "notifications", "messages", "share", "search", "photo", "reel", "events", "gaming", "me"]);
+    if (!match || reserved.has(match[1].toLowerCase())) return null;
+    const reference = `https://facebook.com/${match[1].toLowerCase()}`;
+    return { status: "READY", identityReference: reference, stableId: match[1].toLowerCase(), source: "facebook-me-redirect", url: url.toString() };
+  }
+  return null;
+}
+
 // Read the identity from the rendered LinkedIn surface itself. This expression
 // intentionally does not receive the expected profile path: the caller must
 // compare the observed result with the bound identity after evaluation. A nav
@@ -205,9 +237,49 @@ export class CamoufoxPlaywrightProtocolClient {
     const page = this.#context.pages()[0] || await this.#context.newPage(); this.#register(page);
     const platform = text(this.#expectedIdentity.platform).toLowerCase();
     const adapter = getCamoufoxPlatformLoginAdapter(platform);
-    if (platform === "linkedin" && (!/^https?:/i.test(page.url()) || !/linkedin\.com$/i.test(new URL(page.url()).hostname))) await page.goto("https://www.linkedin.com/feed/", { waitUntil: "commit", timeout: 30_000 }).catch(() => undefined);
-    if (platform !== "linkedin" && adapter) {
+    if (platform === "linkedin") {
+      let redirected = null;
       try {
+        await page.goto("https://www.linkedin.com/in/me/", { waitUntil: "commit", timeout: 30_000 });
+        redirected = redirectIdentity("linkedin", page.url());
+      } catch { redirected = redirectIdentity("linkedin", page.url()); }
+      if (redirected?.status === "CHALLENGED" || redirected?.status === "LOGIN_REQUIRED") {
+        return { state: redirected.status, provider: "camoufox", platform, accountId: text(this.#expectedIdentity.accountId), providerProfileId: this.#profileReference, profileReference: this.#profileReference, identityReference: null, expectedIdentityReference: canonicalCamoufoxIdentity(platform, this.#expectedIdentity.identityReference || this.#expectedIdentity.expectedIdentityUrl), evidence: { sessionAuthenticated: false, identityVerified: false, identitySource: null, redirectUrl: redirected.url, redirectStatus: redirected.status, identityConfidence: 0, identityAmbiguous: false, candidateCount: 0 } };
+      }
+      if (redirected?.status === "UNKNOWN" && redirected.reason) {
+        return { state: "UNKNOWN", provider: "camoufox", platform, accountId: text(this.#expectedIdentity.accountId), providerProfileId: this.#profileReference, profileReference: this.#profileReference, identityReference: null, expectedIdentityReference: canonicalCamoufoxIdentity(platform, this.#expectedIdentity.identityReference || this.#expectedIdentity.expectedIdentityUrl), evidence: { sessionAuthenticated: false, identityVerified: false, identitySource: null, redirectUrl: redirected.url || null, redirectStatus: redirected.status, identityConfidence: 0, identityAmbiguous: false, candidateCount: 0 } };
+      }
+      if (redirected?.identityReference) {
+        const expectedIdentity = canonicalCamoufoxIdentity(platform, this.#expectedIdentity.identityReference || this.#expectedIdentity.expectedIdentityUrl);
+        const identityVerified = !expectedIdentity || redirected.identityReference === expectedIdentity;
+        let readiness = { sessionAuthenticated: true, securityChallenge: false, loginRequired: false };
+        try { readiness = await page.evaluate(linkedInReadinessExpressions().context(new URL(redirected.identityReference).pathname)); } catch { /* redirect itself is the bounded proof */ }
+        const challenged = readiness.securityChallenge === true;
+        const requiresLogin = readiness.loginRequired === true;
+        return { state: challenged ? "CHALLENGED" : requiresLogin ? "LOGIN_REQUIRED" : identityVerified ? "READY" : "UNKNOWN", provider: "camoufox", platform, accountId: text(this.#expectedIdentity.accountId), providerProfileId: this.#profileReference, profileReference: this.#profileReference, identityReference: redirected.identityReference, expectedIdentityReference: expectedIdentity || null, stableIdentityId: redirected.stableId, source: redirected.source, evidence: { sessionAuthenticated: readiness.sessionAuthenticated !== false, identityVerified, stableIdentityId: redirected.stableId, stableIdentityIdVerified: identityVerified, identitySource: redirected.source, redirectUrl: redirected.url, redirectStatus: redirected.status, identityConfidence: 180, identityAmbiguous: false, candidateCount: 1 } };
+      }
+      // Test/injected protocols may not update page.url() on goto. Preserve
+      // the existing rendered-surface observer as a bounded fallback.
+      if (!/^https?:/i.test(page.url()) || !/linkedin\.com$/i.test(new URL(page.url()).hostname)) await page.goto("https://www.linkedin.com/feed/", { waitUntil: "commit", timeout: 30_000 }).catch(() => undefined);
+    }
+    if (platform === "facebook_group" && adapter) {
+      try {
+        let redirected = null;
+        try {
+          await page.goto("https://www.facebook.com/me", { waitUntil: "commit", timeout: 30_000 });
+          redirected = redirectIdentity("facebook_group", page.url());
+        } catch { redirected = redirectIdentity("facebook_group", page.url()); }
+        if (redirected?.status === "CHALLENGED" || redirected?.status === "LOGIN_REQUIRED") {
+          return { state: redirected.status, provider: "camoufox", platform, accountId: text(this.#expectedIdentity.accountId), providerProfileId: this.#profileReference, profileReference: this.#profileReference, identityReference: null, expectedIdentityReference: canonicalCamoufoxIdentity(platform, this.#expectedIdentity.identityReference || this.#expectedIdentity.expectedIdentityUrl), evidence: { sessionAuthenticated: false, identityVerified: false, identitySource: null, redirectUrl: redirected.url, redirectStatus: redirected.status, identityConfidence: 0, identityAmbiguous: false, candidateCount: 0 } };
+        }
+        if (redirected?.status === "UNKNOWN" && redirected.reason) {
+          return { state: "UNKNOWN", provider: "camoufox", platform, accountId: text(this.#expectedIdentity.accountId), providerProfileId: this.#profileReference, profileReference: this.#profileReference, identityReference: null, expectedIdentityReference: canonicalCamoufoxIdentity(platform, this.#expectedIdentity.identityReference || this.#expectedIdentity.expectedIdentityUrl), evidence: { sessionAuthenticated: false, identityVerified: false, identitySource: null, redirectUrl: redirected.url || null, redirectStatus: redirected.status, identityConfidence: 0, identityAmbiguous: false, candidateCount: 0 } };
+        }
+        if (redirected?.identityReference) {
+          const expectedIdentity = canonicalCamoufoxIdentity(platform, this.#expectedIdentity.identityReference || this.#expectedIdentity.expectedIdentityUrl);
+          const identityVerified = !expectedIdentity || redirected.identityReference === expectedIdentity;
+          return { state: identityVerified ? "READY" : "UNKNOWN", provider: "camoufox", platform, accountId: text(this.#expectedIdentity.accountId), providerProfileId: this.#profileReference, profileReference: this.#profileReference, identityReference: redirected.identityReference, expectedIdentityReference: expectedIdentity || null, stableIdentityId: redirected.stableId, source: "facebook-owner-profile-surface", evidence: { sessionAuthenticated: true, identityVerified, stableIdentityId: redirected.stableId, stableIdentityIdVerified: identityVerified, identitySource: redirected.source, redirectUrl: redirected.url, redirectStatus: redirected.status, identityConfidence: 180, identityAmbiguous: false, candidateCount: 1 } };
+        }
         const observed = await page.evaluate(adapter.identityExpression);
         const expectedIdentity = canonicalCamoufoxIdentity(platform, this.#expectedIdentity.identityReference || this.#expectedIdentity.expectedIdentityUrl);
         const observedIdentity = canonicalCamoufoxIdentity(platform, observed?.identityReference);

@@ -122,10 +122,10 @@ process.stdout.write(JSON.stringify({ browserPath, executablePath, cacheRoot: ca
 
 /** Lazy, local-first Camoufox provisioning. No credentials or provider keys are
  * touched. Package/browser downloads are integrity checked by npm/Camoufox. */
-export function createAutoCamoufoxAccountAgentRunner({ dataRoot, runtimeRoot, profileRoot, npmBin = '', headless = true, statusFile = '' } = {}) {
+export function createAutoCamoufoxAccountAgentRunner({ dataRoot, runtimeRoot, profileRoot, npmBin = '', headless = true, statusFile = '', launchTimeoutMs = 180_000 } = {}) {
   const root = path.resolve(String(runtimeRoot || path.join(dataRoot || process.cwd(), 'camoufox-runtime')));
   const profiles = path.resolve(String(profileRoot || path.join(dataRoot || process.cwd(), 'camoufox-profiles')));
-  const provision = createAutoCamoufoxProvisioner({ root, profiles, npmBin, headless, statusFile });
+  const provision = createAutoCamoufoxProvisioner({ root, profiles, npmBin, headless, statusFile, launchTimeoutMs });
   const runner = async ({ account } = {}) => {
     try {
       const runtime = await provision();
@@ -135,10 +135,22 @@ export function createAutoCamoufoxAccountAgentRunner({ dataRoot, runtimeRoot, pr
     }
   };
   runner.provision = provision;
+  runner.warmup = async () => {
+    const runtime = await provision();
+    const acquired = await runtime.coordinator.acquire({
+      provider: 'camoufox',
+      platform: 'service-warmup',
+      accountId: 'service-warmup',
+      profileReference: 'service-warmup',
+      providerProfileId: 'service-warmup'
+    });
+    if (acquired?.handle) await runtime.coordinator.release(acquired.handle);
+    return { status: 'READY', code: 'CAMOUFOX_WARMUP_COMPLETE' };
+  };
   return runner;
 }
 
-export function createAutoCamoufoxProvisioner({ root, profiles, npmBin = '', headless = true, statusFile = '', officialReleaseFallback = true, officialDownload = null, officialFetch = globalThis.fetch, officialAssetOverride = null } = {}) {
+export function createAutoCamoufoxProvisioner({ root, profiles, npmBin = '', headless = true, statusFile = '', launchTimeoutMs = 180_000, officialReleaseFallback = true, officialDownload = null, officialFetch = globalThis.fetch, officialAssetOverride = null } = {}) {
   let ready = null;
   const statusPath = path.resolve(String(statusFile || path.join(root, 'provision-status.json')));
   return async function provision() {
@@ -181,7 +193,7 @@ export function createAutoCamoufoxProvisioner({ root, profiles, npmBin = '', hea
         throw error;
       }
       const { browserPath: installedPath, executablePath } = installed;
-      const coordinator = new CamoufoxProfileCoordinator({ profileRoot: profiles, runtimePath: root, executablePath, headless });
+      const coordinator = new CamoufoxProfileCoordinator({ profileRoot: profiles, runtimePath: root, executablePath, headless, launchTimeoutMs: Math.max(120_000, Math.min(180_000, Number(launchTimeoutMs) || 180_000)) });
       const result = Object.freeze({ coordinator, executablePath, packageVersion: PINNED_CAMOUFOX, browserPath: installedPath, cacheRoot: cacheHome });
       await writeProvisionStatus(statusPath, { status: 'READY', packageVersion: PINNED_CAMOUFOX, playwrightVersion: PINNED_PLAYWRIGHT, executablePath, browserPath: installedPath, cacheRoot: cacheHome });
       return result;

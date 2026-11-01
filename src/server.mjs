@@ -41,6 +41,8 @@ import { discoverUpdate, unavailableUpdateResult } from "./update-discovery.mjs"
 import { installDiscoveredUpdate } from "./update-installer.mjs";
 import { readDesktopProvisioningStatus } from "./desktop-provisioning.mjs";
 import { ensureContentRuntime } from "./product-content-runtime.mjs";
+import { loadGrowthLeadProjection, readRegisteredGrowthAsset } from "./growth-lead-projection.mjs";
+import { ManualLoginSessionManager } from "./manual-login-session.mjs";
 
 async function loadLocalEnv() {
   try {
@@ -145,6 +147,15 @@ const autoCamoufoxExecutionResolver = createAutoCamoufoxExecutionSessionResolver
   headless: process.env.SEEDING_CAMOUFOX_HEADLESS !== "false",
   stateReader: async () => serviceRef ? serviceRef.snapshot() : { executionAccounts: [] }
 });
+const manualLoginProvision = createAutoCamoufoxAccountAgentRunner({
+  dataRoot: dataDir,
+  runtimeRoot: String(process.env.SEEDING_CAMOUFOX_RUNTIME_ROOT || path.join(dataDir, "camoufox-runtime")),
+  profileRoot: camoufoxProfileRoot || path.join(dataDir, "camoufox-profiles"),
+  npmBin: String(process.env.SEEDING_NPM_BIN || "").trim(),
+  statusFile: path.join(dataDir, "camoufox-provision-status.json"),
+  headless: false
+}).provision;
+const manualLoginManager = new ManualLoginSessionManager({ provision: manualLoginProvision });
 if (operatorToken.length < 32) {
   throw new Error("SEEDING_OPERATOR_TOKEN must contain at least 32 characters");
 }
@@ -208,6 +219,7 @@ const service = new SeedingService(store, {
   ,accountAgentRunner: configuredExecutionSessionResolver
     ? ({ account }) => runCamoufoxAccountAgent({ account, resolver: configuredExecutionSessionResolver })
     : autoCamoufoxRunner
+  ,manualLoginManager
 });
 serviceRef = service;
 const platformAdapterRegistry = new PlatformAdapterRegistry();
@@ -269,6 +281,7 @@ let jevExecutionTimer = null;
 let accountAgentRecoveryTimer = null;
 let updateDiscoveryTimer = null;
 const updateRuntime = { enabled: updatePollMinutes > 0, intervalMinutes: updatePollMinutes || null, running: false, lastStartedAt: null, lastCompletedAt: null, nextRunAt: null, result: null };
+const camoufoxWarmup = { enabled: true, running: false, startedAt: null, completedAt: null, status: "NOT_STARTED", code: null, reason: null };
 let contentRuntimeCache = null;
 let contentRuntimeCacheAt = 0;
 const contentRuntimeAutoProvision = process.env.SEEDING_CONTENT_AUTO_PROVISION === "true";
@@ -319,6 +332,28 @@ async function startContentRuntimeProvisioning() {
     contentRuntimeProvision.running = false;
     contentRuntimeProvision.completedAt = new Date().toISOString();
     if (contentRuntimeCache) contentRuntimeCache.provisioning = { ...contentRuntimeProvision };
+  }
+}
+async function startCamoufoxWarmup() {
+  if (camoufoxWarmup.running || camoufoxWarmup.status === "READY") return;
+  camoufoxWarmup.running = true;
+  camoufoxWarmup.startedAt = new Date().toISOString();
+  camoufoxWarmup.status = "RUNNING";
+  camoufoxWarmup.code = null;
+  camoufoxWarmup.reason = null;
+  try {
+    const result = typeof autoCamoufoxRunner.warmup === "function"
+      ? await autoCamoufoxRunner.warmup()
+      : { status: "UNKNOWN", code: "CAMOUFOX_WARMUP_UNAVAILABLE" };
+    camoufoxWarmup.status = result?.status === "READY" ? "READY" : "UNKNOWN";
+    camoufoxWarmup.code = String(result?.code || "CAMOUFOX_WARMUP_UNKNOWN").slice(0, 100);
+  } catch (error) {
+    camoufoxWarmup.status = "UNAVAILABLE";
+    camoufoxWarmup.code = String(error?.code || "CAMOUFOX_WARMUP_FAILED").slice(0, 100);
+    camoufoxWarmup.reason = String(error?.message || "Camoufox warm-up failed").replace(/\s+/g, " ").slice(0, 240);
+  } finally {
+    camoufoxWarmup.running = false;
+    camoufoxWarmup.completedAt = new Date().toISOString();
   }
 }
 async function readContentRuntimeStatus({ refresh = false } = {}) {
@@ -633,7 +668,10 @@ const contentTypes = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
-  ".svg": "image/svg+xml"
+  ".svg": "image/svg+xml",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".mp4": "video/mp4"
 };
 
 function sendJson(response, status, body, headers = {}) {
@@ -773,6 +811,7 @@ const server = http.createServer(async (request, response) => {
         browserTracking: await readBrowserTrafficAutomation(),
         fixtureWorker: fixtureWorker.runtime()
         ,updateDiscovery: updateRuntime
+        ,camoufoxWarmup
         ,contentRuntime: await readContentRuntimeStatus()
       });
     }
@@ -857,6 +896,7 @@ const server = http.createServer(async (request, response) => {
       const autoGtm = await readAutoGtmFeed(autoGtmFeedFile);
       return sendJson(response, 200, {
         ...(await service.dashboard()),
+        growth: await loadGrowthLeadProjection(),
         coordinator: await readCoordinatorProjection(path.join(process.env.SEEDING_COORDINATOR_STATE_ROOT || path.join(agenticRoot, ".agentic", "marketing-seeding", "project-coordinator"), "state.json")),
         autoGtm,
         marketIntelligence: projectMarketDashboard(autoGtm),
@@ -873,8 +913,22 @@ const server = http.createServer(async (request, response) => {
           dailyProduction: await readDailyProductionAutomation(),
           browserTracking: await readBrowserTrafficAutomation(),
           fixtureWorker: fixtureWorker.runtime()
+          ,camoufoxWarmup
         }
       });
+    }
+    const growthAssetMatch = url.pathname.match(/^\/api\/growth\/(video|thumbnail)\/([^/]+)$/);
+    if (request.method === "GET" && growthAssetMatch) {
+      const asset = await readRegisteredGrowthAsset(growthAssetMatch[1], decodeURIComponent(growthAssetMatch[2]));
+      if (!asset) return sendJson(response, 404, { ok: false, error: "growth_asset_not_registered" });
+      const payload = await readFile(asset.absolutePath);
+      response.writeHead(200, {
+        "content-type": asset.contentType,
+        "cache-control": "no-store",
+        "x-content-source": "registered-growth-artifact"
+      });
+      response.end(payload);
+      return;
     }
     if (request.method === "GET" && url.pathname === "/api/9router/status") {
       return sendJson(response, 200, await nineRouterStatus({ refresh: true }));
@@ -963,6 +1017,21 @@ const server = http.createServer(async (request, response) => {
         }
       }
       return sendJson(response, 201, result);
+    }
+    if (request.method === "POST" && url.pathname === "/api/account-credentials/manual-login") {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      const input = await readJson(request);
+      const result = await service.startManualAccountLogin(input, actor);
+      return sendJson(response, 202, result);
+    }
+    if (request.method === "POST" && url.pathname === "/api/account-credentials/retry-login") {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 202, await service.retryExecutionAccountLogin(await readJson(request), actor));
+    }
+    const manualLoginMatch = url.pathname.match(/^\/api\/account-credentials\/manual-login\/([^/]+)$/);
+    if (request.method === "GET" && manualLoginMatch) {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 200, await service.pollManualAccountLogin(decodeURIComponent(manualLoginMatch[1]), actor));
     }
     const credentialMatch = url.pathname.match(/^\/api\/account-credentials\/([^/]+)\/([^/]+)$/);
     if (request.method === "GET" && credentialMatch) {
@@ -1265,6 +1334,7 @@ server.listen(port, host, () => {
   // durable user storage. The server remains responsive while this bounded
   // network install runs; Overview reports RUNNING/UNAVAILABLE truthfully.
   if (contentRuntimeAutoProvision) void startContentRuntimeProvisioning();
+  void startCamoufoxWarmup();
 });
 
 if (trafficPollMinutes > 0) {
