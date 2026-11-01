@@ -244,15 +244,15 @@ async function defaultChromeProbeLauncher({ executablePath, profilePath, url }) 
 async function defaultChromeHistoryReader(profilePath) {
   const history = path.join(profilePath, "Default", "History");
   const query = "SELECT url,title,last_visit_time FROM urls ORDER BY last_visit_time DESC LIMIT 40;";
-  const parse = (stdout) => String(stdout || "").trim().split("\\n").filter(Boolean).map((line) => { const [url, title, stamp] = line.split("\\t"); return { url, title, lastVisitTime: Number(stamp) || 0 }; });
+  const parse = (stdout) => String(stdout || "").trim().split("\n").filter(Boolean).map((line) => { const [url, title, stamp] = line.split("\t"); return { url, title, lastVisitTime: Number(stamp) || 0 }; });
   try {
-    const { stdout } = await execFileAsync("sqlite3", ["-readonly", history, "-separator", "\\t", query], { timeout: 5_000, maxBuffer: 256 * 1024 });
+    const { stdout } = await execFileAsync("sqlite3", ["-readonly", history, "-separator", "\t", query], { timeout: 5_000, maxBuffer: 256 * 1024 });
     return parse(stdout);
   } catch {
     // Chrome holds a write lock on its live History DB. Immutable read-only
     // mode reads the last committed navigation without modifying the profile.
     try {
-      const { stdout } = await execFileAsync("sqlite3", ["-readonly", `file:${history}?immutable=1`, "-separator", "\\t", query], { timeout: 5_000, maxBuffer: 256 * 1024 });
+      const { stdout } = await execFileAsync("sqlite3", ["-readonly", `file:${history}?immutable=1`, "-separator", "\t", query], { timeout: 5_000, maxBuffer: 256 * 1024 });
       return parse(stdout);
     } catch { return []; }
   }
