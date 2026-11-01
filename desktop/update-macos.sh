@@ -1,0 +1,123 @@
+#!/bin/sh
+set -eu
+
+# Validate the extracted candidate before codesign/swap.  An archive can carry
+# a validly signed but unrelated application; accepting it would replace the
+# Marketing Seeding runtime with an arbitrary bundle.  Keep this check small,
+# deterministic, and independent of the current app contents.
+validate_app_bundle() {
+  CANDIDATE=${1:?candidate app bundle path required}
+  [ -d "$CANDIDATE" ] || { echo "candidate app bundle is not a directory" >&2; return 1; }
+  INFO="$CANDIDATE/Contents/Info.plist"
+  [ -f "$INFO" ] || { echo "candidate app Info.plist missing" >&2; return 1; }
+  IDENTIFIER=$(/usr/bin/plutil -extract CFBundleIdentifier raw -o - "$INFO" 2>/dev/null || true)
+  EXECUTABLE=$(/usr/bin/plutil -extract CFBundleExecutable raw -o - "$INFO" 2>/dev/null || true)
+  [ "$IDENTIFIER" = "ai.marketing-seeding.local" ] || { echo "candidate bundle identifier mismatch" >&2; return 1; }
+  [ "$EXECUTABLE" = "launch" ] || { echo "candidate bundle executable mismatch" >&2; return 1; }
+  [ -x "$CANDIDATE/Contents/MacOS/launch" ] || { echo "candidate launch executable missing" >&2; return 1; }
+  for MARKER in \
+    "$CANDIDATE/Contents/Resources/app/source-commit.txt" \
+    "$CANDIDATE/Contents/Resources/app/update-macos.sh" \
+    "$CANDIDATE/Contents/Resources/app/package.json"; do
+    [ -f "$MARKER" ] || { echo "candidate resource marker missing: $MARKER" >&2; return 1; }
+  done
+  EXPECTED_TEAM_ID=${SEEDING_UPDATE_EXPECTED_SIGNER_TEAM_ID:-}
+  EXPECTED_REQUIREMENT=${SEEDING_UPDATE_EXPECTED_SIGNER_REQUIREMENT:-}
+  [ -n "$EXPECTED_TEAM_ID" ] || { echo "expected signer Team ID is not configured" >&2; return 1; }
+  [ -n "$EXPECTED_REQUIREMENT" ] || { echo "expected signer requirement is not configured" >&2; return 1; }
+  SIGNER_DETAILS=$(/usr/bin/codesign --display --verbose=4 "$CANDIDATE" 2>&1) || { echo "candidate signer metadata unavailable" >&2; return 1; }
+  ACTUAL_TEAM_ID=$(printf '%s\n' "$SIGNER_DETAILS" | awk -F= '/^TeamIdentifier=/{print $2; exit}')
+  [ "$ACTUAL_TEAM_ID" = "$EXPECTED_TEAM_ID" ] || { echo "candidate signer Team ID mismatch" >&2; return 1; }
+  /usr/bin/codesign --verify --deep --strict -R="$EXPECTED_REQUIREMENT" "$CANDIDATE" >/dev/null 2>&1 || { echo "candidate signer requirement mismatch" >&2; return 1; }
+}
+
+find_release_app() {
+  UNPACKED=${1:?unpacked release directory required}
+  APP_COUNT=$(find "$UNPACKED" -maxdepth 2 -type d -name '*.app' -print | wc -l | tr -d ' ')
+  [ "$APP_COUNT" = "1" ] || { echo "release archive must contain exactly one app bundle (found $APP_COUNT)" >&2; return 1; }
+  APP_PATH=$(find "$UNPACKED" -maxdepth 2 -type d -name '*.app' -print -quit)
+  [ "$(basename "$APP_PATH")" = "Marketing Seeding OS.app" ] || { echo "release archive app bundle name mismatch" >&2; return 1; }
+  printf '%s\n' "$APP_PATH"
+}
+
+# Offline fixture hook used by focused tests.  It validates only the supplied
+# bundle and never downloads, verifies signatures, launches, or swaps files.
+if [ "${SEEDING_UPDATE_VALIDATE_TEST:-0}" = "1" ]; then
+  validate_app_bundle "$1"
+  exit $?
+fi
+
+# Offline fixture hook used by focused tests. It enumerates only the extracted
+# archive and never validates, downloads, launches, or swaps an app.
+if [ "${SEEDING_UPDATE_ARCHIVE_SELECT_TEST:-0}" = "1" ]; then
+  find_release_app "$1"
+  exit $?
+fi
+
+# Replace a bundle at its exact path. The current app is first moved out of
+# the way, so `mv staged current` cannot turn into a nested app directory.
+# On any failed install, restore the old path or fail closed if the destination
+# was unexpectedly recreated and cannot be safely rolled back.
+swap_app() {
+  CURRENT_APP=${1:?current app bundle path required}
+  STAGED_APP=${2:?staged app bundle path required}
+  TARGET_DIR=$(dirname "$CURRENT_APP")
+  ROLLBACK_APP="$TARGET_DIR/.Marketing-Seeding-OS.rollback.$$"
+  rm -rf "$ROLLBACK_APP"
+
+  if ! mv "$CURRENT_APP" "$ROLLBACK_APP"; then
+    echo "unable to move current app aside; update not applied" >&2
+    return 1
+  fi
+  if mv "$STAGED_APP" "$CURRENT_APP"; then
+    if ! rm -rf "$ROLLBACK_APP"; then
+      echo "updated but rollback path cleanup failed: $ROLLBACK_APP" >&2
+      return 1
+    fi
+    return 0
+  fi
+
+  # A failed move should leave the exact destination absent. Refuse to remove
+  # an unexpected path; the durable backup remains available for recovery.
+  if [ -e "$CURRENT_APP" ]; then
+    echo "staged app move failed and destination was recreated; refusing unsafe rollback" >&2
+    return 2
+  fi
+  if mv "$ROLLBACK_APP" "$CURRENT_APP"; then
+    echo "staged app move failed; previous app restored" >&2
+    return 1
+  fi
+  echo "staged app move failed and previous app could not be restored" >&2
+  return 2
+}
+
+# Offline fixture hook used by focused tests. It performs only the bounded
+# sibling swap above and never downloads, verifies, launches, or writes data.
+if [ "${SEEDING_UPDATE_SWAP_TEST:-0}" = "1" ]; then
+  swap_app "$1" "$2"
+  exit $?
+fi
+
+APP=${1:?current app bundle path required}
+RELEASE_URL=${SEEDING_RELEASE_URL:?signed release URL required}
+EXPECTED_SHA256=${SEEDING_RELEASE_SHA256:?release SHA-256 required}
+DATA_ROOT="$HOME/Library/Application Support/Marketing Seeding OS"
+TMP_DIR=$(mktemp -d)
+ARCHIVE="$TMP_DIR/release.zip"
+BACKUP="$DATA_ROOT/update-backups/$(date -u +%Y%m%dT%H%M%SZ)"
+trap 'rm -rf "$TMP_DIR"' EXIT
+mkdir -p "$BACKUP"
+/usr/bin/curl --fail --location --proto '=https' --tlsv1.2 "$RELEASE_URL" -o "$ARCHIVE"
+ACTUAL_SHA256=$(/usr/bin/shasum -a 256 "$ARCHIVE" | awk '{print $1}')
+[ "$ACTUAL_SHA256" = "$EXPECTED_SHA256" ] || { echo "release checksum mismatch" >&2; exit 1; }
+/usr/bin/ditto -x -k "$ARCHIVE" "$TMP_DIR/unpacked"
+NEW_APP=$(find_release_app "$TMP_DIR/unpacked")
+validate_app_bundle "$NEW_APP"
+/usr/bin/ditto "$APP" "$BACKUP/previous.app"
+[ -f "$DATA_ROOT/state.json" ] && /usr/bin/cp "$DATA_ROOT/state.json" "$BACKUP/state.json"
+TARGET_DIR=$(dirname "$APP")
+STAGED="$TARGET_DIR/.Marketing-Seeding-OS.new.app"
+rm -rf "$STAGED"
+/usr/bin/ditto "$NEW_APP" "$STAGED"
+swap_app "$APP" "$STAGED"
+echo "updated; durable state backup: $BACKUP"

@@ -20,6 +20,12 @@ function validateHttpsIdentityUrl(platform, value, { hosts, pathPattern }) {
   return url.toString();
 }
 
+// Camoufox owns the strict, platform-specific identity grammar for the
+// supported social surfaces. Reuse those canonicalizers at the shared
+// execution-binding boundary so explicit account onboarding and browser
+// evidence use one exact representation (including Facebook numeric IDs).
+import { normalizeCamoufoxIdentityReference } from "./camoufox-platform-login-adapters.mjs";
+
 export const POST_PUBLISH_MEDIA_HASH_CAPABILITIES = Object.freeze(["REQUIRED", "NOT_AVAILABLE"]);
 
 export class PlatformPolicyRegistry {
@@ -111,16 +117,17 @@ export class PlatformPolicyRegistry {
 }
 
 export const defaultPlatformPolicies = new PlatformPolicyRegistry({
-  facebook_group: { allowedTargetHosts: ["facebook.com"] },
-  facebook: { allowedTargetHosts: ["facebook.com"] },
-  threads: { allowedTargetHosts: ["threads.net", "threads.com"] },
+  facebook_group: { allowedTargetHosts: ["facebook.com"], normalizeIdentityUrl: (value) => normalizeCamoufoxIdentityReference("facebook_group", value) || (() => { throw new Error("Expected identity URL for facebook_group does not match its platform policy"); })() },
+  facebook: { allowedTargetHosts: ["facebook.com"], normalizeIdentityUrl: (value) => normalizeCamoufoxIdentityReference("facebook_group", value) || (() => { throw new Error("Expected identity URL for facebook does not match its platform policy"); })() },
+  threads: { allowedTargetHosts: ["threads.net", "threads.com"], normalizeIdentityUrl: (value) => normalizeCamoufoxIdentityReference("threads", value) || (() => { throw new Error("Expected identity URL for threads does not match its platform policy"); })() },
   reddit: {
     allowedTargetHosts: ["reddit.com"],
+    normalizeIdentityUrl: (value) => normalizeCamoufoxIdentityReference("reddit", value) || (() => { throw new Error("Expected identity URL for reddit does not match its platform policy"); })(),
     targetUrlError: "Reddit target URL must identify a specific subreddit or user profile",
     validateTargetUrl: (url) => /^\/(?:r\/[^/]+|user\/[^/]+)/i.test(url.pathname)
   },
-  product_hunt: { allowedTargetHosts: ["producthunt.com"] },
-  indie_hackers: { allowedTargetHosts: ["indiehackers.com"] },
+  product_hunt: { allowedTargetHosts: ["producthunt.com"], normalizeIdentityUrl: (value) => normalizeCamoufoxIdentityReference("product_hunt", value) || (() => { throw new Error("Expected identity URL for product_hunt does not match its platform policy"); })() },
+  indie_hackers: { allowedTargetHosts: ["indiehackers.com"], normalizeIdentityUrl: (value) => normalizeCamoufoxIdentityReference("indie_hackers", value) || (() => { throw new Error("Expected identity URL for indie_hackers does not match its platform policy"); })() },
   linkedin: {
     allowedTargetHosts: ["linkedin.com", "lnkd.in"],
     requiresIdentityUrl: true,

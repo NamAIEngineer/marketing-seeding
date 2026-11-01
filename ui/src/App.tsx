@@ -1170,6 +1170,9 @@ function MissionControlPanel({ data }: { data: R }) {
   const sessionRows = Array.isArray(sessionReadiness?.rows) ? sessionReadiness.rows.slice(0, 12) : []
   const camoufoxSession = data?.camoufoxSession && typeof data.camoufoxSession === "object" ? data.camoufoxSession : null
   const camoufoxSessionRows = Array.isArray(camoufoxSession?.sessions) ? camoufoxSession.sessions.slice(0, 12) : []
+  const nineRouter = data?.nineRouter && typeof data.nineRouter === "object" ? data.nineRouter : null
+  const provisioning = data?.provisioning && typeof data.provisioning === "object" ? data.provisioning : null
+  const fanoutPlans = Array.isArray(data?.fanoutPlans) ? data.fanoutPlans : []
   const unsupportedClaimCount = productIntelligence.reduce((total: number, item: R) => {
     const document = item?.document && typeof item.document === "object" ? item.document : {}
     return total + (Array.isArray(document.CLAIMS_WE_CANNOT_MAKE) ? document.CLAIMS_WE_CANNOT_MAKE.length : 0)
@@ -1328,6 +1331,20 @@ function MissionControlPanel({ data }: { data: R }) {
             })}
           </div>
         ) : <div className="empty-state">Chưa có account agent projection.</div>}
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head">
+          <div><span className="mission-eyebrow">9Router model gateway</span><small>Live authenticated catalog · quota inferred only from observed requests</small></div>
+          <span className={nineRouter?.authenticated ? "status completed" : "status draft"}>{compactText(nineRouter?.catalogStatus, "CONNECT_REQUIRED", 32)}</span>
+        </div>
+        <div className="mission-account-list">
+          <article><div className="mission-account-title"><strong>{compactText(nineRouter?.selection?.model, "UNKNOWN", 100)}</strong><span className="status">{compactText(nineRouter?.quotaStatus, "UNVERIFIED", 32)}</span></div><small>{compactText(nineRouter?.selection?.reason, "No model selected", 180)}</small><small>{Array.isArray(nineRouter?.models) ? nineRouter.models.length : 0} models · binary {compactText(nineRouter?.binary?.version, "UNKNOWN", 24)} · key {nineRouter?.security?.keyStored ? compactText(nineRouter?.security?.keyStorage, "stored", 40) : "CONNECT_REQUIRED"}</small></article>
+          <article><div className="mission-account-title"><strong>Provisioning</strong><span className="status">{compactText(provisioning?.nineRouter?.status, "UNKNOWN", 32)}</span></div><small>Camoufox {compactText(provisioning?.camoufox?.status, "UNKNOWN", 32)} · pinned {compactText(provisioning?.camoufox?.expectedVersion, "UNKNOWN", 20)}</small><small>Provider login remains user-owned in 9Router; no provider credentials imported.</small></article>
+        </div>
+      </div>
+      <div className="mission-account-runtime">
+        <div className="mission-account-head"><div><span className="mission-eyebrow">Campaign fan-out</span><small>All Social expands only to eligible social Account Agents; each row remains isolated.</small></div><span className="status">{fanoutPlans.reduce((count: number, plan: R) => count + Number(plan?.ready || 0), 0)} READY</span></div>
+        {fanoutPlans.length ? <div className="mission-account-list">{fanoutPlans.slice(0, 4).map((plan: R) => <article key={String(plan.campaignId)}><div className="mission-account-title"><strong>{compactText(plan.campaignId, "UNKNOWN", 70)}</strong><span className="status">{compactText(plan.mode, "UNKNOWN", 32)}</span></div><small>{Array.isArray(plan.channels) ? plan.channels.join(" · ") : "UNKNOWN"} · {Number(plan.ready || 0)} ready · {Number(plan.blocked || 0)} blocked</small>{(plan.rows || []).slice(0, 8).map((row: R) => <small key={`${row.channel}:${row.accountId}`}>{row.channel}/{row.accountId}: {row.status} · {Array.isArray(row.reasons) && row.reasons.length ? row.reasons.join(" · ") : "eligible"}</small>)}</article>)}</div> : <div className="empty-state">Chưa có fan-out plan.</div>}
       </div>
       <div className="mission-account-runtime">
         <div className="mission-account-head">
@@ -1907,6 +1924,51 @@ function ProductEvidencePanel({ data }: { data: R }) {
   )
 }
 
+function ContentPipelinePanel({ data }: { data: R }) {
+  const runs = Array.isArray(data?.recentContentPipelineRuns)
+    ? data.recentContentPipelineRuns.slice(0, 6)
+    : []
+  const runtime = data?.contentRuntime && typeof data.contentRuntime === "object" ? data.contentRuntime : null
+  const succeeded = runs.filter((run: R) => run?.status === "SUCCEEDED")
+  const failed = runs.filter((run: R) => run?.status === "FAILED")
+  return (
+    <section className="panel mission-execution-panel full-span" aria-label="Content media pipeline">
+      <div className="panel-head">
+        <div>
+          <h2>Content, report and media</h2>
+          <p>Live pipeline lineage from canonical campaign state. Evidence, copy, MP4 and typed failures stay visible.</p>
+        </div>
+        <span className={`status ${runtime?.ready === true ? "completed" : runtime?.status === "UNAVAILABLE" ? "failed" : "draft"}`}>
+          {runtime ? `${String(runtime.status || "UNKNOWN")} · ${runs.length ? `${succeeded.length} succeeded · ${failed.length} failed` : "No runs"}` : "Runtime unknown"}
+        </span>
+      </div>
+      {!runs.length ? (
+        <div className="empty-state">No content pipeline run has been recorded.</div>
+      ) : (
+        <div className="mission-execution-grid">
+          {runtime ? (
+            <article>
+              <span className="mission-eyebrow">Research/media runtime</span>
+              <strong>{String(runtime.status || "UNKNOWN")}</strong>
+              <small>{String(runtime.mode || "LOCAL")} · Python {String(runtime.python?.status || "UNKNOWN")} · ffmpeg {String(runtime.ffmpeg?.status || "UNKNOWN")}</small>
+              <small>{runtime.failure ? String(runtime.failure.code || "RUNTIME_UNAVAILABLE") : "Preflight verified"}</small>
+              <small>Provisioning: {runtime.provisioning?.running ? "RUNNING" : runtime.provisioning?.attempted ? (runtime.provisioning?.error || "completed") : "not attempted"}</small>
+            </article>
+          ) : null}
+          {runs.map((run: R) => (
+            <article key={`${String(run?.campaignId)}-${String(run?.runId)}`}>
+              <span className="mission-eyebrow">{String(run?.campaignId || "UNKNOWN")}</span>
+              <strong>{String(run?.status || "UNKNOWN")}</strong>
+              <small>{String(run?.mode || "UNKNOWN")} · {Number(run?.evidence?.length || 0)} evidence · {run?.media?.sha256 ? "MP4 verified" : "No MP4"}</small>
+              {run?.failure ? <small>{String(run.failure.code || "FAILED")} · {String(run.failure.message || "")}</small> : null}
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
 function Overview({
   data,
   select,
@@ -1931,6 +1993,7 @@ function Overview({
         <ExecutionEvidencePanel data={data} />
         <ProductFactorySafetyPanel data={data} />
         <ProductEvidencePanel data={data} />
+        <ContentPipelinePanel data={data} />
         <TrafficChart data={data} />
         <TrafficSourcesPanel data={data} />
         <ReadinessPanel data={data} />
@@ -2243,6 +2306,205 @@ function DashboardScopeBar({
     </section>
   )
 }
+
+function OperatorSessionPanel({ refresh }: { refresh: () => void }) {
+  const [token, setToken] = useState(() => { try { return sessionStorage.getItem("seedingOperatorToken") || "" } catch { return "" } })
+  const [status, setStatus] = useState("")
+  const connect = async (event: React.FormEvent) => {
+    event.preventDefault(); setStatus("Đang kiểm tra token…")
+    try {
+      const response = await fetch("/api/operator/session", { headers: { authorization: `Bearer ${token.trim()}` } })
+      if (!response.ok) throw new Error("Token không hợp lệ")
+      sessionStorage.setItem("seedingOperatorToken", token.trim()); setToken(""); setStatus("Đã kết nối phiên vận hành cục bộ"); refresh()
+    } catch (error) { setStatus(error instanceof Error ? error.message : "Không thể kết nối token") }
+  }
+  return <section className="panel full-span"><div className="panel-head"><div><h2>Phiên vận hành cục bộ</h2><p>Token chỉ nằm trong sessionStorage của cửa sổ này; không lưu vào state hoặc repo.</p></div></div><form onSubmit={connect} className="scope-selects"><input required type="password" value={token} onChange={event => setToken(event.target.value)} placeholder="operator token" autoComplete="off" /><button className="primary-button" type="submit">Kết nối</button><button type="button" className="secondary-button" onClick={() => { sessionStorage.removeItem("seedingOperatorToken"); setStatus("Đã ngắt phiên"); refresh() }}>Ngắt</button></form>{status ? <small>{status}</small> : null}</section>
+}
+
+function UpdatePanel({ data, refresh }: { data: R, refresh: () => void }) {
+  const update = data?.update && typeof data.update === "object" ? data.update : {}
+  const [status, setStatus] = useState("")
+  const [busy, setBusy] = useState(false)
+  const token = () => {
+    try { return sessionStorage.getItem("seedingOperatorToken") || "" } catch { return "" }
+  }
+  const check = async () => {
+    setBusy(true)
+    try {
+      const response = await fetch("/api/update/status", { cache: "no-store" })
+      const body = await response.json()
+      if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`)
+      setStatus(`${body.status || "UNKNOWN"}: ${body.reason || "đã kiểm tra"}`)
+      refresh()
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Không thể kiểm tra cập nhật")
+    } finally { setBusy(false) }
+  }
+  const install = async () => {
+    const operatorToken = token()
+    if (!operatorToken) { setStatus("Kết nối token vận hành trước"); return }
+    setBusy(true)
+    setStatus("Đang xác minh manifest, checksum và chữ ký…")
+    try {
+      const response = await fetch("/api/update/install", {
+        method: "POST",
+        headers: { authorization: `Bearer ${operatorToken}` },
+      })
+      const body = await response.json()
+      if (!response.ok && response.status !== 202) throw new Error(body?.error || body?.installation?.reason || `HTTP ${response.status}`)
+      setStatus(body?.installation?.reason || "Cập nhật đã được cài; ứng dụng cần khởi động lại")
+      refresh()
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Không thể cài cập nhật")
+    } finally { setBusy(false) }
+  }
+  const eligible = update.installEligible === true && update.automaticUpdates === true && update.signatureVerified === true
+  const installStatus = update.installation?.status
+  return <section className="panel full-span" aria-label="Cập nhật ứng dụng">
+    <div className="panel-head"><div><h2>Cập nhật ứng dụng</h2><p>Manifest HTTPS, SHA-256, chữ ký Ed25519 và updater macOS phải được xác minh trước khi cài. Tài khoản, campaign, lịch và lịch sử vẫn nằm ngoài app bundle.</p></div><span className={`status ${eligible ? "ready" : "pending"}`}>{String(update.status || "NOT_CONFIGURED")}</span></div>
+    <div className="scope-summary"><span>Phiên bản hiện tại: {String(update.currentVersion || "UNKNOWN")}</span><span>{update.updateAvailable ? `Bản mới: ${String(update.manifest?.version || "UNKNOWN")}` : "Không có bản mới đã xác minh"}</span><span>Chữ ký: {update.signatureVerified ? "VERIFIED" : "UNVERIFIED"}</span><span>Installer: {update.installEligible ? "ELIGIBLE" : "BLOCKED"}</span></div>
+    <div className="scope-selects"><button type="button" className="secondary-button" onClick={check} disabled={busy}>{busy ? "Đang kiểm tra…" : "Kiểm tra cập nhật"}</button><button type="button" className="primary-button" onClick={install} disabled={busy || !eligible}>Cài bản cập nhật đã xác minh</button>{installStatus ? <span>{String(installStatus)}</span> : null}</div>
+    <small>{String(update.reason || "Release manifest chưa cấu hình")} {status ? `· ${status}` : ""}</small>
+  </section>
+}
+
+function NineRouterPanel({ data, refresh }: { data: R, refresh: () => void }) {
+  const router = data?.nineRouter && typeof data.nineRouter === "object" ? data.nineRouter : {}
+  const provisioning = data?.provisioning && typeof data.provisioning === "object" ? data.provisioning : {}
+  const routerProvisioning = provisioning?.nineRouter && typeof provisioning.nineRouter === "object" ? provisioning.nineRouter : {}
+  const [task, setTask] = useState("research")
+  const [preferredModel, setPreferredModel] = useState("")
+  const [apiKey, setApiKey] = useState("")
+  const [status, setStatus] = useState("")
+  const choose = async (event: React.FormEvent) => {
+    event.preventDefault(); const token = sessionStorage.getItem("seedingOperatorToken") || ""; if (!token) { setStatus("Kết nối token vận hành trước"); return }
+    try { const response = await fetch("/api/9router/select-model", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}` }, body: JSON.stringify({ task, preferredModel: preferredModel || null }) }); const body = await response.json(); if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`); setStatus(`${body.model || "UNKNOWN"}: ${body.reason || "UNKNOWN"}`); refresh() } catch (error) { setStatus(error instanceof Error ? error.message : "Không thể chọn model") }
+  }
+  const connect = async (event: React.FormEvent) => {
+    event.preventDefault(); const token = sessionStorage.getItem("seedingOperatorToken") || ""; if (!token) { setStatus("Kết nối token vận hành trước"); return }
+    if (!apiKey.trim()) { setStatus("Nhập app-scoped API key từ 9Router dashboard"); return }
+    try { const response = await fetch("/api/9router/connect", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}` }, body: JSON.stringify({ apiKey: apiKey.trim() }) }); const body = await response.json(); if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`); setApiKey(""); setStatus(`${body.catalogStatus || "CONNECTED"}: ${body.models?.length || 0} model live`); refresh() } catch (error) { setStatus(error instanceof Error ? error.message : "Không thể kết nối 9Router") }
+  }
+  const models = Array.isArray(router.models) ? router.models : []
+  const connectRequired = router.connectRequired !== false || String(router.catalogStatus || "CONNECT_REQUIRED") === "CONNECT_REQUIRED"
+  const dashboardUrl = String(router.dashboardUrl || "http://127.0.0.1:20128/dashboard")
+  const binaryLabel = router.binary?.verified === true ? `verified ${String(router.binary?.version || router.expectedVersion || "")}` : (router.binary?.version ? `unverified ${String(router.binary.version)}` : "not detected")
+  const provisioningLabel = String(routerProvisioning.status || "UNKNOWN")
+  return <section className="panel full-span"><div className="panel-head"><div><h2>9Router model gateway</h2><p>Catalog authenticated từ 9Router /v1/models; quota chỉ được đánh dấu sau request thực tế. Provider login vẫn do user thực hiện trong 9Router.</p></div><span className="status">{String(router.catalogStatus || "CONNECT_REQUIRED")}</span></div>{connectRequired ? <div className="router-first-run" role="status"><div className="mission-account-title"><strong>Kết nối 9Router một lần</strong><span className="status">{provisioningLabel}</span></div><p>Ứng dụng tự provision hoặc dùng 9Router {String(router.expectedVersion || "0.5.109")} có sẵn, rồi chạy gateway local. Trạng thái hiện tại: <strong>{provisioningLabel}</strong> · binary {binaryLabel}.</p><ol><li>Mở 9Router dashboard, đăng nhập các AI provider của bạn trong 9Router.</li><li>Tạo hoặc copy một <strong>app-scoped API key</strong> từ dashboard.</li><li>Dán key một lần bên dưới. App sẽ gọi authenticated <code>/v1/models</code> để xác nhận catalog.</li></ol><div className="scope-selects"><a className="secondary-button" href={dashboardUrl} target="_blank" rel="noreferrer">Mở 9Router dashboard</a><small>Không có zero-touch pairing được upstream công khai hỗ trợ; app không đọc password dashboard, private token, cookie hoặc provider key.</small></div></div> : null}{connectRequired ? <form onSubmit={connect} className="scope-selects"><input type="password" value={apiKey} onChange={event => setApiKey(event.target.value)} placeholder="9Router app-scoped API key" autoComplete="off" aria-label="9Router app-scoped API key" /><button className="secondary-button" type="submit">Kết nối và kiểm tra /v1/models</button></form> : null}<form onSubmit={choose} className="scope-selects"><select value={task} onChange={event => setTask(event.target.value)}><option value="research">Research</option><option value="content">Content</option><option value="media">Media / vision</option><option value="code">Code</option></select><select value={preferredModel} onChange={event => setPreferredModel(event.target.value)}><option value="">Auto compatible fallback</option>{models.map((model: R) => <option key={String(model.id)} value={String(model.id)}>{String(model.id)}</option>)}</select><button className="primary-button" type="submit">Chọn model</button></form><small>Selected: {String(router.selection?.model || "UNKNOWN")} · {String(router.selection?.reason || "chưa chọn")} · {models.length} model · quota {String(router.quotaStatus || "UNVERIFIED")}</small>{status ? <small>{status}</small> : null}</section>
+}
+
+function FanoutPlannerPanel({ data, refresh }: { data: R, refresh: () => void }) {
+  const campaigns = Array.isArray(data?.campaigns) ? data.campaigns : []
+  const accounts = Array.isArray(data?.executionAccounts) ? data.executionAccounts.filter((item: R) => item?.provider === "camoufox") : []
+  const channels = Array.isArray(data?.channels) ? data.channels.filter((item: R) => item?.id !== "email") : []
+  const [campaignId, setCampaignId] = useState("")
+  const [selectedChannels, setSelectedChannels] = useState<string[]>([])
+  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([])
+  const [allSocial, setAllSocial] = useState(false)
+  const [status, setStatus] = useState("")
+  const plan = async (event: React.FormEvent) => {
+    event.preventDefault(); const token = sessionStorage.getItem("seedingOperatorToken") || ""; if (!token || !campaignId) { setStatus("Kết nối token và chọn campaign trước"); return }
+    try { const response = await fetch(`/api/campaigns/${encodeURIComponent(campaignId)}/fanout-plan`, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}` }, body: JSON.stringify({ allSocial, channels: allSocial ? undefined : selectedChannels, accountIds: selectedAccounts, execute: true }) }); const body = await response.json(); if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`); const execution = body.execution; setStatus(`${body.ready || 0} READY · ${body.blocked || 0} BLOCKED${execution ? ` · ${execution.targetIds?.length || 0} queued for guarded execution` : ""}`); refresh() } catch (error) { setStatus(error instanceof Error ? error.message : "Không thể tạo fan-out plan") }
+  }
+  return <section className="panel full-span"><div className="panel-head"><div><h2>Campaign fan-out</h2><p>All Social fan-out và queue tự động qua từng Account Agent đủ session, identity, target readiness và standing authority. Mọi post vẫn qua readiness, quota, kill switch và UNKNOWN quarantine.</p></div></div><form onSubmit={plan} className="scope-selects"><select required value={campaignId} onChange={event => setCampaignId(event.target.value)}><option value="">Chọn campaign</option>{campaigns.map((campaign: R) => <option key={String(campaign.id)} value={String(campaign.id)}>{String(campaign.name || campaign.id)}</option>)}</select><label><input type="checkbox" checked={allSocial} onChange={event => setAllSocial(event.target.checked)} /> All Social</label>{!allSocial && channels.map((channel: R) => <label key={String(channel.id)}><input type="checkbox" checked={selectedChannels.includes(String(channel.id))} onChange={event => setSelectedChannels(current => event.target.checked ? [...new Set([...current, String(channel.id)])] : current.filter(item => item !== String(channel.id)))} /> {String(channel.label || channel.id)}</label>)}{accounts.length ? <fieldset className="account-picker"><legend>Accounts (chọn một hoặc nhiều; bỏ trống = tất cả account phù hợp)</legend>{accounts.map((account: R) => { const id = String(account.accountId || account.id || ""); const key = `${String(account.platform || "")}/${id}`; return <label key={key}><input type="checkbox" checked={selectedAccounts.includes(id)} onChange={event => setSelectedAccounts(current => event.target.checked ? [...new Set([...current, id])] : current.filter(item => item !== id))} /> {key} · {String(account.loginStatus || account.agentStatus || account.sessionHealth || "UNKNOWN")}</label> })}<button type="button" className="secondary-button" onClick={() => setSelectedAccounts(selectedAccounts.length === accounts.length ? [] : accounts.map((account: R) => String(account.accountId || account.id || "")))}>{selectedAccounts.length === accounts.length ? "Bỏ chọn tất cả" : "Chọn tất cả account"}</button></fieldset> : <small>Chưa có Camoufox Account Agent nào.</small>}<button className="primary-button" type="submit">Fan-out và queue tự động</button></form>{accounts.length ? <small>Accounts: {accounts.map((account: R) => `${account.platform}/${account.accountId}`).join(" · ")}</small> : null}{status ? <small>{status}</small> : null}</section>
+}
+
+function StandingAuthorizationPanel({ data, refresh }: { data: R, refresh: () => void }) {
+  const campaigns = Array.isArray(data?.campaigns) ? data.campaigns : []
+  const accounts = Array.isArray(data?.executionAccounts) ? data.executionAccounts.filter((item: R) => item?.provider === "camoufox" && item?.status === "enabled") : []
+  const targets = Array.isArray(data?.targets) ? data.targets.filter((item: R) => item?.status === "active" && item?.channel !== "email") : []
+  const [campaignId, setCampaignId] = useState("")
+  const [targetIds, setTargetIds] = useState<string[]>([])
+  const [authorizationReference, setAuthorizationReference] = useState("")
+  const [audience, setAudience] = useState("")
+  const [timezone, setTimezone] = useState("Asia/Saigon")
+  const [status, setStatus] = useState("")
+  const selectedCampaign = campaigns.find((item: R) => String(item.id) === campaignId)
+  const selectedTargets = targets.filter((item: R) => targetIds.includes(String(item.id)))
+  const target = selectedTargets[0]
+  const targetAccount = accounts.find((item: R) => String(item.accountId) === String(target?.accountId) && String(item.platform) === String(target?.channel))
+  const authorize = async (event: React.FormEvent) => {
+    event.preventDefault()
+    const token = sessionStorage.getItem("seedingOperatorToken") || ""
+    if (!token || !selectedCampaign || !selectedTargets.length || !targetAccount) { setStatus("Chọn campaign, ít nhất một target và account Agent trước"); return }
+    if (!authorizationReference.trim() || !audience.trim()) { setStatus("Nhập standing authorization reference và audience"); return }
+    try {
+      const multi = selectedTargets.length > 1
+      const payload = multi ? {
+        productRepo: selectedCampaign.productRepo,
+        name: selectedCampaign.name,
+        objective: selectedCampaign.objective,
+        audience: audience.split(",").map(item => item.trim()).filter(Boolean),
+        targetIds: selectedTargets.map((item: R) => String(item.id)),
+        authorizationReference: authorizationReference.trim(),
+        timezone,
+        validityHours: 24,
+        quota: 1,
+        concurrency: 1,
+        visibility: "PUBLIC"
+      } : {
+        productRepo: selectedCampaign.productRepo,
+        name: selectedCampaign.name,
+        objective: selectedCampaign.objective,
+        audience: audience.split(",").map(item => item.trim()).filter(Boolean),
+        platform: target.channel,
+        targetId: target.id,
+        accountId: target.accountId,
+        profileId: target.profileId,
+        provider: targetAccount.provider || "camoufox",
+        providerProfileId: targetAccount.providerProfileId || targetAccount.profileId,
+        identityReference: targetAccount.identityReference || target.identityReference || target.expectedIdentityUrl,
+        authorizationReference: authorizationReference.trim(),
+        timezone,
+        validityHours: 24,
+        quota: 1,
+        concurrency: 1,
+        visibility: "PUBLIC"
+      }
+      const response = await fetch(multi ? "/api/campaigns/bootstrap-fanout" : "/api/campaigns/bootstrap", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      })
+      const body = await response.json()
+      if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`)
+      setStatus(`${body.status || "UNKNOWN"}: ${body.blockers?.[0]?.code || body.authorizationId || "authority evaluated"}`)
+      refresh()
+    } catch (error) { setStatus(error instanceof Error ? error.message : "Không thể thiết lập standing authorization") }
+  }
+  return <section className="panel full-span"><div className="panel-head"><div><h2>Standing authorization / Account Agent</h2><p>Chủ tài khoản xác nhận phạm vi đăng tự động một lần. Mỗi target/account vẫn giữ identity, readiness, rules, quota, UNKNOWN quarantine và kill switch riêng.</p></div><span className="status">{String(targetAccount?.loginStatus || targetAccount?.agentStatus || "CHỌN ACCOUNT")}</span></div><form onSubmit={authorize} className="scope-selects"><select required value={campaignId} onChange={event => setCampaignId(event.target.value)}><option value="">Chọn campaign</option>{campaigns.map((campaign: R) => <option key={String(campaign.id)} value={String(campaign.id)}>{String(campaign.name || campaign.id)}</option>)}</select><fieldset className="account-picker"><legend>Targets/accounts (chọn một hoặc nhiều; All Social fan-out vẫn giữ từng binding)</legend>{targets.map((item: R) => <label key={String(item.id)}><input type="checkbox" checked={targetIds.includes(String(item.id))} onChange={event => setTargetIds(current => event.target.checked ? [...new Set([...current, String(item.id)])] : current.filter(id => id !== String(item.id)))} /> {String(item.channel)}/{String(item.accountId)} · {String(item.name || item.id)}</label>)}</fieldset><input required value={authorizationReference} onChange={event => setAuthorizationReference(event.target.value)} placeholder="standing authorization reference" /><input required value={audience} onChange={event => setAudience(event.target.value)} placeholder="audience segments, comma separated" /><input value={timezone} onChange={event => setTimezone(event.target.value)} placeholder="IANA timezone" /><button className="primary-button" type="submit">Authorize autonomous campaign</button></form>{status ? <small>{status}</small> : null}</section>
+}
+
+function ScheduleStatusPanel({ data }: { data: R }) {
+  const schedules = Array.isArray(data?.schedules) ? data.schedules : []
+  const runs = Array.isArray(data?.recentScheduleRuns) ? data.recentScheduleRuns : []
+  const latestBySchedule = new Map<string, R>()
+  runs.forEach((run: R) => { const id = String(run.scheduleId || ""); if (id && !latestBySchedule.has(id)) latestBySchedule.set(id, run) })
+  const labels: Record<string, string> = { running: "RUNNING", blocked: "BLOCKED", failed: "FAILED", succeeded: "QUEUED / EVALUATED", recorded: "RECORDED" }
+  return <section className="panel full-span" aria-label="Lịch tự động và trạng thái queue"><div className="panel-head"><div><h2>Lịch tự động</h2><p>Queue chỉ ghi nhận cửa sổ và chuyển qua standing authority/readiness. BLOCKED, UNKNOWN và publication evidence hiển thị riêng; queued không đồng nghĩa đã đăng.</p></div><span className="status">{schedules.length} lịch</span></div>{schedules.length ? <div className="scope-summary">{schedules.map((schedule: R) => { const run = latestBySchedule.get(String(schedule.id)); const state = String(run?.status || (schedule.status === "active" ? "not_due" : "blocked")).toLowerCase(); const blockedTargets = Array.isArray(run?.blockedTargets) ? run.blockedTargets : []; const controls = Array.isArray(run?.executionControls) ? run.executionControls : []; return <div key={String(schedule.id)}><strong>{String(schedule.name || schedule.id)}</strong><span>{String(schedule.localTime || "")} {String(schedule.timezone || "")}</span><span className={`status ${state}`}>{labels[state] || state.toUpperCase()}</span>{run?.windowKey ? <span>window {String(run.windowKey)}</span> : null}{run?.note ? <small>{String(run.note)}</small> : null}{controls.slice(0, 8).map((item: R, index: number) => <small key={`${String(item.postRef || item.targetId || "control")}:${index}`}>{String(item.platform || "UNKNOWN")}/{String(item.accountId || "UNKNOWN")} · request {String(item.requestState || "UNKNOWN")} · window {String(item.windowStatus || "UNKNOWN")} · grant {String(item.grantStatus || "UNKNOWN")} · {String(item.publicationStatus || "NOT_VERIFIED")}</small>)}{blockedTargets.slice(0, 8).map((item: R, index: number) => <small key={`${String(item.targetId || item.accountId || "blocked")}:${index}`}>BLOCKED {String(item.platform || "")}/{String(item.accountId || "")}: {String(item.reason || "unknown")}</small>)}</div>})}</div> : <div className="empty-state">Chưa có lịch tự động.</div>}</section>
+}
+
+function AccountOnboardingPanel({ refresh }: { refresh: () => void }) {
+  const [platform, setPlatform] = useState("linkedin")
+  const [accountId, setAccountId] = useState("")
+  const [profileId, setProfileId] = useState("")
+  const [username, setUsername] = useState("")
+  const [password, setPassword] = useState("")
+  const [targetName, setTargetName] = useState("")
+  const [targetUrl, setTargetUrl] = useState("")
+  const [status, setStatus] = useState("")
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault(); setStatus("Đang lưu Keychain và chạy Account Agent…")
+    try {
+      const token = sessionStorage.getItem("seedingOperatorToken") || ""
+      if (!token) throw new Error("Kết nối token vận hành trước khi thêm account")
+      const response = await fetch("/api/account-credentials", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}`, "x-agentic-actor": "dashboard-operator" }, body: JSON.stringify({ platform, accountId, profileId, username, password, ...(targetUrl.trim() ? { targetName: targetName.trim() || undefined, targetUrl: targetUrl.trim() } : {}) }) })
+      const body = await response.json(); if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`)
+      setStatus(`Agent ${body?.login?.status || "UNKNOWN"}: ${body?.login?.reason || "đã ghi nhận"}${body?.target?.status ? ` · target ${body.target.status}` : ""}`); setPassword(""); refresh()
+    } catch (error) { setStatus(error instanceof Error ? error.message : "Không thể onboard account") }
+  }
+  return <section className="panel full-span"><div className="panel-head"><div><h2>Thêm social account</h2><p>Credential lưu Keychain; Account Agent tự mở Camoufox, đăng nhập, rồi lấy identity trực tiếp từ trang đã xác thực. Profile để trống sẽ dùng profile bền vững do app tạo. Target URL tùy chọn; app không tự đoán target.</p></div></div><form onSubmit={submit} className="scope-selects"><input required value={platform} onChange={event => setPlatform(event.target.value)} placeholder="platform" /><input required value={accountId} onChange={event => setAccountId(event.target.value)} placeholder="account ID" /><input value={profileId} onChange={event => setProfileId(event.target.value)} placeholder="Camoufox profile (optional)" /><input required value={username} onChange={event => setUsername(event.target.value)} placeholder="username" autoComplete="username" /><input required type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="password" autoComplete="current-password" /><input value={targetName} onChange={event => setTargetName(event.target.value)} placeholder="target name (optional)" /><input type="url" value={targetUrl} onChange={event => setTargetUrl(event.target.value)} placeholder="exact target URL (optional)" /><button className="primary-button" type="submit">Lưu và chạy Agent</button></form>{status ? <small>{status}</small> : null}</section>
+}
 function savedScope(key: string, fallback: string) {
   try {
     return window.localStorage.getItem(`growth-dashboard-${key}`) || fallback
@@ -2466,6 +2728,13 @@ export default function App() {
         }
       />
       <main className="main">
+        <OperatorSessionPanel refresh={load} />
+        <AccountOnboardingPanel refresh={load} />
+        <NineRouterPanel data={data} refresh={load} />
+        <UpdatePanel data={data} refresh={load} />
+        <StandingAuthorizationPanel data={data} refresh={load} />
+        <ScheduleStatusPanel data={data} />
+        <FanoutPlannerPanel data={data} refresh={load} />
         {Object.keys(data).length > 0 && !error ? (
           <DashboardScopeBar
             data={scopedData}

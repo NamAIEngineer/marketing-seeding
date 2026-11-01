@@ -1,0 +1,17 @@
+{
+  "package": "9router",
+  "version": "0.5.109",
+  "registry": "https://registry.npmjs.org",
+  "tarball": "https://registry.npmjs.org/9router/-/9router-0.5.109.tgz",
+  "integrity": "sha512-MKI/tfQSpMhToVyVkXanHddxdfD1YQGYR4+jCxjGrMxz1xNrbR6WuNmY2+jpV745JOvGz9wlDel+APodwaEyfw==",
+  "shasum": "cf6381207a57f7e3cb4cb29f373bb15445fba68a",
+  "signatureKeyIds": [
+    "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+  ],
+  "signatures": [
+    "MEUCIQDYltJeFmu1IcIYoe0Up/QMPy0qGgXJgYBfGCz5dSBgOgIgLi1GmJJnSvrAk6jJYwx84gRSGVFLZ/HU+iMofIs4qRs=",
+    "MEUCIC/vO3HjXNghlrDgPz87z8WQ+gil72dTnbxSA1GhqHCHAiEAp/n840jBFF9+QxCFpq6uhAJv4pRhNqX1qT5CjOrOt+o="
+  ],
+  "source": "npm view 9router@0.5.109 dist --json",
+  "observedAt": "2026-10-30"
+}

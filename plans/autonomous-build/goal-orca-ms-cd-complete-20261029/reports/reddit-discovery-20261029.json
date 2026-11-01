@@ -1,0 +1,581 @@
+{
+  "schemaVersion": 1,
+  "goalId": "ORCA_MS_CD_COMPLETE_20261029_01",
+  "taskId": "task_c1654095b6f7",
+  "dispatchId": "ctx_74841ca420db",
+  "runId": "run_5c4c40ae690b",
+  "sourceRevision": {
+    "workspaceCommit": "bec96d672870099dea51752c6114d1237faa14f2",
+    "workspaceBranch": "NamAIEngineer/sprat",
+    "listeningContractVersion": 1,
+    "httpFetcher": "http-public-read-v1",
+    "crawl4aiExtractor": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+    "nodriverFetcher": "nodriver-0233da5bfbe98dc58341f0863526b6315a97e646"
+  },
+  "designOsCommit": {
+    "repository": "https://github.com/jangtrinh/design-os-studio",
+    "ref": "refs/heads/main",
+    "commit": "f1baf5b7b1aa196aaee58eee6aea34ae4ccabe78",
+    "provenance": "public git ls-remote GET at capture time; GitHub REST commit endpoint separately returned 403 rate limit"
+  },
+  "sourceRefs": [
+    {
+      "kind": "workspace",
+      "path": "scripts/listening-run.mjs",
+      "sha256": "6e39842abaa8f703aa4e0641f8442f58e0820c813e371ad3582b6a1c454f585c",
+      "lines": "15-21,49-105",
+      "excerpt": "CLI accepts --urls, --backend http|nodriver, --scope-json, --evidence; evidence writer strips HTML/page bodies and keeps hashes, coverage, receipts.",
+      "provenance": "local immutable source; current workspace commit"
+    },
+    {
+      "kind": "workspace",
+      "path": "src/listening-adapter.mjs",
+      "sha256": "a7cf1c40ac9ff6884b11447bef5b2ed1a7d5c52d069663de907e7307a639dd7e",
+      "lines": "108-161,208-255",
+      "excerpt": "bounded public fetch preflights DNS, enforces byte/time bounds, normalizes status/hash, invokes Crawl4AI extractor; runListeningExtraction checkpoints bounded fetch metadata and records.",
+      "provenance": "local immutable source; current workspace commit"
+    },
+    {
+      "kind": "workspace",
+      "path": "src/listening-contract.mjs",
+      "sha256": "022112bcafc17127fae11e4ac7d97caa53efd081a648537a50f22e05ecf917fa",
+      "lines": "3-15",
+      "excerpt": "contract v1; Crawl4AI and nodriver revisions; HTTP/nodriver fetcher revisions; statuses include FAILED/UNKNOWN.",
+      "provenance": "local immutable source; current workspace commit"
+    },
+    {
+      "kind": "public",
+      "url": "https://raw.githubusercontent.com/jangtrinh/design-os-studio/f1baf5b7b1aa196aaee58eee6aea34ae4ccabe78/README.md",
+      "sha256": "556a083186d73a92c89101f00e4b5bd003653a694a4a1339dd6db779b38b9368",
+      "lines": "11,40,48,87,645",
+      "excerpt": "Native GPU-accelerated interface design studio in Rust; local-first .fig files, Agents panel and local MCP server.",
+      "provenance": "public raw GitHub GET; pinned commit"
+    },
+    {
+      "kind": "public",
+      "url": "https://raw.githubusercontent.com/jangtrinh/design-os-studio/f1baf5b7b1aa196aaee58eee6aea34ae4ccabe78/Cargo.toml",
+      "sha256": "7c6a3d6c0b77a4603e279fa9017d29e680e0998bbf0d3516c3110bb81ce124f7",
+      "lines": "1-21",
+      "excerpt": "Cargo workspace; repository URL; version 0.7.0; 13 workspace members including designos-app, designos-fig and designos-mcp.",
+      "provenance": "public raw GitHub GET; pinned commit"
+    },
+    {
+      "kind": "public",
+      "url": "https://raw.githubusercontent.com/jangtrinh/design-os-studio/f1baf5b7b1aa196aaee58eee6aea34ae4ccabe78/Cargo.lock",
+      "sha256": "04275faf318623fea25e4562b078b3b925f9779111aa24349c51b9ca265db55c",
+      "lines": "1-end",
+      "excerpt": "Pinned Cargo dependency lockfile hash only; contents not copied into report.",
+      "provenance": "public raw GitHub GET; pinned commit"
+    }
+  ],
+  "queries": [
+    {
+      "kind": "DIRECT_MENTION",
+      "query": "https://www.reddit.com/search.json?q=design-os-studio&restrict_sr=0&limit=25",
+      "source": "Reddit first-party public GET through C Listening entrypoint",
+      "status": "403",
+      "retryAfter": "0",
+      "returnedRecords": 0
+    },
+    {
+      "kind": "DIRECT_MENTION",
+      "query": "https://www.reddit.com/r/opensource/search.json?q=design-os-studio&restrict_sr=1&limit=25",
+      "source": "Reddit first-party public GET through C Listening entrypoint",
+      "status": "403",
+      "retryAfter": "0",
+      "returnedRecords": 0
+    },
+    {
+      "kind": "DIRECT_MENTION",
+      "query": "https://old.reddit.com/search?q=design-os-studio&restrict_sr=0",
+      "source": "Reddit first-party public GET through C Listening entrypoint",
+      "statusChain": [
+        "302",
+        "403"
+      ],
+      "redirect": "https://old.reddit.com/login/?reason=lor2&dest=https%3A%2F%2Fold.reddit.com%2Fsearch%3Fq%3Ddesign-os-studio%26restrict_sr%3D0",
+      "returnedRecords": 0
+    },
+    {
+      "kind": "DIRECT_MENTION",
+      "query": "https://api.pullpush.io/reddit/search/submission/?q=%22design-os-studio%22&size=100",
+      "source": "PullPush public GET search (discovery only; not C crawler)",
+      "status": "200",
+      "returnedRecords": 0,
+      "responseSha256": "395be402436f32fd1d7fb31cf96af64933403c8fb836e9b948db3746fa272f8d"
+    },
+    {
+      "kind": "DIRECT_MENTION",
+      "query": "https://api.pullpush.io/reddit/search/submission/?q=github.com%2Fjangtrinh%2Fdesign-os-studio&size=100",
+      "source": "PullPush public GET search (discovery only; not C crawler)",
+      "status": "200",
+      "returnedRecords": 0,
+      "responseSha256": "8ba8f561d13a7a7b4720234b84013ffdffd3e108b3c2e746198a2ed538477de6"
+    },
+    {
+      "kind": "DIRECT_MENTION",
+      "query": "https://api.pullpush.io/reddit/search/submission/?q=jangtrinh&size=100",
+      "source": "PullPush public GET search (discovery only; not C crawler)",
+      "status": "429",
+      "returnedRecords": 0,
+      "responseSha256": "a0daa9bf7283a8d29a7d12bb5d2ceb23f42135e8eee392957bee45529302a132"
+    },
+    {
+      "kind": "RELATED_NEED",
+      "query": "https://api.pullpush.io/reddit/search/submission/?q=%22Figma+alternative%22&size=100",
+      "source": "PullPush public GET search (discovery only; not C crawler)",
+      "status": "200",
+      "returnedRecords": 100,
+      "responseSha256": "ead78534a73a04bfce191a48ecf50bec636ca65bd50d90d61e760d96b78493f2",
+      "candidateUrls": 5
+    },
+    {
+      "kind": "RELATED_NEED",
+      "query": "https://api.pullpush.io/reddit/search/comment/?link_id=t3_1v75b3a&size=25",
+      "source": "PullPush public GET search (discovery only; not C crawler)",
+      "status": "200",
+      "returnedRecords": 7,
+      "responseSha256": "f26a8e404f507f9f0eb023d9d5070a62d9a2291e3e95e4f50b05f8c251455b66e",
+      "candidateUrls": 1
+    },
+    {
+      "kind": "RELATED_NEED",
+      "query": "https://api.pullpush.io/reddit/search/comment/?link_id=t3_1rwd0j2&size=25",
+      "source": "PullPush public GET search (discovery only; not C crawler)",
+      "status": "200",
+      "returnedRecords": 6,
+      "responseSha256": "f2babafd76ac837e43b2b9b1a8fab3983ace6f1ba6d03437da466fd876994816",
+      "candidateUrls": 1
+    }
+  ],
+  "urls": {
+    "targetRepository": "https://github.com/jangtrinh/design-os-studio",
+    "directMention": [],
+    "relatedNeedPosts": [
+      {
+        "url": "https://www.reddit.com/r/UXDesign/comments/1v75b3a/figma_and_paper_alternative/",
+        "recordType": "post",
+        "subreddit": "UXDesign",
+        "postId": "1v75b3a",
+        "title": "Figma and Paper alternative",
+        "source": "PullPush public submission search",
+        "query": "\"Figma alternative\"",
+        "searchCapturedAt": "2026-10-29T04:52:16.324194+00:00",
+        "sourceRecordBodyLength": 207,
+        "sourceRecordBodySha256": "5d12c292fbaa551a82e50f3e70150b7d943e486662897c124fa60d8dea9180f4",
+        "threadFetchStatus": "HTTP_200_EXTRACTOR_FAILED",
+        "threadFetchContentHash": "ac302ae3bb555e7caec32f3321a4e9dcbe18fc492f160fd9eacf6cdec11e5af7"
+      },
+      {
+        "url": "https://www.reddit.com/r/FigmaDesign/comments/1tdw1ee/article_1_how_figma_stores_your_design_files_and_how_to_read_them_offline/",
+        "recordType": "post",
+        "subreddit": "FigmaDesign",
+        "postId": "1tdw1ee",
+        "title": "Article - 1 How Figma stores your design files (and how to read them offline)",
+        "source": "PullPush public submission search",
+        "query": "\"Figma alternative\"",
+        "searchCapturedAt": "2026-10-29T04:52:16.324194+00:00",
+        "sourceRecordBodyLength": 10139,
+        "sourceRecordBodySha256": "29f274d294b0119807944f5056c9bc55204e0f25eabc9ed3c2e8fbc5cebeb33c",
+        "threadFetchStatus": "HTTP_200_EXTRACTOR_FAILED",
+        "threadFetchContentHash": "459894b31e79138e8bd0b4eb5dc37bbb08b48472a03547d1f8240ed4d37e97f3"
+      },
+      {
+        "url": "https://www.reddit.com/r/graphic_design/comments/1syulhp/figma_alternative_where_ai_works_with_vector/",
+        "recordType": "post",
+        "subreddit": "graphic_design",
+        "postId": "1syulhp",
+        "title": "Figma alternative where AI works with vector primitives, not code",
+        "source": "PullPush public submission search",
+        "query": "\"Figma alternative\"",
+        "searchCapturedAt": "2026-10-29T04:52:16.324194+00:00",
+        "sourceRecordBodyLength": 2712,
+        "sourceRecordBodySha256": "602a6c6b9624864906441d4694aade0bbf6e543e1e4bbb5602d47c349609cd03",
+        "threadFetchStatus": "NOT_ATTEMPTED",
+        "threadFetchContentHash": null
+      },
+      {
+        "url": "https://www.reddit.com/r/LinuxCirclejerk/comments/1rwd0j2/what_is_the_best_figma_alternative_for_linux/",
+        "recordType": "post",
+        "subreddit": "LinuxCirclejerk",
+        "postId": "1rwd0j2",
+        "title": "What is the best figma alternative for linux?",
+        "source": "PullPush public submission search",
+        "query": "\"Figma alternative\"",
+        "searchCapturedAt": "2026-10-29T04:52:16.324194+00:00",
+        "sourceRecordBodyLength": 410,
+        "sourceRecordBodySha256": "15cbd6dffd5143eb298583a749544f99eb7f11c72422ec2d5ce1fc0dfe011fcc",
+        "threadFetchStatus": "HTTP_200_EXTRACTOR_FAILED",
+        "threadFetchContentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "url": "https://www.reddit.com/r/UI_Design/comments/1o5r2oc/figma_alternative_for_noninteractive_prototyping/",
+        "recordType": "post",
+        "subreddit": "UI_Design",
+        "postId": "1o5r2oc",
+        "title": "Figma alternative for non-interactive prototyping",
+        "source": "PullPush public submission search",
+        "query": "\"Figma alternative\"",
+        "searchCapturedAt": "2026-10-29T04:52:16.324194+00:00",
+        "sourceRecordBodyLength": 867,
+        "sourceRecordBodySha256": "ddb2a16ceaff91415d122d30b1c37823be8983dcee396ddee01f4e8a52ab1db5",
+        "threadFetchStatus": "NOT_ATTEMPTED",
+        "threadFetchContentHash": null
+      }
+    ],
+    "relatedNeedComments": [
+      {
+        "url": "https://www.reddit.com/r/UXDesign/comments/1v75b3a/figma_and_paper_alternative/p00xij1/",
+        "recordType": "comment",
+        "subreddit": "UXDesign",
+        "commentId": "p00xij1",
+        "source": "PullPush public comment search",
+        "query": "link_id=t3_1v75b3a",
+        "searchCapturedAt": "2026-10-29T04:54:13.317162+00:00",
+        "bodyLength": 240,
+        "bodySha256": "470de59dbfb159f0eb023d9d5070a62d9a2291e3e95e4f50b05f8c251455b66e",
+        "threadFetchStatus": "HTTP_200_EXTRACTOR_FAILED",
+        "threadFetchContentHash": "5cf939b3ac70032168e3b562dff0a2625c76b0d5eac48048ae2842b682064863"
+      },
+      {
+        "url": "https://www.reddit.com/r/LinuxCirclejerk/comments/1rwd0j2/what_is_the_best_figma_alternative_for_linux/ob00eqi/",
+        "recordType": "comment",
+        "subreddit": "LinuxCirclejerk",
+        "commentId": "ob00eqi",
+        "source": "PullPush public comment search",
+        "query": "link_id=t3_1rwd0j2",
+        "searchCapturedAt": "2026-10-29T04:54:14.371243+00:00",
+        "bodyLength": 79,
+        "bodySha256": "40167dd6c18a4d94d1b137ef8e7e000137352522bb9fea220892af029c9b1fa2",
+        "threadFetchStatus": "HTTP_200_EXTRACTOR_FAILED",
+        "threadFetchContentHash": "f7c0f95ea3fb525e3f1229c8abc27b79194cadb90bf82ecd6099e4cde8c639a9"
+      }
+    ],
+    "note": "PullPush rows are discovery evidence only. They are not treated as crawled thread records."
+  },
+  "fetchAttempts": [
+    {
+      "runId": "listening-f72895c9a9ccce6f1a92734112c90b99",
+      "command": "node scripts/listening-run.mjs --backend http --urls <direct Reddit search URLs>",
+      "backend": "http",
+      "sourceRevision": "http-public-read-v1",
+      "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+      "startedAt": "2026-10-29T04:49:48.791Z",
+      "completedAt": "2026-10-29T04:49:49.935Z",
+      "status": "FAILED",
+      "fetches": [
+        {
+          "url": "https://www.reddit.com/search.json?q=design-os-studio&restrict_sr=0&limit=25",
+          "status": "FAILED",
+          "httpStatus": 403,
+          "reason": "HTTP_403",
+          "contentType": "text/html",
+          "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "capturedAt": "2026-10-29T04:49:49.262Z",
+          "coverage": {
+            "html": false,
+            "jsRendered": false,
+            "structured": false,
+            "post": false,
+            "comment": false
+          }
+        },
+        {
+          "url": "https://www.reddit.com/r/opensource/search.json?q=design-os-studio&restrict_sr=1&limit=25",
+          "status": "FAILED",
+          "httpStatus": 403,
+          "reason": "HTTP_403",
+          "contentType": "text/html",
+          "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "capturedAt": "2026-10-29T04:49:49.710Z",
+          "coverage": {
+            "html": false,
+            "jsRendered": false,
+            "structured": false,
+            "post": false,
+            "comment": false
+          }
+        },
+        {
+          "url": "https://old.reddit.com/search?q=design-os-studio&restrict_sr=0",
+          "status": "FAILED",
+          "httpStatus": 302,
+          "reason": "HTTP_302",
+          "contentType": "text/html",
+          "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "capturedAt": "2026-10-29T04:49:49.935Z",
+          "coverage": {
+            "html": false,
+            "jsRendered": false,
+            "structured": false,
+            "post": false,
+            "comment": false
+          },
+          "redirect": "https://old.reddit.com/login/?reason=lor2&dest=https%3A%2F%2Fold.reddit.com%2Fsearch%3Fq%3Ddesign-os-studio%26restrict_sr%3D0"
+        }
+      ],
+      "records": 0,
+      "evidenceArtifactSha256": "a061dae0fd0cb467867d979eed54955bfc7f7f0756f9f97e6bce327891185d20"
+    },
+    {
+      "runId": "listening-289c1d6f37dec43122e1c820570f04fb",
+      "command": "node scripts/listening-run.mjs --backend http --urls <Reddit direct search + related posts>",
+      "backend": "http",
+      "sourceRevision": "http-public-read-v1",
+      "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+      "startedAt": "2026-10-29T04:47:42.432Z",
+      "completedAt": "2026-10-29T04:47:43.858Z",
+      "status": "FAILED",
+      "fetches": [
+        {
+          "url": "https://www.reddit.com/search/?q=%22design-os-studio%22&restrict_sr=0&sort=relevance",
+          "status": "SUCCEEDED",
+          "httpStatus": 200,
+          "reason": "extractor failure: ModuleNotFoundError",
+          "contentType": "text/html",
+          "contentHash": "0fa1fe4e380f59ff37bbc84743b6345533e1e1916920349536ba9079477f740a",
+          "capturedAt": "2026-10-29T04:47:42.836Z",
+          "coverage": {
+            "html": true,
+            "jsRendered": false,
+            "structured": false,
+            "post": false,
+            "comment": false
+          }
+        },
+        {
+          "url": "https://www.reddit.com/r/UXDesign/comments/1v75b3a/figma_and_paper_alternative/",
+          "status": "SUCCEEDED",
+          "httpStatus": 200,
+          "reason": "extractor failure: ModuleNotFoundError",
+          "contentType": "text/html",
+          "contentHash": "ac302ae3bb555e7caec32f3321a4e9dcbe18fc492f160fd9eacf6cdec11e5af7",
+          "capturedAt": "2026-10-29T04:47:43.118Z",
+          "coverage": {
+            "html": true,
+            "jsRendered": false,
+            "structured": false,
+            "post": false,
+            "comment": false
+          }
+        },
+        {
+          "url": "https://www.reddit.com/r/FigmaDesign/comments/1tdw1ee/article_1_how_figma_stores_your_design_files_and_how_to_read_them_offline/",
+          "status": "SUCCEEDED",
+          "httpStatus": 200,
+          "reason": "extractor failure: ModuleNotFoundError",
+          "contentType": "text/html",
+          "contentHash": "459894b31e79138e8bd0b4eb5dc37bbb08b48472a03547d1f8240ed4d37e97f3",
+          "capturedAt": "2026-10-29T04:47:43.409Z",
+          "coverage": {
+            "html": true,
+            "jsRendered": false,
+            "structured": false,
+            "post": false,
+            "comment": false
+          }
+        },
+        {
+          "url": "https://www.reddit.com/r/SideProject/comments/1px064w/free_figma_alternative/",
+          "status": "SUCCEEDED",
+          "httpStatus": 200,
+          "reason": "extractor failure: ModuleNotFoundError",
+          "contentType": "text/html",
+          "contentHash": "e44e3314ef2e50205c26a7a253e1e91f984a65c33f48f2fcc18216390ec062f3",
+          "capturedAt": "2026-10-29T04:47:43.738Z",
+          "coverage": {
+            "html": true,
+            "jsRendered": false,
+            "structured": false,
+            "post": false,
+            "comment": false
+          }
+        }
+      ],
+      "extractorEvidence": "Python worker stderr: [crawl4ai-extract] failure=ModuleNotFoundError: No module named 'crawl4ai'; zero records.",
+      "records": 0,
+      "evidenceArtifactSha256": "56744eb33037fde3636f0aa35f52bb6442a64850996a77004b34c3ed6eb75848"
+    },
+    {
+      "runId": "listening-bbab35409bd6a8942e8d45ef977adf31",
+      "command": "node scripts/listening-run.mjs --backend nodriver --urls <related posts>",
+      "backend": "nodriver",
+      "sourceRevision": "nodriver-0233da5bfbe98dc58341f0863526b6315a97e646",
+      "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+      "startedAt": "2026-10-29T04:48:33.007Z",
+      "completedAt": "2026-10-29T04:48:33.317Z",
+      "status": "FAILED",
+      "fetches": [
+        {
+          "url": "https://www.reddit.com/r/LinuxCirclejerk/comments/1rwd0j2/what_is_the_best_figma_alternative_for_linux/",
+          "status": "FAILED",
+          "httpStatus": "UNKNOWN",
+          "reason": "nodriver failure: ModuleNotFoundError",
+          "contentType": "text/html",
+          "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "capturedAt": "2026-10-29T04:48:33.219Z",
+          "coverage": {
+            "html": false,
+            "jsRendered": false,
+            "structured": false,
+            "post": false,
+            "comment": false
+          }
+        },
+        {
+          "url": "https://www.reddit.com/r/UI_Design/comments/1o5r2oc/figma_alternative_for_noninteractive_prototyping/",
+          "status": "FAILED",
+          "httpStatus": "UNKNOWN",
+          "reason": "nodriver failure: ModuleNotFoundError",
+          "contentType": "text/html",
+          "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "capturedAt": "2026-10-29T04:48:33.317Z",
+          "coverage": {
+            "html": false,
+            "jsRendered": false,
+            "structured": false,
+            "post": false,
+            "comment": false
+          }
+        }
+      ],
+      "processEvidence": "Worker cleanup recorded profile_removed; no browser process was started.",
+      "records": 0,
+      "evidenceArtifactSha256": "fcbf42da4299485088e46571fca8b8672d077aab721dbe2ab7adc4656c25aeb8"
+    },
+    {
+      "runId": "listening-3e454641286217384359e53bd0ff9ab3",
+      "command": "node scripts/listening-run.mjs --backend http --urls <related comment permalinks>",
+      "backend": "http",
+      "sourceRevision": "http-public-read-v1",
+      "extractorRevision": "crawl4ai-v0.9.5@838869bdda93f25e6d50b3f50ae9577d9b19a586",
+      "startedAt": "2026-10-29T04:53:02.007Z",
+      "completedAt": "2026-10-29T04:53:02.657Z",
+      "status": "FAILED",
+      "fetches": [
+        {
+          "url": "https://www.reddit.com/r/UXDesign/comments/1v75b3a/figma_and_paper_alternative/p00xij1/",
+          "status": "SUCCEEDED",
+          "httpStatus": 200,
+          "reason": "extractor failure: ModuleNotFoundError",
+          "contentType": "text/html",
+          "contentHash": "5cf939b3ac70032168e3b562dff0a2625c76b0d5eac48048ae2842b682064863",
+          "capturedAt": "2026-10-29T04:53:02.323Z",
+          "coverage": {
+            "html": true,
+            "jsRendered": false,
+            "structured": false,
+            "post": false,
+            "comment": false
+          }
+        },
+        {
+          "url": "https://www.reddit.com/r/LinuxCirclejerk/comments/1rwd0j2/what_is_the_best_figma_alternative_for_linux/ob00eqi/",
+          "status": "SUCCEEDED",
+          "httpStatus": 200,
+          "reason": "extractor failure: ModuleNotFoundError",
+          "contentType": "text/html",
+          "contentHash": "f7c0f95ea3fb525e3f1229c8abc27b79194cadb90bf82ecd6099e4cde8c639a9",
+          "capturedAt": "2026-10-29T04:53:02.575Z",
+          "coverage": {
+            "html": true,
+            "jsRendered": false,
+            "structured": false,
+            "post": false,
+            "comment": false
+          }
+        }
+      ],
+      "extractorEvidence": "Python worker stderr: [crawl4ai-extract] failure=ModuleNotFoundError: No module named 'crawl4ai'; zero records.",
+      "records": 0,
+      "evidenceArtifactSha256": "efc05e101e442891a05cfe9f0e18115dd3df527276080c8fe2689fcd8cbd4e37"
+    }
+  ],
+  "recordsSummary": {
+    "crawledRecords": 0,
+    "directMention": {
+      "exactMatches": 0,
+      "postUrls": [],
+      "commentUrls": [],
+      "status": "BLOCKED",
+      "reason": "Reddit first-party search blocked (403; old.reddit.com redirected to login then 403). PullPush exact phrase/repo-url returned zero."
+    },
+    "relatedNeed": {
+      "discoveredPostUrls": 5,
+      "discoveredCommentUrls": 2,
+      "crawledThreadRecords": 0,
+      "status": "PARTIAL",
+      "reason": "Exact public URLs discovered from PullPush; C HTTP fetch reached 200 HTML but extractor unavailable; no thread body treated as crawled."
+    },
+    "searchIndexOnly": true
+  },
+  "coverage": {
+    "publicSourceGET": {
+      "githubRaw": true,
+      "redditFirstParty": true,
+      "pullpush": true
+    },
+    "nativeListeningEntrypoint": {
+      "http": true,
+      "nodriver": true,
+      "crawl4aiExtracted": false,
+      "nodriverBrowserStarted": false
+    },
+    "directMention": {
+      "status": "BLOCKED",
+      "exactUrlCoverage": 0,
+      "recordCoverage": 0
+    },
+    "relatedNeed": {
+      "status": "PARTIAL",
+      "exactUrlCoverage": 7,
+      "threadRecordCoverage": 0
+    },
+    "bodyRetention": "redacted; hashes/lengths/statuses only",
+    "credentialOrLogin": "none; no credentials supplied; login redirect recorded only"
+  },
+  "classification": "RUNTIME_VERIFIED",
+  "resultStatus": "PARTIAL",
+  "blocker": {
+    "status": "BLOCKED/PARTIAL",
+    "items": [
+      {
+        "scope": "Reddit direct mention discovery",
+        "evidence": "HTTP 403 with retry-after: 0 on www.reddit.com JSON/search endpoints; old.reddit.com 302 login redirect followed by 403",
+        "impact": "No exact direct mention URL can be verified from first-party Reddit search."
+      },
+      {
+        "scope": "Listening extraction",
+        "evidence": "Crawl4AI worker ModuleNotFoundError: No module named crawl4ai; nodriver worker ModuleNotFoundError",
+        "impact": "No records emitted by the existing C entrypoint despite bounded 200 HTML fetches."
+      },
+      {
+        "scope": "PullPush direct author fallback",
+        "evidence": "HTTP 429 on q=jangtrinh",
+        "impact": "One auxiliary direct query rate-limited; no retry performed."
+      },
+      {
+        "scope": "runtime session",
+        "evidence": "assignee_orca_session_id is null in dispatch-show",
+        "impact": "Session ID UNKNOWN; native dispatch IDs and worker terminal correlation are retained."
+      }
+    ]
+  },
+  "nextAction": "Install/activate the already-pinned Crawl4AI and nodriver runtime in the authorized C worker environment, then rerun the same bounded URLs under a fresh dispatch; separately retry Reddit first-party search only after its 403/login/rate-limit condition clears. Do not treat current PullPush search rows as crawled threads and do not retry UNKNOWN automatically.",
+  "nativeTurn": {
+    "runId": "run_5c4c40ae690b",
+    "taskId": "task_c1654095b6f7",
+    "dispatchId": "ctx_74841ca420db",
+    "dispatchObservedAt": "2026-10-29 04:34:34",
+    "processIncarnation": "6a60615c-ca30-4517-b7bf-9ed8a76296cf::/Users/nam/orca/workspaces/marketing-seeding/reddit-design-os-discovery-20261029@@6e4eaf0f:e2fe292e-78f4-46ae-9562-7cd5fcc3083f",
+    "turnStarted": "UNKNOWN",
+    "turnStartedReason": "Orca dispatch metadata exposes dispatched_at and worker stage input_accepted, but no explicit turn_started event.",
+    "ack": "input_accepted / worker state ready from orchestration worker-show",
+    "progressMessageId": "msg_002d9e9606c4",
+    "result": "artifact-created; worker_done pending",
+    "sessionId": "UNKNOWN",
+    "sessionIdReason": "dispatch-show assignee_orca_session_id=null"
+  },
+  "capturedAt": "2026-10-29T05:00:15.300Z",
+  "sha256": "74b35683ab87095ef556f6915808a5e64fd50bb7306457d1b5c0b1428d4296e4"
+}

@@ -76,6 +76,54 @@ test("Camoufox protocol independently extracts and compares the rendered LinkedI
   assert.equal(observedSources.length, 2);
 });
 
+test("Camoufox protocol compares numeric Facebook profile IDs as the stable identity", async () => {
+  const expected = "https://facebook.com/profile.php?id=123456789";
+  const observedSources = [];
+  const makePage = (observedId) => ({
+    url: () => "https://www.facebook.com/",
+    async evaluate(source) {
+      observedSources.push(source);
+      assert.match(source, /profile\.php/);
+      return {
+        authenticated: true,
+        ownerSurface: true,
+        identityReference: `https://www.facebook.com/profile.php?id=${observedId}`,
+        stableId: observedId,
+        source: "facebook-owner-profile-surface",
+        candidateCount: 1,
+        ambiguous: false,
+        confidence: 140
+      };
+    },
+    locator() { return { async evaluateAll() { return []; }, nth() { return { async fill() {}, async click() {}, async setInputFiles() {} }; } }; },
+    async goto() {}, async waitForURL() {}, async waitForFunction() {}
+  });
+  const clientFor = (observedId) => new CamoufoxPlaywrightProtocolClient({
+    context: { pages: () => [makePage(observedId)], async newPage() { return makePage(observedId); } },
+    profileReference: "facebook-profile",
+    expectedIdentity: { platform: "facebook_group", accountId: "facebook-account", identityReference: expected }
+  });
+
+  const matching = clientFor("123456789");
+  await matching.attach();
+  const ready = await matching.observeIdentity();
+  assert.equal(ready.state, "READY");
+  assert.equal(ready.identityReference, expected);
+  assert.equal(ready.stableIdentityId, "123456789");
+  assert.equal(ready.evidence.identityVerified, true);
+  assert.equal(ready.evidence.stableIdentityIdVerified, true);
+
+  const mismatching = clientFor("987654321");
+  await mismatching.attach();
+  const unknown = await mismatching.observeIdentity();
+  assert.equal(unknown.state, "UNKNOWN");
+  assert.equal(unknown.identityReference, "https://facebook.com/profile.php?id=987654321");
+  assert.equal(unknown.stableIdentityId, "987654321");
+  assert.equal(unknown.evidence.identityVerified, false);
+  assert.equal(unknown.evidence.stableIdentityIdVerified, false);
+  assert.equal(observedSources.length, 2);
+});
+
 test("Camoufox protocol recognizes the rendered LinkedIn owner profile module", async () => {
   const expected = "https://www.linkedin.com/in/member";
   const page = {
@@ -93,6 +141,24 @@ test("Camoufox protocol recognizes the rendered LinkedIn owner profile module", 
   const observed = await client.observeIdentity();
   assert.equal(observed.state, "READY");
   assert.equal(observed.evidence.identitySource, "linkedin-owner-profile-module");
+});
+
+test("Camoufox protocol keeps a generic authenticated surface UNKNOWN without owner identity evidence", async () => {
+  const genericPage = {
+    url: () => "https://www.linkedin.com/feed/",
+    async evaluate(source) {
+      if (source.includes("const identityVerified")) return { sessionAuthenticated: true, identityVerified: true, feedReachable: true, securityChallenge: false, loginRequired: false };
+      if (source.includes("linkedin-navigation-surface")) return { identityReference: "https://www.linkedin.com/in/member", stableId: "member", ambiguous: false, confidence: 20, source: "linkedin-rendered-profile-link", candidates: [{ reference: "https://www.linkedin.com/in/member", score: 20 }] };
+      throw new Error("unexpected protocol expression");
+    },
+    locator() { return { async evaluateAll() { return []; }, nth() { return { async fill() {}, async click() {}, async setInputFiles() {} }; } }; },
+    async goto() {}, async waitForURL() {}, async waitForFunction() {}
+  };
+  const client = new CamoufoxPlaywrightProtocolClient({ context: { pages: () => [genericPage], async newPage() { return genericPage; } }, profileReference: "linkedin-profile", expectedIdentity: { platform: "linkedin", accountId: "account-1" } });
+  await client.attach();
+  const observed = await client.observeIdentity();
+  assert.equal(observed.state, "UNKNOWN");
+  assert.equal(observed.evidence.identityVerified, false);
 });
 
 test("Camoufox protocol fails closed when rendered LinkedIn identity is ambiguous or different", async () => {

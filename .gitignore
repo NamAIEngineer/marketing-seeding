@@ -25,6 +25,7 @@ node_modules/
 ui/node_modules/
 ui/dist/
 ui/.rollbacks/
+desktop/dist/
 
 # Local verification evidence tied to this machine
 docs/VERIFICATION-2026-10-07.md
@@ -42,3 +43,16 @@ scripts/__pycache__/
 public/assets/*
 !public/assets/index-DNqX5qeD.js
 !public/assets/index-Drr5DD2i.css
+!public/assets/index-BBNwriZn.js
+!public/assets/index-Bbgq8wCP.css
+!public/assets/index-kclzQDHd.js
+!public/assets/index-Cc8QG6hW.js
+
+!public/assets/index-6wzQmXgn.js
+!public/assets/index-BULRpYxY.js
+
+!public/assets/index-Bhoe1Hnl.js
+!public/assets/index-eRrg0z7q.js
+!public/assets/index-DTY-RMKD.js
+!public/assets/index-DwH5X1yX.js
+!public/assets/index-DL5jtFLG.css

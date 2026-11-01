@@ -15,6 +15,11 @@ test("Figma-derived dashboard shell is wired to real local data", async () => {
   assert.match(html, /<div id="root"><\/div>/);
   assert.match(html, /\/assets\/index-[A-Za-z0-9_-]+\.js/);
   assert.match(app, /fetch\("\/api\/dashboard"/);
+  assert.match(app, /Kết nối 9Router một lần/);
+  assert.match(app, /Mở 9Router dashboard/);
+  assert.match(app, /zero-touch pairing/);
+  assert.match(app, /\/v1\/models/);
+  assert.match(app, /dashboardUrl/);
   assert.match(app, /cache: "no-store"/);
   assert.match(app, /Không có dữ liệu mock/);
   assert.match(app, /Không tải được dữ liệu/);

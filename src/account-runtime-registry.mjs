@@ -98,7 +98,7 @@ function eligibility(account, request, now) {
   if (requestedProfile && accountProfile !== requestedProfile) reasons.push("profile:mismatch");
   if (request.identityReference && (!account.identityReference || account.identityReference !== canonicalIdentityUrl(request.identityReference))) reasons.push("identity:mismatch");
   if (CHALLENGE.has(health)) reasons.push(`session:${health}`);
-  else if (!HEALTHY.has(health)) reasons.push(`session:${health || "unknown"}`);
+  else if (!HEALTHY.has(health) && request.allowLoginBootstrap !== true) reasons.push(`session:${health || "unknown"}`);
   if (QUARANTINED.has(account.risk)) reasons.push(`risk:${account.risk}`);
   if (account.allowedCampaigns.length && (!campaignId || !account.allowedCampaigns.includes("*") && !account.allowedCampaigns.includes(campaignId))) reasons.push("campaign:not_allowed");
   if (account.allowedTargets.length && (!targetId || !account.allowedTargets.includes("*") && !account.allowedTargets.includes(targetId))) reasons.push("target:not_allowed");

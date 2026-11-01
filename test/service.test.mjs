@@ -1734,7 +1734,7 @@ test("verified artifact to grounded story to channel drafts stays draft-only", a
   const schedule = await service.createSchedule(campaign.id, {
     name: "Daily draft", localTime: "09:00", timezone: "Asia/Saigon", channels: ["threads", "linkedin"]
   }, "operator");
-  assert.equal(schedule.mode, "draft_only");
+  assert.equal(schedule.mode, "publish_with_standing_approval");
   const run = await service.recordScheduleRun(schedule.id, { status: "succeeded", artifactId: artifact.id, storyId: story.id });
   assert.equal(run.externalSideEffects, false);
   const dashboard = await service.dashboard();

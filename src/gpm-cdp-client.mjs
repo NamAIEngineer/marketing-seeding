@@ -207,7 +207,6 @@ export class GpmCdpClient {
       addListener(socket, "open", onOpen); addListener(socket, "error", onError); addListener(socket, "close", onClose); addListener(socket, "message", onMessage);
       if (Number(socket?.readyState) === WS_OPEN) queueMicrotask(finishOpen);
       openTimer = setTimeout(() => failOpen(new Error("socket open timeout")), this.#timeoutMs);
-      openTimer.unref?.();
     }).finally(() => { this.#connectPromise = null; });
     return this.#connectPromise;
   }
@@ -283,7 +282,6 @@ export class GpmCdpClient {
     this.#commandCount += 1;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => { this.#pending.delete(id); reject(fail("GPM_CDP_TIMEOUT", `GPM CDP command timed out: ${method}`)); }, this.#timeoutMs);
-      timer.unref?.();
       this.#pending.set(id, { resolve, reject, timer });
       try { socket.send(body); } catch (error) { clearTimeout(timer); this.#pending.delete(id); reject(fail("GPM_CDP_SEND_FAILED", safeErrorMessage(error?.message))); }
     });
