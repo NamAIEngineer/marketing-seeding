@@ -4,8 +4,9 @@
   "uniqueBodies": 16,
   "uniqueVideoSlots": 16,
   "uniqueLinkedInHooks": 8,
+  "uniqueFacebookHooks": 8,
   "errors": [],
   "contentStatus": "CONTENT_PENDING_CLAUDE",
   "publication": "NOT_AUTHORIZED",
-  "sha256": "9f0947bd57bc34846fed744879f722957686cdb28b5e4819dab7b3ae4e4a5eaa"
+  "sha256": "fb7f2c8bd726ed75c0cd64f1fd552407e3de9292817f109b05ee1fb28cb3fdde"
 }
