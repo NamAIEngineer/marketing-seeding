@@ -554,3 +554,16 @@ lanes: runtime=SMOKE_PASS; pilot=ARMED_GATES_CLOSED; publish=PAUSED_APPROVAL_GAT
 CẦN NAM: none for account readiness; no credential/CAPTCHA/MFA action required
 blockers: VIDEO_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN | BUILD_DEPENDENCY_SYMLINK_LIMITATION
 next_30m: await video v5 verification/rework; preserve state backup and READY profiles; no publication until explicit dual approval
+
+updated: 2026-11-02T06:50:00+07:00
+phase: P2_READY_MEDIA_CONTENT_GATED
+runtime: packaged 4321 source=1df2802f5a117481a8192006dd044442844da473 dirty=false health=200 pid=22556 stateRevision=454; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam READY; facebook_group/facebook_nam READY; credential endpoints JSON 200; no secret fields
+pilot: armed=10 slots; scheduled=0 published_verified=0; no live submit
+videos: v5 BLOCKED_V5_NOT_PRODUCED (real window resolved, recorder 0.265s/5 frames/video-only); current dashboard ready=10 qaFail=10 bufferTomorrow=0; v4 FAIL; no binding
+content: independent PASS_WITH_CONCERNS report=10ce5e4; 16 drafts/slots; repeated LinkedIn opening flagged; worker rewriting hooks; CONTENT_PENDING_CLAUDE
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: runtime=SMOKE_PASS; pilot=ARMED_GATES_CLOSED; publish=PAUSED_APPROVAL_GATES; video=V5_BLOCKED; content=HOOK_REWRITE_IN_PROGRESS; community=PUBLIC_30_READY_AUTH_UNKNOWN
+CẦN NAM: none for account readiness; no credential/CAPTCHA/MFA action required
+blockers: VIDEO_CAPTURE_RECORDER | VIDEO_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN | BUILD_DEPENDENCY_SYMLINK_LIMITATION
+next_30m: integrate content hook revision if validator+independent gate pass; preserve state backup/READY profiles; no publication
