@@ -46,3 +46,15 @@ lanes: runtime=FIX_INTEGRATED (a4cd21c + evidence d6ed011); content=VERIFIED_WIT
 CẦN NAM: Nếu retry/manual login sau build hiện CAPTCHA/MFA/OTP/checkpoint, nhập mã trong Camoufox hiển thị; không dùng Chrome/copy session. | Nếu cap không đủ 10 slot, thêm account/quyền Page; không vượt cap.
 blockers: CAMOUFOX-LIVE-AUTH (rebuild + live retry required; snapshot evidence in plans/growth-lead-20261102/evidence/login-surface-diagnosis-20261101.md) | VIDEO-QUALITY-A (chỉ 1 candidate, chưa đủ 10) | LIVE-PUBLICATION (chờ READY)
 next_30m: commit integrated fixes, build app, backup state, update LaunchAgent 4321, verify health/API, retry-login both accounts, capture resulting states.
+
+updated: 2026-11-01T22:02:00+07:00
+phase: P0
+runtime: 9dff92b8462b3ffff98255f9632d7f79c57ed791 dirty=false health=200 port=4321 (packaged old SHA; build from clean checkout starting)
+accounts: linkedin/linkedin_nam: BLOCKED (old bundle LOGIN_CONTROLS_NOT_FOUND; new selector/consent + /in/me fix committed, not live); facebook_group/facebook_nam: BLOCKED (old bundle LOGIN_CONTROLS_NOT_FOUND; new login URL + /me fix committed, not live)
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 quality-B manifest; quality-A intake=1 raw candidate only, unaccepted and excluded from manifest
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (live auth UNKNOWN)
+lanes: runtime=FIX_COMMITTED (017717f); content=VERIFIED_WITH_CONCERNS; video=BLOCKED_INCOMPLETE (10 quality-A files/evidence absent); ui=BUILDING; publish=PAUSED
+CẦN NAM: Sau bản mới lên 4321, nếu Camoufox hiển thị CAPTCHA/MFA/OTP/checkpoint, nhập mã trong cửa sổ đó; không dùng Chrome/copy session. | Nếu cap không đủ 10 slot, thêm account/quyền Page; không vượt cap.
+blockers: PACKAGED-REBUILD (controller, ETA 22:30) | VIDEO-QUALITY-A (1 raw candidate, no 10-file QA set) | LIVE-PUBLICATION (chờ READY)
+next_30m: build UI assets, create clean checkout, run desktop/build-macos.sh, backup state, update LaunchAgent, health/API verify.
