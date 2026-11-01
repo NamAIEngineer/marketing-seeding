@@ -40,6 +40,7 @@ const CHALLENGE_TEXT = /(?:captcha|recaptcha|two[- ]factor|2fa|verification code
 const LOGIN_FAILURE_TEXT = /(?:incorrect password|wrong password|invalid password|couldn['’]t log in|could not log in|unexpected error|try again|sai mật khẩu|không thể đăng nhập)/i;
 const AUTH_SURFACE_TEXT = /(?:sign\s*in|log\s*in|create\s+account|choose\s+an?\s+account|checkpoint|captcha|security\s+check|consent(?:\s+required)?)/i;
 const MAX_TEXT = 400;
+const RECENT_PROFILE_HISTORY_MAX_AGE_MS = 15 * 60_000;
 
 export const EVIDENCE_SOURCES = Object.freeze(["camoufox-public", "chrome-account:<id>", "github-api"]);
 const CHROME_SOURCE_PATTERN = /^chrome-account:[A-Za-z0-9._:@+-]{1,160}$/;
@@ -358,6 +359,7 @@ export class ChromeAccountProfileManager {
       // bounded pre-probe baseline, then rely on the live PID plus canonical
       // URL/title evidence. Never accept an old login/challenge row.
       const minChromeTime = chromeTimeMicros((probeStartedAt - 2_000) * 1000) + 11_644_473_600_000_000;
+      const recentHistoryMin = chromeTimeMicros((Date.now() - RECENT_PROFILE_HISTORY_MAX_AGE_MS) * 1000) + 11_644_473_600_000_000;
       for (let attempt = 0; attempt < 10; attempt += 1) {
         const rows = await this.#historyReader(profilePath);
         const candidates = rows.filter((item) => chromeTimeMicros(item.lastVisitTime) >= minChromeTime && /linkedin\.com\/in\/|facebook\.com\/(?:profile\.php|[A-Za-z0-9])/i.test(String(item.url || "")));
@@ -366,6 +368,17 @@ export class ChromeAccountProfileManager {
         for (const row of candidates) {
           const result = verifyChromeIdentity({ platform: normalized, url: row.url, title: row.title || "", bodyText: "", candidateCount: 1 });
           if (result.status === "READY") return { ...result, platform: normalized, accountId: account, source: chromeAccountSource(account), profilePath, pid: process.pid, evidenceHash: chromeEvidenceHash({ ...result, profilePath, pid: process.pid, probeStartedAt, historyLastVisitTime: row.lastVisitTime }) };
+        }
+        // A running Chrome instance may consume the bounded probe by routing
+        // it to an already-open window without creating a new History row.
+        // Accept a recent canonical identity row only within a short TTL,
+        // still requiring the live app-owned PID and clean identity surface.
+        const recent = rows
+          .filter((item) => chromeTimeMicros(item.lastVisitTime) >= recentHistoryMin && /linkedin\.com\/in\/|facebook\.com\/(?:profile\.php|[A-Za-z0-9])/i.test(String(item.url || "")))
+          .sort((a, b) => chromeTimeMicros(b.lastVisitTime) - chromeTimeMicros(a.lastVisitTime));
+        for (const row of recent) {
+          const result = verifyChromeIdentity({ platform: normalized, url: row.url, title: row.title || "", bodyText: "", candidateCount: 1 });
+          if (result.status === "READY") return { ...result, platform: normalized, accountId: account, source: chromeAccountSource(account), profilePath, pid: process.pid, evidenceHash: chromeEvidenceHash({ ...result, profilePath, pid: process.pid, probeStartedAt, historyLastVisitTime: row.lastVisitTime, freshness: "recent_profile_history" }) };
         }
         await this.#sleepFn(500);
       }
