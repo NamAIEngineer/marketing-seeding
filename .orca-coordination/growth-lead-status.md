@@ -208,3 +208,15 @@ lanes: account-migration=PATCHING LinkedIn Chrome budget correction; build=NEXT;
 CẦN NAM: Facebook Chrome profile remains open for review; CAPTCHA/2FA/checkpoint handling only if shown. LinkedIn will get one Chrome Keychain attempt after rebuild.
 blockers: LINKEDIN-CHROME-MIGRATION (rebuild/reload) | LIVE-PUBLICATION (0 verified permalink)
 next_30m: commit budget correction, clean build/reload 4321, retry LinkedIn once via Chrome Keychain; no Facebook retry.
+
+updated: 2026-11-02T00:59:00+07:00
+phase: P0 AUTO-LOGIN
+runtime: packaged 4321 source=2759b7f11aeeebc85a75ca8f7ecab449f54b802d dirty=false health=200 pid=66141; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam BLOCKED CHROME_LOGIN_CHALLENGE (Chrome attempt=1; headed stable Chrome profile open at linkedin.com/login; no retry) | facebook_group/facebook_nam BLOCKED CHROME_LOGIN_CONTROLS_NOT_FOUND (Chrome attempt=1; app profile retained; no retry)
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (authenticated state UNKNOWN)
+lanes: runtime=SMOKE_PASS; account=COMPLETE_BLOCKED_WITH_EVIDENCE; content=INTEGRATED; video=INTEGRATED; publish=PAUSED_NO_READY_ACCOUNT; comments=PAUSED; community=READY_WITH_AUTH_UNKNOWN; threads_reddit_ph_ih_x=PAUSED
+CẦN NAM: LinkedIn Chrome window đang ở `https://www.linkedin.com/login/`; xử lý CAPTCHA/2FA/checkpoint thủ công trong cửa sổ profile `~/Library/Application Support/Marketing Seeding OS/chrome-profiles/linkedin-linkedin_nam` khi Nam thức dậy. Facebook profile đã dừng sau lần thử duy nhất; không retry tự động.
+blockers: NO_READY_ACCOUNT (Nam must clear platform challenge or use manual login; controller will not retry) | LIVE-PUBLICATION (0 verified permalink; schedule remains disabled)
+next_30m: commit/push checkpoint, preserve both Chrome windows/profiles, keep publish/schedule disabled; update status at next hourly check.

@@ -1,0 +1,30 @@
+{
+  "observedAt": "2026-11-02T00:59:00+07:00",
+  "runtime": {"port": 4321, "sourceCommit": "2759b7f11aeeebc85a75ca8f7ecab449f54b802d", "sourceDirty": false, "health": 200},
+  "accounts": [
+    {
+      "platform": "linkedin",
+      "accountId": "linkedin_nam",
+      "provider": "chrome",
+      "profilePath": "~/Library/Application Support/Marketing Seeding OS/chrome-profiles/linkedin-linkedin_nam",
+      "attempts": 1,
+      "status": "BLOCKED",
+      "code": "CHROME_LOGIN_CHALLENGE",
+      "observedUrl": "https://www.linkedin.com/login/",
+      "windowTitle": "Đăng nhập LinkedIn, Đăng nhập | LinkedIn",
+      "windowRetained": true
+    },
+    {
+      "platform": "facebook_group",
+      "accountId": "facebook_nam",
+      "provider": "chrome",
+      "profilePath": "~/Library/Application Support/Marketing Seeding OS/chrome-profiles/facebook-facebook_nam",
+      "attempts": 1,
+      "status": "BLOCKED",
+      "code": "CHROME_LOGIN_CONTROLS_NOT_FOUND",
+      "windowRetained": true
+    }
+  ],
+  "capture": {"status": "UNAVAILABLE", "reason": "screencapture could not create image from Chrome window; URL/title/process evidence retained"},
+  "liveSideEffects": {"publishedVerified": 0, "scheduleEnabled": false, "autoReplyEnabled": false, "communityPostingEnabled": false}
+}
