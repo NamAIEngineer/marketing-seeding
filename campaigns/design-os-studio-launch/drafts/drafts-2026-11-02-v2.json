@@ -1,0 +1,431 @@
+{
+  "campaign": "Design OS Studio — daily distribution",
+  "date": "2026-11-02",
+  "product": "design-os-studio",
+  "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+  "eligibleSurfaces": [
+    "linkedin_personal",
+    "facebook_timeline",
+    "facebook_member_group"
+  ],
+  "pausedSurfaces": [
+    "linkedin_page",
+    "facebook_page",
+    "threads",
+    "reddit",
+    "indie_hackers",
+    "product_hunt",
+    "x"
+  ],
+  "drafts": [
+    {
+      "id": "dos-1102-v2-01",
+      "locale": "en",
+      "channel": "linkedin_personal",
+      "cap": {
+        "perDay": 2
+      },
+      "opening": "I turned a blank canvas into a SaaS dashboard I could review end to end.",
+      "body": "I turned a blank canvas into a SaaS dashboard I could review end to end.\n\nI started with a blank document, asked an agent in the Agents panel to shape the first pass, then corrected the details myself. The useful part was the loop: ask, inspect the canvas, tighten the layout, and check the generated output.\n\nThe .fig file stays on my machine. The README documents native read and write for Figma .fig v106 archives. Dev Mode can generate React, Tailwind, CSS, SwiftUI, Jetpack Compose, and Flutter views from the selected design. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nIf this workflow fits your team, try it and leave the repo a star.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-01",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-01-linkedin-personal.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-01-linkedin-personal.jpg",
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-v2-02",
+      "locale": "en",
+      "channel": "linkedin_personal",
+      "cap": {
+        "perDay": 2
+      },
+      "opening": "A landing page became something I could inspect, adjust, and hand to engineering.",
+      "body": "A landing page became something I could inspect, adjust, and hand to engineering.\n\nI used the canvas for the visual work, kept the file local, and used Dev Mode when I needed an implementation view. I kept the final decisions in the design file instead of scattering screenshots across a handoff thread.\n\nThe Agents panel can run existing Claude Code, Codex, Antigravity, Gemini, or Grok CLI sign-ins, so the workflow does not require an extra API key. The repository also documents a local GPU canvas and a 22-tool designos-mcp server for an agentic workflow. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nCurious how you handle design-to-code? Try the repo and star it if useful.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-02",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-02-linkedin-page.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-02-linkedin-page.jpg",
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-v2-03",
+      "locale": "en",
+      "channel": "linkedin_personal",
+      "cap": {
+        "perDay": 2
+      },
+      "opening": "I got a mobile onboarding screen from an empty file to a coherent flow.",
+      "body": "I got a mobile onboarding screen from an empty file to a coherent flow.\n\nThe useful part was the loop: ask, inspect the canvas, tighten the layout, and check the generated output. I treated the agent as a collaborator. It made the first structure; I made the calls about hierarchy, spacing, and content.\n\nDev Mode can generate React, Tailwind, CSS, SwiftUI, Jetpack Compose, and Flutter views from the selected design. The project README records a verified large-file example with 723,136 Kiwi records and 112,474 scene nodes. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nOpen the project, test one real file, and add a star if it earns a place in your toolkit.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-03",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-03-facebook-timeline.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-03-facebook-timeline.jpg",
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-v2-04",
+      "locale": "en",
+      "channel": "linkedin_personal",
+      "cap": {
+        "perDay": 2
+      },
+      "opening": "I built a sign-up form and checked the design decisions in the same workspace.",
+      "body": "I built a sign-up form and checked the design decisions in the same workspace.\n\nI kept the final decisions in the design file instead of scattering screenshots across a handoff thread. I started with a blank document, asked an agent in the Agents panel to shape the first pass, then corrected the details myself.\n\nThe repository also documents a local GPU canvas and a 22-tool designos-mcp server for an agentic workflow. The .fig file stays on my machine. The README documents native read and write for Figma .fig v106 archives. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nIf local ownership matters to you, take a look and star the repository when you have tried it.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-04",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-04-facebook-page.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-04-facebook-page.jpg",
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-v2-05",
+      "locale": "en",
+      "channel": "linkedin_personal",
+      "cap": {
+        "perDay": 2
+      },
+      "opening": "I made a pricing table that is ready for a real product conversation.",
+      "body": "I made a pricing table that is ready for a real product conversation.\n\nI treated the agent as a collaborator. It made the first structure; I made the calls about hierarchy, spacing, and content. I used the canvas for the visual work, kept the file local, and used Dev Mode when I needed an implementation view.\n\nThe project README records a verified large-file example with 723,136 Kiwi records and 112,474 scene nodes. The Agents panel can run existing Claude Code, Codex, Antigravity, Gemini, or Grok CLI sign-ins, so the workflow does not require an extra API key. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nGive the loop a small test with your own file, then star the repo if it helps.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-05",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-05-facebook-group-a.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-05-facebook-group-a.jpg",
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-v2-06",
+      "locale": "en",
+      "channel": "linkedin_personal",
+      "cap": {
+        "perDay": 2
+      },
+      "opening": "A profile card went from rough layout to a usable design handoff.",
+      "body": "A profile card went from rough layout to a usable design handoff.\n\nI started with a blank document, asked an agent in the Agents panel to shape the first pass, then corrected the details myself. The useful part was the loop: ask, inspect the canvas, tighten the layout, and check the generated output.\n\nThe .fig file stays on my machine. The README documents native read and write for Figma .fig v106 archives. Dev Mode can generate React, Tailwind, CSS, SwiftUI, Jetpack Compose, and Flutter views from the selected design. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nTry one screen from your next project and tell me what you would change. A star is welcome if it helps.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-06",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-06-facebook-group-b.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-06-facebook-group-b.jpg",
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-v2-07",
+      "locale": "en",
+      "channel": "linkedin_personal",
+      "cap": {
+        "perDay": 2
+      },
+      "opening": "I assembled a small design system without leaving the local project.",
+      "body": "I assembled a small design system without leaving the local project.\n\nI used the canvas for the visual work, kept the file local, and used Dev Mode when I needed an implementation view. I kept the final decisions in the design file instead of scattering screenshots across a handoff thread.\n\nThe Agents panel can run existing Claude Code, Codex, Antigravity, Gemini, or Grok CLI sign-ins, so the workflow does not require an extra API key. The repository also documents a local GPU canvas and a 22-tool designos-mcp server for an agentic workflow. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nFor people building in public: try the workflow and star the repo if the result is useful.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-07",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-07-facebook-group-c.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-07-facebook-group-c.jpg",
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-v2-08",
+      "locale": "en",
+      "channel": "linkedin_personal",
+      "cap": {
+        "perDay": 2
+      },
+      "opening": "I ended with an analytics workspace that can move from design review to code review.",
+      "body": "I ended with an analytics workspace that can move from design review to code review.\n\nThe useful part was the loop: ask, inspect the canvas, tighten the layout, and check the generated output. I treated the agent as a collaborator. It made the first structure; I made the calls about hierarchy, spacing, and content.\n\nDev Mode can generate React, Tailwind, CSS, SwiftUI, Jetpack Compose, and Flutter views from the selected design. The project README records a verified large-file example with 723,136 Kiwi records and 112,474 scene nodes. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nI would value a practical comparison from your setup; try it first, then star if it holds up.",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-08",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-08-facebook-group-d.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-08-facebook-group-d.jpg",
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-v2-09",
+      "locale": "vi",
+      "channel": "facebook_timeline",
+      "cap": {
+        "perDay": 4
+      },
+      "opening": "Mình vừa làm ra một màn hình team settings từ file trống, rồi xem lại từng bước ngay trên canvas.",
+      "body": "Mình vừa làm ra một màn hình team settings từ file trống, rồi xem lại từng bước ngay trên canvas.\n\nMình mở file, nhờ agent dựng khung đầu tiên, rồi tự chỉnh lại bố cục và nội dung. Agent làm phần khởi đầu trong Agents panel; mình kiểm tra canvas, sửa chi tiết, rồi mở Dev Mode.\n\n- File .fig nằm trên máy, phù hợp với cách làm local-first.\n- Agent dùng CLI đã đăng nhập sẵn; README ghi rõ không cần thêm API key.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nNếu thấy hữu ích, cho repo một sao nhé.\n\nMọi người thường để agent tham gia ở bước nào khi làm UI?",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-09",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-09-linkedin-square.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-09-linkedin-square.jpg",
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-v2-10",
+      "locale": "vi",
+      "channel": "facebook_member_group",
+      "cap": {
+        "perDay": 4
+      },
+      "opening": "Kết quả cuối của buổi thử là một bảng điều khiển agent có thể đem đi bàn tiếp với team.",
+      "body": "Kết quả cuối của buổi thử là một bảng điều khiển agent có thể đem đi bàn tiếp với team.\n\nAgent làm phần khởi đầu trong Agents panel; mình kiểm tra canvas, sửa chi tiết, rồi mở Dev Mode. Mình làm theo vòng lặp hỏi, xem, sửa và kiểm tra lại thay vì bắt đầu bằng một bản mô tả dài.\n\n- Agent dùng CLI đã đăng nhập sẵn; README ghi rõ không cần thêm API key.\n- Dev Mode có thể xuất React, Tailwind, CSS, SwiftUI, Jetpack Compose và Flutter.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nAi muốn thử thì xem repo; mình rất muốn nghe góp ý.\n\nNếu là workflow của bạn, bước nào nên được tự động hóa trước?",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-10",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": "campaigns/design-os-studio-launch/video/variants/w2-video-10-facebook-portrait.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-10-facebook-portrait.jpg",
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-v2-11",
+      "locale": "vi",
+      "channel": "facebook_member_group",
+      "cap": {
+        "perDay": 4
+      },
+      "opening": "Một luồng checkout hoàn chỉnh hơn bắt đầu từ vài khối rất đơn giản trên canvas.",
+      "body": "Một luồng checkout hoàn chỉnh hơn bắt đầu từ vài khối rất đơn giản trên canvas.\n\nMình làm theo vòng lặp hỏi, xem, sửa và kiểm tra lại thay vì bắt đầu bằng một bản mô tả dài. File vẫn nằm trên máy mình; các quyết định cuối cùng được giữ trong chính bản thiết kế.\n\n- Dev Mode có thể xuất React, Tailwind, CSS, SwiftUI, Jetpack Compose và Flutter.\n- Repo có designos-mcp và canvas GPU native để thử một quy trình agentic rõ ràng hơn.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nMình để link repo ở đây, ai thử rồi cho mình biết kết quả nhé.\n\nBạn ưu tiên giữ file local hay làm việc trên cloud?",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-11",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": null,
+      "thumbnailPath": null,
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-v2-12",
+      "locale": "vi",
+      "channel": "facebook_timeline",
+      "cap": {
+        "perDay": 4
+      },
+      "opening": "Mình dùng một file local để đi từ ý tưởng tới trang tài liệu, không phải ghép nhiều ảnh chụp.",
+      "body": "Mình dùng một file local để đi từ ý tưởng tới trang tài liệu, không phải ghép nhiều ảnh chụp.\n\nFile vẫn nằm trên máy mình; các quyết định cuối cùng được giữ trong chính bản thiết kế. Mình mở file, nhờ agent dựng khung đầu tiên, rồi tự chỉnh lại bố cục và nội dung.\n\n- Repo có designos-mcp và canvas GPU native để thử một quy trình agentic rõ ràng hơn.\n- File .fig nằm trên máy, phù hợp với cách làm local-first.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nNếu hợp cách làm của bạn, ghé repo và để lại một sao.\n\nKhi handoff, bạn cần xem code hay xem canvas trước?",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-12",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": null,
+      "thumbnailPath": null,
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-v2-13",
+      "locale": "vi",
+      "channel": "facebook_member_group",
+      "cap": {
+        "perDay": 4
+      },
+      "opening": "Buổi thử này kết thúc bằng một trang portfolio rõ ràng hơn để tiếp tục xây sản phẩm.",
+      "body": "Buổi thử này kết thúc bằng một trang portfolio rõ ràng hơn để tiếp tục xây sản phẩm.\n\nMình mở file, nhờ agent dựng khung đầu tiên, rồi tự chỉnh lại bố cục và nội dung. Agent làm phần khởi đầu trong Agents panel; mình kiểm tra canvas, sửa chi tiết, rồi mở Dev Mode.\n\n- File .fig nằm trên máy, phù hợp với cách làm local-first.\n- Agent dùng CLI đã đăng nhập sẵn; README ghi rõ không cần thêm API key.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nThử trên một màn hình thật rồi chia sẻ trải nghiệm nhé.\n\nBạn đã dùng agent để sửa thiết kế trực tiếp chưa?",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-13",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": null,
+      "thumbnailPath": null,
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-v2-14",
+      "locale": "vi",
+      "channel": "facebook_member_group",
+      "cap": {
+        "perDay": 4
+      },
+      "opening": "Mình đã biến bản nháp thành một màn hình lịch có cấu trúc để handoff.",
+      "body": "Mình đã biến bản nháp thành một màn hình lịch có cấu trúc để handoff.\n\nAgent làm phần khởi đầu trong Agents panel; mình kiểm tra canvas, sửa chi tiết, rồi mở Dev Mode. Mình làm theo vòng lặp hỏi, xem, sửa và kiểm tra lại thay vì bắt đầu bằng một bản mô tả dài.\n\n- Agent dùng CLI đã đăng nhập sẵn; README ghi rõ không cần thêm API key.\n- Dev Mode có thể xuất React, Tailwind, CSS, SwiftUI, Jetpack Compose và Flutter.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nRepo mở để mọi người xem và thử; một sao nếu bạn thấy đáng giá.\n\nMột design system nhỏ của bạn bắt đầu từ đâu?",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-14",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": null,
+      "thumbnailPath": null,
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-v2-15",
+      "locale": "vi",
+      "channel": "facebook_timeline",
+      "cap": {
+        "perDay": 4
+      },
+      "opening": "Điều còn lại sau buổi làm là một hộp thư hỗ trợ nhìn được, sửa được, và đem đi triển khai.",
+      "body": "Điều còn lại sau buổi làm là một hộp thư hỗ trợ nhìn được, sửa được, và đem đi triển khai.\n\nMình làm theo vòng lặp hỏi, xem, sửa và kiểm tra lại thay vì bắt đầu bằng một bản mô tả dài. File vẫn nằm trên máy mình; các quyết định cuối cùng được giữ trong chính bản thiết kế.\n\n- Dev Mode có thể xuất React, Tailwind, CSS, SwiftUI, Jetpack Compose và Flutter.\n- Repo có designos-mcp và canvas GPU native để thử một quy trình agentic rõ ràng hơn.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nMình đang tiếp tục thử các flow khác, góp ý của mọi người rất hữu ích.\n\nBạn sẽ thử quy trình này với loại màn hình nào?",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-15",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": null,
+      "thumbnailPath": null,
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    },
+    {
+      "id": "dos-1102-v2-16",
+      "locale": "vi",
+      "channel": "facebook_member_group",
+      "cap": {
+        "perDay": 4
+      },
+      "opening": "Mình thử một hướng local-first và kết quả là một thư viện component cụ thể.",
+      "body": "Mình thử một hướng local-first và kết quả là một thư viện component cụ thể.\n\nFile vẫn nằm trên máy mình; các quyết định cuối cùng được giữ trong chính bản thiết kế. Mình mở file, nhờ agent dựng khung đầu tiên, rồi tự chỉnh lại bố cục và nội dung.\n\n- Repo có designos-mcp và canvas GPU native để thử một quy trình agentic rõ ràng hơn.\n- File .fig nằm trên máy, phù hợp với cách làm local-first.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nNếu làm local-first, mình muốn nghe cách bạn đang tổ chức file.\n\nĐiểm khó nhất trong design-to-code của bạn hiện là gì?",
+      "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "sourceRefs": [
+        "product:README.md:11-13",
+        "product:README.md:47-50"
+      ],
+      "videoSlot": "mission16-v3-product-16",
+      "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
+      "videoArtifactPath": null,
+      "thumbnailPath": null,
+      "videoQuality": "PENDING_V3_APPROVAL",
+      "state": "CONTENT_PENDING_CLAUDE",
+      "validation": {
+        "status": "PENDING_CLAUDE",
+        "report": null
+      }
+    }
+  ],
+  "queuePolicy": {
+    "status": "CONTENT_PENDING_CLAUDE",
+    "noPublish": true,
+    "videoGate": "MISSION_16_V3_APPROVED"
+  },
+  "validationGate": {
+    "status": "CONTENT_PENDING_CLAUDE",
+    "required": "Claude review plus video approval"
+  }
+}

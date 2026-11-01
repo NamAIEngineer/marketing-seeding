@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "draftCount": 16,
+  "uniqueVideoSlots": 16,
+  "errors": [],
+  "contentStatus": "CONTENT_PENDING_CLAUDE",
+  "publication": "NOT_AUTHORIZED",
+  "sha256": "dd216573a3c6a88fe2d9ce03078f8b60d05c030102e6f2f2aead04af739523a3"
+}
