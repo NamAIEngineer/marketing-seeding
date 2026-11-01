@@ -70,3 +70,16 @@ lanes: runtime=FIX_COMMITTED (30db904 input selectors + d93bcb7 visible macOS fo
 CẦN NAM: Không retry LinkedIn tiếp trước candidate font test; sau khi candidate xác minh chữ đọc được, mở lại Đăng nhập thủ công và chỉ nhập MFA/CAPTCHA/OTP/checkpoint nếu Camoufox yêu cầu. Không dùng Chrome/copy cookie/session. | Nếu tới 00:00 2/11 profile thử vẫn fail, chuyển login/publish sang Chromium persistent profile riêng trong Application Support (không đụng Chrome cá nhân); quyết định đã ghi.
 blockers: CAMOUFOX-FINGERPRINT-GLYPH (runtime fix d93bcb7; candidate screenshot/test pending) | CAMOUFOX-LIVE-AUTH (LinkedIn toast + Facebook identity UNKNOWN; owner=Nam only for MFA/CAPTCHA/OTP) | PACKAGED-REBUILD (controller; preserve state) | LIVE-PUBLICATION (0 verified permalink)
 next_30m: cherry-pick runtime fixes, integrate quality-A video/content evidence, build clean checkout with sh desktop/build-macos.sh, backup state + update LaunchAgent 4321, verify health/source SHA/operator session/UI, run profile-only LinkedIn/Facebook login smoke without real-account retry.
+
+updated: 2026-11-01T22:39:45+0700
+phase: P0
+runtime: packaged ai.marketing-seeding.packaged 4321 (source SHA 22178785c79decde793f494d198c93879db11cfc, prior verified health=200 dirty=false; rebuild pending Chrome architecture)
+accounts: linkedin/linkedin_nam: BLOCKED/WAITING_FOR_USER on old Camoufox session; Chrome app-owned manual login pending | facebook_group/facebook_nam: UNKNOWN on old Camoufox identity; Chrome app-owned manual login pending
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 real-capture worker output awaiting independent verification; quality-A integration pending
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (public/fixture evidence; authenticated Chrome state pending)
+canonical_store: single JsonStore/SeedingService on 4321; Camoufox-public→discoveries/communities/rules/listening; chrome-account:<id>→publications/permalink/metrics/comments/join; github-api→stars/referrer; source+evidenceHash required
+lanes: chrome-login=P0 DISPATCHING (linkedin_nam first); comments-pilot=BLOCKED_ON_LOGIN (task graph added; no account side effects); content=CHECKPOINTED; video=READY_FOR_INTEGRATION; community=READY_WITH_AUTH_UNKNOWN; ui=CHECKPOINTED; publish=PAUSED until Chrome account READY
+CẦN NAM: Sau khi app mở cửa sổ Chrome profile riêng `linkedin-linkedin_nam`, Nam tự nhập LinkedIn credential/SSO/MFA/CAPTCHA/checkpoint trong cửa sổ đó; không dùng Chrome cá nhân, không copy cookie/session. | Sau đó làm tương tự cho `facebook-group-facebook_nam` nếu được yêu cầu; chỉ Nam nhập mã.
+blockers: CHROME-LOGIN-P0 (worker + Nam manual input); LIVE-PUBLICATION (0 verified permalink); PILOT-COMMENTS (waits for READY account)
+next_30m: dispatch Chrome profile worker, independently inspect/integrate into canonical store, commit checkpoint, build clean app 4321, open linkedin_nam manual-login window, verify account identity before READY.

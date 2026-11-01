@@ -195,3 +195,45 @@ Overview hiện là trang dài toàn form kỹ thuật (operator token, 9Router,
 4. **Sửa app Swift (desktop/MarketingSeedingApp.swift):** thêm main menu chuẩn (App, Edit với Cut/Copy/Paste/Select All, Window) để Cmd+C/V/A hoạt động trong WKWebView.
 5. Tiếng Việt tự nhiên, không jargon (bỏ "UNKNOWN quarantine", "standing authority"… khỏi màn hình của Nam). Đi qua gate design-os-vietnamese cho chữ UI.
 6. Build lại app (sh desktop/build-macos.sh từ checkout sạch), cập nhật LaunchAgent ai.marketing-seeding.packaged cổng 4321, giữ state + Keychain + Camoufox profiles. Chụp màn hình Tổng quan mới lưu vào plans/growth-lead-20261102/ui/.
+
+---
+
+## 12. BỔ SUNG 22:37 ICT — TỰ TRẢ LỜI COMMENT + PILOT 1 TUẦN (Nam chốt)
+
+### 12.1 Tự trả lời comment
+- Mọi bài đã đăng: làn Chrome profile của chính account đó đọc comment mới (chu kỳ ≤ 30 phút trong giờ chạy), và **tự trả lời** dưới tên account đó.
+- Giọng như người thật: ngắn, tự nhiên, đúng ngôn ngữ người hỏi (vi/en), cảm ơn, trả lời đúng câu hỏi, có thể hỏi lại 1 câu. Không văn mẫu, không lặp câu giữa các reply, không emoji spam, không dán link repo ở mọi reply (chỉ khi người ta hỏi link/cách cài).
+- Grounded: mọi thông tin kỹ thuật lấy từ repo design-os-studio (README/CHANGELOG/docs), có evidence hash. Không biết thì nói thật là sẽ kiểm tra, không bịa.
+- Trung thực: là account của Nam trả lời về sản phẩm Nam/team làm; không giả làm người dùng khác, không phủ nhận là có dùng công cụ nếu bị hỏi thẳng.
+- Không tự trả lời (để vào "Cần Nam" trên Overview): comment tiêu cực/tranh cãi, hỏi giá/hợp đồng/hợp tác, thông tin cá nhân, vấn đề pháp lý, spam/lừa đảo.
+- Giới hạn: tối đa 1 reply cho mỗi comment, tối đa 20 reply/account/ngày, giãn cách tự nhiên (2–15 phút sau comment, không reply tức thì).
+- Overview: số comment mới, đã trả lời, đang chờ Nam.
+
+### 12.2 Lịch đăng
+- **10 bài/ngày, khung 07:00–23:00 ICT**, giãn đều theo cap mục 9 (không dồn 1 account). Chạy hằng ngày tự động.
+
+### 12.3 PILOT 7 NGÀY: 2026-11-02 → 2026-11-08
+- Mỗi ngày đủ 10 bài (content khác + MP4 khác), theo đúng cap.
+- Thiết kế thí nghiệm có chủ đích (ghi rõ biến của từng bài vào store):
+  - Khung giờ: sáng 07–10 / trưa 11–14 / chiều 15–18 / tối 19–23.
+  - Kiểu mở bài: kết quả cụ thể / câu hỏi / trước–sau / con số thật.
+  - Video: recap nhiều tính năng vs 1 kết quả; 16:9 vs 1:1 vs 4:5; độ dài 15s vs 30s.
+  - Nơi đăng: LinkedIn cá nhân / Facebook cá nhân / Facebook Group (theo loại group: VN vs quốc tế, design vs AI).
+  - Ngôn ngữ: vi vs en.
+- Đo cho từng bài: 1h/24h/72h view, reaction, comment, share, click (UTM), star GitHub tăng (tương quan theo giờ + referrer khi có).
+- Cuối mỗi ngày (23:30): tự tạo báo cáo ngày ngắn trên Overview + điều chỉnh nhẹ (tối đa 30% số bài ngày mai đổi biến) — giữ đủ dữ liệu so sánh.
+- Ngày 2026-11-09 08:00: **báo cáo pilot** trên Overview (và file plans/pilot-20261102/report.md): cái gì kéo star tốt nhất, group/khung giờ/kiểu bài/video tốt nhất, account nào bị cảnh báo hay không, đề xuất công thức tối ưu cho tuần 2 + số bài/ngày an toàn. Sau đó tự áp dụng công thức tối ưu (Nam chỉ xem).
+- An toàn account trong pilot: nếu bất kỳ account nào gặp cảnh báo/giới hạn/checkpoint ⇒ tự giảm 50% tần suất account đó 48h và ghi vào Overview.
+
+---
+
+## 13. BỔ SUNG 22:40 ICT — PHẠM VI CRAWL (làn Camoufox + Crawl4AI, chỉ trang public)
+
+1. Cộng đồng: tìm Facebook/LinkedIn group theo chủ đề (Figma, UI/UX, design system, AI design, AI agents, Claude Code/Codex, MCP, build in public; VN + quốc tế) → tên, link, số thành viên, độ hoạt động, nội quy, loại bài được phép → danh sách join + xếp hạng.
+2. Bài đang chạy tốt trong các group đó: chủ đề, cách mở bài, định dạng video/ảnh, giờ đăng, mức tương tác → gợi ý góc content cho ngày sau.
+3. Listening: các cuộc thảo luận public mà sản phẩm thật sự liên quan (vd "Figma offline", "mở file .fig không cần Figma", "AI agent sửa file thiết kế", "Figma MCP") → danh sách cơ hội trả lời có ích (chỉ đưa vào hàng chờ, đăng/trả lời vẫn theo cap + rule cộng đồng).
+4. Đối thủ / repo tương tự (Penpot, các Figma MCP server, công cụ design-to-code AI…): cách họ giới thiệu, cái gì kéo star → bài học cho content.
+5. Nguồn sản phẩm: release/CHANGELOG/README của design-os-studio (release watcher) → tính năng mới cho video + bài.
+6. Số liệu của mình: star history design-os-studio (GitHub API), referrer/traffic nếu có quyền.
+
+Giới hạn: chỉ trang public, tôn trọng robots/rate limit; KHÔNG thu thập danh sách thành viên, email, số điện thoại hay dữ liệu cá nhân; không đăng nhập để crawl. Kết quả ghi vào store chung (source=camoufox-public / crawl4ai) và hiện trên Overview ở khối Cộng đồng.
