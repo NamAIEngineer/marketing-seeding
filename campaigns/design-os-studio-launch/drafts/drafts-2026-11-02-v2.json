@@ -25,12 +25,15 @@
       "cap": {
         "perDay": 2
       },
-      "opening": "I turned a blank canvas into a SaaS dashboard I could review end to end.",
-      "body": "I turned a blank canvas into a SaaS dashboard I could review end to end.\n\nI started with a blank document, asked an agent in the Agents panel to shape the first pass, then corrected the details myself. The useful part was the loop: ask, inspect the canvas, tighten the layout, and check the generated output.\n\nThe .fig file stays on my machine. The README documents native read and write for Figma .fig v106 archives. Dev Mode can generate React, Tailwind, CSS, SwiftUI, Jetpack Compose, and Flutter views from the selected design. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nIf this workflow fits your team, try it and leave the repo a star.",
+      "postType": "original",
+      "opening": "I wanted to see whether agent sessions, review, receipts would change a real design handoff.",
+      "body": "I wanted to see whether agent sessions, review, receipts would change a real design handoff.\n\n**v0.6.0 — AI Design**\n\nClaude Code, Codex, Gemini, Grok and Antigravity can run as sessions; edits can be reviewed with Keep or Revert; each turn records duration, tools and changed layers.\n\nWhat I would actually try:\n• Open a real design file locally\n• Ask an agent for one bounded change\n• Inspect the canvas before accepting it\n• Keep or revert the turn\n• Check the implementation view\n• Compare a captured result with the expected screen\n\n**From “AI generates a screen” to “an agent works inside a design environment with state, review and evidence.”**\n\nThe project is free and presented as research/open source. I am sharing the experiment, not claiming a production guarantee.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nWhat would you test first: **accuracy, controllability hay speed?**?\n\n#DesignOS #AIDesign #DesignEngineering #Figma #BuildInPublic #MCP",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "v0.6.0 — AI Design",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-01",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -50,12 +53,15 @@
       "cap": {
         "perDay": 2
       },
-      "opening": "A landing page became something I could inspect, adjust, and hand to engineering.",
-      "body": "A landing page became something I could inspect, adjust, and hand to engineering.\n\nI used the canvas for the visual work, kept the file local, and used Dev Mode when I needed an implementation view. I kept the final decisions in the design file instead of scattering screenshots across a handoff thread.\n\nThe Agents panel can run existing Claude Code, Codex, Antigravity, Gemini, or Grok CLI sign-ins, so the workflow does not require an extra API key. The repository also documents a local GPU canvas and a 22-tool designos-mcp server for an agentic workflow. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nCurious how you handle design-to-code? Try the repo and star it if useful.",
+      "postType": "original",
+      "opening": "I wanted to see whether a live agent workbench would change a real design handoff.",
+      "body": "I wanted to see whether a live agent workbench would change a real design handoff.\n\n**v0.2.0 — Agentic PTY Chat UI**\n\nThe release adds structured chat turns for Claude Code, Codex and Antigravity with inline NodeSpec detection and one-click canvas apply.\n\nWhat I would actually try:\n• Open a real design file locally\n• Ask an agent for one bounded change\n• Inspect the canvas before accepting it\n• Keep or revert the turn\n• Check the implementation view\n• Compare a captured result with the expected screen\n\n**From “AI generates a screen” to “an agent works inside a design environment with state, review and evidence.”**\n\nThe project is free and presented as research/open source. I am sharing the experiment, not claiming a production guarantee.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nWhat would you test first: **file fidelity, agent editing hay code handoff?**?\n\n#DesignOS #AIDesign #DesignEngineering #Figma #BuildInPublic #MCP",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "v0.2.0 — Agentic PTY Chat UI",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-02",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -75,12 +81,15 @@
       "cap": {
         "perDay": 2
       },
-      "opening": "I got a mobile onboarding screen from an empty file to a coherent flow.",
-      "body": "I got a mobile onboarding screen from an empty file to a coherent flow.\n\nThe useful part was the loop: ask, inspect the canvas, tighten the layout, and check the generated output. I treated the agent as a collaborator. It made the first structure; I made the calls about hierarchy, spacing, and content.\n\nDev Mode can generate React, Tailwind, CSS, SwiftUI, Jetpack Compose, and Flutter views from the selected design. The project README records a verified large-file example with 723,136 Kiwi records and 112,474 scene nodes. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nOpen the project, test one real file, and add a star if it earns a place in your toolkit.",
+      "postType": "original",
+      "opening": "I wanted to see whether a local file you can open and save would change a real design handoff.",
+      "body": "I wanted to see whether a local file you can open and save would change a real design handoff.\n\n**v0.2.0 — .fig v106 parity**\n\nThe README documents native bidirectional Figma .fig v106 read/write, including the binary archive pieces needed for a local round trip.\n\nWhat I would actually try:\n• Open a real design file locally\n• Ask an agent for one bounded change\n• Inspect the canvas before accepting it\n• Keep or revert the turn\n• Check the implementation view\n• Compare a captured result with the expected screen\n\n**From “AI generates a screen” to “an agent works inside a design environment with state, review and evidence.”**\n\nThe project is free and presented as research/open source. I am sharing the experiment, not claiming a production guarantee.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nWhat would you test first: **local ownership hay team collaboration?**?\n\n#DesignOS #AIDesign #DesignEngineering #Figma #BuildInPublic #MCP",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "v0.2.0 — .fig v106 parity",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-03",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -100,12 +109,15 @@
       "cap": {
         "perDay": 2
       },
-      "opening": "I built a sign-up form and checked the design decisions in the same workspace.",
-      "body": "I built a sign-up form and checked the design decisions in the same workspace.\n\nI kept the final decisions in the design file instead of scattering screenshots across a handoff thread. I started with a blank document, asked an agent in the Agents panel to shape the first pass, then corrected the details myself.\n\nThe repository also documents a local GPU canvas and a 22-tool designos-mcp server for an agentic workflow. The .fig file stays on my machine. The README documents native read and write for Figma .fig v106 archives. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nIf local ownership matters to you, take a look and star the repository when you have tried it.",
+      "postType": "original",
+      "opening": "I wanted to see whether code you can inspect before handoff would change a real design handoff.",
+      "body": "I wanted to see whether code you can inspect before handoff would change a real design handoff.\n\n**v0.2.0 — Dev Mode**\n\nDev Mode lists React, Tailwind v4, CSS, SwiftUI, Jetpack Compose and Flutter outputs from the selected design.\n\nWhat I would actually try:\n• Open a real design file locally\n• Ask an agent for one bounded change\n• Inspect the canvas before accepting it\n• Keep or revert the turn\n• Check the implementation view\n• Compare a captured result with the expected screen\n\n**From “AI generates a screen” to “an agent works inside a design environment with state, review and evidence.”**\n\nThe project is free and presented as research/open source. I am sharing the experiment, not claiming a production guarantee.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nWhat would you test first: **React, SwiftUI hay Tailwind output?**?\n\n#DesignOS #AIDesign #DesignEngineering #Figma #BuildInPublic #MCP",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "v0.2.0 — Dev Mode",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-04",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -125,12 +137,15 @@
       "cap": {
         "perDay": 2
       },
-      "opening": "I made a pricing table that is ready for a real product conversation.",
-      "body": "I made a pricing table that is ready for a real product conversation.\n\nI treated the agent as a collaborator. It made the first structure; I made the calls about hierarchy, spacing, and content. I used the canvas for the visual work, kept the file local, and used Dev Mode when I needed an implementation view.\n\nThe project README records a verified large-file example with 723,136 Kiwi records and 112,474 scene nodes. The Agents panel can run existing Claude Code, Codex, Antigravity, Gemini, or Grok CLI sign-ins, so the workflow does not require an extra API key. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nGive the loop a small test with your own file, then star the repo if it helps.",
+      "postType": "original",
+      "opening": "I wanted to see whether a design file that stays on your machine would change a real design handoff.",
+      "body": "I wanted to see whether a design file that stays on your machine would change a real design handoff.\n\n**v0.2.0 — local GPU canvas**\n\nThe project describes a Rust/wgpu/tiny-skia canvas and local-first execution with no telemetry.\n\nWhat I would actually try:\n• Open a real design file locally\n• Ask an agent for one bounded change\n• Inspect the canvas before accepting it\n• Keep or revert the turn\n• Check the implementation view\n• Compare a captured result with the expected screen\n\n**From “AI generates a screen” to “an agent works inside a design environment with state, review and evidence.”**\n\nThe project is free and presented as research/open source. I am sharing the experiment, not claiming a production guarantee.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nWhat would you test first: **MCP context hay review and undo?**?\n\n#DesignOS #AIDesign #DesignEngineering #Figma #BuildInPublic #MCP",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "v0.2.0 — local GPU canvas",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-05",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -150,12 +165,15 @@
       "cap": {
         "perDay": 2
       },
-      "opening": "A profile card went from rough layout to a usable design handoff.",
-      "body": "A profile card went from rough layout to a usable design handoff.\n\nI started with a blank document, asked an agent in the Agents panel to shape the first pass, then corrected the details myself. The useful part was the loop: ask, inspect the canvas, tighten the layout, and check the generated output.\n\nThe .fig file stays on my machine. The README documents native read and write for Figma .fig v106 archives. Dev Mode can generate React, Tailwind, CSS, SwiftUI, Jetpack Compose, and Flutter views from the selected design. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nTry one screen from your next project and tell me what you would change. A star is welcome if it helps.",
+      "postType": "original",
+      "opening": "I wanted to see whether an agent that can see design context would change a real design handoff.",
+      "body": "I wanted to see whether an agent that can see design context would change a real design handoff.\n\n**v0.2.0 — designos-mcp**\n\nThe README documents a 22-tool stdio MCP server with screenshot, metadata, design context and search surfaces.\n\nWhat I would actually try:\n• Open a real design file locally\n• Ask an agent for one bounded change\n• Inspect the canvas before accepting it\n• Keep or revert the turn\n• Check the implementation view\n• Compare a captured result with the expected screen\n\n**From “AI generates a screen” to “an agent works inside a design environment with state, review and evidence.”**\n\nThe project is free and presented as research/open source. I am sharing the experiment, not claiming a production guarantee.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nWhat would you test first: **spec gates hay screenshot diff?**?\n\n#DesignOS #AIDesign #DesignEngineering #Figma #BuildInPublic #MCP",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "v0.2.0 — designos-mcp",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-06",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -175,12 +193,15 @@
       "cap": {
         "perDay": 2
       },
-      "opening": "I assembled a small design system without leaving the local project.",
-      "body": "I assembled a small design system without leaving the local project.\n\nI used the canvas for the visual work, kept the file local, and used Dev Mode when I needed an implementation view. I kept the final decisions in the design file instead of scattering screenshots across a handoff thread.\n\nThe Agents panel can run existing Claude Code, Codex, Antigravity, Gemini, or Grok CLI sign-ins, so the workflow does not require an extra API key. The repository also documents a local GPU canvas and a 22-tool designos-mcp server for an agentic workflow. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nFor people building in public: try the workflow and star the repo if the result is useful.",
+      "postType": "original",
+      "opening": "I wanted to see whether requirements visible beside the canvas would change a real design handoff.",
+      "body": "I wanted to see whether requirements visible beside the canvas would change a real design handoff.\n\n**v0.2.0 — Spec Reader**\n\nThe app includes an 11-stage PRODUCT:OS Spec Reader with user stories, Gherkin scenarios and g1–g5 gates.\n\nWhat I would actually try:\n• Open a real design file locally\n• Ask an agent for one bounded change\n• Inspect the canvas before accepting it\n• Keep or revert the turn\n• Check the implementation view\n• Compare a captured result with the expected screen\n\n**From “AI generates a screen” to “an agent works inside a design environment with state, review and evidence.”**\n\nThe project is free and presented as research/open source. I am sharing the experiment, not claiming a production guarantee.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nWhat would you test first: **installer experience hay source build?**?\n\n#DesignOS #AIDesign #DesignEngineering #Figma #BuildInPublic #MCP",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "v0.2.0 — Spec Reader",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-07",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -200,12 +221,15 @@
       "cap": {
         "perDay": 2
       },
-      "opening": "I ended with an analytics workspace that can move from design review to code review.",
-      "body": "I ended with an analytics workspace that can move from design review to code review.\n\nThe useful part was the loop: ask, inspect the canvas, tighten the layout, and check the generated output. I treated the agent as a collaborator. It made the first structure; I made the calls about hierarchy, spacing, and content.\n\nDev Mode can generate React, Tailwind, CSS, SwiftUI, Jetpack Compose, and Flutter views from the selected design. The project README records a verified large-file example with 723,136 Kiwi records and 112,474 scene nodes. I am sharing the finished result because the practical handoff matters more to me than a list of features.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nI would value a practical comparison from your setup; try it first, then star if it holds up.",
+      "postType": "original",
+      "opening": "I wanted to see whether a path from repo to a native app would change a real design handoff.",
+      "body": "I wanted to see whether a path from repo to a native app would change a real design handoff.\n\n**v0.2.0 — installers**\n\nThe release builder covers macOS, Windows and Linux artifacts, with a release manifest and SHA256SUMS.\n\nWhat I would actually try:\n• Open a real design file locally\n• Ask an agent for one bounded change\n• Inspect the canvas before accepting it\n• Keep or revert the turn\n• Check the implementation view\n• Compare a captured result with the expected screen\n\n**From “AI generates a screen” to “an agent works inside a design environment with state, review and evidence.”**\n\nThe project is free and presented as research/open source. I am sharing the experiment, not claiming a production guarantee.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nWhat would you test first: **what would you test first?**?\n\n#DesignOS #AIDesign #DesignEngineering #Figma #BuildInPublic #MCP",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "v0.2.0 — installers",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-08",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -225,12 +249,15 @@
       "cap": {
         "perDay": 4
       },
-      "opening": "Mình vừa làm ra một màn hình team settings từ file trống, rồi xem lại từng bước ngay trên canvas.",
-      "body": "Mình vừa làm ra một màn hình team settings từ file trống, rồi xem lại từng bước ngay trên canvas.\n\nMình mở file, nhờ agent dựng khung đầu tiên, rồi tự chỉnh lại bố cục và nội dung. Agent làm phần khởi đầu trong Agents panel; mình kiểm tra canvas, sửa chi tiết, rồi mở Dev Mode.\n\n- File .fig nằm trên máy, phù hợp với cách làm local-first.\n- Agent dùng CLI đã đăng nhập sẵn; README ghi rõ không cần thêm API key.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nNếu thấy hữu ích, cho repo một sao nhé.\n\nMọi người thường để agent tham gia ở bước nào khi làm UI?",
+      "postType": "original",
+      "opening": "Anh em đang làm UI/UX, mình vừa thử xem an enterprise-scale file you can inspect locally có giúp ích thật không.",
+      "body": "Anh em đang làm UI/UX, mình vừa thử xem an enterprise-scale file you can inspect locally có giúp ích thật không.\n\n**README — large-file example**\n\nThe README records 723,136 Kiwi records, 112,474 scene nodes and a 1.54s cold load example on Apple Silicon Metal.\n\nMình ghi lại phần thực tế:\n• Mở file thật trên máy\n• Giao agent một việc nhỏ\n• Xem lại thay đổi trên canvas\n• Giữ hoặc hoàn tác turn\n• Kiểm tra phần code\n• So lại ảnh chụp với màn hình mong muốn\n\n**Từ “AI dựng UI cho xong” sang “agent làm việc trong môi trường có state, review và bằng chứng.”**\n\nProject miễn phí, theo hướng nghiên cứu và open source. Mình chia sẻ để anh em thử và góp ý, không nói quá về khả năng production.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nNếu thử, anh em ưu tiên **accuracy, controllability hay speed?**?\n\n#DesignOS #AIDesign #DesignEngineering #Figma #BuildInPublic #MCP #OpenSource",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "README — large-file example",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-09",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -250,12 +277,15 @@
       "cap": {
         "perDay": 4
       },
-      "opening": "Kết quả cuối của buổi thử là một bảng điều khiển agent có thể đem đi bàn tiếp với team.",
-      "body": "Kết quả cuối của buổi thử là một bảng điều khiển agent có thể đem đi bàn tiếp với team.\n\nAgent làm phần khởi đầu trong Agents panel; mình kiểm tra canvas, sửa chi tiết, rồi mở Dev Mode. Mình làm theo vòng lặp hỏi, xem, sửa và kiểm tra lại thay vì bắt đầu bằng một bản mô tả dài.\n\n- Agent dùng CLI đã đăng nhập sẵn; README ghi rõ không cần thêm API key.\n- Dev Mode có thể xuất React, Tailwind, CSS, SwiftUI, Jetpack Compose và Flutter.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nAi muốn thử thì xem repo; mình rất muốn nghe góp ý.\n\nNếu là workflow của bạn, bước nào nên được tự động hóa trước?",
+      "postType": "follow_up",
+      "opening": "Mấy hôm trước mình đã share hướng này rồi, nên lần này chỉ update ngắn.",
+      "body": "Mấy hôm trước mình đã share hướng này rồi, nên lần này chỉ update ngắn.\n\n**README hiện ghi rõ vòng lặp local: self-check → NodeSpec → export .fig → screenshot → diff.**\n\nMình vẫn đang thử từng bước với file thật; ai đã xem bài trước có thể vào repo xem phần mới và góp ý giúp.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nAnh em muốn mình đào sâu phần nào trước: **file fidelity, agent editing hay screenshot diff**?\n\n#DesignOS #Figma #BuildInPublic #OpenSource #DesignEngineering",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "README — offline workflow",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-10",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -271,16 +301,19 @@
     {
       "id": "dos-1102-v2-11",
       "locale": "vi",
-      "channel": "facebook_member_group",
+      "channel": "facebook_timeline",
       "cap": {
         "perDay": 4
       },
-      "opening": "Một luồng checkout hoàn chỉnh hơn bắt đầu từ vài khối rất đơn giản trên canvas.",
-      "body": "Một luồng checkout hoàn chỉnh hơn bắt đầu từ vài khối rất đơn giản trên canvas.\n\nMình làm theo vòng lặp hỏi, xem, sửa và kiểm tra lại thay vì bắt đầu bằng một bản mô tả dài. File vẫn nằm trên máy mình; các quyết định cuối cùng được giữ trong chính bản thiết kế.\n\n- Dev Mode có thể xuất React, Tailwind, CSS, SwiftUI, Jetpack Compose và Flutter.\n- Repo có designos-mcp và canvas GPU native để thử một quy trình agentic rõ ràng hơn.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nMình để link repo ở đây, ai thử rồi cho mình biết kết quả nhé.\n\nBạn ưu tiên giữ file local hay làm việc trên cloud?",
+      "postType": "original",
+      "opening": "Anh em đang làm UI/UX, mình vừa thử xem existing subscriptions in the same workspace có giúp ích thật không.",
+      "body": "Anh em đang làm UI/UX, mình vừa thử xem existing subscriptions in the same workspace có giúp ích thật không.\n\n**README — CLI agents**\n\nThe Agentic PTY surface names Claude Code, Codex, Antigravity, Gemini and Grok as CLI choices.\n\nMình ghi lại phần thực tế:\n• Mở file thật trên máy\n• Giao agent một việc nhỏ\n• Xem lại thay đổi trên canvas\n• Giữ hoặc hoàn tác turn\n• Kiểm tra phần code\n• So lại ảnh chụp với màn hình mong muốn\n\n**Từ “AI dựng UI cho xong” sang “agent làm việc trong môi trường có state, review và bằng chứng.”**\n\nProject miễn phí, theo hướng nghiên cứu và open source. Mình chia sẻ để anh em thử và góp ý, không nói quá về khả năng production.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nNếu thử, anh em ưu tiên **local ownership hay team collaboration?**?\n\n#DesignOS #AIDesign #DesignEngineering #Figma #BuildInPublic #MCP #OpenSource",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "README — CLI agents",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-11",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -296,16 +329,19 @@
     {
       "id": "dos-1102-v2-12",
       "locale": "vi",
-      "channel": "facebook_timeline",
+      "channel": "facebook_member_group",
       "cap": {
         "perDay": 4
       },
-      "opening": "Mình dùng một file local để đi từ ý tưởng tới trang tài liệu, không phải ghép nhiều ảnh chụp.",
-      "body": "Mình dùng một file local để đi từ ý tưởng tới trang tài liệu, không phải ghép nhiều ảnh chụp.\n\nFile vẫn nằm trên máy mình; các quyết định cuối cùng được giữ trong chính bản thiết kế. Mình mở file, nhờ agent dựng khung đầu tiên, rồi tự chỉnh lại bố cục và nội dung.\n\n- Repo có designos-mcp và canvas GPU native để thử một quy trình agentic rõ ràng hơn.\n- File .fig nằm trên máy, phù hợp với cách làm local-first.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nNếu hợp cách làm của bạn, ghé repo và để lại một sao.\n\nKhi handoff, bạn cần xem code hay xem canvas trước?",
+      "postType": "original",
+      "opening": "Anh em đang làm UI/UX, mình vừa thử xem local work without background tracking có giúp ích thật không.",
+      "body": "Anh em đang làm UI/UX, mình vừa thử xem local work without background tracking có giúp ích thật không.\n\n**README — privacy**\n\nThe facts register describes zero telemetry and 100% offline local-first execution.\n\nMình ghi lại phần thực tế:\n• Mở file thật trên máy\n• Giao agent một việc nhỏ\n• Xem lại thay đổi trên canvas\n• Giữ hoặc hoàn tác turn\n• Kiểm tra phần code\n• So lại ảnh chụp với màn hình mong muốn\n\n**Từ “AI dựng UI cho xong” sang “agent làm việc trong môi trường có state, review và bằng chứng.”**\n\nProject miễn phí, theo hướng nghiên cứu và open source. Mình chia sẻ để anh em thử và góp ý, không nói quá về khả năng production.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nNếu thử, anh em ưu tiên **React, SwiftUI hay Tailwind output?**?\n\n#DesignOS #AIDesign #DesignEngineering #Figma #BuildInPublic #MCP #OpenSource",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "README — privacy",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-12",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -321,16 +357,19 @@
     {
       "id": "dos-1102-v2-13",
       "locale": "vi",
-      "channel": "facebook_member_group",
+      "channel": "facebook_timeline",
       "cap": {
         "perDay": 4
       },
-      "opening": "Buổi thử này kết thúc bằng một trang portfolio rõ ràng hơn để tiếp tục xây sản phẩm.",
-      "body": "Buổi thử này kết thúc bằng một trang portfolio rõ ràng hơn để tiếp tục xây sản phẩm.\n\nMình mở file, nhờ agent dựng khung đầu tiên, rồi tự chỉnh lại bố cục và nội dung. Agent làm phần khởi đầu trong Agents panel; mình kiểm tra canvas, sửa chi tiết, rồi mở Dev Mode.\n\n- File .fig nằm trên máy, phù hợp với cách làm local-first.\n- Agent dùng CLI đã đăng nhập sẵn; README ghi rõ không cần thêm API key.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nThử trên một màn hình thật rồi chia sẻ trải nghiệm nhé.\n\nBạn đã dùng agent để sửa thiết kế trực tiếp chưa?",
+      "postType": "original",
+      "opening": "Anh em đang làm UI/UX, mình vừa thử xem one design reviewed against several implementation targets có giúp ích thật không.",
+      "body": "Anh em đang làm UI/UX, mình vừa thử xem one design reviewed against several implementation targets có giúp ích thật không.\n\n**README — code targets**\n\nThe documented Dev Mode targets include React, Tailwind, CSS, SwiftUI, Jetpack Compose and Flutter.\n\nMình ghi lại phần thực tế:\n• Mở file thật trên máy\n• Giao agent một việc nhỏ\n• Xem lại thay đổi trên canvas\n• Giữ hoặc hoàn tác turn\n• Kiểm tra phần code\n• So lại ảnh chụp với màn hình mong muốn\n\n**Từ “AI dựng UI cho xong” sang “agent làm việc trong môi trường có state, review và bằng chứng.”**\n\nProject miễn phí, theo hướng nghiên cứu và open source. Mình chia sẻ để anh em thử và góp ý, không nói quá về khả năng production.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nNếu thử, anh em ưu tiên **MCP context hay review and undo?**?\n\n#DesignOS #AIDesign #DesignEngineering #Figma #BuildInPublic #MCP #OpenSource",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "README — code targets",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-13",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -350,12 +389,15 @@
       "cap": {
         "perDay": 4
       },
-      "opening": "Mình đã biến bản nháp thành một màn hình lịch có cấu trúc để handoff.",
-      "body": "Mình đã biến bản nháp thành một màn hình lịch có cấu trúc để handoff.\n\nAgent làm phần khởi đầu trong Agents panel; mình kiểm tra canvas, sửa chi tiết, rồi mở Dev Mode. Mình làm theo vòng lặp hỏi, xem, sửa và kiểm tra lại thay vì bắt đầu bằng một bản mô tả dài.\n\n- Agent dùng CLI đã đăng nhập sẵn; README ghi rõ không cần thêm API key.\n- Dev Mode có thể xuất React, Tailwind, CSS, SwiftUI, Jetpack Compose và Flutter.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nRepo mở để mọi người xem và thử; một sao nếu bạn thấy đáng giá.\n\nMột design system nhỏ của bạn bắt đầu từ đâu?",
+      "postType": "original",
+      "opening": "Anh em đang làm UI/UX, mình vừa thử xem a bounded first run before editing a real file có giúp ích thật không.",
+      "body": "Anh em đang làm UI/UX, mình vừa thử xem a bounded first run before editing a real file có giúp ích thật không.\n\n**README — self-check**\n\nThe safe loop starts with scripts/self_check.py, then a NodeSpec round trip and a screenshot diff.\n\nMình ghi lại phần thực tế:\n• Mở file thật trên máy\n• Giao agent một việc nhỏ\n• Xem lại thay đổi trên canvas\n• Giữ hoặc hoàn tác turn\n• Kiểm tra phần code\n• So lại ảnh chụp với màn hình mong muốn\n\n**Từ “AI dựng UI cho xong” sang “agent làm việc trong môi trường có state, review và bằng chứng.”**\n\nProject miễn phí, theo hướng nghiên cứu và open source. Mình chia sẻ để anh em thử và góp ý, không nói quá về khả năng production.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nNếu thử, anh em ưu tiên **spec gates hay screenshot diff?**?\n\n#DesignOS #AIDesign #DesignEngineering #Figma #BuildInPublic #MCP #OpenSource",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "README — self-check",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-14",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -375,12 +417,15 @@
       "cap": {
         "perDay": 4
       },
-      "opening": "Điều còn lại sau buổi làm là một hộp thư hỗ trợ nhìn được, sửa được, và đem đi triển khai.",
-      "body": "Điều còn lại sau buổi làm là một hộp thư hỗ trợ nhìn được, sửa được, và đem đi triển khai.\n\nMình làm theo vòng lặp hỏi, xem, sửa và kiểm tra lại thay vì bắt đầu bằng một bản mô tả dài. File vẫn nằm trên máy mình; các quyết định cuối cùng được giữ trong chính bản thiết kế.\n\n- Dev Mode có thể xuất React, Tailwind, CSS, SwiftUI, Jetpack Compose và Flutter.\n- Repo có designos-mcp và canvas GPU native để thử một quy trình agentic rõ ràng hơn.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nMình đang tiếp tục thử các flow khác, góp ý của mọi người rất hữu ích.\n\nBạn sẽ thử quy trình này với loại màn hình nào?",
+      "postType": "original",
+      "opening": "Anh em đang làm UI/UX, mình vừa thử xem a screenshot you can compare instead of trusting a claim có giúp ích thật không.",
+      "body": "Anh em đang làm UI/UX, mình vừa thử xem a screenshot you can compare instead of trusting a claim có giúp ích thật không.\n\n**README — visual QA**\n\nThe documented CLI captures a GPU frame and runs designos-diff for perceptual comparison.\n\nMình ghi lại phần thực tế:\n• Mở file thật trên máy\n• Giao agent một việc nhỏ\n• Xem lại thay đổi trên canvas\n• Giữ hoặc hoàn tác turn\n• Kiểm tra phần code\n• So lại ảnh chụp với màn hình mong muốn\n\n**Từ “AI dựng UI cho xong” sang “agent làm việc trong môi trường có state, review và bằng chứng.”**\n\nProject miễn phí, theo hướng nghiên cứu và open source. Mình chia sẻ để anh em thử và góp ý, không nói quá về khả năng production.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nNếu thử, anh em ưu tiên **installer experience hay source build?**?\n\n#DesignOS #AIDesign #DesignEngineering #Figma #BuildInPublic #MCP #OpenSource",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "README — visual QA",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-15",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -400,12 +445,15 @@
       "cap": {
         "perDay": 4
       },
-      "opening": "Mình thử một hướng local-first và kết quả là một thư viện component cụ thể.",
-      "body": "Mình thử một hướng local-first và kết quả là một thư viện component cụ thể.\n\nFile vẫn nằm trên máy mình; các quyết định cuối cùng được giữ trong chính bản thiết kế. Mình mở file, nhờ agent dựng khung đầu tiên, rồi tự chỉnh lại bố cục và nội dung.\n\n- Repo có designos-mcp và canvas GPU native để thử một quy trình agentic rõ ràng hơn.\n- File .fig nằm trên máy, phù hợp với cách làm local-first.\n\nhttps://github.com/jangtrinh/design-os-studio\n\nNếu làm local-first, mình muốn nghe cách bạn đang tổ chức file.\n\nĐiểm khó nhất trong design-to-code của bạn hiện là gì?",
+      "postType": "original",
+      "opening": "Anh em đang làm UI/UX, mình vừa thử xem a project you can study and run openly có giúp ích thật không.",
+      "body": "Anh em đang làm UI/UX, mình vừa thử xem a project you can study and run openly có giúp ích thật không.\n\n**README — licensing**\n\nThe repository states a dual MIT OR Apache-2.0 license and links its source, docs and release artifacts.\n\nMình ghi lại phần thực tế:\n• Mở file thật trên máy\n• Giao agent một việc nhỏ\n• Xem lại thay đổi trên canvas\n• Giữ hoặc hoàn tác turn\n• Kiểm tra phần code\n• So lại ảnh chụp với màn hình mong muốn\n\n**Từ “AI dựng UI cho xong” sang “agent làm việc trong môi trường có state, review và bằng chứng.”**\n\nProject miễn phí, theo hướng nghiên cứu và open source. Mình chia sẻ để anh em thử và góp ý, không nói quá về khả năng production.\n\nhttps://github.com/jangtrinh/design-os-studio\nhttps://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0\n\nNếu thử, anh em ưu tiên **what would you test first?**?\n\n#DesignOS #AIDesign #DesignEngineering #Figma #BuildInPublic #MCP #OpenSource",
       "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.6.0",
+      "releaseFact": "README — licensing",
       "sourceRefs": [
-        "product:README.md:11-13",
-        "product:README.md:47-50"
+        "product:README.md",
+        "product:CHANGELOG.md:0.2.0"
       ],
       "videoSlot": "mission16-v3-product-16",
       "videoArtifactStatus": "CONTENT_PENDING_CLAUDE",
@@ -422,7 +470,8 @@
   "queuePolicy": {
     "status": "CONTENT_PENDING_CLAUDE",
     "noPublish": true,
-    "videoGate": "MISSION_16_V3_APPROVED"
+    "videoGate": "MISSION_16_V3_APPROVED",
+    "goldStandard": "manual-posts-nam-gold-standard.md"
   },
   "validationGate": {
     "status": "CONTENT_PENDING_CLAUDE",
