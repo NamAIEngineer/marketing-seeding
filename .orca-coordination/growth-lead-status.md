@@ -376,3 +376,15 @@ lanes: runtime=FINAL_VERIFY_PASS; canonical-projection=FAIL_CLOSED_VIDEO_INTAKE;
 CẦN NAM: Hai cửa sổ stable Google Chrome app-owned vẫn chờ Nam xử lý CAPTCHA/2FA/checkpoint; không retry account thật.
 blockers: NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | VIDEO_CAPTURE_TARGET_UNAVAILABLE | AUTHENTICATED_COMMUNITY_UNKNOWN
 next_30m: giữ runtime ổn định; không retry account; chờ Nam xử lý Chrome windows.
+
+updated: 2026-11-02T04:20:00+07:00
+phase: QUALITY_A_INTEGRATED_REBUILD_PENDING
+runtime: packaged 4321 source=9278aa47b4e8d39fb59b27fcb246071ae022aca0 dirty=false health=200 pid=1458 stateRevision=452; current bundle predates quality-A integration; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam BLOCKED CHROME_LOGIN_CHALLENGE (attempt=1; no retry) | facebook_group/facebook_nam BLOCKED CHROME_LOGIN_CONTROLS_NOT_FOUND (attempt=1; no retry)
+today_posts: target=10 pilot=armed slots=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10 after source integration; PASS_QUALITY_A_WINDOW_CAPTURE; 10 unique hashes; ScreenCaptureKit window 38128
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: runtime=REBUILD_PENDING; canonical-projection=QUALITY_A_INTEGRATED_7EA8A40; ui=PACKAGED; pilot=ARMED; comments=GUARDS_COMMITTED_4_TESTS_PASS; community=PUBLIC_30_READY_AUTH_UNKNOWN; publish=PAUSED_NO_READY_ACCOUNT
+CẦN NAM: Hai cửa sổ stable Google Chrome app-owned vẫn chờ Nam xử lý CAPTCHA/2FA/checkpoint; không retry account thật.
+blockers: NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN | REFERENCE_AUDIO_LICENSE_UNKNOWN
+next_30m: build clean from 7ea8a40, backup state, swap 4321, verify projection qaFail=0/buffer=10 and quality-A routes; keep 4318 untouched.
