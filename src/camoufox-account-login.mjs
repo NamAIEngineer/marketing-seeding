@@ -5,6 +5,20 @@ const CHALLENGE = /captcha|verify|security check|two-factor|mfa|challenge/i;
 const AUTHENTICATED = /feed|sign out|log out/i;
 
 function safeText(value, limit = 4000) { return String(value || "").replace(/[\r\n]+/g, " ").slice(0, limit); }
+function snapshotEvidence(value) {
+  const raw = safeText(value, 1200);
+  return { snapshot: raw || null, snapshotHash: raw ? cryptoHash(raw) : null };
+}
+function cryptoHash(value) {
+  let hash = 2166136261;
+  for (const char of String(value)) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+async function dismissConsent(protocol, pageId, selectors = {}) {
+  const ref = await protocol.resolve(pageId, selectors.consent || /accept|agree|allow|continue without|use essential|got it|not now|dismiss/i);
+  if (!ref) return false;
+  try { await protocol.click({ pageId, ref }); return true; } catch { return false; }
+}
 
 /**
  * Credential-backed Camoufox login. Secrets are fetched from Keychain inside
@@ -25,18 +39,22 @@ export async function loginAccountWithCamoufox({ platform, accountId, protocol, 
   const target = loginUrl || LOGIN_URLS[channel];
   await protocol.navigate(pageId, target);
   let snapshot = safeText(await protocol.snapshot(pageId));
+  const initialEvidence = snapshotEvidence(snapshot);
   if (CHALLENGE.test(snapshot)) return { status: "BLOCKED", code: "ACCOUNT_SECURITY_CHALLENGE", reason: "login requires a factor not available from supplied credentials" };
+  // Consent/interstitial surfaces can hide the credential form in Camoufox.
+  // Dismiss only a visible, labelled consent control; never bypass a challenge.
+  if (await dismissConsent(protocol, pageId, selectors)) snapshot = safeText(await protocol.snapshot(pageId));
   const usernameRef = await protocol.resolve(pageId, selectors.username || /email|username|phone/i);
   const passwordRef = await protocol.resolve(pageId, selectors.password || /password/i);
   const submitRef = await protocol.resolve(pageId, selectors.submit || /sign in|log in|continue/i);
-  if (!usernameRef || !passwordRef || !submitRef) return { status: "BLOCKED", code: "LOGIN_CONTROLS_NOT_FOUND", reason: "bounded login controls were not observed" };
+  if (!usernameRef || !passwordRef || !submitRef) return { status: "BLOCKED", code: "LOGIN_CONTROLS_NOT_FOUND", reason: "bounded login controls were not observed", evidence: { loginUrl: target, ...initialEvidence, postConsentSnapshot: snapshotEvidence(snapshot) } };
   await protocol.fill(pageId, usernameRef, username);
   await protocol.fill(pageId, passwordRef, password);
   await protocol.click({ pageId, ref: submitRef });
   await new Promise((resolve) => setTimeout(resolve, 250));
   snapshot = safeText(await protocol.snapshot(pageId));
   if (CHALLENGE.test(snapshot)) return { status: "BLOCKED", code: "ACCOUNT_SECURITY_CHALLENGE", reason: "login reached a security factor unavailable from supplied credentials" };
-  if (!AUTHENTICATED.test(snapshot)) return { status: "UNKNOWN", code: "LOGIN_NOT_CONFIRMED", reason: "post-submit authenticated surface was not observed" };
+  if (!AUTHENTICATED.test(snapshot)) return { status: "UNKNOWN", code: "LOGIN_NOT_CONFIRMED", reason: "post-submit authenticated surface was not observed", evidence: { loginUrl: target, ...snapshotEvidence(snapshot) } };
   // Generic words such as Home/Profile/Feed are insufficient proof. A
   // protocol identity observation must match the bound account exactly.
   if (typeof protocol.observeIdentity !== "function") return { status: "UNKNOWN", code: "LOGIN_IDENTITY_UNAVAILABLE", reason: "authenticated surface lacks exact account identity evidence" };

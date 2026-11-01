@@ -34,3 +34,15 @@ lanes: runtime=DISPATCHING (snapshot/selector/consent + /me discovery); content=
 CẦN NAM: Chỉ khi cửa sổ Camoufox hiện CAPTCHA/MFA/OTP/checkpoint: nhập mã trong chính cửa sổ đó; không dùng Chrome/copy session. | Nếu cap không đủ 10 slot, thêm account/quyền Page; không vượt cap.
 blockers: CAMOUFOX-LOGIN-CONTROLS (runtime worker; snapshot required; ETA before 23:00) | LIVE-PUBLICATION (chờ READY; no external publish yet)
 next_30m: commit checkpoint, dispatch runtime/content verification workers, reconcile quality-A assets, build clean app, restart 4321 with state backup.
+
+updated: 2026-11-01T21:56:00+07:00
+phase: P0
+runtime: 9dff92b8462b3ffff98255f9632d7f79c57ed791 dirty=false health=200 port=4321 (old packaged bundle; source fix integrated, rebuild pending)
+accounts: linkedin/linkedin_nam: BLOCKED (old bundle LOGIN_CONTROLS_NOT_FOUND; snapshot evidence recorded, rebuild/retry pending); facebook_group/facebook_nam: BLOCKED (old bundle LOGIN_CONTROLS_NOT_FOUND; Facebook URL + /me redirect fix integrated, rebuild/retry pending)
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 manifest hashes unique; quality-A intake=1 unaccepted (incomplete), active queue remains quality-B until 10 A captures verified
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (live auth UNKNOWN)
+lanes: runtime=FIX_INTEGRATED (a4cd21c + evidence d6ed011); content=VERIFIED_WITH_CONCERNS (report content-verifier-20261101T2145); video=BLOCKED_INCOMPLETE quality-A intake; ui=BUILD_READY (launcher wait 120s, no bootout, background provisioning); publish=PAUSED until READY + quality-A
+CẦN NAM: Nếu retry/manual login sau build hiện CAPTCHA/MFA/OTP/checkpoint, nhập mã trong Camoufox hiển thị; không dùng Chrome/copy session. | Nếu cap không đủ 10 slot, thêm account/quyền Page; không vượt cap.
+blockers: CAMOUFOX-LIVE-AUTH (rebuild + live retry required; snapshot evidence in plans/growth-lead-20261102/evidence/login-surface-diagnosis-20261101.md) | VIDEO-QUALITY-A (chỉ 1 candidate, chưa đủ 10) | LIVE-PUBLICATION (chờ READY)
+next_30m: commit integrated fixes, build app, backup state, update LaunchAgent 4321, verify health/API, retry-login both accounts, capture resulting states.

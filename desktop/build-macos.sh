@@ -29,6 +29,13 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/app" "$APP/Contents/Reso
 ditto "$SOURCE/src" "$APP/Contents/Resources/app/src"
 ditto "$SOURCE/public" "$APP/Contents/Resources/app/public"
 ditto "$SOURCE/scripts" "$APP/Contents/Resources/app/scripts"
+if [ -d "$SOURCE/campaigns" ]; then
+  ditto "$SOURCE/campaigns" "$APP/Contents/Resources/app/campaigns"
+fi
+if [ -d "$SOURCE/plans/growth-lead-20261102" ]; then
+  mkdir -p "$APP/Contents/Resources/app/plans"
+  ditto "$SOURCE/plans/growth-lead-20261102" "$APP/Contents/Resources/app/plans/growth-lead-20261102"
+fi
 if [ -d "$SOURCE/plans/crawl4ai-integration" ]; then
   mkdir -p "$APP/Contents/Resources/app/plans"
   ditto "$SOURCE/plans/crawl4ai-integration" "$APP/Contents/Resources/app/plans/crawl4ai-integration"
@@ -155,11 +162,15 @@ if ! "$APP_ROOT/../bin/node" "$APP_ROOT/health-probe.mjs" "http://127.0.0.1:$POR
 <key>StandardErrorPath</key><string>$XML_DATA_ROOT/server.log</string>
 </dict></plist>
 EOF
-  /bin/launchctl bootout "gui/$(id -u)/$LABEL" >/dev/null 2>&1 || true
-  chmod 600 "$PLIST"
-  /bin/launchctl bootstrap "gui/$(id -u)" "$PLIST"
+  # An already loaded agent may still be warming up. Never boot it out from
+  # the desktop launcher: that races the service startup and causes a loop of
+  # false dialogs. Only bootstrap a new label; an existing label is waited on.
+  if ! /bin/launchctl print "gui/$(id -u)/$LABEL" >/dev/null 2>&1; then
+    chmod 600 "$PLIST"
+    /bin/launchctl bootstrap "gui/$(id -u)" "$PLIST"
+  fi
   READY=0
-  for ATTEMPT in 1 2 3 4 5 6 7 8 9 10; do
+  for ATTEMPT in $(seq 1 120); do
     if "$APP_ROOT/../bin/node" "$APP_ROOT/health-probe.mjs" "http://127.0.0.1:$PORT/health" "$HEALTH_NONCE" "$SOURCE_COMMIT" >/dev/null 2>&1; then READY=1; break; fi
     sleep 1
   done
@@ -210,27 +221,28 @@ export SEEDING_CONTENT_MODE="${SEEDING_CONTENT_MODE:-PRODUCTION}"
 export SEEDING_JEV_WORKER_ENABLED="${SEEDING_JEV_WORKER_ENABLED:-true}"
 export SEEDING_JEV_LIVE_ENABLED="${SEEDING_JEV_LIVE_ENABLED:-true}"
 export SEEDING_JEV_AUTONOMOUS_LIVE_ENABLED="${SEEDING_JEV_AUTONOMOUS_LIVE_ENABLED:-true}"
-if [ "${SEEDING_9ROUTER_PROVISION:-true}" = "true" ] && [ -x "$APP_ROOT/provision-9router.sh" ]; then
-  : >"$DATA_ROOT/9router-provision-status"
-  if ! "$APP_ROOT/provision-9router.sh" "$DATA_ROOT" >"$DATA_ROOT/9router-provision-command" 2>"$DATA_ROOT/9router-provision-error"; then
-    if ! /usr/bin/grep -q '^UNAVAILABLE:' "$DATA_ROOT/9router-provision-status" 2>/dev/null; then
-      printf '%s\n' "UNAVAILABLE:provision_failed" >"$DATA_ROOT/9router-provision-status"
-    fi
-  else
-    printf '%s\n' "ready" >"$DATA_ROOT/9router-provision-status"
-  fi
-fi
-if [ "${SEEDING_CAMOUFOX_PROVISION:-true}" = "true" ] && [ -x "$APP_ROOT/provision-camoufox.sh" ]; then
-  if ! "$APP_ROOT/provision-camoufox.sh" "$DATA_ROOT" >"$DATA_ROOT/camoufox-provision-command" 2>"$DATA_ROOT/camoufox-provision-error"; then
-    # Preserve a typed status emitted by the provisioner (including the
-    # lowercase form used by the shell wrapper).  Replace it only when the
-    # helper failed before writing any status, so Overview retains the actual
-    # unavailable reason instead of a generic provisioning_failed marker.
-    if ! /usr/bin/grep -Eq '^(UNAVAILABLE|unavailable):' "$DATA_ROOT/camoufox-provision-status" 2>/dev/null; then
-      printf '%s\n' 'unavailable:provision_script_failed' >"$DATA_ROOT/camoufox-provision-status"
+# Provisioning is deliberately detached from the listener. The server owns
+# its readiness projection and starts listening before these bounded installers
+# run, so the desktop can show "Đang khởi động" instead of timing out.
+(
+  if [ "${SEEDING_9ROUTER_PROVISION:-true}" = "true" ] && [ -x "$APP_ROOT/provision-9router.sh" ]; then
+    : >"$DATA_ROOT/9router-provision-status"
+    if ! "$APP_ROOT/provision-9router.sh" "$DATA_ROOT" >"$DATA_ROOT/9router-provision-command" 2>"$DATA_ROOT/9router-provision-error"; then
+      if ! /usr/bin/grep -q '^UNAVAILABLE:' "$DATA_ROOT/9router-provision-status" 2>/dev/null; then
+        printf '%s\n' "UNAVAILABLE:provision_failed" >"$DATA_ROOT/9router-provision-status"
+      fi
+    else
+      printf '%s\n' "ready" >"$DATA_ROOT/9router-provision-status"
     fi
   fi
-fi
+  if [ "${SEEDING_CAMOUFOX_PROVISION:-true}" = "true" ] && [ -x "$APP_ROOT/provision-camoufox.sh" ]; then
+    if ! "$APP_ROOT/provision-camoufox.sh" "$DATA_ROOT" >"$DATA_ROOT/camoufox-provision-command" 2>"$DATA_ROOT/camoufox-provision-error"; then
+      if ! /usr/bin/grep -Eq '^(UNAVAILABLE|unavailable):' "$DATA_ROOT/camoufox-provision-status" 2>/dev/null; then
+        printf '%s\n' 'unavailable:provision_script_failed' >"$DATA_ROOT/camoufox-provision-status"
+      fi
+    fi
+  fi
+) >/dev/null 2>&1 &
 cd "$APP_ROOT"
 exec "$NODE" src/server.mjs
 SERVICE
