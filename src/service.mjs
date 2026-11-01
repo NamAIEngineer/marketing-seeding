@@ -7161,6 +7161,9 @@ export class SeedingService {
     const snapshot = await this.store.read();
     const account = (snapshot.executionAccounts || []).find((item) => item.platform === platform && item.accountId === accountId);
     if (!account) throw Object.assign(new Error("account not found"), { code: "ACCOUNT_NOT_FOUND" });
+    if (Number(account.chromeLoginAttempts || 0) >= 1) {
+      return { account: projectOnboardedAccount(account), login: { status: account.loginStatus === "READY" ? "READY" : "BLOCKED", code: "CHROME_RETRY_LIMIT_REACHED", reason: "Tài khoản đã được thử tự đăng nhập một lần; không thử lại tự động", platform, accountId } };
+    }
     if (this.chromeAccountProfileManager && ["linkedin", "facebook", "facebook_group"].includes(platform)) {
       // Legacy records may still say Camoufox after the browser architecture
       // cutover. Migrate the account binding at the retry fence, then use the
@@ -7175,7 +7178,7 @@ export class SeedingService {
         const row = (state.executionAccounts || []).find((item) => item.platform === platform && item.accountId === accountId);
         const ready = login.status === "READY";
         const blocked = login.status === "BLOCKED";
-        if (row) Object.assign(row, { provider: "chrome", providerProfileId: chromeProfileId, profileId: chromeProfileId, agentStatus: ready ? "READY" : blocked ? "BLOCKED" : "RUNNING", loginStatus: ready ? "READY" : blocked ? "BLOCKED" : "RUNNING", sessionRecoveryStatus: ready ? "RECOVERED" : blocked ? "HUMAN_REQUIRED" : "RUNNING", loginAttemptAt: at, lastLoginAt: ready ? at : row.lastLoginAt || null, chromeProfilePath: login.profilePath || row.chromeProfilePath || null, ...(login.identityReference ? { identityReference: login.identityReference, expectedIdentityUrl: login.identityReference } : {}), identityEvidenceHash: login.evidenceHash || row.identityEvidenceHash || null, lastFailureCode: ready ? null : String(login.code || "CHROME_LOGIN_UNKNOWN").slice(0, 100), lastFailureReason: ready ? null : String(login.reason || "Đăng nhập Chrome chưa hoàn tất").replace(/\s+/g, " ").slice(0, 300), loginEvidenceAt: at, updatedAt: at });
+        if (row) Object.assign(row, { provider: "chrome", providerProfileId: chromeProfileId, profileId: chromeProfileId, chromeLoginAttempts: Number(row.chromeLoginAttempts || 0) + 1, agentStatus: ready ? "READY" : blocked ? "BLOCKED" : "RUNNING", loginStatus: ready ? "READY" : blocked ? "BLOCKED" : "RUNNING", sessionRecoveryStatus: ready ? "RECOVERED" : blocked ? "HUMAN_REQUIRED" : "RUNNING", loginAttemptAt: at, lastLoginAt: ready ? at : row.lastLoginAt || null, chromeProfilePath: login.profilePath || row.chromeProfilePath || null, ...(login.identityReference ? { identityReference: login.identityReference, expectedIdentityUrl: login.identityReference } : {}), identityEvidenceHash: login.evidenceHash || row.identityEvidenceHash || null, lastFailureCode: ready ? null : String(login.code || "CHROME_LOGIN_UNKNOWN").slice(0, 100), lastFailureReason: ready ? null : String(login.reason || "Đăng nhập Chrome chưa hoàn tất").replace(/\s+/g, " ").slice(0, 300), loginEvidenceAt: at, updatedAt: at });
         return row || account;
       });
       return { account: projectOnboardedAccount(saved.result), login };
