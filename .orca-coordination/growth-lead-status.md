@@ -304,3 +304,15 @@ lanes: canonical-projection=IMPLEMENTED; ui-bundle=STAGED_PUBLIC_IGNORED_ASSET; 
 CẦN NAM: Hai cửa sổ stable Google Chrome app-owned vẫn chờ Nam xử lý CAPTCHA/2FA/checkpoint. Không retry account thật. Mở đúng cửa sổ account khi Nam thức dậy; không dùng profile Chrome cá nhân.
 blockers: PACKAGED-REBUILD (controller) | NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
 next_30m: force-track new UI assets, commit source checkpoint, build clean package with sh desktop/build-macos.sh, backup state, swap 4321, persist 30 discovery rows + arm pilot, verify dashboard canonical fields.
+
+updated: 2026-11-02T02:33:00+07:00
+phase: NON_ACCOUNT_LANES_CANONICAL_STATE
+runtime: packaged 4321 source=6803809e6d4f9a64ba7b5366f6d0debe733566dd dirty=false health=200; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam BLOCKED CHROME_LOGIN_CHALLENGE (attempt=1; no retry) | facebook_group/facebook_nam BLOCKED CHROME_LOGIN_CONTROLS_NOT_FOUND (attempt=1; no retry)
+today_posts: target=10 pilot=armed slots=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10; quality-A manifest verified
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: runtime=REBUILD_FOR_ROUTE_GUARD; canonical-projection=LIVE_VERIFIED; ui=LIVE_BUNDLE_6803809; pilot=ARMED; comments=GUARDS_COMMITTED; publish=PAUSED_NO_READY_ACCOUNT
+CẦN NAM: Hai cửa sổ stable Google Chrome app-owned vẫn chờ Nam xử lý CAPTCHA/2FA/checkpoint. Không retry account thật. Mở đúng cửa sổ account khi Nam thức dậy; không dùng profile Chrome cá nhân.
+blockers: REBUILD_ROUTE_GUARD (controller) | NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: commit route guard, rebuild clean app, backup state, swap 4321, smoke health/source/UI, recheck canonical dashboard and await independent verifier.

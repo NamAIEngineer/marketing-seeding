@@ -704,6 +704,7 @@ function automationCanMutate(method, pathname) {
   if (/^\/api\/campaigns\/[^/]+\/product-factory\/artifacts\/promote$/.test(pathname)) return false;
   if (/^\/api\/campaigns\/[^/]+\/product-intelligence\/inspect$/.test(pathname)) return true;
   if (pathname === "/api/campaigns/bootstrap") return true;
+  if (pathname === "/api/community-discoveries") return true;
   if (/^\/api\/campaigns\/[^/]+\/distribution-handoff$/.test(pathname)) return true;
   if (/^\/api\/campaigns\/[^/]+\/content-candidates\/materialize$/.test(pathname)) return true;
   if (/^\/api\/campaigns\/[^/]+\/discoveries\/observe$/.test(pathname)) return true;
