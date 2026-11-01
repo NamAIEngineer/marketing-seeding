@@ -1986,7 +1986,7 @@ function GrowthOverviewPanel({ data }: { data: R }) {
         <div className="panel-head">
           <div>
             <h2>Hôm nay · {String(growth.date || "UNKNOWN")}</h2>
-            <p>10 bài khác nhau trên LinkedIn + Facebook. Mỗi bài có một MP4 riêng, permalink chỉ hiện khi xác minh được.</p>
+          <p>Kết quả trước tính năng: 10 bài khác nhau trên LinkedIn + Facebook, mỗi bài có MP4 riêng và permalink xác minh độc lập.</p>
           </div>
           <span className="status pending">target {Number(growth.targetPosts || 10)} · verified 0 · UNKNOWN</span>
         </div>
@@ -2011,7 +2011,7 @@ function GrowthOverviewPanel({ data }: { data: R }) {
       </section>
       <section className="panel growth-video-panel" aria-label="Video panel">
         <div className="panel-head">
-          <div><h2>Video</h2><p>Artifact đã đăng ký loopback; quality B là derived từ reference, chưa phải screen capture thật.</p></div>
+          <div><h2>Video</h2><p>Mỗi bài một MP4 khác nhau, có thumbnail và xem trực tiếp. Chỉ ghi nhận khi artifact đã kiểm tra.</p></div>
           <span className={`status ${Number(videos.qaFail || 0) ? "failed" : "ready"}`}>{Number(videos.ready || 0)} ready · {Number(videos.qaFail || 0)} QA fail</span>
         </div>
         <div className="growth-kpi-row"><span><b>{Number(videos.ready || 0)}</b> hôm nay</span><span><b>{Number(videos.bufferTomorrow || 0)}</b> buffer ngày mai</span><span><b>{Number(videos.qaFail || 0)}</b> fail</span></div>
@@ -2108,8 +2108,7 @@ function AccountSummaryPanel({ data, refresh }: { data: R; refresh: () => void }
 
 function NeedsNamPanel({ data }: { data: R }) {
   const rows = accountRows(data).filter((row: R) => ["BLOCKED", "UNKNOWN", "CHALLENGE", "MFA_REQUIRED"].includes(String(row.loginStatus || row.agentStatus || "UNKNOWN").toUpperCase()))
-  if (!rows.length) return null
-  return <section className="panel needs-nam-panel" aria-label="Cần Nam"><div className="panel-head"><div><h2>Cần Nam</h2><p>Chỉ hiện việc cần thao tác trực tiếp.</p></div></div><ul>{rows.map((row: R) => <li key={`${row.platform}/${row.accountId}`}>Mở <b>Tài khoản</b> → <b>Đăng nhập thủ công</b>, hoàn tất Google/SSO/2FA trong cửa sổ Chrome riêng.</li>)}</ul></section>
+  return <section className="panel needs-nam-panel" aria-label="Cần Nam"><div className="panel-head"><div><h2>Cần Nam</h2><p>Chỉ cần thao tác khi Chrome yêu cầu xác minh hoặc cửa sổ bị chặn.</p></div><span className={`status ${rows.length ? "failed" : "ready"}`}>{rows.length ? `${rows.length} việc` : "Không có"}</span></div><ul><li>Mỗi account dùng một cửa sổ Chrome riêng với profile Marketing Seeding OS; không dùng profile Chrome cá nhân.</li><li>LinkedIn và Facebook: bấm <b>Đăng nhập thủ công</b>, hoàn tất Google/SSO, 2FA, CAPTCHA hoặc checkpoint trong đúng cửa sổ account.</li>{rows.map((row: R) => <li key={`${row.platform}/${row.accountId}`}><b>{String(row.platform)}/{String(row.accountId)}</b>: cửa sổ đang chờ thao tác; hoàn tất thử thách rồi giữ cửa sổ mở để hệ thống tự xác minh.</li>)}</ul></section>
 }
 
 function SystemPage({ data, refresh }: { data: R; refresh: () => void }) {
