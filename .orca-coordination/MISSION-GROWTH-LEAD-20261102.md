@@ -237,3 +237,15 @@ Overview hiện là trang dài toàn form kỹ thuật (operator token, 9Router,
 6. Số liệu của mình: star history design-os-studio (GitHub API), referrer/traffic nếu có quyền.
 
 Giới hạn: chỉ trang public, tôn trọng robots/rate limit; KHÔNG thu thập danh sách thành viên, email, số điện thoại hay dữ liệu cá nhân; không đăng nhập để crawl. Kết quả ghi vào store chung (source=camoufox-public / crawl4ai) và hiện trên Overview ở khối Cộng đồng.
+
+---
+
+## 14. CHỐT ĐÍCH CUỐI 23:54 ICT (Nam) — đè mọi mục trước khi mâu thuẫn
+
+- Toàn bộ là MỘT hệ thống tự động. Nam chỉ xem Overview để thấy kết quả, hệ thống tự optimize và tìm cách tối ưu.
+- KHÔNG dùng API mạng xã hội nào. Mọi thao tác LinkedIn/Facebook bằng trình duyệt qua Chrome profile thật của app.
+- ĐĂNG NHẬP có 2 cách, phải hỗ trợ cả hai:
+  1. **Thủ công**: Tổng quan > Tài khoản > Đăng nhập thủ công → mở Chrome profile riêng của account, Nam tự đăng nhập; hệ thống tự nhận identity, chuyển READY.
+  2. **Danh sách account**: Nam đưa danh sách tài khoản FB/LinkedIn (nhập qua form local trong app hoặc import file CSV local chọn bằng hộp thoại; file chỉ đọc 1 lần rồi xoá khỏi bộ nhớ, không lưu vào repo/state/log/chat) → credential vào macOS Keychain → hệ thống tự mở Chrome profile của từng account, tự điền và đăng nhập, tự nhận identity, chuyển READY. Gặp CAPTCHA/2FA/checkpoint ⇒ dừng account đó, mở cửa sổ cho Nam và ghi Cần Nam; không giải CAPTCHA tự động; account khác chạy tiếp.
+  - Hỗ trợ nhiều account mỗi nền tảng (pool), mỗi account một Chrome profile riêng; lịch đăng tự chia bài theo cap từng account.
+- Ranh giới giữ nguyên: không thêm biện pháp che giấu automation hay né phát hiện bot.

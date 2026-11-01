@@ -2076,17 +2076,18 @@ function AccountSummaryPanel({ data, refresh }: { data: R; refresh: () => void }
     try {
       const headers: Record<string, string> = { "content-type": "application/json" }
       const token = sessionStorage.getItem("seedingOperatorToken") || ""; if (token) headers.authorization = `Bearer ${token}`
-      const response = await fetch("/api/account-credentials/manual-login", { method: "POST", headers, body: JSON.stringify({ platform, accountId, profileId: row.profileId || row.providerProfileId || row.profileRef }) })
+      const response = await fetch("/api/account-credentials/chrome-login", { method: "POST", headers, body: JSON.stringify({ platform, accountId, profileId: row.profileId || row.providerProfileId || row.profileRef }) })
       const body = await response.json(); if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`)
-      const sessionId = String(body.sessionId || ""); if (!sessionId) throw new Error("Không tạo được phiên đăng nhập")
+      const login = body?.login || body
+      const sessionId = String(login.sessionId || ""); if (!sessionId) throw new Error("Không tạo được phiên đăng nhập")
       const deadline = Date.now() + 10 * 60_000
       while (Date.now() < deadline) {
         await new Promise(resolve => window.setTimeout(resolve, 2000))
-        const statusResponse = await fetch(`/api/account-credentials/manual-login/${encodeURIComponent(sessionId)}`, { headers: token ? { authorization: `Bearer ${token}` } : {} })
+        const statusResponse = await fetch(`/api/account-credentials/chrome-login/${encodeURIComponent(sessionId)}`, { headers: token ? { authorization: `Bearer ${token}` } : {} })
         const status = await statusResponse.json(); if (!statusResponse.ok) throw new Error(status?.error || `HTTP ${statusResponse.status}`)
         const state = String(status.status || "UNKNOWN").toUpperCase()
         if (state === "READY") { setMessage(`${platform}/${accountId}: đã xác minh danh tính`); refresh(); return }
-        if (state === "BLOCKED") { setMessage(`${platform}/${accountId}: cần hoàn tất mã xác minh trong cửa sổ Camoufox`); return }
+        if (state === "BLOCKED") { setMessage(`${platform}/${accountId}: cần hoàn tất mã xác minh trong cửa sổ Chrome`); return }
       }
       setMessage("Phiên đăng nhập hết thời gian chờ; có thể bấm lại để tiếp tục")
     } catch (error) { setMessage(error instanceof Error ? error.message : "Không mở được đăng nhập thủ công") }
@@ -2102,13 +2103,13 @@ function AccountSummaryPanel({ data, refresh }: { data: R; refresh: () => void }
     } catch (error) { setMessage(error instanceof Error ? error.message : "Không thể thử lại") }
     finally { setBusy(null) }
   }
-  return <section className="panel growth-account-panel" aria-label="Tài khoản"><div className="panel-head"><div><h2>Tài khoản</h2><p>Trạng thái đăng nhập của LinkedIn và Facebook. Đăng nhập thủ công mở Camoufox riêng, không dùng dữ liệu Chrome.</p></div><span className="status">{rows.length} account</span></div><div className="account-list">{rows.length ? rows.map((row: R) => { const key = `${String(row.platform || "")}/${String(row.accountId || "")}`; return <div className="account-row" key={key}><div><b>{key}</b><small>{statusLabel(row)}</small></div><div className="account-actions"><button type="button" className="secondary-button" disabled={busy === key} onClick={() => retryLogin(row)}>Đăng nhập lại</button><button type="button" className="primary-button" disabled={busy === key} onClick={() => manualLogin(row)}>{busy === key ? "Đang mở…" : "Đăng nhập thủ công"}</button></div></div> }) : <div className="empty-state">Chưa có account. Chọn “Thêm account” trong Hệ thống.</div>}</div>{message ? <small className="account-message">{message}</small> : null}</section>
+  return <section className="panel growth-account-panel" aria-label="Tài khoản"><div className="panel-head"><div><h2>Tài khoản</h2><p>Trạng thái đăng nhập của LinkedIn và Facebook. Đăng nhập thủ công mở cửa sổ Chrome riêng, không dùng dữ liệu Chrome cá nhân.</p></div><span className="status">{rows.length} account</span></div><div className="account-list">{rows.length ? rows.map((row: R) => { const key = `${String(row.platform || "")}/${String(row.accountId || "")}`; return <div className="account-row" key={key}><div><b>{key}</b><small>{statusLabel(row)}</small></div><div className="account-actions"><button type="button" className="secondary-button" disabled={busy === key} onClick={() => retryLogin(row)}>Đăng nhập lại</button><button type="button" className="primary-button" disabled={busy === key} onClick={() => manualLogin(row)}>{busy === key ? "Đang mở…" : "Đăng nhập thủ công"}</button></div></div> }) : <div className="empty-state">Chưa có account. Chọn “Thêm account” trong Hệ thống.</div>}</div>{message ? <small className="account-message">{message}</small> : null}</section>
 }
 
 function NeedsNamPanel({ data }: { data: R }) {
   const rows = accountRows(data).filter((row: R) => ["BLOCKED", "UNKNOWN", "CHALLENGE", "MFA_REQUIRED"].includes(String(row.loginStatus || row.agentStatus || "UNKNOWN").toUpperCase()))
   if (!rows.length) return null
-  return <section className="panel needs-nam-panel" aria-label="Cần Nam"><div className="panel-head"><div><h2>Cần Nam</h2><p>Chỉ hiện việc cần thao tác trực tiếp.</p></div></div><ul>{rows.map((row: R) => <li key={`${row.platform}/${row.accountId}`}>Mở <b>Tài khoản</b> → <b>Đăng nhập thủ công</b>, hoàn tất Google/SSO/2FA trong cửa sổ Camoufox riêng.</li>)}</ul></section>
+  return <section className="panel needs-nam-panel" aria-label="Cần Nam"><div className="panel-head"><div><h2>Cần Nam</h2><p>Chỉ hiện việc cần thao tác trực tiếp.</p></div></div><ul>{rows.map((row: R) => <li key={`${row.platform}/${row.accountId}`}>Mở <b>Tài khoản</b> → <b>Đăng nhập thủ công</b>, hoàn tất Google/SSO/2FA trong cửa sổ Chrome riêng.</li>)}</ul></section>
 }
 
 function SystemPage({ data, refresh }: { data: R; refresh: () => void }) {
@@ -2608,7 +2609,7 @@ function AccountOnboardingPanel({ refresh }: { refresh: () => void }) {
       setStatus(`Agent ${body?.login?.status || "UNKNOWN"}: ${body?.login?.reason || "đã ghi nhận"}${body?.target?.status ? ` · target ${body.target.status}` : ""}`); setPassword(""); refresh()
     } catch (error) { setStatus(error instanceof Error ? error.message : "Không thể onboard account") }
   }
-  return <section className="panel full-span"><div className="panel-head"><div><h2>Thêm social account</h2><p>Credential lưu Keychain; Account Agent tự mở Camoufox, đăng nhập, rồi lấy identity trực tiếp từ trang đã xác thực. Profile để trống sẽ dùng profile bền vững do app tạo. Target URL tùy chọn; app không tự đoán target.</p></div></div><form onSubmit={submit} className="scope-selects"><input required value={platform} onChange={event => setPlatform(event.target.value)} placeholder="platform" /><input required value={accountId} onChange={event => setAccountId(event.target.value)} placeholder="account ID" /><input value={profileId} onChange={event => setProfileId(event.target.value)} placeholder="Camoufox profile (optional)" /><input required value={username} onChange={event => setUsername(event.target.value)} placeholder="username" autoComplete="username" /><input required type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="password" autoComplete="current-password" /><input value={targetName} onChange={event => setTargetName(event.target.value)} placeholder="target name (optional)" /><input type="url" value={targetUrl} onChange={event => setTargetUrl(event.target.value)} placeholder="exact target URL (optional)" /><button className="primary-button" type="submit">Lưu và chạy Agent</button></form>{status ? <small>{status}</small> : null}</section>
+  return <section className="panel full-span"><div className="panel-head"><div><h2>Thêm social account</h2><p>Credential lưu Keychain; Account Agent dùng Chrome profile riêng cho tài khoản. Profile để trống sẽ dùng profile bền vững do app tạo. Target URL tùy chọn; app không tự đoán target.</p></div></div><form onSubmit={submit} className="scope-selects"><input required value={platform} onChange={event => setPlatform(event.target.value)} placeholder="platform" /><input required value={accountId} onChange={event => setAccountId(event.target.value)} placeholder="account ID" /><input value={profileId} onChange={event => setProfileId(event.target.value)} placeholder="Chrome profile ID (optional)" /><input required value={username} onChange={event => setUsername(event.target.value)} placeholder="username" autoComplete="username" /><input required type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="password" autoComplete="current-password" /><input value={targetName} onChange={event => setTargetName(event.target.value)} placeholder="target name (optional)" /><input type="url" value={targetUrl} onChange={event => setTargetUrl(event.target.value)} placeholder="exact target URL (optional)" /><button className="primary-button" type="submit">Lưu account</button></form>{status ? <small>{status}</small> : null}</section>
 }
 function savedScope(key: string, fallback: string) {
   try {

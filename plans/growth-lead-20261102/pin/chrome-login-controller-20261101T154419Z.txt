@@ -1,0 +1,11 @@
+attempt=chrome-login-20261101T154419Z
+created_at=2026-11-01T15:44:19Z
+workspace=/Users/nam/orca/workspaces/marketing-seeding/ms-growth-lead-20261101
+head=fbcf39ca6185cbafec0b18eea17e298e0d9654d8
+branch=NamAIEngineer/ms-growth-lead-20261101
+status=?? .orca-coordination/video-quality-a-status.md
+?? campaigns/design-os-studio-launch/video/quality-a/raw/
+?? plans/growth-lead-20261102/pin/chrome-login-controller-20261101T154419Z.txt
+?? plans/growth-lead-20261102/reports/content-verifier-20261101T2145.md
+allowed_scope=src chrome/account/manual-login/store/browser routes; tests/docs/evidence for Chrome architecture
+forbidden_scope=credentials, external login/publish/join/comment, personal Chrome profile, state.json, Keychain secrets, UI/video/content/community files

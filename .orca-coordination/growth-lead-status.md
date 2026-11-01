@@ -110,3 +110,41 @@ lanes: chrome-login=P0 WORKING dispatch=ctx_296c3a1aa393; content=INTEGRATED c78
 CẦN NAM: Chưa mở cửa sổ đăng nhập. Sau profile-only Chrome smoke đọc được chữ, nút Tổng quan > Tài khoản > Đăng nhập thủ công mở cửa sổ Chrome `linkedin-linkedin_nam`; Nam tự nhập credential/SSO/MFA/CAPTCHA/checkpoint. Không dùng Chrome cá nhân, không copy cookie/session.
 blockers: CHROME-LOGIN-P0 (worker implementation + profile-only screenshot); LIVE-PUBLICATION (0 verified permalink); PILOT-COMMENTS (waits for READY account)
 next_30m: nhận Chrome worker minimal seam/report, inspect independently, integrate serially, build clean app via `sh desktop/build-macos.sh` from clean checkout, preserve state/Keychain, smoke /health+account API, then open LinkedIn Chrome window only after readable screenshot proof and add CHROME_LOGIN_READY.
+
+updated: 2026-11-01T23:18:00+07:00
+phase: P0
+runtime: packaged 4321 source=22178785c79decde793f494d198c93879db11cfc dirty=false prior health=200; Chrome seam integration in progress
+accounts: linkedin/linkedin_nam: BLOCKED/WAITING_FOR_USER old Camoufox evidence; Chrome window not opened | facebook_group/facebook_nam: UNKNOWN old Camoufox evidence; Chrome window not opened
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10; quality=A real-capture bounded; 10 unique hashes verified
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (public/fixture; authenticated state UNKNOWN)
+camoufox_manual_login: CLOSED; no new account window opened
+lanes: chrome-login=P0 INTEGRATING worker commit 1b4d159; content=INTEGRATED; video=INTEGRATED; community=READY_WITH_AUTH_UNKNOWN; ui=CHECKPOINTED; publish/comments/pilot=PAUSED until Chrome account READY
+CẦN NAM: Chưa mở cửa sổ login. Sau khi build + profile-only smoke có screenshot chữ đọc được, nút Tổng quan > Tài khoản > Đăng nhập thủ công sẽ mở Chrome profile riêng `linkedin-linkedin_nam`; Nam tự nhập credential/SSO/MFA/CAPTCHA/checkpoint. Không dùng Chrome cá nhân, không copy cookie/session.
+blockers: CHROME-LOGIN-P0 (serial integration + packaged rebuild + readable profile-only screenshot); LIVE-PUBLICATION (0 verified permalink); PILOT-COMMENTS (waits for READY account)
+next_30m: cherry-pick Chrome seam, integrate router/UI, build clean app 4321 với state backup, profile-only smoke, then open LinkedIn Chrome window only after evidence gate.
+
+updated: 2026-11-01T23:42:00+07:00
+phase: P0 CUTOVER-4321
+runtime: packaged 4321 prior source=22178785c79decde793f494d198c93879db11cfc dirty=false health=200; requested clean growth build now
+accounts: linkedin/linkedin_nam WAITING_FOR_USER; Chrome profile-only smoke readable on temporary app-owned profile; real profile not opened yet | facebook_group/facebook_nam UNKNOWN; real profile not opened
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10; quality=A bounded real capture, unique hashes verified
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (authenticated state UNKNOWN)
+camoufox_manual_login: CLOSED
+lanes: chrome-login=P0 BUILD+SMOKE; content=INTEGRATED; video=INTEGRATED; publish/comments/pilot=PAUSED until READY
+CẦN NAM: Chưa mở profile thật; sau CHROME_LOGIN_READY, nhập credential/SSO/MFA/CAPTCHA/checkpoint trong cửa sổ Chrome riêng.
+blockers: none at start; if build/deploy/smoke fails append exact error immediately
+next_30m: clean build, preserve state/Keychain, update LaunchAgent 4321, verify health/source/API, open linkedin-linkedin_nam only after screenshot gate.
+
+updated: 2026-11-02T00:19:00+07:00
+phase: P0 AUTO-LOGIN
+runtime: packaged 4321 still old source=22178785c79decde793f494d198c93879db11cfc dirty=false health=200; clean growth build queued
+accounts: linkedin/linkedin_nam WAITING_FOR_USER (Keychain credentialStored=true; one auto-login attempt allowed after build) | facebook_group/facebook_nam WAITING_FOR_USER (Keychain credentialStored=true; one auto-login attempt allowed after LinkedIn)
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10; quality-A bounded real capture, unique hashes verified
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (public/fixture; authenticated Chrome state UNKNOWN)
+lanes: chrome-auto-login=P0 IMPLEMENTED (Keychain→headed stable Chrome, one attempt/account, challenge fail-closed); content=INTEGRATED; video=INTEGRATED; publish=PAUSED until READY + one-post proof; comments/pilot=PAUSED until READY; community=READY_WITH_AUTH_UNKNOWN
+CẦN NAM: Chỉ khi Chrome hiển thị CAPTCHA/2FA/checkpoint hoặc lỗi bảo mật: xử lý trong đúng cửa sổ account đó sáng mai; hệ thống không thử lại. Không dùng Chrome cá nhân, không copy cookie/session.
+blockers: PACKAGED-REBUILD (new source + bundled playwright-core); LIVE-PUBLICATION (0 verified permalink); CHALLENGE_INPUT (conditional per account)
+next_30m: commit source checkpoint, build from clean checkout, backup state + Keychain untouched, update LaunchAgent 4321, smoke health/source/account JSON, then retry LinkedIn once and Facebook once in order; record exact outcomes.

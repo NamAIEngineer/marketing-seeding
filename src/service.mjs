@@ -1655,7 +1655,7 @@ function projectDashboardAccountAgents(state = {}) {
 }
 
 function projectOnboardedAccount(account = {}) {
-  const allowed = ["id", "platform", "accountId", "provider", "providerProfileId", "profileId", "identityReference", "status", "health", "agentStatus", "loginStatus", "loginAttemptAt", "lastLoginAt", "lastFailureCode", "lastFailureReason", "sessionHealth", "loginEvidenceAt", "credentialStored", "updatedAt"];
+  const allowed = ["id", "platform", "accountId", "provider", "providerProfileId", "profileId", "identityReference", "status", "health", "agentStatus", "loginStatus", "loginAttemptAt", "lastLoginAt", "lastFailureCode", "lastFailureReason", "sessionHealth", "loginEvidenceAt", "identityEvidenceHash", "chromeProfilePath", "credentialStored", "updatedAt"];
   return Object.fromEntries(allowed.filter((key) => account[key] !== undefined).map((key) => [key, account[key]]));
 }
 
@@ -7084,16 +7084,16 @@ export class SeedingService {
     return result.result;
   }
 
-  /** Store a credential reference, register one isolated account agent, then
-   * run a bounded login attempt when a Camoufox runtime hook is configured. */
+  /** Store a credential reference and bind the account to its app-owned
+   * Chromium profile. Login remains a visible, user-completed step. */
   async onboardExecutionAccount(input = {}, actor = "operator") {
     const platform = String(input.platform || "").trim().toLowerCase();
     const accountId = String(input.accountId || "").trim();
     if (!platform || !accountId) throw new Error("platform and accountId are required");
     if (!String(input.username || "") || !String(input.password || "")) throw new Error("username and password are required");
-    const profileId = String(input.profileId || input.providerProfileId || `camoufox-${platform}-${accountId}`).trim();
+    const profileId = String(input.profileId || input.providerProfileId || `chrome-${platform}-${accountId}`).trim();
     const account = await this.registerExecutionAccount({
-      platform, accountId, provider: "camoufox", providerProfileId: profileId,
+      platform, accountId, provider: "chrome", providerProfileId: profileId,
       profileId,
       // The onboarding caller does not establish identity. Camoufox must
       // derive and verify the exact identity from the authenticated browser
@@ -7104,44 +7104,26 @@ export class SeedingService {
     const startedAt = nowIso();
     const baseline = await this.store.mutate(actor, "account_agent_login_started", (state) => {
       const row = state.executionAccounts.find((item) => item.id === account.id);
-      Object.assign(row, { agentStatus: "RUNNING", loginStatus: "UNKNOWN", loginAttemptAt: startedAt, lastFailureCode: null, lastFailureReason: null, credentialStored: credential?.credentialStored === true, updatedAt: startedAt });
+      Object.assign(row, { agentStatus: "WAITING_FOR_USER", loginStatus: "WAITING_FOR_USER", sessionRecoveryStatus: "HUMAN_REQUIRED", loginAttemptAt: startedAt, lastFailureCode: "CHROME_MANUAL_LOGIN_REQUIRED", lastFailureReason: "Bấm Đăng nhập thủ công để mở Chrome profile riêng", credentialStored: credential?.credentialStored === true, updatedAt: startedAt });
       return row;
     });
-    let result = { status: "UNKNOWN", code: "ACCOUNT_AGENT_UNAVAILABLE", reason: "Camoufox account agent runtime is not configured" };
-    if (this.accountAgentRunner) {
-      try { result = await this.accountAgentRunner({ account: baseline.result, platform, accountId }); }
-      catch (error) { result = { status: "UNKNOWN", code: String(error?.code || "ACCOUNT_AGENT_ERROR"), reason: String(error?.message || "account agent failed") }; }
-    }
-    let manualLogin = null;
-    if (result?.status === "BLOCKED" && ["ACCOUNT_SECURITY_CHALLENGE", "AUTH_REQUIRED", "SECURITY_CHALLENGE"].includes(String(result?.code || "")) && this.manualLoginManager) {
-      try {
-        manualLogin = await this.manualLoginManager.start({ platform, accountId, profileId, identityReference: baseline.result.identityReference || null });
-      } catch (error) {
-        manualLogin = { status: "UNKNOWN", code: String(error?.code || "MANUAL_LOGIN_UNAVAILABLE"), reason: "Không mở được cửa sổ đăng nhập thủ công" };
-      }
-    }
-    const finishedAt = nowIso();
-    const final = await this.store.mutate(actor, "account_agent_login_finished", (state) => {
-      const row = state.executionAccounts.find((item) => item.id === account.id);
-      const status = ["READY", "BLOCKED", "UNKNOWN"].includes(result?.status) ? result.status : "UNKNOWN";
-      const discoveredIdentity = String(result?.identityReference || "").trim();
-      Object.assign(row, { ...(discoveredIdentity ? { identityReference: discoveredIdentity, expectedIdentityUrl: discoveredIdentity } : {}), agentStatus: status === "READY" ? "READY" : status === "BLOCKED" ? "BLOCKED" : "UNKNOWN", loginStatus: status, sessionHealth: status === "READY" ? "ready" : status === "BLOCKED" ? "blocked" : "unknown", health: status === "READY" ? "healthy" : status === "BLOCKED" ? "human_required" : "unknown", lastLoginAt: status === "READY" ? finishedAt : row.lastLoginAt || null, lastFailureCode: status === "READY" ? null : String(result?.code || "UNKNOWN").slice(0, 80), lastFailureReason: status === "READY" ? null : String(result?.reason || "UNKNOWN").replace(/\s+/g, " ").slice(0, 300), loginEvidenceAt: finishedAt, updatedAt: finishedAt });
-      return row;
-    });
-    return { account: projectOnboardedAccount(final.result), login: { status: result.status, code: result.code, reason: result.reason }, ...(manualLogin ? { manualLogin } : {}) };
+    return {
+      account: projectOnboardedAccount(baseline.result),
+      login: { status: "WAITING_FOR_USER", code: "CHROME_MANUAL_LOGIN_REQUIRED", reason: "Bấm Đăng nhập thủ công để mở Chrome profile riêng; danh tính sẽ được xác minh qua /me" }
+    };
   }
 
   async startManualAccountLogin(input = {}, actor = "operator") {
     const platform = String(input.platform || "").trim().toLowerCase();
     const accountId = String(input.accountId || "").trim();
     if (!platform || !accountId) throw new Error("platform and accountId are required");
-    const profileId = String(input.profileId || input.providerProfileId || `camoufox-${platform}-${accountId}`).trim();
-    const account = await this.registerExecutionAccount({ platform, accountId, provider: "camoufox", providerProfileId: profileId, profileId, status: "enabled", health: "unknown", authMode: "MANUAL_AUTH" }, actor);
+    const profileId = String(input.profileId || input.providerProfileId || `chrome-${platform}-${accountId}`).trim();
+    const account = await this.registerExecutionAccount({ platform, accountId, provider: "chrome", providerProfileId: profileId, profileId, status: "enabled", health: "unknown", authMode: "MANUAL_AUTH" }, actor);
     if (!this.manualLoginManager) return { account: projectOnboardedAccount(account), login: { status: "UNKNOWN", code: "MANUAL_LOGIN_UNAVAILABLE", reason: "Manual Camoufox session manager is not configured" } };
     const session = await this.manualLoginManager.start({ platform, accountId, profileId, identityReference: account.identityReference || null });
     await this.store.mutate(actor, "manual_account_login_started", (state) => {
       const row = state.executionAccounts.find((item) => item.id === account.id);
-      if (row) Object.assign(row, { agentStatus: "RUNNING", loginStatus: "UNKNOWN", sessionRecoveryStatus: "HUMAN_REQUIRED", loginAttemptAt: nowIso(), lastFailureCode: null, lastFailureReason: "Đang chờ đăng nhập trong cửa sổ Camoufox", updatedAt: nowIso() });
+      if (row) Object.assign(row, { provider: "chrome", agentStatus: "RUNNING", loginStatus: "WAITING_FOR_USER", sessionRecoveryStatus: "HUMAN_REQUIRED", loginAttemptAt: nowIso(), chromeProfilePath: session.profilePath || null, lastFailureCode: null, lastFailureReason: "Đang chờ đăng nhập trong cửa sổ Chrome riêng", updatedAt: nowIso() });
     });
     return { account: projectOnboardedAccount(account), login: session };
   }
@@ -7156,7 +7138,7 @@ export class SeedingService {
     const login = await this.chromeAccountProfileManager.start({ platform, accountId });
     await this.store.mutate(actor, "chrome_account_login_started", (state) => {
       const row = state.executionAccounts.find((item) => item.id === account.id);
-      if (row) Object.assign(row, { agentStatus: "RUNNING", loginStatus: "UNKNOWN", sessionRecoveryStatus: "HUMAN_REQUIRED", loginAttemptAt: nowIso(), chromeProfilePath: login.profilePath, updatedAt: nowIso() });
+    if (row) Object.assign(row, { provider: "chrome", agentStatus: "RUNNING", loginStatus: "WAITING_FOR_USER", sessionRecoveryStatus: "HUMAN_REQUIRED", loginAttemptAt: nowIso(), chromeProfilePath: login.profilePath, lastFailureCode: null, lastFailureReason: "Đang chờ đăng nhập trong cửa sổ Chrome riêng", updatedAt: nowIso() });
     });
     return { account: projectOnboardedAccount(account), login };
   }
@@ -7179,6 +7161,18 @@ export class SeedingService {
     const snapshot = await this.store.read();
     const account = (snapshot.executionAccounts || []).find((item) => item.platform === platform && item.accountId === accountId);
     if (!account) throw Object.assign(new Error("account not found"), { code: "ACCOUNT_NOT_FOUND" });
+    if (account.provider === "chrome" && this.chromeAccountProfileManager) {
+      const login = await this.chromeAccountProfileManager.retryLogin({ platform, accountId });
+      const at = nowIso();
+      const saved = await this.store.mutate(actor, "chrome_account_retry_started", (state) => {
+        const row = (state.executionAccounts || []).find((item) => item.platform === platform && item.accountId === accountId);
+        const ready = login.status === "READY";
+        const blocked = login.status === "BLOCKED";
+        if (row) Object.assign(row, { provider: "chrome", agentStatus: ready ? "READY" : blocked ? "BLOCKED" : "RUNNING", loginStatus: ready ? "READY" : blocked ? "BLOCKED" : "RUNNING", sessionRecoveryStatus: ready ? "RECOVERED" : blocked ? "HUMAN_REQUIRED" : "RUNNING", loginAttemptAt: at, lastLoginAt: ready ? at : row.lastLoginAt || null, chromeProfilePath: login.profilePath || row.chromeProfilePath || null, ...(login.identityReference ? { identityReference: login.identityReference, expectedIdentityUrl: login.identityReference } : {}), identityEvidenceHash: login.evidenceHash || row.identityEvidenceHash || null, lastFailureCode: ready ? null : String(login.code || "CHROME_LOGIN_UNKNOWN").slice(0, 100), lastFailureReason: ready ? null : String(login.reason || "Đăng nhập Chrome chưa hoàn tất").replace(/\s+/g, " ").slice(0, 300), loginEvidenceAt: at, updatedAt: at });
+        return row || account;
+      });
+      return { account: projectOnboardedAccount(saved.result), login };
+    }
     if (!this.accountAgentRunner) return { account: projectOnboardedAccount(account), login: { status: "UNKNOWN", code: "ACCOUNT_AGENT_UNAVAILABLE", reason: "Account Agent chưa sẵn sàng" } };
     let result;
     try { result = await this.accountAgentRunner({ account }); } catch (error) { result = { status: "UNKNOWN", code: String(error?.code || "ACCOUNT_AGENT_ERROR"), reason: "Không thể chạy lại Account Agent" }; }

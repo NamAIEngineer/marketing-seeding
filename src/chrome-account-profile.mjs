@@ -2,6 +2,7 @@ import os from "node:os";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { mkdir } from "node:fs/promises";
+import { readAccountCredentials } from "./account-credentials.mjs";
 
 /**
  * Chromium account runtime boundary.
@@ -32,6 +33,8 @@ const SAFE_PLATFORM = /^(?:linkedin|facebook)$/;
 const SAFE_ACCOUNT_ID = /^[A-Za-z0-9._:@+-]{1,160}$/;
 const SAFE_REFERENCE = /^[A-Za-z0-9._:@/-]{1,240}$/;
 const LOGIN_OR_CHALLENGE = /(?:^|\/)login(?:\/|$)|checkpoint|challenge|captcha|consent|authorize|security[-_ ]check/i;
+const CHALLENGE_TEXT = /(?:captcha|recaptcha|two[- ]factor|2fa|verification code|security code|confirm it(?:'|’)s you|unusual activity|checkpoint|security check|verify your identity|xác minh|mã xác minh)/i;
+const LOGIN_FAILURE_TEXT = /(?:incorrect password|wrong password|invalid password|couldn['’]t log in|could not log in|unexpected error|try again|sai mật khẩu|không thể đăng nhập)/i;
 const MAX_TEXT = 400;
 
 function text(value, limit = MAX_TEXT) {
@@ -202,6 +205,7 @@ export class ChromeAccountProfileManager {
   #profileRoot;
   #ttlMs;
   #sessions = new Map();
+  #retryAttempts = new Map();
   constructor({ playwright = null, executablePath = process.env.SEEDING_CHROME_EXECUTABLE_PATH || defaultChromeExecutablePath(), homeDir = os.homedir(), profileRoot = null, ttlMs = 15 * 60_000 } = {}) {
     this.#playwright = playwright;
     this.#executablePath = text(executablePath, 500) || defaultChromeExecutablePath();
@@ -277,8 +281,8 @@ export class ChromeAccountProfileManager {
       platform: session.platform,
       accountId: session.accountId,
       status: session.status,
-      code: session.status === "READY" ? "LOGIN_CONFIRMED" : "WAITING_FOR_USER",
-      reason: session.status === "READY" ? "Direct platform identity redirect verified" : "Complete login in the visible Chrome window; identity remains unverified",
+      code: session.resultCode || (session.status === "READY" ? "LOGIN_CONFIRMED" : "WAITING_FOR_USER"),
+      reason: session.resultReason || (session.status === "READY" ? "Direct platform identity redirect verified" : "Complete login in the visible Chrome window; identity remains unverified"),
       loginUrl: session.loginUrl,
       identityProbeUrl: CHROME_IDENTITY_PROBE_URLS[session.platform],
       profilePath: session.profilePath,
@@ -294,8 +298,66 @@ export class ChromeAccountProfileManager {
     const normalized = normalizedPlatform(platform);
     const account = normalizedAccountId(accountId);
     const reference = credentialReference == null ? null : requiredSafe(credentialReference, "credentialReference");
-    // Deliberately no Keychain read and no live retry in this bounded task.
-    return { status: "UNKNOWN", code: "CHROME_RETRY_NOT_EXECUTED", reason: "Retry is staged for a human-approved live run", platform: normalized, accountId: account, credentialReference: reference };
+    const key = `${normalized}:${account}`;
+    if ((this.#retryAttempts.get(key) || 0) >= 1) {
+      const existing = [...this.#sessions.values()].find((item) => item.platform === normalized && item.accountId === account);
+      return existing ? { ...this.status(existing.sessionId), status: existing.status === "READY" ? "READY" : "BLOCKED", code: "CHROME_RETRY_LIMIT_REACHED", reason: "Tài khoản đã được thử tự đăng nhập một lần; không thử lại tự động" } : { status: "BLOCKED", code: "CHROME_RETRY_LIMIT_REACHED", reason: "Tài khoản đã được thử tự đăng nhập một lần; không thử lại tự động", platform: normalized, accountId: account };
+    }
+    this.#retryAttempts.set(key, 1);
+    let credentials;
+    try { credentials = await readAccountCredentials({ platform: normalized, accountId: account }); }
+    catch (error) { return { status: "BLOCKED", code: String(error?.code || "KEYCHAIN_CREDENTIAL_UNAVAILABLE"), reason: "Không đọc được credential từ macOS Keychain; không thử lại tự động", platform: normalized, accountId: account, credentialReference: reference }; }
+    let started;
+    try { started = await this.start({ platform: normalized, accountId: account }); }
+    catch (error) { credentials = null; return { status: "BLOCKED", code: String(error?.code || "CHROME_LOGIN_LAUNCH_FAILED"), reason: String(error?.message || "Không mở được Chrome profile").replace(/\s+/g, " ").slice(0, 240), platform: normalized, accountId: account }; }
+    const session = this.#sessions.get(started.sessionId);
+    const page = session?.page;
+    if (!session || !page) { credentials = null; return { status: "BLOCKED", code: "CHROME_LOGIN_PAGE_UNAVAILABLE", reason: "Chrome profile không có trang đăng nhập", platform: normalized, accountId: account }; }
+    const initialUrl = pageUrl(page);
+    if (initialUrl && !LOGIN_OR_CHALLENGE.test(initialUrl)) {
+      try { await page.goto(CHROME_IDENTITY_PROBE_URLS[normalized], { waitUntil: "domcontentloaded" }); }
+      catch {}
+      const existingIdentity = verifyChromeIdentity({ platform: normalized, url: pageUrl(page), title: typeof page.title === "function" ? await page.title().catch(() => "") : "", bodyText: await pageBodyText(page), candidateCount: 1 });
+      if (existingIdentity.status === "READY") {
+        credentials = null; session.status = "READY"; session.resultCode = existingIdentity.code; session.resultReason = existingIdentity.reason; session.identityReference = existingIdentity.identityReference; session.evidenceHash = existingIdentity.evidenceHash; session.observedUrl = existingIdentity.observedUrl; session.identityEvidence = existingIdentity; return this.status(started.sessionId);
+      }
+    }
+    const selectors = normalized === "linkedin"
+      ? { username: ['input[name="session_key"]', '#username', 'input[autocomplete="username"]'], password: ['input[name="session_password"]', '#password', 'input[autocomplete="current-password"]'], submit: ['button[type="submit"]', 'input[type="submit"]', 'button:has-text("Sign in")'] }
+      : { username: ['input[name="email"]', 'input[autocomplete="username"]', '#email'], password: ['input[name="pass"]', 'input[autocomplete="current-password"]', '#pass'], submit: ['button[name="login"]', 'button[type="submit"]', 'input[type="submit"]'] };
+    const findVisible = async (candidates) => {
+      for (const selector of candidates) {
+        try { const locator = page.locator(selector).first(); if (await locator.count() && await locator.isVisible()) return locator; } catch {}
+      }
+      return null;
+    };
+    const usernameField = await findVisible(selectors.username);
+    const passwordField = await findVisible(selectors.password);
+    if (!usernameField || !passwordField) {
+      const body = await pageBodyText(page); const challenge = CHALLENGE_TEXT.test(body) || LOGIN_OR_CHALLENGE.test(pageUrl(page));
+      session.status = "BLOCKED"; session.resultCode = challenge ? "CHROME_LOGIN_CHALLENGE" : "CHROME_LOGIN_CONTROLS_NOT_FOUND"; session.resultReason = challenge ? "Nền tảng yêu cầu CAPTCHA/2FA/checkpoint; cửa sổ Chrome được giữ mở" : "Không tìm thấy đủ ô đăng nhập trong Chrome profile";
+      credentials = null; return this.status(started.sessionId);
+    }
+    try {
+      await usernameField.fill(credentials.username); await passwordField.fill(credentials.password);
+      const submit = await findVisible(selectors.submit); if (!submit) throw Object.assign(new Error("Không tìm thấy nút đăng nhập"), { code: "CHROME_LOGIN_CONTROLS_NOT_FOUND" });
+      await submit.click(); if (typeof page.waitForTimeout === "function") await page.waitForTimeout(8_000);
+    } catch (error) {
+      session.status = "BLOCKED"; session.resultCode = String(error?.code || "CHROME_LOGIN_SUBMIT_FAILED"); session.resultReason = String(error?.message || "Không thể gửi form đăng nhập").replace(/\s+/g, " ").slice(0, 240); credentials = null; return this.status(started.sessionId);
+    }
+    credentials = null;
+    const body = await pageBodyText(page); const observedUrl = pageUrl(page);
+    if (CHALLENGE_TEXT.test(body) || /checkpoint|challenge|captcha|security[-_ ]check/i.test(observedUrl)) {
+      session.status = "BLOCKED"; session.resultCode = "CHROME_LOGIN_CHALLENGE"; session.resultReason = "Nền tảng yêu cầu CAPTCHA/2FA/checkpoint; cửa sổ Chrome được giữ mở cho Nam"; session.observedUrl = observedUrl; session.evidenceHash = chromeEvidenceHash({ platform: normalized, accountId: account, observedUrl, code: session.resultCode, attempt: 1 }); return this.status(started.sessionId);
+    }
+    if (LOGIN_FAILURE_TEXT.test(body) && LOGIN_OR_CHALLENGE.test(observedUrl)) {
+      session.status = "BLOCKED"; session.resultCode = "CHROME_LOGIN_FAILED"; session.resultReason = "Đăng nhập không thành công; không thử lại tự động"; session.observedUrl = observedUrl; session.evidenceHash = chromeEvidenceHash({ platform: normalized, accountId: account, observedUrl, code: session.resultCode, attempt: 1 }); return this.status(started.sessionId);
+    }
+    try { await page.goto(CHROME_IDENTITY_PROBE_URLS[normalized], { waitUntil: "domcontentloaded" }); }
+    catch (error) { session.status = "BLOCKED"; session.resultCode = String(error?.code || "CHROME_IDENTITY_PROBE_FAILED"); session.resultReason = "Không thể kiểm tra danh tính sau đăng nhập; không thử lại tự động"; return this.status(started.sessionId); }
+    const result = verifyChromeIdentity({ platform: normalized, url: pageUrl(page), title: typeof page.title === "function" ? await page.title().catch(() => "") : "", bodyText: await pageBodyText(page), candidateCount: 1 });
+    session.status = result.status === "READY" ? "READY" : "BLOCKED"; session.resultCode = result.code; session.resultReason = result.reason; session.identityReference = result.identityReference; session.evidenceHash = result.evidenceHash; session.observedUrl = result.observedUrl; session.identityEvidence = result;
+    return this.status(started.sessionId);
   }
   async close(sessionId) {
     const session = this.#sessions.get(String(sessionId));

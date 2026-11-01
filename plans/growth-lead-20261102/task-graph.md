@@ -35,4 +35,14 @@ Run mode: supervised Orca orchestration. Controller: Growth Lead in `ms-growth-l
 |---|---|---|---|---|
 | T-comments-pilot | BUILD · publish/learning | Account-owned comment polling/reply safety, 07:00–23:00 schedule, pilot variable/metric schema, daily 23:30 and 2026-11-09 08:00 reports, warning/checkpoint frequency reduction | T-chrome-login; at least one account identity verified for live side effects | A13, A14, V9 |
 
+## Wave 3 — account pool after the Chrome gate
+
+`T-account-pool` starts only after `CHROME_LOGIN_READY` is recorded. It does not weaken the manual-login gate: credentials may be supplied only through the local UI/CSV picker, are written to Keychain, and are never persisted in state, logs, repo, or chat.
+
+| Task | role | Scope | Dependencies | Acceptance |
+|---|---|---|---|---|
+| T-account-pool | BUILD · account/runtime | Local account-list form plus one-shot local CSV import; validate LinkedIn/Facebook rows; create one app-owned Chrome profile per account; read Keychain credentials for bounded auto-login; stop challenged accounts and surface `CẦN NAM`; continue independent pool accounts; project all rows through the single `JsonStore`/`SeedingService` with source/evidence hash | `CHROME_LOGIN_READY`; existing account credential seam | Mission 14, A11, V8 |
+| T-linkedin-pilot | LIVE-PREP · publish | After at least one account reaches READY, run exactly one LinkedIn browser post with one approved MP4, independently verify permalink/media, and record evidence before enabling schedule | T-account-pool; READY account; kill switch/campaign gate | one real permalink or explicit BLOCKED/UNKNOWN; no fabricated publication |
+| T-schedule-pilot | BUILD · publish/learning | Enable 10/day 07:00–23:00 only after pilot post proof; allocate across account pool under per-account caps, spacing, warning 50% reduction, and kill switch | T-linkedin-pilot; verified permalink | A13, A14, V9 |
+
 Paused scope: Threads, Reddit, Product Hunt, Indie Hackers, X publication; no W3b platform outside Facebook/LinkedIn Groups. Credential entry and CAPTCHA/MFA/OTP remain the only `CẦN NAM` actions. T-comments-pilot may implement guards and scheduling before login but must not perform live writes until a READY account and kill switch are evidenced.

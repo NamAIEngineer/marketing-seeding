@@ -40,6 +40,16 @@ if [ -d "$SOURCE/plans/crawl4ai-integration" ]; then
   mkdir -p "$APP/Contents/Resources/app/plans"
   ditto "$SOURCE/plans/crawl4ai-integration" "$APP/Contents/Resources/app/plans/crawl4ai-integration"
 fi
+# The account browser uses Playwright as a control library while launching the
+# separately installed stable Google Chrome binary. Bundle only playwright-core
+# (never its browser binaries) so the packaged runtime can import the seam.
+if [ -d "$SOURCE/node_modules/playwright-core" ]; then
+  mkdir -p "$APP/Contents/Resources/app/node_modules"
+  ditto "$SOURCE/node_modules/playwright-core" "$APP/Contents/Resources/app/node_modules/playwright-core"
+else
+  echo 'playwright-core is required for the packaged Chrome account lane' >&2
+  exit 2
+fi
 ditto "$SOURCE/desktop/provision-9router.sh" "$APP/Contents/Resources/app/provision-9router.sh"
 ditto "$SOURCE/desktop/9router-provenance.json" "$APP/Contents/Resources/app/9router-provenance.json"
 ditto "$SOURCE/desktop/provision-camoufox.sh" "$APP/Contents/Resources/app/provision-camoufox.sh"

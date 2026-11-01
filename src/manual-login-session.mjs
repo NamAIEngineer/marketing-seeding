@@ -17,7 +17,7 @@ export class ManualLoginSessionManager {
     const account = clean(accountId, 160);
     if (!requested || !account || !clean(profileId, 500)) throw Object.assign(new Error("platform, accountId and profileId are required"), { code: "MANUAL_LOGIN_BINDING_REQUIRED" });
     for (const [id, session] of this.#sessions) if (session.accountId === account && session.platform === requested) await this.close(id);
-    const opened = await this.#browserManager.start({ platform: requested, accountId: account, profilePath: profileId });
+    const opened = await this.#browserManager.start({ platform: requested, accountId: account });
     const sessionId = opened?.sessionId || randomUUID();
     const startedAt = opened?.startedAt || new Date().toISOString();
     const expiresAt = opened?.expiresAt || new Date(Date.now() + this.#ttlMs).toISOString();
