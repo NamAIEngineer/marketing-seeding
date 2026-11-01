@@ -284,3 +284,39 @@ Cấu trúc (giữ khung + chuyển động của mẫu: pill cam, chữ hiện 
 Mỗi video là một sản phẩm khác nhau (dashboard SaaS, landing page, app mobile onboarding, form đăng ký, bảng giá, profile card…) để 10 bài/ngày không trùng. Bản tiếng Việt và tiếng Anh chỉ khác chữ overlay.
 
 Thực hiện: video worker term_a791f9b6 làm, dùng ScreenCaptureKit (đã chạy) + hyperframes runtime/Playwright để dựng. Làm **1 video hoàn chỉnh trước**, xuất contact sheet 2 fps + ảnh so sánh với video mẫu, ghi path vào video-quality-a-status.md, Claude duyệt bằng mắt rồi mới làm các video còn lại. Không đăng video nào chưa được Claude duyệt. Lịch bài dời theo video đã duyệt.
+
+## 17. CONTENT v2 — viết lại toàn bộ drafts (Claude review 05:50 2/11, Nam đã xem)
+Drafts hiện tại (drafts-2026-11-02.json, 16 bài) KHÔNG ĐẠT, không được đăng:
+- Viết kiểu changelog/README ("The README describes...", "The 0.7.0 changelog lists...") = feature-first, ngược hẳn style Nam: người đọc chỉ quan tâm làm xong thì RA ĐƯỢC CÁI GÌ.
+- 16 bài cùng 1 câu CTA "Try it and star the repo if it helps your work." → nhìn là biết bot.
+- Quá ngắn, không hook, không câu chuyện, không khớp video.
+- Có kênh linkedin_page / facebook_page mà mình KHÔNG có → chỉ dùng linkedin_personal, facebook_timeline, facebook_member_group.
+- Dấu backtick trong bản tiếng Việt sẽ hiện nguyên ký tự trên Facebook → bỏ.
+Yêu cầu v2:
+1. Mỗi bài gắn với ĐÚNG 1 video mục 16 (1 sản phẩm: dashboard, landing page, onboarding mobile, form, pricing, profile card...). Bài kể kết quả của video đó.
+2. Cấu trúc: dòng 1 = kết quả cụ thể (cái làm ra được) → 2-4 dòng quá trình ngắn (agent dựng gì, mình làm gì) → 2-3 lợi ích có thật trong README (file .fig nằm trên máy; agent dùng tài khoản CLI sẵn có, không cần API key; Dev Mode ra code React/Tailwind/SwiftUI...; mở được file 207.601 node) → link repo đầy đủ → CTA star, mỗi bài viết CTA khác nhau.
+3. Giọng người thật, xưng mình. Bài group: tiếng Việt, hợp chủ đề group, kết bằng 1 câu hỏi mở để kéo comment. LinkedIn: tiếng Anh, chuyên nghiệp hơn, 120-200 từ.
+4. Chỉ nói điều có thật/kiểm chứng được. KHÔNG bịa số liệu thời gian ("30 giây", "1 prompt") trừ khi video chứng minh; không nói "không cắt" vì video là bản dựng.
+5. Mỗi bài khác nhau thật sự (hook, góc nhìn, CTA); bài group khác nhau giữa các group.
+6. Ghi drafts-v2 vào drafts/drafts-2026-11-02-v2.json + bản đọc được drafts/drafts-2026-11-02-v2.md, đánh dấu CONTENT_PENDING_CLAUDE. Claude duyệt (CLAUDE_APPROVED) mới được đăng, cùng gate với video.
+Bài mẫu (Facebook group, tham khảo giọng, không copy nguyên):
+"Từ một file trống tới một dashboard SaaS hoàn chỉnh, mình gần như chỉ ngồi xem.
+Mình mở DESIGN:OS Studio, gõ yêu cầu cho agent (Claude Code chạy ngay trong app). Nó tự dựng layout, chia grid, tạo component, gắn variable. Mình rà lại vài chỗ rồi mở Dev Mode lấy code React/Tailwind mang đi dùng luôn.
+Mấy điểm mình thấy đáng giá:
+- File .fig nằm trên máy mình, không phải upload lên đâu
+- Không cần API key, agent dùng tài khoản CLI mình đang có
+- File nặng cỡ 200 nghìn layer vẫn mở được
+Video 35s bên dưới là toàn bộ quá trình.
+Open source, miễn phí: https://github.com/jangtrinh/design-os-studio
+Mọi người đang dùng AI ở bước nào trong lúc làm UI? Thấy hữu ích thì cho repo 1 sao nhé."
+
+## 18. GOLD STANDARD từ Nam (05:58 2/11) — ƯU TIÊN CAO NHẤT cho content + video, thay bài mẫu ở mục 17
+Nam gửi 4 bài đăng tay và nói: video và content phải chuẩn như vậy. Đã chép đủ vào campaigns/design-os-studio-launch/reference/manual-posts-nam-gold-standard.md. Đọc kỹ trước khi viết.
+- Bài A (group Figma VN, 73 like / 33 comment / 64 share) là khuôn chính: hook gọi đúng người + dòng đậm tin mới (version thật) + "Điểm mình thấy hay là..." + 6-12 bullet năng lực thật + reframe "từ X sang Y" + minh bạch (free, hướng nghiên cứu) + repo + link release + câu hỏi feedback có lựa chọn in đậm + 5-9 hashtag.
+- Bài B là khuôn follow-up: không giới thiệu lại, update mới, share lại bài gốc, hỏi feedback khác.
+- Content v2 (mục 17) phải theo khuôn này. Mỗi bài lấy 1 tin thật khác nhau từ CHANGELOG/releases (0.6.0 → 0.7.x hiện tại) hoặc 1 sản phẩm làm ra trong video mục 16; không bịa tính năng/số liệu.
+- Tiếng Việt cho Facebook (timeline + group). LinkedIn: tiếng Anh, cùng cấu trúc, giọng chuyên nghiệp hơn.
+- Mỗi group 1 bài khác nhau, hợp chủ đề group; group đã đăng rồi thì dùng khuôn follow-up.
+- Minh bạch: nếu bài nói như người ngoài thì vẫn phải thật; không dựng persona giả, không tự comment/like chéo.
+- Video: chính là phong cách video mẫu release-recap mà bài A dùng; bản 30-40s mục 16 giữ đúng ngôn ngữ hình ảnh đó (khung selection xanh mở/đóng, nhãn cam nhỏ, headline 1-2 từ to, UI thật crop/zoom).
+- Gate giữ nguyên: CLAUDE_APPROVED cho cả content và video mới được đăng.

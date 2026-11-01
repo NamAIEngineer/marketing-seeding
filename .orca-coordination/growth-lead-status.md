@@ -450,3 +450,16 @@ lanes: account=REATTACH_SOURCE_UPDATE; runtime=BUILD_PENDING; pilot=ARMED_MEDIA_
 CẦN NAM: none for account verification; existing Chrome profiles remain open and untouched
 blockers: RUNTIME_BUNDLE_PRE_SOURCE_UPDATE | VIDEO_V3_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
 next_30m: commit source/doc checkpoint; build clean 8ca0+; swap LaunchAgent 4321 only; call verify-session for both profiles; record canonical identity/evidence
+
+updated: 2026-11-02T05:57:09+0700
+phase: P2_CHROME_CANONICAL_VERIFY
+runtime: packaged 4321 source=6c4c42d8866e75dc0fadf5d595cb3d5b900fcbeb dirty=false health=200 pid=43470 stateRevision=452; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam UNKNOWN CHROME_IDENTITY_HISTORY_NOT_FRESH after first source bundle; facebook_group/facebook_nam UNKNOWN CHROME_IDENTITY_HISTORY_NOT_FRESH; no credential submitted
+pilot: armed=10 slots; activation gated by canonical READY + Claude-approved v3/v16 media + content v2/m18 approval; no post
+videos: v3 prototype pending CLAUDE_APPROVED; v2 rejected; gold-standard reference passed to video lane
+content: mission-17 v2 PASS validator; mission-18 gold-standard rewrite pending; CONTENT_PENDING_CLAUDE
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: account=HISTORY-PARSER-FIX; runtime=REBUILD_PENDING; pilot=ARMED_MEDIA_CONTENT_GATED; publish=PAUSED; video=V3_CLAUDE_REVIEW_PENDING; content=M18_WORKER_PENDING; community=PUBLIC_30_READY_AUTH_UNKNOWN
+CẦN NAM: none for account verify; Chrome profiles remain open; no login/new window initiated by verify logic beyond bounded /me probe
+blockers: RUNTIME_BUNDLE_PRE_PARSER_FIX | VIDEO_V3_CLAUDE_APPROVAL | CONTENT_M18_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: clean build parser fix; swap 4321; verify both app-owned Chrome profiles; commit gold-standard reference/status; keep 4318 untouched

@@ -353,7 +353,11 @@ export class ChromeAccountProfileManager {
       if (!process?.live) return { status: "UNKNOWN", code: process?.code || "CHROME_PROFILE_NOT_RUNNING", reason: "App-owned Chrome profile has no verified live process; no login or credential action was attempted", platform: normalized, accountId: account, profilePath, source: chromeAccountSource(account) };
       const probeStartedAt = Date.now();
       try { await this.#probeLauncher({ executablePath: this.#executablePath, profilePath, url: CHROME_IDENTITY_PROBE_URLS[normalized] }); } catch (error) { return { status: "UNKNOWN", code: "CHROME_IDENTITY_PROBE_FAILED", reason: String(error?.message || "Could not navigate existing Chrome profile").slice(0, 240), platform: normalized, accountId: account, profilePath, source: chromeAccountSource(account) }; }
-      const minChromeTime = chromeTimeMicros((probeStartedAt + 1_000) * 1000) + 11_644_473_600_000_000;
+      // Chrome may commit the navigation before the probe launcher returns,
+      // or coalesce `/me` and its canonical redirect at one timestamp. Use a
+      // bounded pre-probe baseline, then rely on the live PID plus canonical
+      // URL/title evidence. Never accept an old login/challenge row.
+      const minChromeTime = chromeTimeMicros((probeStartedAt - 2_000) * 1000) + 11_644_473_600_000_000;
       for (let attempt = 0; attempt < 10; attempt += 1) {
         const rows = await this.#historyReader(profilePath);
         const candidates = rows.filter((item) => chromeTimeMicros(item.lastVisitTime) >= minChromeTime && /linkedin\.com\/in\/|facebook\.com\/(?:profile\.php|[A-Za-z0-9])/i.test(String(item.url || "")));
