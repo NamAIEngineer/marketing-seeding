@@ -34,30 +34,33 @@
         "product:README.md:40-46"
       ],
       "videoSlot": "dos-video-slot-01",
-      "videoArtifactStatus": "READY_QA_PASS_REAL_SCREEN_CAPTURE_BOUNDED",
-      "videoSha256": "48d308ebf23f0b47e50097b2052d76907dee57482e1d5a28d12c0a8248a766c6",
+      "videoArtifactStatus": "READY_QA_PASS_QUALITY_A_WINDOW_CAPTURE",
+      "videoSha256": "c42c9d1add3929001075596fd4da29e8eb4be9886a6215e70ffaf00543272a14",
       "state": "DRAFT",
       "validation": {
         "status": "NOT_APPLICABLE",
         "report": null
       },
-      "videoPath": "campaigns/design-os-studio-launch/video/variants/w2-video-01-linkedin-personal.mp4",
-      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-01-linkedin-personal.jpg",
-      "videoQa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "videoPath": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-01.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/quality-a/thumbnails/dos-1102-01.jpg",
+      "videoQa": "PASS_QUALITY_A_WINDOW_CAPTURE",
       "videoQuality": "A",
       "videoAspectRatio": "16:9",
       "videoSpec": {
-        "durationSeconds": 7.833,
-        "sizeBytes": 109931,
-        "dimensions": "1280:720",
+        "durationSeconds": 4.4,
+        "sizeBytes": 131894,
+        "dimensions": "1280x720",
         "fps": "30/1",
         "videoCodec": "h264",
         "pixelFormat": "yuv420p",
-        "audioCodec": "none",
-        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-01-linkedin-personal.mov"
+        "audioCodec": "aac",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-01.mp4",
+        "proofGrid": "campaigns/design-os-studio-launch/video/quality-a/proof-grid/dos-1102-01.png",
+        "sourceWindowId": "38128",
+        "sourceBundleId": "os.design.studio"
       },
-      "videoSource": "real design:os studio window capture via screencapture -v; encoded H.264",
-      "videoEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-01-linkedin-personal.mov"
+      "videoSource": "Single DESIGN:OS Studio window captured via ScreenCaptureKit SCContentFilter(desktopIndependentWindow), normalized to 30 fps; per-post clip uses a distinct live window capture.",
+      "videoEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-01.mp4"
     },
     {
       "id": "dos-1102-02",
@@ -75,30 +78,33 @@
         "product:README.md:47-48"
       ],
       "videoSlot": "dos-video-slot-02",
-      "videoArtifactStatus": "READY_QA_PASS_REAL_SCREEN_CAPTURE_BOUNDED",
-      "videoSha256": "332bb33cd844b1faaefb1c924981a27044d3d269927840a7176f498a05476753",
+      "videoArtifactStatus": "READY_QA_PASS_QUALITY_A_WINDOW_CAPTURE",
+      "videoSha256": "20a5331c5f9d978de4abb1f90ca61c998415749c8842aa020ba2db9f30b56d25",
       "state": "DRAFT",
       "validation": {
         "status": "NOT_APPLICABLE",
         "report": null
       },
-      "videoPath": "campaigns/design-os-studio-launch/video/variants/w2-video-02-linkedin-page.mp4",
-      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-02-linkedin-page.jpg",
-      "videoQa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "videoPath": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-02.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/quality-a/thumbnails/dos-1102-02.jpg",
+      "videoQa": "PASS_QUALITY_A_WINDOW_CAPTURE",
       "videoQuality": "A",
       "videoAspectRatio": "16:9",
       "videoSpec": {
-        "durationSeconds": 7.933,
-        "sizeBytes": 118832,
-        "dimensions": "1280:720",
+        "durationSeconds": 4.4,
+        "sizeBytes": 128402,
+        "dimensions": "1280x720",
         "fps": "30/1",
         "videoCodec": "h264",
         "pixelFormat": "yuv420p",
-        "audioCodec": "none",
-        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-02-linkedin-page.mov"
+        "audioCodec": "aac",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-02.mp4",
+        "proofGrid": "campaigns/design-os-studio-launch/video/quality-a/proof-grid/dos-1102-02.png",
+        "sourceWindowId": "38128",
+        "sourceBundleId": "os.design.studio"
       },
-      "videoSource": "real design:os studio window capture via screencapture -v; encoded H.264",
-      "videoEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-02-linkedin-page.mov"
+      "videoSource": "Single DESIGN:OS Studio window captured via ScreenCaptureKit SCContentFilter(desktopIndependentWindow), normalized to 30 fps; per-post clip uses a distinct live window capture.",
+      "videoEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-02.mp4"
     },
     {
       "id": "dos-1102-03",
@@ -116,30 +122,33 @@
         "product:README.md:49-50"
       ],
       "videoSlot": "dos-video-slot-03",
-      "videoArtifactStatus": "READY_QA_PASS_REAL_SCREEN_CAPTURE_BOUNDED",
-      "videoSha256": "bb6dc47404bf3ea78d49610453897a05f1dbad43aa1dbf6033ff4ff162cb7fe7",
+      "videoArtifactStatus": "READY_QA_PASS_QUALITY_A_WINDOW_CAPTURE",
+      "videoSha256": "6ccb6251c403156435d1f65267c7a55382e2c1bba0ae89f450d19650cae08367",
       "state": "DRAFT",
       "validation": {
         "status": "NOT_APPLICABLE",
         "report": null
       },
-      "videoPath": "campaigns/design-os-studio-launch/video/variants/w2-video-03-facebook-timeline.mp4",
-      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-03-facebook-timeline.jpg",
-      "videoQa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "videoPath": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-03.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/quality-a/thumbnails/dos-1102-03.jpg",
+      "videoQa": "PASS_QUALITY_A_WINDOW_CAPTURE",
       "videoQuality": "A",
       "videoAspectRatio": "16:9",
       "videoSpec": {
-        "durationSeconds": 7.9,
-        "sizeBytes": 108602,
-        "dimensions": "1280:720",
+        "durationSeconds": 4.4,
+        "sizeBytes": 128810,
+        "dimensions": "1280x720",
         "fps": "30/1",
         "videoCodec": "h264",
         "pixelFormat": "yuv420p",
-        "audioCodec": "none",
-        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-03-facebook-timeline.mov"
+        "audioCodec": "aac",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-03.mp4",
+        "proofGrid": "campaigns/design-os-studio-launch/video/quality-a/proof-grid/dos-1102-03.png",
+        "sourceWindowId": "38128",
+        "sourceBundleId": "os.design.studio"
       },
-      "videoSource": "real design:os studio window capture via screencapture -v; encoded H.264",
-      "videoEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-03-facebook-timeline.mov"
+      "videoSource": "Single DESIGN:OS Studio window captured via ScreenCaptureKit SCContentFilter(desktopIndependentWindow), normalized to 30 fps; per-post clip uses a distinct live window capture.",
+      "videoEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-03.mp4"
     },
     {
       "id": "dos-1102-04",
@@ -156,30 +165,33 @@
         "product:README.md:42-46"
       ],
       "videoSlot": "dos-video-slot-04",
-      "videoArtifactStatus": "READY_QA_PASS_REAL_SCREEN_CAPTURE_BOUNDED",
-      "videoSha256": "e4b53ca4337c0f21a2d100373d8cfec70ef9ce1a18442aedb46f8c60d80b2444",
+      "videoArtifactStatus": "READY_QA_PASS_QUALITY_A_WINDOW_CAPTURE",
+      "videoSha256": "504887f50e7447afe9bb6b7895851e79ab4aa135ead528c75bb3420e2de4b583",
       "state": "DRAFT",
       "validation": {
         "status": "NOT_APPLICABLE",
         "report": null
       },
-      "videoPath": "campaigns/design-os-studio-launch/video/variants/w2-video-04-facebook-page.mp4",
-      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-04-facebook-page.jpg",
-      "videoQa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "videoPath": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-04.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/quality-a/thumbnails/dos-1102-04.jpg",
+      "videoQa": "PASS_QUALITY_A_WINDOW_CAPTURE",
       "videoQuality": "A",
       "videoAspectRatio": "16:9",
       "videoSpec": {
-        "durationSeconds": 7.933,
-        "sizeBytes": 120212,
-        "dimensions": "1280:720",
+        "durationSeconds": 4.4,
+        "sizeBytes": 129743,
+        "dimensions": "1280x720",
         "fps": "30/1",
         "videoCodec": "h264",
         "pixelFormat": "yuv420p",
-        "audioCodec": "none",
-        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-04-facebook-page.mov"
+        "audioCodec": "aac",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-04.mp4",
+        "proofGrid": "campaigns/design-os-studio-launch/video/quality-a/proof-grid/dos-1102-04.png",
+        "sourceWindowId": "38128",
+        "sourceBundleId": "os.design.studio"
       },
-      "videoSource": "real design:os studio window capture via screencapture -v; encoded H.264",
-      "videoEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-04-facebook-page.mov"
+      "videoSource": "Single DESIGN:OS Studio window captured via ScreenCaptureKit SCContentFilter(desktopIndependentWindow), normalized to 30 fps; per-post clip uses a distinct live window capture.",
+      "videoEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-04.mp4"
     },
     {
       "id": "dos-1102-05",
@@ -196,30 +208,33 @@
         "product:CHANGELOG.md:33-37"
       ],
       "videoSlot": "dos-video-slot-05",
-      "videoArtifactStatus": "READY_QA_PASS_REAL_SCREEN_CAPTURE_BOUNDED",
-      "videoSha256": "1e1e4ebd76f5ca04c09afa5187392c20f368f6f6fe0155be4da6788d6a0f1008",
+      "videoArtifactStatus": "READY_QA_PASS_QUALITY_A_WINDOW_CAPTURE",
+      "videoSha256": "5f427796047809b5c134d21ba3b71df4d7aa4c17d573610b885343d1d987b0a2",
       "state": "DRAFT",
       "validation": {
         "status": "NOT_APPLICABLE",
         "report": null
       },
-      "videoPath": "campaigns/design-os-studio-launch/video/variants/w2-video-05-facebook-group-a.mp4",
-      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-05-facebook-group-a.jpg",
-      "videoQa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "videoPath": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-05.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/quality-a/thumbnails/dos-1102-05.jpg",
+      "videoQa": "PASS_QUALITY_A_WINDOW_CAPTURE",
       "videoQuality": "A",
       "videoAspectRatio": "16:9",
       "videoSpec": {
-        "durationSeconds": 7.933,
-        "sizeBytes": 111183,
-        "dimensions": "1280:720",
+        "durationSeconds": 4.4,
+        "sizeBytes": 131755,
+        "dimensions": "1280x720",
         "fps": "30/1",
         "videoCodec": "h264",
         "pixelFormat": "yuv420p",
-        "audioCodec": "none",
-        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-05-facebook-group-a.mov"
+        "audioCodec": "aac",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-05.mp4",
+        "proofGrid": "campaigns/design-os-studio-launch/video/quality-a/proof-grid/dos-1102-05.png",
+        "sourceWindowId": "38128",
+        "sourceBundleId": "os.design.studio"
       },
-      "videoSource": "real design:os studio window capture via screencapture -v; encoded H.264",
-      "videoEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-05-facebook-group-a.mov"
+      "videoSource": "Single DESIGN:OS Studio window captured via ScreenCaptureKit SCContentFilter(desktopIndependentWindow), normalized to 30 fps; per-post clip uses a distinct live window capture.",
+      "videoEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-05.mp4"
     },
     {
       "id": "dos-1102-06",
@@ -236,30 +251,33 @@
         "product:CHANGELOG.md:9-14"
       ],
       "videoSlot": "dos-video-slot-06",
-      "videoArtifactStatus": "READY_QA_PASS_REAL_SCREEN_CAPTURE_BOUNDED",
-      "videoSha256": "754ec6dd7707fc21b8896f4abfaf51f5a7a8df85a390adbb0ca725f5cd0a59a1",
+      "videoArtifactStatus": "READY_QA_PASS_QUALITY_A_WINDOW_CAPTURE",
+      "videoSha256": "7e03fd1dba8ded4d2a7b8ac27aa083d002e786a6f5530f5d5e37c36883950e74",
       "state": "DRAFT",
       "validation": {
         "status": "NOT_APPLICABLE",
         "report": null
       },
-      "videoPath": "campaigns/design-os-studio-launch/video/variants/w2-video-06-facebook-group-b.mp4",
-      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-06-facebook-group-b.jpg",
-      "videoQa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "videoPath": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-06.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/quality-a/thumbnails/dos-1102-06.jpg",
+      "videoQa": "PASS_QUALITY_A_WINDOW_CAPTURE",
       "videoQuality": "A",
-      "videoAspectRatio": "1:1",
+      "videoAspectRatio": "16:9",
       "videoSpec": {
-        "durationSeconds": 7.933,
-        "sizeBytes": 119951,
-        "dimensions": "1080:1080",
+        "durationSeconds": 4.4,
+        "sizeBytes": 131931,
+        "dimensions": "1280x720",
         "fps": "30/1",
         "videoCodec": "h264",
         "pixelFormat": "yuv420p",
-        "audioCodec": "none",
-        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-06-facebook-group-b.mov"
+        "audioCodec": "aac",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-06.mp4",
+        "proofGrid": "campaigns/design-os-studio-launch/video/quality-a/proof-grid/dos-1102-06.png",
+        "sourceWindowId": "38128",
+        "sourceBundleId": "os.design.studio"
       },
-      "videoSource": "real design:os studio window capture via screencapture -v; encoded H.264",
-      "videoEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-06-facebook-group-b.mov"
+      "videoSource": "Single DESIGN:OS Studio window captured via ScreenCaptureKit SCContentFilter(desktopIndependentWindow), normalized to 30 fps; per-post clip uses a distinct live window capture.",
+      "videoEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-06.mp4"
     },
     {
       "id": "dos-1102-07",
@@ -277,30 +295,33 @@
         "product:CHANGELOG.md:15-17"
       ],
       "videoSlot": "dos-video-slot-07",
-      "videoArtifactStatus": "READY_QA_PASS_REAL_SCREEN_CAPTURE_BOUNDED",
-      "videoSha256": "18201c3db5ba334271d835cddd8e2d930623209dfba9707c589c9f5a6ec63588",
+      "videoArtifactStatus": "READY_QA_PASS_QUALITY_A_WINDOW_CAPTURE",
+      "videoSha256": "e5de7dc6faff175353f915bab60c7802185dc6a33731ac343a029c329c24c22a",
       "state": "DRAFT",
       "validation": {
         "status": "NOT_APPLICABLE",
         "report": null
       },
-      "videoPath": "campaigns/design-os-studio-launch/video/variants/w2-video-07-facebook-group-c.mp4",
-      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-07-facebook-group-c.jpg",
-      "videoQa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "videoPath": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-07.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/quality-a/thumbnails/dos-1102-07.jpg",
+      "videoQa": "PASS_QUALITY_A_WINDOW_CAPTURE",
       "videoQuality": "A",
-      "videoAspectRatio": "1:1",
+      "videoAspectRatio": "16:9",
       "videoSpec": {
-        "durationSeconds": 7.867,
-        "sizeBytes": 109912,
-        "dimensions": "1080:1080",
+        "durationSeconds": 4.4,
+        "sizeBytes": 130391,
+        "dimensions": "1280x720",
         "fps": "30/1",
         "videoCodec": "h264",
         "pixelFormat": "yuv420p",
-        "audioCodec": "none",
-        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-07-facebook-group-c.mov"
+        "audioCodec": "aac",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-07.mp4",
+        "proofGrid": "campaigns/design-os-studio-launch/video/quality-a/proof-grid/dos-1102-07.png",
+        "sourceWindowId": "38128",
+        "sourceBundleId": "os.design.studio"
       },
-      "videoSource": "real design:os studio window capture via screencapture -v; encoded H.264",
-      "videoEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-07-facebook-group-c.mov"
+      "videoSource": "Single DESIGN:OS Studio window captured via ScreenCaptureKit SCContentFilter(desktopIndependentWindow), normalized to 30 fps; per-post clip uses a distinct live window capture.",
+      "videoEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-07.mp4"
     },
     {
       "id": "dos-1102-08",
@@ -318,30 +339,33 @@
         "product:CHANGELOG.md:18-20"
       ],
       "videoSlot": "dos-video-slot-08",
-      "videoArtifactStatus": "READY_QA_PASS_REAL_SCREEN_CAPTURE_BOUNDED",
-      "videoSha256": "4a33ccff7cc45e40a829bf270a30eef9a0d1d8556ae2c24a6476cbe58fbcb996",
+      "videoArtifactStatus": "READY_QA_PASS_QUALITY_A_WINDOW_CAPTURE",
+      "videoSha256": "f3df8cc91745d4b6b637363b71e0c580a32d1484dacc3425fd24876ea45a9c56",
       "state": "DRAFT",
       "validation": {
         "status": "NOT_APPLICABLE",
         "report": null
       },
-      "videoPath": "campaigns/design-os-studio-launch/video/variants/w2-video-08-facebook-group-d.mp4",
-      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-08-facebook-group-d.jpg",
-      "videoQa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "videoPath": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-08.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/quality-a/thumbnails/dos-1102-08.jpg",
+      "videoQa": "PASS_QUALITY_A_WINDOW_CAPTURE",
       "videoQuality": "A",
-      "videoAspectRatio": "1:1",
+      "videoAspectRatio": "16:9",
       "videoSpec": {
-        "durationSeconds": 7.833,
-        "sizeBytes": 120221,
-        "dimensions": "1080:1080",
+        "durationSeconds": 4.4,
+        "sizeBytes": 130732,
+        "dimensions": "1280x720",
         "fps": "30/1",
         "videoCodec": "h264",
         "pixelFormat": "yuv420p",
-        "audioCodec": "none",
-        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-08-facebook-group-d.mov"
+        "audioCodec": "aac",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-08.mp4",
+        "proofGrid": "campaigns/design-os-studio-launch/video/quality-a/proof-grid/dos-1102-08.png",
+        "sourceWindowId": "38128",
+        "sourceBundleId": "os.design.studio"
       },
-      "videoSource": "real design:os studio window capture via screencapture -v; encoded H.264",
-      "videoEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-08-facebook-group-d.mov"
+      "videoSource": "Single DESIGN:OS Studio window captured via ScreenCaptureKit SCContentFilter(desktopIndependentWindow), normalized to 30 fps; per-post clip uses a distinct live window capture.",
+      "videoEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-08.mp4"
     },
     {
       "id": "dos-1102-09",
@@ -359,30 +383,33 @@
         "product:README.md:40-46"
       ],
       "videoSlot": "dos-video-slot-09",
-      "videoArtifactStatus": "READY_QA_PASS_REAL_SCREEN_CAPTURE_BOUNDED",
-      "videoSha256": "0dc5f41195c009322e2ffa4957da76954e515d44acd2316c83adfcf70a268d73",
+      "videoArtifactStatus": "READY_QA_PASS_QUALITY_A_WINDOW_CAPTURE",
+      "videoSha256": "bce69df0058f4a3af0bd5d0237c26e20d469ef4f58e639cd9d3a679a6c69c74f",
       "state": "DRAFT",
       "validation": {
         "status": "PENDING_GATE",
         "report": "evidence/vietnamese-validate-copy.json"
       },
-      "videoPath": "campaigns/design-os-studio-launch/video/variants/w2-video-09-linkedin-square.mp4",
-      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-09-linkedin-square.jpg",
-      "videoQa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "videoPath": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-09.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/quality-a/thumbnails/dos-1102-09.jpg",
+      "videoQa": "PASS_QUALITY_A_WINDOW_CAPTURE",
       "videoQuality": "A",
-      "videoAspectRatio": "4:5",
+      "videoAspectRatio": "16:9",
       "videoSpec": {
-        "durationSeconds": 7.833,
-        "sizeBytes": 109943,
-        "dimensions": "1080:1350",
+        "durationSeconds": 4.4,
+        "sizeBytes": 131696,
+        "dimensions": "1280x720",
         "fps": "30/1",
         "videoCodec": "h264",
         "pixelFormat": "yuv420p",
-        "audioCodec": "none",
-        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-09-linkedin-square.mov"
+        "audioCodec": "aac",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-09.mp4",
+        "proofGrid": "campaigns/design-os-studio-launch/video/quality-a/proof-grid/dos-1102-09.png",
+        "sourceWindowId": "38128",
+        "sourceBundleId": "os.design.studio"
       },
-      "videoSource": "real design:os studio window capture via screencapture -v; encoded H.264",
-      "videoEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-09-linkedin-square.mov"
+      "videoSource": "Single DESIGN:OS Studio window captured via ScreenCaptureKit SCContentFilter(desktopIndependentWindow), normalized to 30 fps; per-post clip uses a distinct live window capture.",
+      "videoEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-09.mp4"
     },
     {
       "id": "dos-1102-10",
@@ -400,30 +427,33 @@
         "product:README.md:47-48"
       ],
       "videoSlot": "dos-video-slot-10",
-      "videoArtifactStatus": "READY_QA_PASS_REAL_SCREEN_CAPTURE_BOUNDED",
-      "videoSha256": "883622e9b2624308095905d9afc78a04713990001786411184706bd4699e3c77",
+      "videoArtifactStatus": "READY_QA_PASS_QUALITY_A_WINDOW_CAPTURE",
+      "videoSha256": "eeabb65c9c8abe5ba610efbef8f08090b21179477205978d00c006e3ad3f2b35",
       "state": "DRAFT",
       "validation": {
         "status": "PENDING_GATE",
         "report": "evidence/vietnamese-validate-copy.json"
       },
-      "videoPath": "campaigns/design-os-studio-launch/video/variants/w2-video-10-facebook-portrait.mp4",
-      "thumbnailPath": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-10-facebook-portrait.jpg",
-      "videoQa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "videoPath": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-10.mp4",
+      "thumbnailPath": "campaigns/design-os-studio-launch/video/quality-a/thumbnails/dos-1102-10.jpg",
+      "videoQa": "PASS_QUALITY_A_WINDOW_CAPTURE",
       "videoQuality": "A",
-      "videoAspectRatio": "4:5",
+      "videoAspectRatio": "16:9",
       "videoSpec": {
-        "durationSeconds": 7.867,
-        "sizeBytes": 110402,
-        "dimensions": "1080:1350",
+        "durationSeconds": 4.4,
+        "sizeBytes": 129154,
+        "dimensions": "1280x720",
         "fps": "30/1",
         "videoCodec": "h264",
         "pixelFormat": "yuv420p",
-        "audioCodec": "none",
-        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-10-facebook-portrait.mov"
+        "audioCodec": "aac",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-10.mp4",
+        "proofGrid": "campaigns/design-os-studio-launch/video/quality-a/proof-grid/dos-1102-10.png",
+        "sourceWindowId": "38128",
+        "sourceBundleId": "os.design.studio"
       },
-      "videoSource": "real design:os studio window capture via screencapture -v; encoded H.264",
-      "videoEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-10-facebook-portrait.mov"
+      "videoSource": "Single DESIGN:OS Studio window captured via ScreenCaptureKit SCContentFilter(desktopIndependentWindow), normalized to 30 fps; per-post clip uses a distinct live window capture.",
+      "videoEvidence": "campaigns/design-os-studio-launch/video/quality-a/artifacts/dos-1102-10.mp4"
     },
     {
       "id": "dos-1102-11",

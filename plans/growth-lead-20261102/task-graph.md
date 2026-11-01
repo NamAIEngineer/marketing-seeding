@@ -64,6 +64,19 @@ Run mode: supervised Orca orchestration. Current non-account lanes continue whil
   present, exposing `qaFail=10`, `quality=UNVERIFIED`, and
   `bufferTomorrow=0`; next clean package must carry this truthful state.
 
+## Quality-A replacement checkpoint — 2026-11-02 04:18 ICT
+
+- `T-video`: PASS bounded. Ten ScreenCaptureKit window-only artifacts are
+  present, unique, hash-verified, mapped one-to-one to the first ten drafts,
+  and independently inspected through proof grids. `quality-a.json` is
+  `PASS_QUALITY_A_WINDOW_CAPTURE`.
+- `T-integrate`: manifest and draft rows now point to the quality-A artifact
+  paths. The previous quality-B variant files remain preserved for fallback and
+  audit. The projection will report `qaFail=0` and `bufferTomorrow=10` after
+  the next packaged rebuild.
+- `T-verify`: fresh read-only verification is in progress after this media
+  integration; no account retry or publication side effect is allowed.
+
 ## Wave 2 — serialized integration and verification
 
 | Task | role | Scope | Dependencies | Acceptance |

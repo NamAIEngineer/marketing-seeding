@@ -1,5 +1,13 @@
 # W2 video factory evidence — 2026-11-01
 
+## Current state — 2026-11-02 04:18 ICT
+
+The later ScreenCaptureKit window-capture run supersedes the earlier bounded
+quality-B section below. Current canonical state: ten quality-A artifacts,
+one-to-one manifest/draft mapping, `qaFail=0`, and buffer `10` after the next
+packaged rebuild. The earlier quality-B artifacts and measurements remain as
+historical fallback evidence.
+
 ## Ledger
 
 - **FACT:** Reference exists at `campaigns/design-os-studio-launch/reference/release-recap-reference.mp4`.
@@ -71,6 +79,22 @@ Full command output is retained in `campaigns/design-os-studio-launch/video/qa-e
 ## Out of scope
 
 Credentials, MFA/CAPTCHA/OTP, uploads, publication, external messaging, deployment, merge, push, runtime/content/community/Overview code, and real screen capture setup.
+
+Status: DONE_WITH_CONCERNS
+
+## 2026-11-02 04:18 ICT quality-A replacement
+
+- **FACT:** ScreenCaptureKit resolved the real DESIGN:OS Studio window (`id=38128`,
+  bundle `os.design.studio`) and produced ten distinct window-only MP4s.
+- **FACT:** `quality-a.json` reports `PASS_QUALITY_A_WINDOW_CAPTURE`; all ten
+  artifact hashes match disk and are unique. Each file is H.264/AAC,
+  1280x720, 30 fps, 4.4 seconds, with thumbnail and three-frame proof grid.
+- **FACT:** Direct proof-grid inspection shows DESIGN:OS Studio content rather
+  than Claude/Orca desktop capture. Manifest and first ten drafts are now bound
+  one-to-one to these quality-A files. Existing quality-B variants remain
+  preserved.
+- **UNKNOWN:** Separate commercial license evidence for the supplied reference
+  audio excerpt; the visible credit is retained.
 
 Status: DONE_WITH_CONCERNS
 

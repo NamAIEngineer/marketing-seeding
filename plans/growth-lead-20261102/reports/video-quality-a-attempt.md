@@ -1,33 +1,30 @@
-# Video quality-A replacement attempt
+# Video Quality A attempt — 2026-11-02
 
-## Acceptance IDs addressed
+## Result
 
-`A8`, `V6` — inspect the reference, attempt ten distinct quality-A captures,
-preserve evidence, and fail closed when the capture target is unavailable.
+PASS_QUALITY_A_WINDOW_CAPTURE: ten distinct MP4 artifacts produced for `dos-1102-01` through `dos-1102-10`.
 
-## Outcome
+## Capture proof
 
-`BLOCKED_CAPTURE_TARGET_UNAVAILABLE`. The requested ten quality-A replacements were not fabricated or promoted. The reference template and audio measurements are recorded at `campaigns/design-os-studio-launch/video/quality-a/template-spec.json`; quality-A artifact metadata is explicitly empty in `campaigns/design-os-studio-launch/video/quality-a/quality-a.json`.
+`raw/window-capture.swift` uses ScreenCaptureKit `SCShareableContent` and `SCContentFilter(desktopIndependentWindow:)`; resolved Studio window id `38128`, app `design:os studio`, bundle `os.design.studio`, bounds `160,25,1600x966`. `live-01.mp4` … `live-10.mp4` each log the same target and decode as Studio-only window captures. Three-frame proof grids are under `video/quality-a/proof-grid/`.
 
-## Evidence
+## QA
 
-- Reference: SHA-256 `a7014b242aca885b221fc6f1a8d93199176dcf4797b03f9af17b20a23ebafa95`; 1280x720; 30 fps; 30.336 s; H.264/AAC; mean audio `-15.1 dB`; max `-0.5 dB`.
-- Proof grid: `campaigns/design-os-studio-launch/video/quality-a/reference-proof-grid.png`.
-- Feature frame: `campaigns/design-os-studio-launch/video/quality-a/reference-feature-frame.png`.
-- Screen-capture probe: `raw/foreground-check.mp4` decoded to 1920x1080, 30 fps, 1.966668 s; frame `raw/foreground-check.jpg` visibly shows Claude desktop. Device 1 test similarly showed Orca desktop. Device 0/1 are physical displays; Design OS Studio is visible only in isolated computer-use surface.
-- No quality-B artifact or manifest was overwritten.
+Every artifact was checked with `ffprobe`, `blackdetect`, `freezedetect`, and loudness filter execution. Outputs are H.264/AAC, 1280x720, 30 fps, 4.4 s, with unique SHA-256 values in `quality-a.json`. One-to-one post mapping and thumbnails are recorded there.
 
-## Confidence
+## Limitation
 
-`confident` for the blocker: the decoded proof frames identify the physical
-display contents. The Design OS Studio window itself remains unavailable to the
-physical capture devices.
+The supplied reference audio was reused to match the requested musical profile and its visible credit. Separate commercial-license evidence was not retrieved; this remains UNKNOWN. Quality-B files remain preserved; the canonical `video-manifest.json` now points to the replacement quality-A artifacts.
 
-## Out of scope noticed
+## Integration
 
-No account login, credential read, publication, upload, group join, reply, or
-runtime state mutation was performed.
+- Manifest artifact rows `growth-20261102-01` through `growth-20261102-10` now
+  point to the ten ScreenCaptureKit files under `video/quality-a/artifacts/`.
+- The first ten drafts now carry the matching quality-A path, hash, thumbnail,
+  proof grid, source window and QA fields. The previous quality-B files remain
+  on disk and are not deleted.
+- Fresh checks: all ten disk hashes match the receipt; all hashes are unique;
+  ffprobe reports H.264/AAC, 1280x720, 30/1 fps, 4.4 seconds; thumbnails and
+  proof grids exist for every post.
 
-## Status
-
-Status: BLOCKED
+Status: DONE_WITH_CONCERNS

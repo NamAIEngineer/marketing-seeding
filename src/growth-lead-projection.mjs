@@ -67,9 +67,9 @@ export async function loadGrowthLeadProjection({ dashboard = null } = {}) {
   ]);
   const artifacts = (Array.isArray(manifest.artifacts) ? manifest.artifacts : []).map(mapArtifact).filter(Boolean);
   // A manifest entry is eligible only when the recorded QA result is a pass
-  // that is not contradicted by the quality-A intake evidence. The intake
-  // receipt is authoritative for the current capture run; it records that the
-  // physical displays contained Claude/Orca rather than Design OS Studio.
+  // that is not contradicted by the current quality-A intake receipt. A prior
+  // blocked receipt fails closed; a later PASS_QUALITY_A_WINDOW_CAPTURE
+  // receipt supersedes that historical blocker.
   const qualityAIntake = await readJson(path.join(campaignRoot, "video", "quality-a", "quality-a.json"), null);
   const captureBlocked = qualityAIntake?.status === "BLOCKED_CAPTURE_TARGET_UNAVAILABLE";
   const effectiveArtifacts = captureBlocked
