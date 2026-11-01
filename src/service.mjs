@@ -4,6 +4,7 @@ import { copyFile, mkdir, readFile, readdir, realpath, stat } from "node:fs/prom
 import path from "node:path";
 import { CHANNELS, nowIso } from "./constants.mjs";
 import { approvalFingerprint, assertReplyCanSend, assertTransition, evaluateQueue, killSwitchReasons } from "./guards.mjs";
+import { buildPilotReport, nextEligibleSlot, pilotExperiment } from "./growth-pilot.mjs";
 import { collectOfficialMetrics, integrationReadiness } from "./integrations.mjs";
 import { buildMarketingFlowGraph } from "./flow-graph.mjs";
 import { artifactAuthorizedForCampaign, campaignAuthorizationFingerprint, campaignContentHash, campaignScopeFingerprint, evaluateCampaignAuthorization, normalizeCampaignAuthorization, publicationIdentityKey, publicationIdentityKeysForPost } from "./campaign-authorization.mjs";
@@ -1655,7 +1656,7 @@ function projectDashboardAccountAgents(state = {}) {
 }
 
 function projectOnboardedAccount(account = {}) {
-  const allowed = ["id", "platform", "accountId", "provider", "providerProfileId", "profileId", "identityReference", "status", "health", "agentStatus", "loginStatus", "loginAttemptAt", "lastLoginAt", "lastFailureCode", "lastFailureReason", "sessionHealth", "loginEvidenceAt", "identityEvidenceHash", "chromeProfilePath", "credentialStored", "updatedAt"];
+  const allowed = ["id", "platform", "accountId", "provider", "providerProfileId", "profileId", "identityReference", "source", "status", "health", "agentStatus", "loginStatus", "loginAttemptAt", "lastLoginAt", "lastFailureCode", "lastFailureReason", "sessionHealth", "loginEvidenceAt", "identityEvidenceHash", "chromeProfilePath", "credentialStored", "updatedAt"];
   return Object.fromEntries(allowed.filter((key) => account[key] !== undefined).map((key) => [key, account[key]]));
 }
 
@@ -7136,11 +7137,12 @@ export class SeedingService {
     const profileId = String(input.profileId || `chrome-${platform}-${accountId}`).trim();
     const account = await this.registerExecutionAccount({ platform, accountId, provider: "chrome", providerProfileId: profileId, profileId, status: "enabled", health: "unknown", authMode: "MANUAL_AUTH" }, actor);
     const login = await this.chromeAccountProfileManager.start({ platform, accountId });
-    await this.store.mutate(actor, "chrome_account_login_started", (state) => {
+    const persisted = await this.store.mutate(actor, "chrome_account_login_started", (state) => {
       const row = state.executionAccounts.find((item) => item.id === account.id);
-    if (row) Object.assign(row, { provider: "chrome", agentStatus: "RUNNING", loginStatus: "WAITING_FOR_USER", sessionRecoveryStatus: "HUMAN_REQUIRED", loginAttemptAt: nowIso(), chromeProfilePath: login.profilePath, lastFailureCode: null, lastFailureReason: "Đang chờ đăng nhập trong cửa sổ Chrome riêng", updatedAt: nowIso() });
+      if (row) Object.assign(row, { provider: "chrome", agentStatus: "RUNNING", loginStatus: "WAITING_FOR_USER", sessionRecoveryStatus: "HUMAN_REQUIRED", loginAttemptAt: nowIso(), chromeProfilePath: login.profilePath, lastFailureCode: null, lastFailureReason: "Đang chờ đăng nhập trong cửa sổ Chrome riêng", updatedAt: nowIso() });
+      return row || account;
     });
-    return { account: projectOnboardedAccount(account), login };
+    return { account: projectOnboardedAccount(persisted.result), login };
   }
 
   async pollChromeAccountLogin(sessionId, actor = "chrome-account-login") {
@@ -7276,6 +7278,30 @@ export class SeedingService {
       };
       state.schedules.push(schedule);
       return schedule;
+    });
+    return result.result;
+  }
+
+  async armGrowthPilot(campaignId, input = {}, actor = "operator") {
+    const experiment = pilotExperiment({ ...input, campaignId });
+    const result = await this.store.mutate(actor, "growth_pilot_armed", (state) => {
+      requireItem(state.campaigns, campaignId, "Campaign");
+      state.pilotExperiments ||= [];
+      const existing = state.pilotExperiments.find((item) => item.id === experiment.id);
+      if (existing) return existing;
+      state.pilotExperiments.push(experiment);
+      return experiment;
+    });
+    return result.result;
+  }
+
+  async recordGrowthPilotReport(experimentId, input = {}, actor = "pilot-reporter") {
+    const result = await this.store.mutate(actor, "growth_pilot_report_recorded", (state) => {
+      const experiment = requireItem(state.pilotExperiments || [], experimentId, "Pilot experiment");
+      const report = buildPilotReport({ experiment, date: input.date, observations: input.observations, generatedAt: input.generatedAt });
+      state.pilotReports ||= [];
+      state.pilotReports.push({ id: `${experimentId}:${report.date}`, ...report });
+      return report;
     });
     return result.result;
   }

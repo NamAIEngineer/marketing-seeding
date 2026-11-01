@@ -268,3 +268,15 @@ lanes: runtime=SMOKE_PASS; account=BLOCKED_WITH_EVIDENCE; content=INTEGRATED; vi
 CẦN NAM: Stable Chrome profile `linkedin-linkedin_nam` mở tại LinkedIn login, profile `facebook-facebook_nam` mở tại Facebook login. Xử lý CAPTCHA/2FA/checkpoint thủ công nếu có. Không retry/tự submit thêm.
 blockers: NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | SCHEDULE_DISABLED (0 schedules; no live side effects)
 next_30m: preserve profile processes; no account retry; next hourly check.
+
+updated: 2026-11-02T02:00:00+07:00
+phase: PARALLEL_NON_ACCOUNT_LANES
+runtime: packaged 4321 source=edf61853d397397e4d8e9c018f85b9859a2fbc9c dirty=false health=200; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam BLOCKED CHROME_LOGIN_CHALLENGE (Chrome attempt=1; no retry) | facebook_group/facebook_nam BLOCKED CHROME_LOGIN_CONTROLS_NOT_FOUND (Chrome attempt=1; no retry; fixture selector investigation committed)
+today_posts: target=10 armed=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10
+community: public_candidates=30 (Facebook=15, LinkedIn=15), authenticated_reads=0, join_requested_today=0, approved=0, postable=0; no live joins
+lanes: schedule=IMPLEMENTING_ARMED; comments-pilot=IMPLEMENTING_GUARDS_REPORTS; community=PUBLIC_ARTIFACT_READY; facebook-fixture=COMMITTED; ui=IN_PROGRESS; publish=PAUSED_NO_READY_ACCOUNT
+CẦN NAM: Hai cửa sổ stable Google Chrome vẫn chờ xử lý CAPTCHA/2FA/checkpoint; không retry account thật. Không cần dán password/token vào terminal/chat.
+blockers: NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: integrate pilot/community checkpoints, run targeted tests, commit, update task graph/status.

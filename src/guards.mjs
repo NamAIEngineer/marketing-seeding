@@ -191,4 +191,21 @@ export function assertReplyCanSend(reply, state) {
   if (!reply.approvedAt && policy?.replyRequiresApproval !== false) {
     throw new Error("Reply requires human approval");
   }
+  if (interaction.status === "replied" || state.replies.some((item) => item.id !== reply.id && item.interactionId === interaction.id && item.status === "sent")) {
+    throw new Error("Reply interaction already replied");
+  }
+  const account = (state.executionAccounts || []).find((item) => item.id === `${target?.channel}:${target?.accountId}` || (item.platform === target?.channel && item.accountId === target?.accountId));
+  const readiness = String(account?.agentStatus || account?.loginStatus || account?.status || "").toUpperCase();
+  if (readiness !== "READY") throw new Error("Reply account is not READY");
+  const sensitive = /\b(legal|lawsuit|court|contract|refund|refunds|price|pricing|buy|purchase|personal data|privacy|password|politics|political|scam|spam|controversial)\b|\b(giá|mua|hoàn tiền|pháp lý|hợp đồng|khiếu nại|mật khẩu|dữ liệu cá nhân|chính trị|lừa đảo|spam)\b/i;
+  if (sensitive.test(String(interaction.text || "")) || sensitive.test(String(reply.text || ""))) throw new Error("Reply requires CẦN NAM review");
+  const sentAt = Date.now();
+  const dayStart = new Date(sentAt); dayStart.setHours(0, 0, 0, 0);
+  const sentToday = (state.replies || []).filter((item) => item.status === "sent" && item.sentAt && new Date(item.sentAt) >= dayStart && state.interactions.some((i) => i.id === item.interactionId && state.posts.some((p) => p.id === i.postId && state.targets.find((t) => t.id === p.targetId)?.accountId === target?.accountId))).length;
+  if (sentToday >= 20) throw new Error("Reply daily limit reached");
+  const captured = Date.parse(interaction.capturedAt || "");
+  if (Number.isFinite(captured)) {
+    const elapsed = (sentAt - captured) / 60000;
+    if (elapsed < 2 || elapsed > 15) throw new Error("Reply delay must be between 2 and 15 minutes");
+  }
 }

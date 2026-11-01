@@ -57,8 +57,9 @@ test("Chrome manager launches one visible persistent app profile and leaves logi
   assert.equal(session.status, "WAITING_FOR_USER");
   assert.equal(session.source, "chrome-account:linkedin_nam");
   assert.equal(session.identityReference, null);
-  assert.equal((await manager.retryLogin({ platform: "linkedin", accountId: "linkedin_nam", credentialReference: "keychain:marketing/linkedin_nam" })).code, "CHROME_RETRY_NOT_EXECUTED");
-  await manager.close(session.sessionId);
+  const retry = await manager.retryLogin({ platform: "linkedin", accountId: "linkedin_nam", credentialReference: "keychain:marketing/linkedin_nam" });
+  assert.equal(retry.code, "CHROME_LOGIN_CONTROLS_NOT_FOUND");
+  await manager.close(retry.sessionId);
   assert.deepEqual(calls.at(-1), ["close"]);
   await rm(homeDir, { recursive: true, force: true });
 });
@@ -97,7 +98,7 @@ test("manual Chrome service seam persists canonical store source and identity ev
   assert.equal(started.accountId, "linkedin_nam");
   assert.equal(first.account.provider, "chrome");
   assert.equal(first.account.source, "chrome-account:linkedin_nam");
-  assert.match(first.account.profileId, /Library\/Application Support\/Marketing Seeding OS\/chrome-profiles\/linkedin-linkedin_nam$/);
+  assert.match(first.account.chromeProfilePath, /Library\/Application Support\/Marketing Seeding OS\/chrome-profiles\/linkedin-linkedin_nam$/);
   const ready = await service.pollChromeAccountLogin("linkedin:linkedin_nam:1");
   assert.equal(ready.status, "READY");
   const state = await store.read();

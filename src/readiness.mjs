@@ -84,7 +84,10 @@ export function normalizeExecutionAccount(input, now = new Date(), platformPolic
   // Camoufox onboarding discovers the identity from the authenticated page.
   // Until then the account remains UNKNOWN and cannot enter an execution
   // binding. Legacy ORCA/other provider lanes keep their strict URL contract.
-  const identityReference = provider === "camoufox" && !providedIdentity
+  // Provider-owned browser profiles start UNKNOWN until the browser proves
+  // identity through a direct platform redirect. Do not require an identity
+  // URL at registration time for Chrome/Camoufox; readiness remains fail-closed.
+  const identityReference = ["camoufox", "chrome"].includes(provider) && !providedIdentity
     ? null
     : platformPolicies.normalizeIdentityUrl(platform, providedIdentity);
 
@@ -94,6 +97,7 @@ export function normalizeExecutionAccount(input, now = new Date(), platformPolic
     accountId,
     ...(provider ? { provider } : {}),
     ...(providerProfileId ? { providerProfileId } : {}),
+    ...(provider === "chrome" ? { source: `chrome-account:${accountId}` } : provider === "camoufox" ? { source: "camoufox-public" } : {}),
     profileId,
     identityReference,
     expectedIdentityUrl: identityReference,

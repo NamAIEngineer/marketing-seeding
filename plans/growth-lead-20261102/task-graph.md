@@ -1,6 +1,6 @@
 # Growth Lead task graph — 2026-11-02
 
-Run mode: supervised Orca orchestration. Controller: Growth Lead in `ms-growth-lead-20261101`. Independent verifier: a fresh read-only Codex attempt after the last integration change. Max concurrent workers: 2; completed workers are reused or released before new work starts. P0 login blocks account-dependent publishing/comments, but content/video/public community lanes continue.
+Run mode: supervised Orca orchestration. Current non-account lanes continue while live account side effects remain blocked by truthful readiness gates. Controller: Growth Lead in `ms-growth-lead-20261101`. Independent verifier: a fresh read-only Codex attempt after the last integration change. Max concurrent workers: 2; completed workers are reused or released before new work starts. P0 login blocks account-dependent publishing/comments, but content/video/public community lanes continue.
 
 ## Wave 0 — parallel build
 
@@ -21,6 +21,23 @@ Run mode: supervised Orca orchestration. Controller: Growth Lead in `ms-growth-l
 | Task | Lane / role | Scope | Dependencies | Acceptance |
 |---|---|---|---|---|
 | T-chrome-login | BUILD · runtime/account | Visible Playwright Chromium persistent profile manager, manual-login API/UI for LinkedIn/Facebook, native host fingerprint, identity redirect verification, retry with Keychain credential only, canonical `JsonStore`/`SeedingService` source/evidence records, Camoufox public-only routing | none; may read existing runtime/account contracts | A11, A12, V8 |
+
+## Wave 1.5 — non-account execution (2026-11-02 01:57 ICT)
+
+| Task | Lane / role | Scope | Dependencies | Acceptance |
+|---|---|---|---|---|
+| T-schedule-pilot | BUILD · publish/learning | Arm 10 daily slots 07:00–23:00 ICT for 2026-11-02..08; READY gate, first post <=15m, missed-slot shift/no burst, cap-aware | none for arming; READY + permalink/media evidence for live execution | A13, A14, V9 |
+| T-comments-report | BUILD · engagement/learning | Reply guards, sensitive CẦN NAM queue, 20/account/day, 2–15m delay, 23:30 reports, 09-Nov pilot report | READY account for live writes; schema can be prepared now | A13, A14, V9 |
+| T-community-public | BUILD · community | Public-only FB/LinkedIn discovery artifact with score/rule fields and evidence hashes; no join side effects | none | A10, V7 |
+| T-facebook-fixture | BUILD · runtime/account | Preserve chooser/consent/challenge surfaces; fail-closed identity evidence; test fixtures only | none; no real-account retry | A11, A12, V8 |
+| T-ui-overview | BUILD · UI | Five growth blocks and explicit CẦN NAM; technical controls under Hệ thống | source integration | A5, V5 |
+
+## Current worker receipts
+
+- `7a8c68f`: Facebook Chrome fixture guard + 6 tests (integrated).
+- `T-schedule-pilot` worker edits staged in worktree, pending controller commit.
+- `T-community-public` artifact staged in worktree, pending controller commit.
+- `T-ui-overview`: worker pending.
 
 ## Wave 2 — serialized integration and verification
 

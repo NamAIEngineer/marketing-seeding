@@ -34,6 +34,8 @@ export function createInitialState(now = new Date()) {
     publicationAttempts: [],
     schedules: [],
     scheduleRuns: [],
+    pilotExperiments: [],
+    pilotReports: [],
     targets: [],
     posts: [],
     metricSnapshots: [],
@@ -54,7 +56,7 @@ export function createInitialState(now = new Date()) {
 }
 
 const STATE_COLLECTIONS = Object.freeze([
-  "campaigns", "campaignAuthorizations", "liveExecutionGrants", "submissionUncertainties", "oneTimeExecutionWindows", "executionAccounts", "executionRequests", "executionReceipts", "executionLeases", "artifacts", "stories", "publicationAttempts", "schedules", "scheduleRuns", "targets", "posts",
+  "campaigns", "campaignAuthorizations", "liveExecutionGrants", "submissionUncertainties", "oneTimeExecutionWindows", "executionAccounts", "executionRequests", "executionReceipts", "executionLeases", "artifacts", "stories", "publicationAttempts", "schedules", "scheduleRuns", "pilotExperiments", "pilotReports", "targets", "posts",
   "metricSnapshots", "keywordSnapshots", "interactions", "replies", "conversions", "collectorRuns", "fixtureAutomationRuns", "communityMemberships", "memoryItems", "browserSnapshots", "browserExecutions", "providerDecisions", "listeningJobs", "auditLog"
 ]);
 
