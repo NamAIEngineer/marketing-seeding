@@ -220,3 +220,15 @@ lanes: runtime=SMOKE_PASS; account=COMPLETE_BLOCKED_WITH_EVIDENCE; content=INTEG
 CẦN NAM: LinkedIn Chrome window đang ở `https://www.linkedin.com/login/`; xử lý CAPTCHA/2FA/checkpoint thủ công trong cửa sổ profile `~/Library/Application Support/Marketing Seeding OS/chrome-profiles/linkedin-linkedin_nam` khi Nam thức dậy. Facebook profile đã dừng sau lần thử duy nhất; không retry tự động.
 blockers: NO_READY_ACCOUNT (Nam must clear platform challenge or use manual login; controller will not retry) | LIVE-PUBLICATION (0 verified permalink; schedule remains disabled)
 next_30m: commit/push checkpoint, preserve both Chrome windows/profiles, keep publish/schedule disabled; update status at next hourly check.
+
+updated: 2026-11-02T01:06:00+07:00
+phase: P0 AUTO-LOGIN
+runtime: source=b2eb743c13d5a11eb935c5b4d2f0135429865bae queued for clean rebuild; current 4321 source=2759b7f dirty=false health=200; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam BLOCKED CHROME_LOGIN_CHALLENGE (Chrome attempt=1; no retry) | facebook_group/facebook_nam BLOCKED CHROME_LOGIN_CONTROLS_NOT_FOUND (Chrome attempt=1; reconciled after stale Camoufox race; no retry)
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (authenticated state UNKNOWN)
+lanes: runtime=RACE_FENCE_COMMITTED; account=BLOCKED_WITH_EVIDENCE; content=INTEGRATED; video=INTEGRATED; publish=PAUSED_NO_READY_ACCOUNT; comments=PAUSED; community=READY_WITH_AUTH_UNKNOWN
+CẦN NAM: LinkedIn Chrome window remains at `https://www.linkedin.com/login/`; handle CAPTCHA/2FA/checkpoint manually in app profile tomorrow. Facebook has no retry budget; no automatic action remains.
+blockers: NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | STALE-RECOVERY-RACE (fenced in b2eb743; rebuild pending)
+next_30m: clean build/reload 4321, verify health/source/state, confirm schedules remain disabled, push checkpoint.
