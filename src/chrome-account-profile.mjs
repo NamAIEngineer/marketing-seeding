@@ -294,9 +294,10 @@ export class ChromeAccountProfileManager {
       expiresAt: session.expiresAt
     };
   }
-  async retryLogin({ platform, accountId, credentialReference = null } = {}) {
+  async retryLogin({ platform, accountId, credentialPlatform = null, credentialReference = null } = {}) {
     const normalized = normalizedPlatform(platform);
     const account = normalizedAccountId(accountId);
+    const credentialKeyPlatform = text(credentialPlatform || platform, 40).toLowerCase();
     const reference = credentialReference == null ? null : requiredSafe(credentialReference, "credentialReference");
     const key = `${normalized}:${account}`;
     if ((this.#retryAttempts.get(key) || 0) >= 1) {
@@ -305,7 +306,7 @@ export class ChromeAccountProfileManager {
     }
     this.#retryAttempts.set(key, 1);
     let credentials;
-    try { credentials = await readAccountCredentials({ platform: normalized, accountId: account }); }
+    try { credentials = await readAccountCredentials({ platform: credentialKeyPlatform, accountId: account }); }
     catch (error) { return { status: "BLOCKED", code: String(error?.code || "KEYCHAIN_CREDENTIAL_UNAVAILABLE"), reason: "Không đọc được credential từ macOS Keychain; không thử lại tự động", platform: normalized, accountId: account, credentialReference: reference }; }
     let started;
     try { started = await this.start({ platform: normalized, accountId: account }); }

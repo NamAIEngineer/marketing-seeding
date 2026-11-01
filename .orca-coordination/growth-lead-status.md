@@ -160,3 +160,27 @@ lanes: source=CHECKPOINTED; build=STARTING; chrome-auto-login=READY_TO_RUN one a
 CẦN NAM: Conditional only: if an account window shows CAPTCHA/2FA/checkpoint, handle that window tomorrow; no automatic retry.
 blockers: PACKAGED-REBUILD (clean checkout + UI assets); LIVE-PUBLICATION (0 verified permalink)
 next_30m: create clean worktree at 2034e3d, build UI/public + desktop app, back up state, update LaunchAgent 4321, smoke health/source/account JSON.
+
+updated: 2026-11-02T00:36:00+07:00
+phase: P0 AUTO-LOGIN
+runtime: candidate build PASS source=0eb26660c498fd7fc415e6ee06cc050e9187c62f; old packaged 4321 still active until reversible swap; 4318 untouched
+accounts: linkedin/linkedin_nam WAITING_FOR_USER (credentialStored=true; retry not run) | facebook_group/facebook_nam WAITING_FOR_USER (credentialStored=true; retry not run)
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (authenticated state UNKNOWN)
+lanes: build=PASS; deploy=STARTING; chrome-auto-login=READY_TO_RUN one attempt/account; publish=PAUSED until identity + one-post proof
+CẦN NAM: Conditional only: if Chrome shows CAPTCHA/2FA/checkpoint, handle that account window; no automatic retry.
+blockers: DEPLOY-4321 (reversible swap in progress) | LIVE-PUBLICATION (0 verified permalink)
+next_30m: backup state/app, restart packaged 4321, verify health/source/API/UI, then retry LinkedIn once and Facebook once.
+
+updated: 2026-11-02T00:43:00+07:00
+phase: P0 AUTO-LOGIN
+runtime: 4321 health=200 source=0eb26660c498fd7fc415e6ee06cc050e9187c62f dirty=false; migration patch pending rebuild; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam BLOCKED LOGIN_CONTROLS_NOT_FOUND on legacy Camoufox retry (one attempt consumed; no retry) | facebook_group/facebook_nam WAITING_FOR_USER (no attempt yet; legacy binding will migrate to Chrome before one attempt)
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (authenticated state UNKNOWN)
+lanes: deploy=SMOKE_PASS; account-migration=PATCHING; chrome-auto-login=LinkedIn blocked legacy route, Facebook one attempt pending; publish=PAUSED
+CẦN NAM: LinkedIn needs review tomorrow: no automatic retry after LOGIN_CONTROLS_NOT_FOUND. If Facebook Chrome shows CAPTCHA/2FA/checkpoint, handle that account window; no automatic retry.
+blockers: ACCOUNT-ROUTE-MIGRATION (controller; rebuild required) | LIVE-PUBLICATION (0 verified permalink)
+next_30m: commit migration, clean rebuild/restart 4321, then run Facebook Keychain retry once via headed stable Chrome.
