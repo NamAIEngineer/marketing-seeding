@@ -249,3 +249,38 @@ Giới hạn: chỉ trang public, tôn trọng robots/rate limit; KHÔNG thu th�
   2. **Danh sách account**: Nam đưa danh sách tài khoản FB/LinkedIn (nhập qua form local trong app hoặc import file CSV local chọn bằng hộp thoại; file chỉ đọc 1 lần rồi xoá khỏi bộ nhớ, không lưu vào repo/state/log/chat) → credential vào macOS Keychain → hệ thống tự mở Chrome profile của từng account, tự điền và đăng nhập, tự nhận identity, chuyển READY. Gặp CAPTCHA/2FA/checkpoint ⇒ dừng account đó, mở cửa sổ cho Nam và ghi Cần Nam; không giải CAPTCHA tự động; account khác chạy tiếp.
   - Hỗ trợ nhiều account mỗi nền tảng (pool), mỗi account một Chrome profile riêng; lịch đăng tự chia bài theo cap từng account.
 - Ranh giới giữ nguyên: không thêm biện pháp che giấu automation hay né phát hiện bot.
+
+---
+
+## 15. VIDEO MOTION SPEC v3 — 05:45 ICT 2/11 (Nam chê v2 "cứng nhắc, chả có gì đặc sắc") — đè W2 cũ
+
+Claude đã phân tích video mẫu ở 4–5 fps. Cái làm nên mẫu (v2 thiếu hết):
+1. **Chữ động (kinetic typography)**: headline hiện TỪNG CHỮ theo nhịp nhạc ("Edit" → "Edit grid" → "Edit grid tracks" → … → "Edit grid tracks on the canvas."). Intro: dòng "design:os studio" hiện trước, sau đó dòng cam "0.4 → 0.6" hiện thêm. Card "Next:" chữ mờ dần.
+2. **Crop/zoom sát vùng tính năng**, KHÔNG quay cả cửa sổ: chỉ danh sách agent 5 dòng, chỉ hộp thoại Approve, chỉ lưới + panel Auto layout. UI to, đọc được chữ trong UI.
+3. **Thao tác thật có con trỏ**: con trỏ rê qua từng agent (hover sáng từng dòng), bấm Approve (nút đổi trạng thái), thêm track lưới (Rows 2→3, ô lưới mới xuất hiện), kéo layout guide (frame co lại). Mỗi cảnh có 1 thay đổi nhìn thấy rõ.
+4. **Khung viền xanh chấm góc biến hình** giữa các cảnh: co giãn/đổi vị trí theo kích thước nội dung, chuyển cảnh mượt, không cắt cứng.
+5. **Nhịp nhanh**: 9 tính năng trong ~30s, mỗi cảnh 1.5–3s, cắt theo beat nhạc; nhóm theo pill version (vd "0.7 Inspector", "0.7 Agents") kể câu chuyện tiến hoá.
+6. Nền tối + canvas sáng tương phản; outro "Next: …" + end card version + credit.
+
+Cách làm v3:
+- Mỗi tính năng: chuẩn bị file demo riêng (nội dung to, rõ, ít chi tiết thừa) trong designos-studio; kịch bản thao tác cụ thể; điều khiển bằng designos-mcp/CLI + con trỏ thật; quay cửa sổ bằng ScreenCaptureKit; cắt vùng ROI quanh tính năng (đúng tọa độ panel/hộp thoại) và scale lên.
+- Dựng bằng HTML/SVG + Playwright với hyperframes runtime có sẵn trong design-os-studio (design/marketing/svg-animation/runtime: hyperframes-engine, motion-presets, extra-beats): kinetic text theo beat, khung viền morph, chuyển cảnh.
+- Mỗi video: intro (title rồi version), 3–5 cảnh tính năng khác nhau, Next teaser, end card repo + Star on GitHub + credit. 15–30s.
+- QA bắt buộc (ngoài kỹ thuật): (a) mỗi cảnh có thay đổi pixel rõ trong ROI giữa đầu/cuối cảnh; (b) chữ UI trong ROI đủ to (cao ≥ 14px ở 1280×720); (c) headline có animation từng chữ; (d) ảnh so sánh cạnh nhau với mẫu ở cùng nhịp; (e) Claude duyệt bằng mắt trước khi gắn vào slot.
+- Chất lượng hơn số lượng: KHÔNG đăng video v2. Lịch hôm nay dời bài đầu cho tới khi có video v3 đã duyệt; mục tiêu ≥3 video v3 trước 10:00, đủ 10 trong ngày; slot nào chưa có video duyệt thì dời sang slot sau.
+
+---
+
+## 16. VIDEO DÀI 30–40s "LÀM RA SẢN PHẨM" — 05:42 ICT 2/11 (Nam chốt, đè mục 15 về cấu trúc; giữ phong cách mục 15)
+
+Mỗi video kể **trọn quá trình làm ra một sản phẩm thật bằng DESIGN:OS Studio, và kết thúc bằng sản phẩm hoàn chỉnh**, dài 30–40s.
+
+Cấu trúc (giữ khung + chuyển động của mẫu: pill cam, chữ hiện từng từ theo nhịp, khung viền chấm góc co giãn, zoom sát vùng thao tác, con trỏ thật):
+1. **Hook 0–3s**: kết quả cuối trước (vd "Một màn hình dashboard. Từ file trống. 35 giây.") + logo design:os studio.
+2. **Quá trình 3–30s** (5–7 bước, mỗi bước 3–5s, quay thật rồi tăng tốc hợp lý): ví dụ mở file trống/kit → nhờ agent (Claude Code/Codex trong Agents panel) dựng bố cục từ 1 câu yêu cầu → chỉnh auto layout/grid → dùng component + variables (đổi theme) → kiểm tra Check designs/sửa lỗi → Dev Mode xuất code React/HTML. Mỗi bước có headline ngắn ≤ 6 từ, thay đổi nhìn thấy rõ.
+3. **Thành phẩm 30–36s**: reveal sản phẩm hoàn chỉnh (màn hình đẹp, có thể cả code chạy được/preview HTML), zoom chậm.
+4. **End card 36–40s**: "design:os studio 0.7.6", github.com/jangtrinh/design-os-studio, "Star on GitHub", credit nhạc.
+
+Mỗi video là một sản phẩm khác nhau (dashboard SaaS, landing page, app mobile onboarding, form đăng ký, bảng giá, profile card…) để 10 bài/ngày không trùng. Bản tiếng Việt và tiếng Anh chỉ khác chữ overlay.
+
+Thực hiện: video worker term_a791f9b6 làm, dùng ScreenCaptureKit (đã chạy) + hyperframes runtime/Playwright để dựng. Làm **1 video hoàn chỉnh trước**, xuất contact sheet 2 fps + ảnh so sánh với video mẫu, ghi path vào video-quality-a-status.md, Claude duyệt bằng mắt rồi mới làm các video còn lại. Không đăng video nào chưa được Claude duyệt. Lịch bài dời theo video đã duyệt.

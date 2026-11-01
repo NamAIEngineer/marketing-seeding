@@ -66,18 +66,29 @@ export async function loadGrowthLeadProjection({ dashboard = null } = {}) {
     readJson(communityReceiptPath, { dashboard: {}, discoveries: [], membershipChecks: [], joinProjection: null }),
   ]);
   const artifacts = (Array.isArray(manifest.artifacts) ? manifest.artifacts : []).map(mapArtifact).filter(Boolean);
-  // A manifest entry is eligible only when the recorded QA result is a pass
-  // that is not contradicted by the current quality-A intake receipt. A prior
-  // blocked receipt fails closed; a later PASS_QUALITY_A_WINDOW_CAPTURE
-  // receipt supersedes that historical blocker.
+  // A manifest entry is eligible only when capture and composition QA both
+  // pass. Visual composition is a hard gate: ffprobe/hash alone cannot
+  // promote media into pilot slots.
   const qualityAIntake = await readJson(path.join(campaignRoot, "video", "quality-a", "quality-a.json"), null);
+  const compositionQa = await readJson(path.join(campaignRoot, "video", "quality-a", "composition-qa.json"), null);
   const captureBlocked = qualityAIntake?.status === "BLOCKED_CAPTURE_TARGET_UNAVAILABLE";
-  const effectiveArtifacts = captureBlocked
+  const compositionPassed = compositionQa?.status === "PASS_QUALITY_A_COMPOSITION"
+    && compositionQa?.visualChecks?.headlineBboxesInsideSafeFrame === true
+    && compositionQa?.visualChecks?.clipInsideComposition === true
+    && compositionQa?.visualChecks?.introCardPresent === true
+    && compositionQa?.visualChecks?.endCardPresent === true
+    && compositionQa?.visualChecks?.repoUrlPresent === true
+    && compositionQa?.visualChecks?.starCtaPresent === true
+    && compositionQa?.visualChecks?.referenceFrameComparison === true;
+  const compositionBlocked = !compositionPassed;
+  const effectiveArtifacts = captureBlocked || compositionBlocked
     ? artifacts.map((item) => ({
       ...item,
-      qa: "BLOCKED_CAPTURE_TARGET_UNAVAILABLE",
+      qa: captureBlocked ? "BLOCKED_CAPTURE_TARGET_UNAVAILABLE" : "BLOCKED_VISUAL_COMPOSITION_GATE",
       quality: "UNVERIFIED",
-      source: "capture evidence contradicted: physical display did not show Design OS Studio",
+      source: captureBlocked
+        ? "capture evidence contradicted: physical display did not show Design OS Studio"
+        : "visual composition QA pending: artifacts are retained for audit but cannot bind pilot slots",
     }))
     : artifacts;
   const draftRows = Array.isArray(drafts.drafts) ? drafts.drafts : [];

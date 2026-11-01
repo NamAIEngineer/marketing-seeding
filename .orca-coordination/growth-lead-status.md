@@ -413,3 +413,40 @@ CẦN NAM: Hai cửa sổ stable Google Chrome app-owned vẫn chờ Nam xử l�
 blockers: NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN | REFERENCE_AUDIO_LICENSE_UNKNOWN
 next_30m: giữ runtime ổn định; không retry account; chờ Nam xử lý Chrome windows. Verifier: verify-20261102-quality-a-runtime-0424.md.
 2026-11-02T04:22:21+0700 PREDICT: backup state/bundle, replace 4321 seam only, keep 4318 and profiles.
+
+updated: 2026-11-02T05:14:27+07:00
+phase: P1_VIDEO_COMPOSITION_REVIEW
+runtime: packaged 4321 source=9ca603cd25c2a34a8d3a2856957102b119c8119e dirty=false health=200 pid=17330 stateRevision=452; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam BLOCKED CHROME_LOGIN_CHALLENGE (attempt=1; no retry) | facebook_group/facebook_nam BLOCKED CHROME_LOGIN_CONTROLS_NOT_FOUND (attempt=1; no retry)
+today_posts: target=10 pilot=armed slots=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=10 buffer_tomorrow=0; previous 4.4s composition rejected; v2 18.6s artifacts retained pending independent visual/bbox verification and canonical hash refresh
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: runtime=SMOKE_PASS; canonical-projection=FAIL_CLOSED_VISUAL_COMPOSITION; video=V2_INDEPENDENT_VERIFY; pilot=ARMED_MEDIA_UNBOUND; comments=GUARDS_COMMITTED_4_TESTS_PASS; community=PUBLIC_30_READY_AUTH_UNKNOWN; publish=PAUSED_NO_READY_ACCOUNT
+CẦN NAM: Hai cửa sổ stable Google Chrome app-owned vẫn chờ xử lý CAPTCHA/2FA/checkpoint; không retry account thật.
+blockers: NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | VIDEO_COMPOSITION_QA_PENDING | AUTHENTICATED_COMMUNITY_UNKNOWN | REFERENCE_AUDIO_LICENSE_UNKNOWN
+next_30m: independent verifier đọc proof/comparison/bbox; sau PASS mới cập nhật manifest/drafts/quality-a receipt, tạo composition-qa.json, commit checkpoint; không build/publish khi media gate chưa xanh.
+
+updated: 2026-11-02T05:35:00+07:00
+phase: CHROME_SESSION_REATTACH_EVIDENCE
+runtime: packaged 4321 source=9ca603cd25c2a34a8d3a2856957102b119c8119e dirty=false health=200 pid=17330 stateRevision=452; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam OBSERVED_AUTHENTICATED_PROFILE (Chrome PID 69774; /in/me/ -> /in/nam-phạm-phương-b48897278/; canonical READY pending runtime-bound receipt) | facebook_group/facebook_nam OBSERVED_AUTHENTICATED_PROFILE (Chrome PID 69776; /me -> /FullSatckDev/; canonical READY pending runtime-bound receipt)
+account_evidence: plans/growth-lead-20261102/evidence/chrome-session-verify-20261102T0530.json plus screenshots; no credential submitted; no login window opened
+pilot: armed=10 slots; activation remains gated until canonical READY + media gate + independent permalink
+videos: v2 verifier FAIL; no pilot media binding until compare-v2/hash/draft reconciliation
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: account=REATTACH_RUNTIME_FIX; runtime=SMOKE_PASS_PRE_SOURCE_UPDATE; pilot=ARMED; publish=PAUSED_NO_CANONICAL_READY; video=V2_REVIEW_FAIL; community=PUBLIC_30_READY_AUTH_UNKNOWN
+CẦN NAM: Không cần thao tác thêm lúc này; hai profile Chrome app-owned đang hiển thị phiên đã đăng nhập. Nếu runtime re-attach fail, giữ cửa sổ nguyên trạng; không retry credential.
+blockers: RUNTIME_SESSION_BINDING_AFTER_RESTART | LIVE-PUBLICATION (0 verified permalink) | VIDEO_COMPOSITION_QA_PENDING | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: integrate re-attach seam, build clean checkout, backup/swap 4321, verify account JSON + READY identityReference; only then arm first-post window.
+
+updated: 2026-11-02T05:45:17+0700
+phase: P2_CHROME_CANONICAL_VERIFY
+runtime: packaged 4321 source=9ca603cd25c2a34a8d3a2856957102b119c8119e dirty=false health=200 pid=17330 stateRevision=452; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam OBSERVED_AUTHENTICATED_PROFILE pending runtime-bound verify-session | facebook_group/facebook_nam OBSERVED_AUTHENTICATED_PROFILE pending runtime-bound verify-session
+pilot: armed=10 slots; live schedule remains gated by canonical READY + Claude-approved v3 media; no post submitted
+videos: v3 prototype pending Claude approval; v2 rejected and excluded; no media bound to pilot
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: account=REATTACH_SOURCE_UPDATE; runtime=BUILD_PENDING; pilot=ARMED_MEDIA_GATED; publish=PAUSED_NO_CANONICAL_READY; video=V3_CLAUDE_REVIEW_PENDING; community=PUBLIC_30_READY_AUTH_UNKNOWN
+CẦN NAM: none for account verification; existing Chrome profiles remain open and untouched
+blockers: RUNTIME_BUNDLE_PRE_SOURCE_UPDATE | VIDEO_V3_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: commit source/doc checkpoint; build clean 8ca0+; swap LaunchAgent 4321 only; call verify-session for both profiles; record canonical identity/evidence

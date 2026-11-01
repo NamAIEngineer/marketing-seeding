@@ -64,18 +64,25 @@ Run mode: supervised Orca orchestration. Current non-account lanes continue whil
   present, exposing `qaFail=10`, `quality=UNVERIFIED`, and
   `bufferTomorrow=0`; next clean package must carry this truthful state.
 
-## Quality-A replacement checkpoint — 2026-11-02 04:18 ICT
+## Quality-A replacement checkpoint — 2026-11-02 04:18 ICT (superseded 05:05)
 
-- `T-video`: PASS bounded. Ten ScreenCaptureKit window-only artifacts are
-  present, unique, hash-verified, mapped one-to-one to the first ten drafts,
-  and independently inspected through proof grids. `quality-a.json` is
-  `PASS_QUALITY_A_WINDOW_CAPTURE`.
-- `T-integrate`: manifest and draft rows now point to the quality-A artifact
-  paths. The previous quality-B variant files remain preserved for fallback and
-  audit. The projection will report `qaFail=0` and `bufferTomorrow=10` after
-  the next packaged rebuild.
-- `T-verify`: fresh read-only verification is in progress after this media
-  integration; no account retry or publication side effect is allowed.
+- `T-video`: the 04:18 PASS is superseded by Claude's 05:05 visual review.
+  The ten 4.4-second files failed composition review (headline overflow, clip
+  crop/overflow, missing proper intro/end card and repo CTA). They remain under
+  the rejected audit directory and cannot bind pilot slots.
+- `T-integrate`: projection now requires
+  `video/quality-a/composition-qa.json` with status
+  `PASS_QUALITY_A_COMPOSITION` plus true checks for reference-frame
+  comparison, headline bboxes, clip containment, intro/end cards, full repo
+  URL and star CTA. Until then it exposes `qaFail=10` and `bufferTomorrow=0`.
+- `T-video-v2`: worker recomposed ten 18.6-second MP4s (intro + three scenes +
+  end card) with v2 proof grids, but the receipt references `compare-v2`
+  evidence that is not present in the lead checkout. Canonical manifest/draft
+  hashes are stale relative to the changed files and must not be promoted.
+- `T-verify-video-composition`: independent read-only verifier checks decoded
+  frames/contact grids, bbox and clip bounds, template sections, repo URL, CTA,
+  actual Studio source, unique hashes and canonical mapping before any
+  manifest/draft update or packaged rebuild. No account retry/publication.
 
 ## Wave 2 — serialized integration and verification
 
