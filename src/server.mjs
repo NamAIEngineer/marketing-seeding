@@ -148,16 +148,8 @@ const autoCamoufoxExecutionResolver = createAutoCamoufoxExecutionSessionResolver
   headless: process.env.SEEDING_CAMOUFOX_HEADLESS !== "false",
   stateReader: async () => serviceRef ? serviceRef.snapshot() : { executionAccounts: [] }
 });
-const manualLoginProvision = createAutoCamoufoxAccountAgentRunner({
-  dataRoot: dataDir,
-  runtimeRoot: String(process.env.SEEDING_CAMOUFOX_RUNTIME_ROOT || path.join(dataDir, "camoufox-runtime")),
-  profileRoot: camoufoxProfileRoot || path.join(dataDir, "camoufox-profiles"),
-  npmBin: String(process.env.SEEDING_NPM_BIN || "").trim(),
-  statusFile: path.join(dataDir, "camoufox-provision-status.json"),
-  headless: false
-}).provision;
-const manualLoginManager = new ManualLoginSessionManager({ provision: manualLoginProvision });
 const chromeAccountProfileManager = new ChromeAccountProfileManager();
+const manualLoginManager = new ManualLoginSessionManager({ browserManager: chromeAccountProfileManager });
 if (operatorToken.length < 32) {
   throw new Error("SEEDING_OPERATOR_TOKEN must contain at least 32 characters");
 }
@@ -206,6 +198,7 @@ const service = new SeedingService(store, {
     orcaBrowser,
 
     camoufox: {
+      chromeAccount: chromeAccountProfileManager,
       executable: camoufoxExecutablePath || null,
       profileReference: camoufoxProfileReference || null,
       probe: ({ runtime }) => probeCamoufoxRuntime({

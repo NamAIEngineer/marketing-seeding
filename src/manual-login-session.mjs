@@ -1,65 +1,49 @@
 import { randomUUID } from "node:crypto";
 
-const LOGIN_URLS = Object.freeze({
-  linkedin: "https://www.linkedin.com/login",
-  facebook: "https://www.facebook.com/login/",
-  facebook_group: "https://www.facebook.com/login/"
-});
 const clean = (value, max = 240) => String(value ?? "").replace(/[\r\n\t]+/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
 
-/** Retained, isolated visible Camoufox sessions for SSO/MFA/challenge handoff. */
+/** Manual login seam for the app-owned Chromium account runtime. */
 export class ManualLoginSessionManager {
-  #provision;
+  #browserManager;
   #sessions = new Map();
   #ttlMs;
-  constructor({ provision, ttlMs = 15 * 60_000 } = {}) {
-    if (typeof provision !== "function") throw new Error("manual login provisioner is required");
-    this.#provision = provision;
+  constructor({ browserManager, ttlMs = 15 * 60_000 } = {}) {
+    if (!browserManager || typeof browserManager.start !== "function") throw new Error("Chrome account browser manager is required");
+    this.#browserManager = browserManager;
     this.#ttlMs = Math.max(60_000, Number(ttlMs) || 15 * 60_000);
   }
   async start({ platform, accountId, profileId, identityReference = null } = {}) {
     const requested = clean(platform, 80).toLowerCase();
-    const browserPlatform = requested === "facebook" ? "facebook_group" : requested;
-    const loginUrl = LOGIN_URLS[requested] || LOGIN_URLS[browserPlatform];
-    if (!loginUrl || !clean(accountId, 160) || !clean(profileId, 180)) {
-      throw Object.assign(new Error("platform, accountId and profileId are required"), { code: "MANUAL_LOGIN_BINDING_REQUIRED" });
-    }
-    for (const [id, session] of this.#sessions) if (session.accountId === accountId && session.platform === requested) await this.close(id);
-    const runtime = await this.#provision();
-    const acquired = await runtime.coordinator.acquire({ provider: "camoufox", platform: browserPlatform, accountId, profileReference: profileId, providerProfileId: profileId, identityReference });
-    if (!acquired?.ready) throw Object.assign(new Error("Camoufox visible profile could not be opened"), { code: acquired?.code || "CAMOUFOX_MANUAL_LOGIN_UNAVAILABLE" });
-    const protocol = await runtime.coordinator.protocolFactory()({ profileReference: acquired.handle.profileReference, expectedIdentity: { provider: "camoufox", platform: browserPlatform, accountId, identityReference }, runtimeIdentity: acquired.handle.runtimeIdentity });
-    await protocol.attach({ allowUnauthenticated: true });
-    const page = (await protocol.listTabs())[0];
-    await protocol.navigate(page.pageId || page.id, loginUrl);
-    const sessionId = randomUUID();
-    this.#sessions.set(sessionId, { sessionId, platform: requested, browserPlatform, accountId: clean(accountId, 160), profileReference: clean(profileId, 180), loginUrl, protocol, coordinator: runtime.coordinator, handle: acquired.handle, pageId: page.pageId || page.id, startedAt: new Date().toISOString(), expiresAt: new Date(Date.now() + this.#ttlMs).toISOString(), status: "WAITING_FOR_USER" });
+    const account = clean(accountId, 160);
+    if (!requested || !account || !clean(profileId, 500)) throw Object.assign(new Error("platform, accountId and profileId are required"), { code: "MANUAL_LOGIN_BINDING_REQUIRED" });
+    for (const [id, session] of this.#sessions) if (session.accountId === account && session.platform === requested) await this.close(id);
+    const opened = await this.#browserManager.start({ platform: requested, accountId: account, profilePath: profileId });
+    const sessionId = opened?.sessionId || randomUUID();
+    const startedAt = opened?.startedAt || new Date().toISOString();
+    const expiresAt = opened?.expiresAt || new Date(Date.now() + this.#ttlMs).toISOString();
+    this.#sessions.set(sessionId, { sessionId, platform: requested, accountId: account, profileReference: clean(profileId, 500), identityReference: clean(identityReference, 500) || null, startedAt, expiresAt, status: opened?.status || "WAITING_FOR_USER" });
     return this.status(sessionId);
   }
   async poll(sessionId) {
     const session = this.#sessions.get(String(sessionId));
     if (!session) return { status: "UNKNOWN", code: "MANUAL_LOGIN_SESSION_NOT_FOUND" };
-    if (Date.now() > Date.parse(session.expiresAt)) { await this.close(sessionId); return { status: "BLOCKED", code: "MANUAL_LOGIN_SESSION_EXPIRED", reason: "Cửa sổ đăng nhập đã hết thời gian" }; }
-    try {
-      const observed = await session.protocol.observeIdentity();
-      const state = String(observed?.state || "UNKNOWN").toUpperCase();
-      if (state === "READY") { session.status = "READY"; session.identityReference = clean(observed.identityReference, 400) || null; session.observed = observed; }
-      else if (["CHALLENGED", "CHALLENGE", "MFA", "SECURITY_CHALLENGE"].includes(state)) session.status = "WAITING_FOR_USER";
-      else session.status = "WAITING_FOR_USER";
-      return this.status(sessionId);
-    } catch (error) { return { ...this.status(sessionId), status: "WAITING_FOR_USER", code: clean(error?.code || "MANUAL_LOGIN_OBSERVATION_PENDING") }; }
+    if (Date.now() > Date.parse(session.expiresAt)) { await this.close(sessionId); return { status: "BLOCKED", code: "MANUAL_LOGIN_SESSION_EXPIRED", reason: "Chrome login window expired" }; }
+    const observed = await this.#browserManager.poll(sessionId);
+    if (observed?.status === "READY") { session.status = "READY"; session.identityReference = clean(observed.identityReference, 500) || session.identityReference; session.evidenceHash = clean(observed.evidenceHash, 80) || null; session.observedUrl = clean(observed.observedUrl, 500) || null; }
+    else if (observed?.status === "BLOCKED") session.status = "BLOCKED";
+    else session.status = "WAITING_FOR_USER";
+    return { ...this.status(sessionId), ...(observed?.code ? { code: observed.code } : {}) };
   }
   status(sessionId) {
-    const s = this.#sessions.get(String(sessionId));
-    if (!s) return { status: "UNKNOWN", code: "MANUAL_LOGIN_SESSION_NOT_FOUND" };
-    return { sessionId: s.sessionId, platform: s.platform, accountId: s.accountId, status: s.status, code: s.status === "READY" ? "LOGIN_CONFIRMED" : "WAITING_FOR_USER", reason: s.status === "READY" ? "Đã xác minh danh tính" : "Đăng nhập trong cửa sổ Camoufox riêng", identityReference: s.identityReference || null, loginUrl: s.loginUrl, profileReference: s.profileReference, startedAt: s.startedAt, expiresAt: s.expiresAt };
+    const session = this.#sessions.get(String(sessionId));
+    if (!session) return { status: "UNKNOWN", code: "MANUAL_LOGIN_SESSION_NOT_FOUND" };
+    return { sessionId: session.sessionId, platform: session.platform, accountId: session.accountId, status: session.status, code: session.status === "READY" ? "LOGIN_CONFIRMED" : "WAITING_FOR_USER", reason: session.status === "READY" ? "Đã xác minh danh tính từ redirect nền tảng" : "Đăng nhập trong cửa sổ Chrome riêng; danh tính chưa xác minh", identityReference: session.identityReference || null, observedUrl: session.observedUrl || null, evidenceHash: session.evidenceHash || null, profileReference: session.profileReference, source: `chrome-account:${session.accountId}`, startedAt: session.startedAt, expiresAt: session.expiresAt };
   }
   async close(sessionId) {
-    const s = this.#sessions.get(String(sessionId));
-    if (!s) return { status: "UNKNOWN", code: "MANUAL_LOGIN_SESSION_NOT_FOUND" };
+    const session = this.#sessions.get(String(sessionId));
+    if (!session) return { status: "UNKNOWN", code: "MANUAL_LOGIN_SESSION_NOT_FOUND" };
     this.#sessions.delete(String(sessionId));
-    await s.protocol?.detach?.().catch(() => undefined);
-    await s.coordinator?.release?.(s.handle).catch(() => undefined);
+    try { await this.#browserManager.close?.(sessionId); } catch {}
     return { sessionId: String(sessionId), status: "CLOSED" };
   }
 }

@@ -1,10 +1,10 @@
 import { assertTransportCannotChangeAfterIntent } from "./browser-interaction-transport.mjs";
-import { CamoufoxTransport, GpmChromeTransport, OrcaAccessibilityTransport, OrcaPointerTransport } from "./browser-runtime-transports.mjs";
+import { CamoufoxTransport, ChromeAccountTransport, GpmChromeTransport, OrcaAccessibilityTransport, OrcaPointerTransport } from "./browser-runtime-transports.mjs";
 
 export const WORKLOAD_TRANSPORT_POLICY = Object.freeze({
-  // GPM remains available only as historical/compatibility input. The active
-  // authenticated social lane is Camoufox and fails closed until its runtime
-  // is explicitly attached and identity-verified.
+  // Kept as a compatibility policy literal for older projections. When the
+  // explicit Chrome account transport is registered, select() upgrades this
+  // authenticated workload to Chrome; Camoufox remains public-only.
   AUTHENTICATED_SOCIAL_EXECUTION: "camoufox",
   PUBLIC_DISCOVERY: "camoufox",
   COMMUNITY_RESEARCH: "camoufox",
@@ -29,6 +29,7 @@ function routeKey(transport) {
   const value = identity(transport);
   return String(value.transport || "").toLowerCase().startsWith("orca") ? "orca" :
     String(value.provider || value.transport || "").toLowerCase().includes("gpm") ? "gpm" :
+    String(value.provider || value.transport || "").toLowerCase().includes("chrome") ? "chrome" :
     String(value.provider || value.transport || "").toLowerCase().includes("camoufox") ? "camoufox" : "unknown";
 }
 
@@ -53,8 +54,17 @@ export class BrowserRuntimeRouter {
     if (!name) throw routeError("ROUTE_WORKLOAD_REQUIRED", "Browser workload is required");
     const configured = this.policy[name];
     if (!configured || typeof configured !== "string") throw routeError("ROUTE_WORKLOAD_UNSUPPORTED", `No transport policy for workload ${name}`, { workload: name });
-    const key = configured.toLowerCase();
-    const candidates = this.candidatesFor(key);
+    let key = configured.toLowerCase();
+    const chromeCandidates = this.candidatesFor("chrome");
+    if (name === "AUTHENTICATED_SOCIAL_EXECUTION" && chromeCandidates.length === 1) key = "chrome";
+    let candidates = this.candidatesFor(key);
+    // Keep old read-only fixture callers deterministic while production
+    // defaults register the explicit Chrome account transport. A Camoufox
+    // fallback is never selected when a Chrome account transport exists.
+    const compatibilityFallback = key === "chrome" && candidates.length === 0
+      ? this.candidatesFor("camoufox")
+      : [];
+    if (compatibilityFallback.length) candidates = compatibilityFallback;
     if (candidates.length === 0) throw routeError("ROUTE_TRANSPORT_UNAVAILABLE", `No transport is registered for workload ${name}`, { workload: name, route: key });
     if (candidates.length > 1) throw routeError("ROUTE_POLICY_AMBIGUOUS", `Multiple transports are registered for workload ${name}`, { workload: name, route: key, transports: candidates.map((item) => identity(item)) });
     const transport = candidates[0];
@@ -62,11 +72,11 @@ export class BrowserRuntimeRouter {
     const runtime = identity(transport);
     return {
       workload: name,
-      route: key,
+      route: routeKey(transport) === "camoufox" && key === "chrome" ? "camoufox" : key,
       transport,
       transportId: runtime.transport || null,
       runtimeIdentity: runtime,
-      reason: `${name} policy selects ${key} transport`,
+      reason: compatibilityFallback.length ? `${name} compatibility fallback selects camoufox transport` : `${name} policy selects ${key} transport`,
       selectedBeforeIrreversibleIntent: intentPersisted !== true,
       intentPersisted: intentPersisted === true
     };
@@ -84,6 +94,7 @@ export function createDefaultBrowserRuntimeRouter({ gpm = null, camoufox = {}, o
   // product default; callers must opt into the explicit legacy lane.
   const transports = [
     ...(gpm && typeof gpm === "object" ? [new GpmChromeTransport(gpm)] : []),
+    ...(camoufox && typeof camoufox.chromeAccount === "object" ? [new ChromeAccountTransport(camoufox.chromeAccount)] : []),
     ...(camoufox && typeof camoufox === "object" ? [new CamoufoxTransport(camoufox)] : [])
   ];
   const orcaTransports = orca ? (Array.isArray(orca) ? orca : [orca]) : (orcaBrowser ? [new OrcaAccessibilityTransport(orcaBrowser), new OrcaPointerTransport(orcaBrowser)] : []);

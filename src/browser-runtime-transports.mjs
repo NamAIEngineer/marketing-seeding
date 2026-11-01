@@ -121,5 +121,17 @@ export class CamoufoxTransport extends BrowserRuntimeTransport {
   }
 }
 
+/** Visible, persistent Chromium transport for authenticated account work. */
+export class ChromeAccountTransport extends BrowserRuntimeTransport {
+  constructor(options = {}) {
+    super({ ...options, id: options.id || "chrome-account", provider: "chrome" });
+    this.profileRoot = options.profileRoot || null;
+  }
+
+  runtimeIdentity() {
+    return { ...super.runtimeIdentity(), profileRoot: this.profileRoot };
+  }
+}
+
 export { OrcaAccessibilityTransport, OrcaPointerTransport };
 
