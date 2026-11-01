@@ -1,0 +1,139 @@
+=== campaigns/design-os-studio-launch/video/variants/w2-video-01-linkedin-personal.mp4 ===
+index=0|codec_name=h264|codec_type=video|width=1280|height=720|pix_fmt=yuv420p|r_frame_rate=30/1|avg_frame_rate=30/1
+index=1|codec_name=aac|codec_type=audio|r_frame_rate=0/0|avg_frame_rate=0/0
+duration=20.000000|size=1007549
+[Parsed_freezedetect_1 @ 0x1286063d0] lavfi.freezedetect.freeze_start: 6.533333
+[Parsed_freezedetect_1 @ 0x1286063d0] lavfi.freezedetect.freeze_start: 13.366667
+[Parsed_freezedetect_1 @ 0x1286063d0] lavfi.freezedetect.freeze_start: 16.566667
+[Parsed_ebur128_0 @ 0x14875bc60] Summary:
+    I:         -14.1 LUFS
+    Threshold: -24.1 LUFS
+    LRA:         1.7 LU
+    Threshold: -34.1 LUFS
+
+=== campaigns/design-os-studio-launch/video/variants/w2-video-02-linkedin-page.mp4 ===
+index=0|codec_name=h264|codec_type=video|width=1280|height=720|pix_fmt=yuv420p|r_frame_rate=30/1|avg_frame_rate=30/1
+index=1|codec_name=aac|codec_type=audio|r_frame_rate=0/0|avg_frame_rate=0/0
+duration=20.000000|size=1190539
+[Parsed_freezedetect_1 @ 0x159006830] lavfi.freezedetect.freeze_start: 3.533333
+[Parsed_freezedetect_1 @ 0x159006830] lavfi.freezedetect.freeze_start: 10.366667
+[Parsed_freezedetect_1 @ 0x159006830] lavfi.freezedetect.freeze_start: 14.1
+[Parsed_ebur128_0 @ 0x158705170] Summary:
+    I:         -14.1 LUFS
+    Threshold: -24.1 LUFS
+    LRA:         1.4 LU
+    Threshold: -34.1 LUFS
+
+=== campaigns/design-os-studio-launch/video/variants/w2-video-03-facebook-timeline.mp4 ===
+index=0|codec_name=h264|codec_type=video|width=1280|height=720|pix_fmt=yuv420p|r_frame_rate=30/1|avg_frame_rate=30/1
+index=1|codec_name=aac|codec_type=audio|r_frame_rate=0/0|avg_frame_rate=0/0
+duration=18.000000|size=1135993
+[Parsed_freezedetect_1 @ 0x12f704590] lavfi.freezedetect.freeze_start: 0.533333
+[Parsed_freezedetect_1 @ 0x12f704590] lavfi.freezedetect.freeze_start: 7.166667
+[Parsed_freezedetect_1 @ 0x12f704590] lavfi.freezedetect.freeze_start: 8.733333
+[Parsed_freezedetect_1 @ 0x12f704590] lavfi.freezedetect.freeze_start: 10.366667
+[Parsed_ebur128_0 @ 0x1480052f0] Summary:
+    I:         -14.1 LUFS
+    Threshold: -24.1 LUFS
+    LRA:         1.3 LU
+    Threshold: -34.0 LUFS
+
+=== campaigns/design-os-studio-launch/video/variants/w2-video-04-facebook-page.mp4 ===
+index=0|codec_name=h264|codec_type=video|width=1280|height=720|pix_fmt=yuv420p|r_frame_rate=30/1|avg_frame_rate=30/1
+index=1|codec_name=aac|codec_type=audio|r_frame_rate=0/0|avg_frame_rate=0/0
+duration=20.000000|size=1155793
+[Parsed_freezedetect_1 @ 0x138e20680] lavfi.freezedetect.freeze_start: 5.5
+[Parsed_freezedetect_1 @ 0x138e20680] lavfi.freezedetect.freeze_start: 13.1
+[Parsed_freezedetect_1 @ 0x138e20680] lavfi.freezedetect.freeze_start: 15.333333
+[Parsed_ebur128_0 @ 0x138e250c0] Summary:
+    I:         -14.2 LUFS
+    Threshold: -24.1 LUFS
+    LRA:         1.7 LU
+    Threshold: -34.2 LUFS
+
+=== campaigns/design-os-studio-launch/video/variants/w2-video-05-facebook-group-a.mp4 ===
+index=0|codec_name=h264|codec_type=video|width=1280|height=720|pix_fmt=yuv420p|r_frame_rate=30/1|avg_frame_rate=30/1
+index=1|codec_name=aac|codec_type=audio|r_frame_rate=0/0|avg_frame_rate=0/0
+duration=20.000000|size=1221065
+[Parsed_freezedetect_1 @ 0x129e71a50] lavfi.freezedetect.freeze_start: 2.533333
+[Parsed_freezedetect_1 @ 0x129e71a50] lavfi.freezedetect.freeze_start: 9.366667
+[Parsed_freezedetect_1 @ 0x129e71a50] lavfi.freezedetect.freeze_start: 12.466667
+[Parsed_ebur128_0 @ 0x129e6f220] Summary:
+    I:         -14.1 LUFS
+    Threshold: -24.1 LUFS
+    LRA:         1.3 LU
+    Threshold: -34.0 LUFS
+
+=== campaigns/design-os-studio-launch/video/variants/w2-video-06-facebook-group-b.mp4 ===
+index=0|codec_name=h264|codec_type=video|width=1080|height=1080|pix_fmt=yuv420p|r_frame_rate=30/1|avg_frame_rate=30/1
+index=1|codec_name=aac|codec_type=audio|r_frame_rate=0/0|avg_frame_rate=0/0
+duration=20.000000|size=1236722
+[Parsed_freezedetect_1 @ 0x159f07550] lavfi.freezedetect.freeze_start: 0
+[Parsed_freezedetect_1 @ 0x159f07550] lavfi.freezedetect.freeze_start: 5.966667
+[Parsed_freezedetect_1 @ 0x159f07550] lavfi.freezedetect.freeze_start: 16.1
+[Parsed_ebur128_0 @ 0x15a805b50] Summary:
+    I:         -14.1 LUFS
+    Threshold: -24.1 LUFS
+    LRA:         1.7 LU
+    Threshold: -34.2 LUFS
+
+=== campaigns/design-os-studio-launch/video/variants/w2-video-07-facebook-group-c.mp4 ===
+index=0|codec_name=h264|codec_type=video|width=1080|height=1080|pix_fmt=yuv420p|r_frame_rate=30/1|avg_frame_rate=30/1
+index=1|codec_name=aac|codec_type=audio|r_frame_rate=0/0|avg_frame_rate=0/0
+duration=20.000000|size=1312043
+[Parsed_freezedetect_1 @ 0x1568072f0] lavfi.freezedetect.freeze_start: 4
+[Parsed_freezedetect_1 @ 0x1568072f0] lavfi.freezedetect.freeze_start: 11.3
+[Parsed_freezedetect_1 @ 0x1568072f0] lavfi.freezedetect.freeze_start: 13.866667
+[Parsed_ebur128_0 @ 0x155e716e0] Summary:
+    I:         -14.2 LUFS
+    Threshold: -24.2 LUFS
+    LRA:         1.6 LU
+    Threshold: -34.1 LUFS
+
+=== campaigns/design-os-studio-launch/video/variants/w2-video-08-facebook-group-d.mp4 ===
+index=0|codec_name=h264|codec_type=video|width=1080|height=1080|pix_fmt=yuv420p|r_frame_rate=30/1|avg_frame_rate=30/1
+index=1|codec_name=aac|codec_type=audio|r_frame_rate=0/0|avg_frame_rate=0/0
+duration=18.000000|size=1343465
+[Parsed_freezedetect_1 @ 0x13285c5c0] lavfi.freezedetect.freeze_start: 1.566667
+[Parsed_freezedetect_1 @ 0x13285c5c0] lavfi.freezedetect.freeze_start: 11.633333
+[Parsed_ebur128_0 @ 0x13285b990] Summary:
+    I:         -14.0 LUFS
+    Threshold: -24.0 LUFS
+    LRA:         1.4 LU
+    Threshold: -34.0 LUFS
+
+=== campaigns/design-os-studio-launch/video/variants/w2-video-09-linkedin-square.mp4 ===
+index=0|codec_name=h264|codec_type=video|width=1080|height=1350|pix_fmt=yuv420p|r_frame_rate=30/1|avg_frame_rate=30/1
+index=1|codec_name=aac|codec_type=audio|r_frame_rate=0/0|avg_frame_rate=0/0
+duration=20.000000|size=1575584
+[Parsed_freezedetect_1 @ 0x1253066c0] lavfi.freezedetect.freeze_start: 4.866667
+[Parsed_freezedetect_1 @ 0x1253066c0] lavfi.freezedetect.freeze_start: 14.833333
+[Parsed_ebur128_0 @ 0x124707830] Summary:
+    I:         -14.2 LUFS
+    Threshold: -24.2 LUFS
+    LRA:         1.7 LU
+    Threshold: -34.2 LUFS
+
+=== campaigns/design-os-studio-launch/video/variants/w2-video-10-facebook-portrait.mp4 ===
+index=0|codec_name=h264|codec_type=video|width=1080|height=1350|pix_fmt=yuv420p|r_frame_rate=30/1|avg_frame_rate=30/1
+index=1|codec_name=aac|codec_type=audio|r_frame_rate=0/0|avg_frame_rate=0/0
+duration=18.000000|size=1623145
+[Parsed_freezedetect_1 @ 0x136e71390] lavfi.freezedetect.freeze_start: 9.333333
+[Parsed_ebur128_0 @ 0x136e6ee40] Summary:
+    I:         -14.0 LUFS
+    Threshold: -24.0 LUFS
+    LRA:         1.3 LU
+    Threshold: -34.0 LUFS
+
+--- distinct hash count ---
+713b735e5dfc8341b680171f0c34955fb5a05d6c468c320427f85b6a44481692  campaigns/design-os-studio-launch/video/variants/w2-video-01-linkedin-personal.mp4
+797cb56bb8feeab6604d00650a6ff42ca749b98ba56e601d29d947b893a8c64a  campaigns/design-os-studio-launch/video/variants/w2-video-02-linkedin-page.mp4
+8d19bb55f8ff14e7cdb429d2edffbf2241b90ce2c5fa5a2f7f541fd0080a6833  campaigns/design-os-studio-launch/video/variants/w2-video-03-facebook-timeline.mp4
+00922075b3c407169695ec90af2d4f2c9cc53c6f3f565346f9a57eb5e131bb5d  campaigns/design-os-studio-launch/video/variants/w2-video-04-facebook-page.mp4
+e72b59b9caba7f8b47ed7c44f5feff275a04d2aafbcbc3f029be92405ce2ef90  campaigns/design-os-studio-launch/video/variants/w2-video-05-facebook-group-a.mp4
+498e3ae834c619a64026e1c9ed79185ebcecd9732db09c4472b892ca80f0ef82  campaigns/design-os-studio-launch/video/variants/w2-video-06-facebook-group-b.mp4
+292886e1ce2c79d9eae0a591574c9a5128e5bbf5bdb6b341a76d4d935c749f82  campaigns/design-os-studio-launch/video/variants/w2-video-07-facebook-group-c.mp4
+8b1423ee42c43f7ca7927e2fea5fbf0a42c8390e5e90ee53d3d9d9568eb367fa  campaigns/design-os-studio-launch/video/variants/w2-video-08-facebook-group-d.mp4
+589e095960647f45a22d24a5d3cced7b56fe55507e7c1f7c03d65e905d311a24  campaigns/design-os-studio-launch/video/variants/w2-video-09-linkedin-square.mp4
+fdfba104fef9a1fa7978e32b780caceed526973871e52536738b64c037cd482a  campaigns/design-os-studio-launch/video/variants/w2-video-10-facebook-portrait.mp4
+files=10 unique_sha256=10

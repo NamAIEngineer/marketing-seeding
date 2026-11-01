@@ -1,0 +1,10 @@
+48d308ebf23f0b47e50097b2052d76907dee57482e1d5a28d12c0a8248a766c6  campaigns/design-os-studio-launch/video/variants/w2-video-01-linkedin-personal.mp4
+332bb33cd844b1faaefb1c924981a27044d3d269927840a7176f498a05476753  campaigns/design-os-studio-launch/video/variants/w2-video-02-linkedin-page.mp4
+bb6dc47404bf3ea78d49610453897a05f1dbad43aa1dbf6033ff4ff162cb7fe7  campaigns/design-os-studio-launch/video/variants/w2-video-03-facebook-timeline.mp4
+e4b53ca4337c0f21a2d100373d8cfec70ef9ce1a18442aedb46f8c60d80b2444  campaigns/design-os-studio-launch/video/variants/w2-video-04-facebook-page.mp4
+e4b53ca4337c0f21a2d100373d8cfec70ef9ce1a18442aedb46f8c60d80b2444  campaigns/design-os-studio-launch/video/variants/w2-video-05-facebook-group-a.mp4
+754ec6dd7707fc21b8896f4abfaf51f5a7a8df85a390adbb0ca725f5cd0a59a1  campaigns/design-os-studio-launch/video/variants/w2-video-06-facebook-group-b.mp4
+18201c3db5ba334271d835cddd8e2d930623209dfba9707c589c9f5a6ec63588  campaigns/design-os-studio-launch/video/variants/w2-video-07-facebook-group-c.mp4
+4a33ccff7cc45e40a829bf270a30eef9a0d1d8556ae2c24a6476cbe58fbcb996  campaigns/design-os-studio-launch/video/variants/w2-video-08-facebook-group-d.mp4
+0dc5f41195c009322e2ffa4957da76954e515d44acd2316c83adfcf70a268d73  campaigns/design-os-studio-launch/video/variants/w2-video-09-linkedin-square.mp4
+883622e9b2624308095905d9afc78a04713990001786411184706bd4699e3c77  campaigns/design-os-studio-launch/video/variants/w2-video-10-facebook-portrait.mp4

@@ -1,0 +1,7 @@
+W2 real capture checkpoint — 2026-11-01 20:50 ICT
+
+Source app: ~/Applications/designos.app (design:os studio 0.7.6; SHA256/version verified before capture).
+Capture: macOS screencapture -v -V 8 -x, ten independent session files under real-captures/*.mov. Screen Recording permission prompt was accepted for Orca through the visible macOS dialog; subsequent probe exited 0 and produced H.264 1920x1080.
+Encode: ffmpeg 9.0.2, each source trimmed to 8 seconds, H.264 yuv420p 1280x720/30fps (or channel aspect ratio), ten unique MP4 hashes, ten thumbnails.
+QA: ffprobe passed codec/dimensions/fps/duration for all ten. No publication performed.
+Limitation: designos-studio CLI build rejects --fixture showcase (exit 2: unknown fixture) and active capture includes Studio home/permission context; captures are real app screen evidence but panel-specific motion/template parity requires a follow-up capture once a supported fixture/project is opened. No quality-B fallback reused.

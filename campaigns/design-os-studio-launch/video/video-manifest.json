@@ -1,0 +1,235 @@
+{
+  "reference": {
+    "path": "campaigns/design-os-studio-launch/reference/release-recap-reference.mp4",
+    "sha256": "a7014b242aca885b221fc6f1a8d93199176dcf4797b03f9af17b20a23ebafa95",
+    "probe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "index": 0,
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1280,
+          "height": 720,
+          "pix_fmt": "yuv420p",
+          "r_frame_rate": "30/1",
+          "avg_frame_rate": "30/1"
+        },
+        {
+          "index": 1,
+          "codec_name": "aac",
+          "codec_type": "audio",
+          "r_frame_rate": "0/0",
+          "avg_frame_rate": "0/0"
+        }
+      ],
+      "format": {
+        "duration": "30.336000",
+        "size": "1546751"
+      }
+    }
+  },
+  "artifacts": [
+    {
+      "postId": "growth-20261102-01",
+      "path": "campaigns/design-os-studio-launch/video/variants/w2-video-01-linkedin-personal.mp4",
+      "sha256": "48d308ebf23f0b47e50097b2052d76907dee57482e1d5a28d12c0a8248a766c6",
+      "thumbnail": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-01-linkedin-personal.jpg",
+      "eligibleSurfaceAspectRatio": "16:9",
+      "qa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "quality": "A",
+      "source": "real design:os studio window capture via screencapture -v; encoded H.264",
+      "spec": {
+        "durationSeconds": 7.833,
+        "sizeBytes": 109931,
+        "dimensions": "1280:720",
+        "fps": "30/1",
+        "videoCodec": "h264",
+        "pixelFormat": "yuv420p",
+        "audioCodec": "none",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-01-linkedin-personal.mov"
+      }
+    },
+    {
+      "postId": "growth-20261102-02",
+      "path": "campaigns/design-os-studio-launch/video/variants/w2-video-02-linkedin-page.mp4",
+      "sha256": "332bb33cd844b1faaefb1c924981a27044d3d269927840a7176f498a05476753",
+      "thumbnail": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-02-linkedin-page.jpg",
+      "eligibleSurfaceAspectRatio": "16:9",
+      "qa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "quality": "A",
+      "source": "real design:os studio window capture via screencapture -v; encoded H.264",
+      "spec": {
+        "durationSeconds": 7.933,
+        "sizeBytes": 118832,
+        "dimensions": "1280:720",
+        "fps": "30/1",
+        "videoCodec": "h264",
+        "pixelFormat": "yuv420p",
+        "audioCodec": "none",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-02-linkedin-page.mov"
+      }
+    },
+    {
+      "postId": "growth-20261102-03",
+      "path": "campaigns/design-os-studio-launch/video/variants/w2-video-03-facebook-timeline.mp4",
+      "sha256": "bb6dc47404bf3ea78d49610453897a05f1dbad43aa1dbf6033ff4ff162cb7fe7",
+      "thumbnail": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-03-facebook-timeline.jpg",
+      "eligibleSurfaceAspectRatio": "16:9",
+      "qa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "quality": "A",
+      "source": "real design:os studio window capture via screencapture -v; encoded H.264",
+      "spec": {
+        "durationSeconds": 7.9,
+        "sizeBytes": 108602,
+        "dimensions": "1280:720",
+        "fps": "30/1",
+        "videoCodec": "h264",
+        "pixelFormat": "yuv420p",
+        "audioCodec": "none",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-03-facebook-timeline.mov"
+      }
+    },
+    {
+      "postId": "growth-20261102-04",
+      "path": "campaigns/design-os-studio-launch/video/variants/w2-video-04-facebook-page.mp4",
+      "sha256": "e4b53ca4337c0f21a2d100373d8cfec70ef9ce1a18442aedb46f8c60d80b2444",
+      "thumbnail": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-04-facebook-page.jpg",
+      "eligibleSurfaceAspectRatio": "16:9",
+      "qa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "quality": "A",
+      "source": "real design:os studio window capture via screencapture -v; encoded H.264",
+      "spec": {
+        "durationSeconds": 7.933,
+        "sizeBytes": 120212,
+        "dimensions": "1280:720",
+        "fps": "30/1",
+        "videoCodec": "h264",
+        "pixelFormat": "yuv420p",
+        "audioCodec": "none",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-04-facebook-page.mov"
+      }
+    },
+    {
+      "postId": "growth-20261102-05",
+      "path": "campaigns/design-os-studio-launch/video/variants/w2-video-05-facebook-group-a.mp4",
+      "sha256": "e4b53ca4337c0f21a2d100373d8cfec70ef9ce1a18442aedb46f8c60d80b2444",
+      "thumbnail": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-05-facebook-group-a.jpg",
+      "eligibleSurfaceAspectRatio": "16:9",
+      "qa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "quality": "A",
+      "source": "real design:os studio window capture via screencapture -v; encoded H.264",
+      "spec": {
+        "durationSeconds": 7.933,
+        "sizeBytes": 120212,
+        "dimensions": "1280:720",
+        "fps": "30/1",
+        "videoCodec": "h264",
+        "pixelFormat": "yuv420p",
+        "audioCodec": "none",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-05-facebook-group-a.mov"
+      }
+    },
+    {
+      "postId": "growth-20261102-06",
+      "path": "campaigns/design-os-studio-launch/video/variants/w2-video-06-facebook-group-b.mp4",
+      "sha256": "754ec6dd7707fc21b8896f4abfaf51f5a7a8df85a390adbb0ca725f5cd0a59a1",
+      "thumbnail": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-06-facebook-group-b.jpg",
+      "eligibleSurfaceAspectRatio": "1:1",
+      "qa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "quality": "A",
+      "source": "real design:os studio window capture via screencapture -v; encoded H.264",
+      "spec": {
+        "durationSeconds": 7.933,
+        "sizeBytes": 119951,
+        "dimensions": "1080:1080",
+        "fps": "30/1",
+        "videoCodec": "h264",
+        "pixelFormat": "yuv420p",
+        "audioCodec": "none",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-06-facebook-group-b.mov"
+      }
+    },
+    {
+      "postId": "growth-20261102-07",
+      "path": "campaigns/design-os-studio-launch/video/variants/w2-video-07-facebook-group-c.mp4",
+      "sha256": "18201c3db5ba334271d835cddd8e2d930623209dfba9707c589c9f5a6ec63588",
+      "thumbnail": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-07-facebook-group-c.jpg",
+      "eligibleSurfaceAspectRatio": "1:1",
+      "qa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "quality": "A",
+      "source": "real design:os studio window capture via screencapture -v; encoded H.264",
+      "spec": {
+        "durationSeconds": 7.867,
+        "sizeBytes": 109912,
+        "dimensions": "1080:1080",
+        "fps": "30/1",
+        "videoCodec": "h264",
+        "pixelFormat": "yuv420p",
+        "audioCodec": "none",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-07-facebook-group-c.mov"
+      }
+    },
+    {
+      "postId": "growth-20261102-08",
+      "path": "campaigns/design-os-studio-launch/video/variants/w2-video-08-facebook-group-d.mp4",
+      "sha256": "4a33ccff7cc45e40a829bf270a30eef9a0d1d8556ae2c24a6476cbe58fbcb996",
+      "thumbnail": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-08-facebook-group-d.jpg",
+      "eligibleSurfaceAspectRatio": "1:1",
+      "qa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "quality": "A",
+      "source": "real design:os studio window capture via screencapture -v; encoded H.264",
+      "spec": {
+        "durationSeconds": 7.833,
+        "sizeBytes": 120221,
+        "dimensions": "1080:1080",
+        "fps": "30/1",
+        "videoCodec": "h264",
+        "pixelFormat": "yuv420p",
+        "audioCodec": "none",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-08-facebook-group-d.mov"
+      }
+    },
+    {
+      "postId": "growth-20261102-09",
+      "path": "campaigns/design-os-studio-launch/video/variants/w2-video-09-linkedin-square.mp4",
+      "sha256": "0dc5f41195c009322e2ffa4957da76954e515d44acd2316c83adfcf70a268d73",
+      "thumbnail": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-09-linkedin-square.jpg",
+      "eligibleSurfaceAspectRatio": "4:5",
+      "qa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "quality": "A",
+      "source": "real design:os studio window capture via screencapture -v; encoded H.264",
+      "spec": {
+        "durationSeconds": 7.833,
+        "sizeBytes": 109943,
+        "dimensions": "1080:1350",
+        "fps": "30/1",
+        "videoCodec": "h264",
+        "pixelFormat": "yuv420p",
+        "audioCodec": "none",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-09-linkedin-square.mov"
+      }
+    },
+    {
+      "postId": "growth-20261102-10",
+      "path": "campaigns/design-os-studio-launch/video/variants/w2-video-10-facebook-portrait.mp4",
+      "sha256": "883622e9b2624308095905d9afc78a04713990001786411184706bd4699e3c77",
+      "thumbnail": "campaigns/design-os-studio-launch/video/thumbnails/w2-video-10-facebook-portrait.jpg",
+      "eligibleSurfaceAspectRatio": "4:5",
+      "qa": "PASS_REAL_SCREEN_CAPTURE_BOUNDED",
+      "quality": "A",
+      "source": "real design:os studio window capture via screencapture -v; encoded H.264",
+      "spec": {
+        "durationSeconds": 7.867,
+        "sizeBytes": 110402,
+        "dimensions": "1080:1350",
+        "fps": "30/1",
+        "videoCodec": "h264",
+        "pixelFormat": "yuv420p",
+        "audioCodec": "none",
+        "captureEvidence": "campaigns/design-os-studio-launch/video/real-captures/w2-video-10-facebook-portrait.mov"
+      }
+    }
+  ]
+}
