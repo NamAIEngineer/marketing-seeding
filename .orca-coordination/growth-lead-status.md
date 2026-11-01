@@ -58,3 +58,15 @@ lanes: runtime=FIX_COMMITTED (017717f); content=VERIFIED_WITH_CONCERNS; video=BL
 CẦN NAM: Sau bản mới lên 4321, nếu Camoufox hiển thị CAPTCHA/MFA/OTP/checkpoint, nhập mã trong cửa sổ đó; không dùng Chrome/copy session. | Nếu cap không đủ 10 slot, thêm account/quyền Page; không vượt cap.
 blockers: PACKAGED-REBUILD (controller, ETA 22:30) | VIDEO-QUALITY-A (1 raw candidate, no 10-file QA set) | LIVE-PUBLICATION (chờ READY)
 next_30m: build UI assets, create clean checkout, run desktop/build-macos.sh, backup state, update LaunchAgent, health/API verify.
+
+updated: 2026-11-01T22:31:00+07:00
+phase: P0
+runtime: 22178785c79decde793f494d198c93879db11cfc dirty=false health=200 port=4321 (packaged candidate; glyph/session fixes queued for rebuild)
+accounts: linkedin/linkedin_nam: BLOCKED (manual session e59ba4c0: LinkedIn unexpected-error toast after one sign-in; glyph corruption observed; no blind retry); facebook_group/facebook_nam: UNKNOWN (last retry EXPECTED_IDENTITY_REQUIRED; no further retry until candidate)
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10 (worker produced real-capture quality-A candidate set; integrate + independently verify before promotion)
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (live auth UNKNOWN; no external join/post side effect)
+lanes: runtime=FIX_COMMITTED (30db904 input selectors + d93bcb7 visible macOS font config; rebuild pending); desktop-session=DONE (fb7caea local loopback operator bootstrap; rebuild pending); content=VERIFIED_WITH_CONCERNS (16 drafts, 10 active LinkedIn/Facebook); video=READY_FOR_INTEGRATION (b5467cf + 85b228f real captures, independent QA pending); publish=PAUSED until READY accounts; threads_reddit_ph_ih_x=PAUSED by MISSION-9
+CẦN NAM: Không retry LinkedIn tiếp trước candidate font test; sau khi candidate xác minh chữ đọc được, mở lại Đăng nhập thủ công và chỉ nhập MFA/CAPTCHA/OTP/checkpoint nếu Camoufox yêu cầu. Không dùng Chrome/copy cookie/session. | Nếu tới 00:00 2/11 profile thử vẫn fail, chuyển login/publish sang Chromium persistent profile riêng trong Application Support (không đụng Chrome cá nhân); quyết định đã ghi.
+blockers: CAMOUFOX-FINGERPRINT-GLYPH (runtime fix d93bcb7; candidate screenshot/test pending) | CAMOUFOX-LIVE-AUTH (LinkedIn toast + Facebook identity UNKNOWN; owner=Nam only for MFA/CAPTCHA/OTP) | PACKAGED-REBUILD (controller; preserve state) | LIVE-PUBLICATION (0 verified permalink)
+next_30m: cherry-pick runtime fixes, integrate quality-A video/content evidence, build clean checkout with sh desktop/build-macos.sh, backup state + update LaunchAgent 4321, verify health/source SHA/operator session/UI, run profile-only LinkedIn/Facebook login smoke without real-account retry.
