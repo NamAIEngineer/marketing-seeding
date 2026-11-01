@@ -476,3 +476,16 @@ lanes: account=READY_CANONICAL; runtime=SMOKE_PASS; pilot=ARMED_GATES_CLOSED; pu
 CẦN NAM: none for account readiness; credential/CAPTCHA/MFA not requested
 blockers: VIDEO_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
 next_30m: preserve READY state; await/record Claude approvals; do not submit any post or bind unapproved video; keep 4318 unchanged
+
+updated: 2026-11-02T06:16:00+07:00
+phase: P2_READY_MEDIA_CONTENT_GATED
+runtime: packaged 4321 source=6cf02f46231bd2b01634ef462af3ad5acea5b4f4 dirty=false health=200 pid=18332 stateRevision=454; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam READY; facebook_group/facebook_nam READY; identity/evidence persisted in canonical JsonStore
+pilot: armed=10 slots; scheduled=0 published_verified=0; no live submit while content/video gates closed
+videos: v4 prototype bounded structure PASS but overall FAIL — missing full https end-card URL, audio +1.23s, no CLAUDE_APPROVED, only 1 prototype, audio license UNKNOWN; v2/v3 rejected/unpromoted
+content: v2 mission 18 currently CONTENT_PENDING_CLAUDE; Nam 06:05 build-in-public + Facebook timeline/group rules recorded; content worker revision pending
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: account=READY_CANONICAL; runtime=SMOKE_PASS; pilot=ARMED_GATES_CLOSED; publish=PAUSED_APPROVAL_GATES; video=V4_FAIL_REWORK; content=M18_NAM_RULE_REWRITE; community=PUBLIC_30_READY_AUTH_UNKNOWN
+CẦN NAM: none; no credential/CAPTCHA/MFA action required
+blockers: VIDEO_V4_REWORK_AND_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: preserve READY accounts; integrate content worker commit when received; keep Overview v2 projection; no publication until explicit dual approval
