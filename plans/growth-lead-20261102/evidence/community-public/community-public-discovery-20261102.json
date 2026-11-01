@@ -1,0 +1,2881 @@
+{
+  "schemaVersion": 1,
+  "runId": "community-public-discovery-20261102T0120+07",
+  "capturedAt": "2026-11-01T18:20:00.000Z",
+  "scope": {
+    "platforms": [
+      "facebook_group",
+      "linkedin_group"
+    ],
+    "externalSideEffects": false,
+    "publication": "DISABLED"
+  },
+  "sourceReceipts": [
+    {
+      "sourceUrl": "https://www.facebook.com/groups/",
+      "sourceType": "public_candidate_fixture_seed",
+      "observedAt": "2026-11-02T01:20:00+07:00",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": "UNKNOWN",
+      "status": "CANDIDATE_ONLY"
+    },
+    {
+      "sourceUrl": "https://www.linkedin.com/groups/",
+      "sourceType": "public_candidate_fixture_seed",
+      "observedAt": "2026-11-02T01:20:00+07:00",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": "UNKNOWN",
+      "status": "CANDIDATE_ONLY"
+    }
+  ],
+  "discoveries": [
+    {
+      "id": "facebook_group:public-01",
+      "platform": "facebook_group",
+      "url": "https://www.facebook.com/groups/ui-ux-vietnam",
+      "host": "facebook.com",
+      "name": "UI UX Vietnam",
+      "description": "Public discovery candidate for UI UX Vietnam; no authenticated group read.",
+      "sourceUrl": "https://www.facebook.com/groups/ui-ux-vietnam",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "vi",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.facebook.com/groups/ui-ux-vietnam",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:d9769fee9d91bc78fcf6beff5f4c3d69ac44a9b7e0319e65a4b1ade872e5c16e"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "ui",
+            "ux",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "b4ec298a4b2be2562f75f9c9b6e0c57baebfd76f1d8529892c7d5a37483fa782"
+      }
+    },
+    {
+      "id": "facebook_group:public-02",
+      "platform": "facebook_group",
+      "url": "https://www.facebook.com/groups/figma-vietnam",
+      "host": "facebook.com",
+      "name": "Figma Vietnam Community",
+      "description": "Public discovery candidate for Figma Vietnam Community; no authenticated group read.",
+      "sourceUrl": "https://www.facebook.com/groups/figma-vietnam",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "vi",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.facebook.com/groups/figma-vietnam",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:4cc45e3a2f93718cc966b05b561013dddb26c30413bcdacbf532d09c4904a3ad"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "5dfb8574a2e6c3fcfa920c2638e730b8fa80ea4594d8dc3a13eec7108a7a1ddf"
+      }
+    },
+    {
+      "id": "facebook_group:public-03",
+      "platform": "facebook_group",
+      "url": "https://www.facebook.com/groups/product-design-vn",
+      "host": "facebook.com",
+      "name": "Product Design Vietnam",
+      "description": "Public discovery candidate for Product Design Vietnam; no authenticated group read.",
+      "sourceUrl": "https://www.facebook.com/groups/product-design-vn",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "vi",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.facebook.com/groups/product-design-vn",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:889b2e486115859cab31e26467a69d4d19f6e4fd202db599db09005d204e101c"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "d97c1e51e3327c9c5ba68c4686adf5b0d9a3cda01bdfa6ce29354e1a4adfe561"
+      }
+    },
+    {
+      "id": "facebook_group:public-04",
+      "platform": "facebook_group",
+      "url": "https://www.facebook.com/groups/design-systems-vn",
+      "host": "facebook.com",
+      "name": "Design Systems Vietnam",
+      "description": "Public discovery candidate for Design Systems Vietnam; no authenticated group read.",
+      "sourceUrl": "https://www.facebook.com/groups/design-systems-vn",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "vi",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.facebook.com/groups/design-systems-vn",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:40e737e6faff0bf03cc5f47e667667c9f67edd86bc38386e88b24c1c3ffd1a57"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "d60eff6a890c6845de0706b57840ea6a8ad679c15e64bee88e28b4d6006154b4"
+      }
+    },
+    {
+      "id": "facebook_group:public-05",
+      "platform": "facebook_group",
+      "url": "https://www.facebook.com/groups/ai-design-builders",
+      "host": "facebook.com",
+      "name": "AI Design Builders",
+      "description": "Public discovery candidate for AI Design Builders; no authenticated group read.",
+      "sourceUrl": "https://www.facebook.com/groups/ai-design-builders",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.facebook.com/groups/ai-design-builders",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:87efdafa8905225a2304795dcbda6cc234fd1f8f3f70366d8e41c082a595b56c"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "ui",
+            "product design",
+            "design system",
+            "ai design",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "6a5194f85b5bd265040a4607cfb4f5fdda4843971bf69d09dae6f5018c86fb99"
+      }
+    },
+    {
+      "id": "facebook_group:public-06",
+      "platform": "facebook_group",
+      "url": "https://www.facebook.com/groups/claude-code-builders",
+      "host": "facebook.com",
+      "name": "Claude Code Builders",
+      "description": "Public discovery candidate for Claude Code Builders; no authenticated group read.",
+      "sourceUrl": "https://www.facebook.com/groups/claude-code-builders",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.facebook.com/groups/claude-code-builders",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:4a833a4862230e4e6a5da093cf01427bdde09c0e6a777726c82e2a89bbc9022c"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "ui",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "34d90673d34b23d69d94cdfd2323c740c3413d99b876bb147d2293a57c4f98e9"
+      }
+    },
+    {
+      "id": "facebook_group:public-07",
+      "platform": "facebook_group",
+      "url": "https://www.facebook.com/groups/codex-mcp-makers",
+      "host": "facebook.com",
+      "name": "Codex and MCP Makers",
+      "description": "Public discovery candidate for Codex and MCP Makers; no authenticated group read.",
+      "sourceUrl": "https://www.facebook.com/groups/codex-mcp-makers",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.facebook.com/groups/codex-mcp-makers",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:31ecd1086420260b8d8b783d17bb364d8cd7bcb05265befe0395910ba85a35ee"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "828f6684753a3a6b2fb7a41b5d4048bababd5d4db2a32a764a0f6e30c582f1ce"
+      }
+    },
+    {
+      "id": "facebook_group:public-08",
+      "platform": "facebook_group",
+      "url": "https://www.facebook.com/groups/build-in-public-vn",
+      "host": "facebook.com",
+      "name": "Build in Public Vietnam",
+      "description": "Public discovery candidate for Build in Public Vietnam; no authenticated group read.",
+      "sourceUrl": "https://www.facebook.com/groups/build-in-public-vn",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "vi",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.facebook.com/groups/build-in-public-vn",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:15574a43a2d61bd3de132ff625646ee29721c8d7cb02803a72701a76f2f58895"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "ui",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp",
+            "build in public"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "6f773a9c25e8d7ef319ad77a55e6aeee027c9a7b4d4a4e1ef7efb9d7f9138751"
+      }
+    },
+    {
+      "id": "facebook_group:public-09",
+      "platform": "facebook_group",
+      "url": "https://www.facebook.com/groups/figma-plugins-agents",
+      "host": "facebook.com",
+      "name": "Figma Plugins and Agents",
+      "description": "Public discovery candidate for Figma Plugins and Agents; no authenticated group read.",
+      "sourceUrl": "https://www.facebook.com/groups/figma-plugins-agents",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.facebook.com/groups/figma-plugins-agents",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:f5549363cd693edb17a1129b70a5775d7deef45ab42cf50d628111f94f9f600a"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "e27dbf9d53ade92fe71b840b4802190f423d767cfecba7d0fbca7cb59a51f765"
+      }
+    },
+    {
+      "id": "facebook_group:public-10",
+      "platform": "facebook_group",
+      "url": "https://www.facebook.com/groups/ux-product-design",
+      "host": "facebook.com",
+      "name": "UX Research and Product Design",
+      "description": "Public discovery candidate for UX Research and Product Design; no authenticated group read.",
+      "sourceUrl": "https://www.facebook.com/groups/ux-product-design",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.facebook.com/groups/ux-product-design",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:c4f384c5a9740956c9956f935568fdddfbfee6cfd900f431309ad5cb1ca1dff4"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "ux",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "2963cb90ee214717c8c9b6f5f0cab21fd9a619b94f03463dfbbf1836fe1ee64e"
+      }
+    },
+    {
+      "id": "facebook_group:public-11",
+      "platform": "facebook_group",
+      "url": "https://www.facebook.com/groups/design-engineering-vn",
+      "host": "facebook.com",
+      "name": "Design Engineering Vietnam",
+      "description": "Public discovery candidate for Design Engineering Vietnam; no authenticated group read.",
+      "sourceUrl": "https://www.facebook.com/groups/design-engineering-vn",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "vi",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.facebook.com/groups/design-engineering-vn",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:08cfe7438d51f8acccf8a4fefba662b51ed42267425c24d54dec0f2239bbac0f"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "9f2b1a974fac8694ef0873918c0cae5cdfdb81aebacddf888f4ce9cd99e2d300"
+      }
+    },
+    {
+      "id": "facebook_group:public-12",
+      "platform": "facebook_group",
+      "url": "https://www.facebook.com/groups/open-source-design-tools",
+      "host": "facebook.com",
+      "name": "Open Source Design Tools",
+      "description": "Public discovery candidate for Open Source Design Tools; no authenticated group read.",
+      "sourceUrl": "https://www.facebook.com/groups/open-source-design-tools",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.facebook.com/groups/open-source-design-tools",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:990ad91b4a8dfe59a0f9c9de30cb5f05fc9f86d3e16d9907f0cac017ec76e116"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "7934d0e09f0555c198e7948e14ac2b981dfed1ea8a5cb57d5a2f535840edfec9"
+      }
+    },
+    {
+      "id": "facebook_group:public-13",
+      "platform": "facebook_group",
+      "url": "https://www.facebook.com/groups/ai-agents-designers",
+      "host": "facebook.com",
+      "name": "AI Agents for Designers",
+      "description": "Public discovery candidate for AI Agents for Designers; no authenticated group read.",
+      "sourceUrl": "https://www.facebook.com/groups/ai-agents-designers",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.facebook.com/groups/ai-agents-designers",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:96908902251d294c9bd30df0953ee33f39918e1a758e2362e965c6ef31eed272"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "0c727c4d09ec0f4a2837751262fde037f28c77c838e7bad4c29c5d3395ba2084"
+      }
+    },
+    {
+      "id": "facebook_group:public-14",
+      "platform": "facebook_group",
+      "url": "https://www.facebook.com/groups/mcp-builders-vn",
+      "host": "facebook.com",
+      "name": "MCP Builders Vietnam",
+      "description": "Public discovery candidate for MCP Builders Vietnam; no authenticated group read.",
+      "sourceUrl": "https://www.facebook.com/groups/mcp-builders-vn",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "vi",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.facebook.com/groups/mcp-builders-vn",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:b89de26846b5a35a28267e0b03497d1296c564ffce00fb9f6016c9ef74da04b2"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "ui",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "ab3443a3f54394dd18a1f10dd5fa334d1db2774812e67d99eae019532ef6c0ef"
+      }
+    },
+    {
+      "id": "facebook_group:public-15",
+      "platform": "facebook_group",
+      "url": "https://www.facebook.com/groups/product-makers-saigon",
+      "host": "facebook.com",
+      "name": "Product Makers Saigon",
+      "description": "Public discovery candidate for Product Makers Saigon; no authenticated group read.",
+      "sourceUrl": "https://www.facebook.com/groups/product-makers-saigon",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "vi",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.facebook.com/groups/product-makers-saigon",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:e396e76f7257537e7f76a4aed11e5f4ea56d72256f7409dd545a724247fb9b93"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "0667ceab2f9b457bff15d891d6deec279e3cb2502caaafa1cff5efd537113a7d"
+      }
+    },
+    {
+      "id": "linkedin_group:public-16",
+      "platform": "linkedin_group",
+      "url": "https://www.linkedin.com/groups/product-design-systems/",
+      "host": "linkedin.com",
+      "name": "Product Design Systems",
+      "description": "Public discovery candidate for Product Design Systems; no authenticated group read.",
+      "sourceUrl": "https://www.linkedin.com/groups/product-design-systems/",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.linkedin.com/groups/product-design-systems/",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:f7c9ff00a2b1971f2f642df79ffc89c624889647a6de209c86175cdef61c663c"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "bbbbd84604a02b41f7c91629fd6cb9ae005ab8be3a98db1b30452760bc69b524"
+      }
+    },
+    {
+      "id": "linkedin_group:public-17",
+      "platform": "linkedin_group",
+      "url": "https://www.linkedin.com/groups/figma-community/",
+      "host": "linkedin.com",
+      "name": "Figma Community",
+      "description": "Public discovery candidate for Figma Community; no authenticated group read.",
+      "sourceUrl": "https://www.linkedin.com/groups/figma-community/",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.linkedin.com/groups/figma-community/",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:629c7d418731b6b4b87f2649947617ca6b898bc49676e6ebd1906b1275a545fb"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "1e8c98a5d7b70225528daf78720e48df2c1a24361dd1b29cff11146ec0e768f6"
+      }
+    },
+    {
+      "id": "linkedin_group:public-18",
+      "platform": "linkedin_group",
+      "url": "https://www.linkedin.com/groups/ux-interface-design/",
+      "host": "linkedin.com",
+      "name": "UX and Interface Design",
+      "description": "Public discovery candidate for UX and Interface Design; no authenticated group read.",
+      "sourceUrl": "https://www.linkedin.com/groups/ux-interface-design/",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.linkedin.com/groups/ux-interface-design/",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:046be9fbe5daa382207e6223a909e0b35da3992c7586c6a1eef68db2435082d9"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "ux",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "90c27424ac6893baadb3bc630841d7446e5043737265a658cb7f6c89212eda75"
+      }
+    },
+    {
+      "id": "linkedin_group:public-19",
+      "platform": "linkedin_group",
+      "url": "https://www.linkedin.com/groups/ai-product-design/",
+      "host": "linkedin.com",
+      "name": "AI Product Design",
+      "description": "Public discovery candidate for AI Product Design; no authenticated group read.",
+      "sourceUrl": "https://www.linkedin.com/groups/ai-product-design/",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.linkedin.com/groups/ai-product-design/",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:974e7cced222c0c1b35fe615f7cd2ba08e1d8931801ded394cf39824e5abf3db"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "46f5c4bad7d9299d0bc8eb0463183d2f84d62ab7b0b055cd49f90a9e00fb5107"
+      }
+    },
+    {
+      "id": "linkedin_group:public-20",
+      "platform": "linkedin_group",
+      "url": "https://www.linkedin.com/groups/design-engineering/",
+      "host": "linkedin.com",
+      "name": "Design Engineering",
+      "description": "Public discovery candidate for Design Engineering; no authenticated group read.",
+      "sourceUrl": "https://www.linkedin.com/groups/design-engineering/",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.linkedin.com/groups/design-engineering/",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:e65b150d7f92fe571cb35a999bc2d164015270c262c7d423a29cfdc3ae099d2e"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "e25152c9f0b2273abc45f5664ffcdeef2c0c119df0a231ecc3367543f79de6c2"
+      }
+    },
+    {
+      "id": "linkedin_group:public-21",
+      "platform": "linkedin_group",
+      "url": "https://www.linkedin.com/groups/open-source-product-builders/",
+      "host": "linkedin.com",
+      "name": "Open Source Product Builders",
+      "description": "Public discovery candidate for Open Source Product Builders; no authenticated group read.",
+      "sourceUrl": "https://www.linkedin.com/groups/open-source-product-builders/",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.linkedin.com/groups/open-source-product-builders/",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:f5e16dd8ee4baffc755cdfc2e85e9dc2a027f8b757fd25bd950f13442ce19b08"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "ui",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "4cfa78b685dda36bda82c77099865bf2696102581ae52ccf4303829d37062189"
+      }
+    },
+    {
+      "id": "linkedin_group:public-22",
+      "platform": "linkedin_group",
+      "url": "https://www.linkedin.com/groups/claude-code-community/",
+      "host": "linkedin.com",
+      "name": "Claude Code Community",
+      "description": "Public discovery candidate for Claude Code Community; no authenticated group read.",
+      "sourceUrl": "https://www.linkedin.com/groups/claude-code-community/",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.linkedin.com/groups/claude-code-community/",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:adfb028877f26ae9bcc9e8a9592a4365d5bc9e93ec800d2b4317e964f9b10b1e"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "9db02ef1bbdd05c6421a18debc2b3f442c3ce54e57df03e47571b7acd0414fa1"
+      }
+    },
+    {
+      "id": "linkedin_group:public-23",
+      "platform": "linkedin_group",
+      "url": "https://www.linkedin.com/groups/mcp-agent-builders/",
+      "host": "linkedin.com",
+      "name": "MCP and Agent Builders",
+      "description": "Public discovery candidate for MCP and Agent Builders; no authenticated group read.",
+      "sourceUrl": "https://www.linkedin.com/groups/mcp-agent-builders/",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.linkedin.com/groups/mcp-agent-builders/",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:579cc8e0d02883e0346314aa7033f4aa3025373a964d93e70db6c29bcd30b181"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "ui",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "91cfa177d6cd8b236cec7d286fe08a543b28c34cebc5826788b4455f3d2cb021"
+      }
+    },
+    {
+      "id": "linkedin_group:public-24",
+      "platform": "linkedin_group",
+      "url": "https://www.linkedin.com/groups/design-systems-leadership/",
+      "host": "linkedin.com",
+      "name": "Design Systems Leadership",
+      "description": "Public discovery candidate for Design Systems Leadership; no authenticated group read.",
+      "sourceUrl": "https://www.linkedin.com/groups/design-systems-leadership/",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.linkedin.com/groups/design-systems-leadership/",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:88b119da4756a1777de9d9fbe87fb3efc618c13f509c62009dc9234d24fc2f38"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "0e6bb81ad5c1e20eb20c92bdef69f33adb3cbaa3d4d678dbee932ddd23f0e3a2"
+      }
+    },
+    {
+      "id": "linkedin_group:public-25",
+      "platform": "linkedin_group",
+      "url": "https://www.linkedin.com/groups/vietnam-product-designers/",
+      "host": "linkedin.com",
+      "name": "Vietnam Product Designers",
+      "description": "Public discovery candidate for Vietnam Product Designers; no authenticated group read.",
+      "sourceUrl": "https://www.linkedin.com/groups/vietnam-product-designers/",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "vi",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.linkedin.com/groups/vietnam-product-designers/",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:e5c85d4747270e4ef12e8cede9561cc4f37f5e0179232535fbd75662dedfd40d"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "bc8406ce0fc82dcd3bc09a19b3249b9b0cd7c6d1c04a147a5d8e1c24bdce5011"
+      }
+    },
+    {
+      "id": "linkedin_group:public-26",
+      "platform": "linkedin_group",
+      "url": "https://www.linkedin.com/groups/ai-agents-product-teams/",
+      "host": "linkedin.com",
+      "name": "AI Agents in Product Teams",
+      "description": "Public discovery candidate for AI Agents in Product Teams; no authenticated group read.",
+      "sourceUrl": "https://www.linkedin.com/groups/ai-agents-product-teams/",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.linkedin.com/groups/ai-agents-product-teams/",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:7e7576eba9157e96cafa0a42f1ae8f788fe09de63b70d735bd9be353acb72817"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "96a47a4e640865eb51ddd3ca2d34994f83e398de3f4888ae21c256c1e449cc7d"
+      }
+    },
+    {
+      "id": "linkedin_group:public-27",
+      "platform": "linkedin_group",
+      "url": "https://www.linkedin.com/groups/ux-research-vietnam/",
+      "host": "linkedin.com",
+      "name": "UX Research Vietnam",
+      "description": "Public discovery candidate for UX Research Vietnam; no authenticated group read.",
+      "sourceUrl": "https://www.linkedin.com/groups/ux-research-vietnam/",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "vi",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.linkedin.com/groups/ux-research-vietnam/",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:7bce8f12ca430f469e6fa9469b7d91c295d45d48dc6425b96fb889c00f60d903"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "ux",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "5a0c566408894a25a8fd70871f97f46ed06fc4651f9c2d753942ae8d531548c2"
+      }
+    },
+    {
+      "id": "linkedin_group:public-28",
+      "platform": "linkedin_group",
+      "url": "https://www.linkedin.com/groups/build-in-public-asia/",
+      "host": "linkedin.com",
+      "name": "Build in Public Asia",
+      "description": "Public discovery candidate for Build in Public Asia; no authenticated group read.",
+      "sourceUrl": "https://www.linkedin.com/groups/build-in-public-asia/",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.linkedin.com/groups/build-in-public-asia/",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:8601a3b4727d10c8a48f169ec12d8a38ab286e6ac1594bf739cdd7b52c9975a2"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "ui",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp",
+            "build in public"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "c21c6fe9031125714b862236718ad33d7e6a0f583088c7cc330bec6dd4d6e243"
+      }
+    },
+    {
+      "id": "linkedin_group:public-29",
+      "platform": "linkedin_group",
+      "url": "https://www.linkedin.com/groups/react-design-systems/",
+      "host": "linkedin.com",
+      "name": "React and Design Systems",
+      "description": "Public discovery candidate for React and Design Systems; no authenticated group read.",
+      "sourceUrl": "https://www.linkedin.com/groups/react-design-systems/",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "en",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.linkedin.com/groups/react-design-systems/",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:7845fc7340ab2a20b53f194d12df5fe4c57291dbc6fe54c00653bc6c27ec1312"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "22770ac9bb21180fe0555fb2fba792010586ef900104f42b9eb59f7ba87178e6"
+      }
+    },
+    {
+      "id": "linkedin_group:public-30",
+      "platform": "linkedin_group",
+      "url": "https://www.linkedin.com/groups/creative-tech-vietnam/",
+      "host": "linkedin.com",
+      "name": "Creative Technology Vietnam",
+      "description": "Public discovery candidate for Creative Technology Vietnam; no authenticated group read.",
+      "sourceUrl": "https://www.linkedin.com/groups/creative-tech-vietnam/",
+      "sourceType": "public_discovery_fixture",
+      "capturedAt": "2026-11-01T18:20:00.000Z",
+      "observedHttpStatus": "UNKNOWN",
+      "authenticatedGroupRead": false,
+      "loginShell": true,
+      "members": null,
+      "recentPosts": 0,
+      "language": "vi",
+      "keywords": [
+        "Figma",
+        "product design",
+        "design system",
+        "AI agents",
+        "Claude Code",
+        "Codex",
+        "MCP"
+      ],
+      "relevanceTerms": [],
+      "rules": {
+        "classification": "unclear",
+        "sourceUrl": "https://www.linkedin.com/groups/creative-tech-vietnam/",
+        "capturedAt": "2026-11-01T18:20:00.000Z",
+        "evidence": "UNKNOWN: public candidate only; rules not fetched."
+      },
+      "evidenceRefs": [
+        "sha256:a768df8c446aaffb0a4e7667e2ff761f796db16ff418b70ee3773c2f7be0d81a"
+      ],
+      "score": 73,
+      "threshold": 60,
+      "eligible": false,
+      "scoreInputs": {
+        "relevance": {
+          "value": 100,
+          "hits": [
+            "figma",
+            "product design",
+            "design system",
+            "ai agent",
+            "claude code",
+            "codex",
+            "mcp"
+          ]
+        },
+        "size": null,
+        "activity": 20,
+        "language": 100,
+        "promoPolicy": null
+      },
+      "scoreStatus": "OBSERVED_PUBLIC_DATA",
+      "publicEvidence": {
+        "classification": "CANDIDATE_ONLY",
+        "authenticated": false,
+        "loginShell": "UNKNOWN",
+        "evidenceHash": "ce604e76662a02fc8559d2f41b4a7d07c6dbd24a60984efc3088058a8f78d48f"
+      }
+    }
+  ],
+  "joinProjection": {
+    "accountId": "linkedin_primary",
+    "capturedAt": "2026-11-01T18:20:00.000Z",
+    "caps": {
+      "daily": 3,
+      "weekly": 15,
+      "joinRequestedTodayBefore": 0,
+      "joinRequestedWeekBefore": 0,
+      "joinRequestedToday": 0,
+      "joinRequestedWeek": 0
+    },
+    "intents": [
+      {
+        "communityId": "facebook_group:public-01",
+        "accountId": "linkedin_primary",
+        "platform": "facebook_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:d9769fee9d91bc78fcf6beff5f4c3d69ac44a9b7e0319e65a4b1ade872e5c16e"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "facebook_group:public-02",
+        "accountId": "linkedin_primary",
+        "platform": "facebook_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:4cc45e3a2f93718cc966b05b561013dddb26c30413bcdacbf532d09c4904a3ad"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "facebook_group:public-03",
+        "accountId": "linkedin_primary",
+        "platform": "facebook_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:889b2e486115859cab31e26467a69d4d19f6e4fd202db599db09005d204e101c"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "facebook_group:public-04",
+        "accountId": "linkedin_primary",
+        "platform": "facebook_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:40e737e6faff0bf03cc5f47e667667c9f67edd86bc38386e88b24c1c3ffd1a57"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "facebook_group:public-05",
+        "accountId": "linkedin_primary",
+        "platform": "facebook_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:87efdafa8905225a2304795dcbda6cc234fd1f8f3f70366d8e41c082a595b56c"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "facebook_group:public-06",
+        "accountId": "linkedin_primary",
+        "platform": "facebook_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:4a833a4862230e4e6a5da093cf01427bdde09c0e6a777726c82e2a89bbc9022c"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "facebook_group:public-07",
+        "accountId": "linkedin_primary",
+        "platform": "facebook_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:31ecd1086420260b8d8b783d17bb364d8cd7bcb05265befe0395910ba85a35ee"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "facebook_group:public-08",
+        "accountId": "linkedin_primary",
+        "platform": "facebook_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:15574a43a2d61bd3de132ff625646ee29721c8d7cb02803a72701a76f2f58895"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "facebook_group:public-09",
+        "accountId": "linkedin_primary",
+        "platform": "facebook_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:f5549363cd693edb17a1129b70a5775d7deef45ab42cf50d628111f94f9f600a"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "facebook_group:public-10",
+        "accountId": "linkedin_primary",
+        "platform": "facebook_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:c4f384c5a9740956c9956f935568fdddfbfee6cfd900f431309ad5cb1ca1dff4"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "facebook_group:public-11",
+        "accountId": "linkedin_primary",
+        "platform": "facebook_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:08cfe7438d51f8acccf8a4fefba662b51ed42267425c24d54dec0f2239bbac0f"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "facebook_group:public-12",
+        "accountId": "linkedin_primary",
+        "platform": "facebook_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:990ad91b4a8dfe59a0f9c9de30cb5f05fc9f86d3e16d9907f0cac017ec76e116"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "facebook_group:public-13",
+        "accountId": "linkedin_primary",
+        "platform": "facebook_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:96908902251d294c9bd30df0953ee33f39918e1a758e2362e965c6ef31eed272"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "facebook_group:public-14",
+        "accountId": "linkedin_primary",
+        "platform": "facebook_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:b89de26846b5a35a28267e0b03497d1296c564ffce00fb9f6016c9ef74da04b2"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "facebook_group:public-15",
+        "accountId": "linkedin_primary",
+        "platform": "facebook_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:e396e76f7257537e7f76a4aed11e5f4ea56d72256f7409dd545a724247fb9b93"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "linkedin_group:public-16",
+        "accountId": "linkedin_primary",
+        "platform": "linkedin_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:f7c9ff00a2b1971f2f642df79ffc89c624889647a6de209c86175cdef61c663c"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "linkedin_group:public-17",
+        "accountId": "linkedin_primary",
+        "platform": "linkedin_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:629c7d418731b6b4b87f2649947617ca6b898bc49676e6ebd1906b1275a545fb"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "linkedin_group:public-18",
+        "accountId": "linkedin_primary",
+        "platform": "linkedin_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:046be9fbe5daa382207e6223a909e0b35da3992c7586c6a1eef68db2435082d9"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "linkedin_group:public-19",
+        "accountId": "linkedin_primary",
+        "platform": "linkedin_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:974e7cced222c0c1b35fe615f7cd2ba08e1d8931801ded394cf39824e5abf3db"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "linkedin_group:public-20",
+        "accountId": "linkedin_primary",
+        "platform": "linkedin_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:e65b150d7f92fe571cb35a999bc2d164015270c262c7d423a29cfdc3ae099d2e"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "linkedin_group:public-21",
+        "accountId": "linkedin_primary",
+        "platform": "linkedin_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:f5e16dd8ee4baffc755cdfc2e85e9dc2a027f8b757fd25bd950f13442ce19b08"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "linkedin_group:public-22",
+        "accountId": "linkedin_primary",
+        "platform": "linkedin_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:adfb028877f26ae9bcc9e8a9592a4365d5bc9e93ec800d2b4317e964f9b10b1e"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "linkedin_group:public-23",
+        "accountId": "linkedin_primary",
+        "platform": "linkedin_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:579cc8e0d02883e0346314aa7033f4aa3025373a964d93e70db6c29bcd30b181"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "linkedin_group:public-24",
+        "accountId": "linkedin_primary",
+        "platform": "linkedin_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:88b119da4756a1777de9d9fbe87fb3efc618c13f509c62009dc9234d24fc2f38"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "linkedin_group:public-25",
+        "accountId": "linkedin_primary",
+        "platform": "linkedin_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:e5c85d4747270e4ef12e8cede9561cc4f37f5e0179232535fbd75662dedfd40d"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "linkedin_group:public-26",
+        "accountId": "linkedin_primary",
+        "platform": "linkedin_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:7e7576eba9157e96cafa0a42f1ae8f788fe09de63b70d735bd9be353acb72817"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "linkedin_group:public-27",
+        "accountId": "linkedin_primary",
+        "platform": "linkedin_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:7bce8f12ca430f469e6fa9469b7d91c295d45d48dc6425b96fb889c00f60d903"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "linkedin_group:public-28",
+        "accountId": "linkedin_primary",
+        "platform": "linkedin_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:8601a3b4727d10c8a48f169ec12d8a38ab286e6ac1594bf739cdd7b52c9975a2"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "linkedin_group:public-29",
+        "accountId": "linkedin_primary",
+        "platform": "linkedin_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:7845fc7340ab2a20b53f194d12df5fe4c57291dbc6fe54c00653bc6c27ec1312"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      },
+      {
+        "communityId": "linkedin_group:public-30",
+        "accountId": "linkedin_primary",
+        "platform": "linkedin_group",
+        "requestedAt": null,
+        "status": "NOT_REQUESTED",
+        "reason": "RULE_UNCLEAR",
+        "externalSideEffect": false,
+        "truthfulAnswerStatus": "NOT_EVALUATED",
+        "evidenceRefs": [
+          "sha256:a768df8c446aaffb0a4e7667e2ff761f796db16ff418b70ee3773c2f7be0d81a"
+        ],
+        "receipt": {
+          "kind": "join_request_intent",
+          "observed": false,
+          "authenticated": false,
+          "status": "NOT_REQUESTED",
+          "reason": "RULE_UNCLEAR"
+        }
+      }
+    ]
+  },
+  "memberships": [],
+  "dashboard": {
+    "observedAt": "2026-11-01T18:20:00.000Z",
+    "discovered": 30,
+    "join_requested_today": 0,
+    "approved": 0,
+    "postable": 0,
+    "auth_unknown": 0,
+    "rule_blocked": 30,
+    "caps": {
+      "daily": 3,
+      "weekly": 15,
+      "joinRequestedTodayBefore": 0,
+      "joinRequestedWeekBefore": 0,
+      "joinRequestedToday": 0,
+      "joinRequestedWeek": 0
+    },
+    "rows": [
+      {
+        "id": "facebook_group:public-01",
+        "platform": "facebook_group",
+        "name": "UI UX Vietnam",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "facebook_group:public-02",
+        "platform": "facebook_group",
+        "name": "Figma Vietnam Community",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "facebook_group:public-03",
+        "platform": "facebook_group",
+        "name": "Product Design Vietnam",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "facebook_group:public-04",
+        "platform": "facebook_group",
+        "name": "Design Systems Vietnam",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "facebook_group:public-05",
+        "platform": "facebook_group",
+        "name": "AI Design Builders",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "facebook_group:public-06",
+        "platform": "facebook_group",
+        "name": "Claude Code Builders",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "facebook_group:public-07",
+        "platform": "facebook_group",
+        "name": "Codex and MCP Makers",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "facebook_group:public-08",
+        "platform": "facebook_group",
+        "name": "Build in Public Vietnam",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "facebook_group:public-09",
+        "platform": "facebook_group",
+        "name": "Figma Plugins and Agents",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "facebook_group:public-10",
+        "platform": "facebook_group",
+        "name": "UX Research and Product Design",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "facebook_group:public-11",
+        "platform": "facebook_group",
+        "name": "Design Engineering Vietnam",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "facebook_group:public-12",
+        "platform": "facebook_group",
+        "name": "Open Source Design Tools",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "facebook_group:public-13",
+        "platform": "facebook_group",
+        "name": "AI Agents for Designers",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "facebook_group:public-14",
+        "platform": "facebook_group",
+        "name": "MCP Builders Vietnam",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "facebook_group:public-15",
+        "platform": "facebook_group",
+        "name": "Product Makers Saigon",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "linkedin_group:public-16",
+        "platform": "linkedin_group",
+        "name": "Product Design Systems",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "linkedin_group:public-17",
+        "platform": "linkedin_group",
+        "name": "Figma Community",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "linkedin_group:public-18",
+        "platform": "linkedin_group",
+        "name": "UX and Interface Design",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "linkedin_group:public-19",
+        "platform": "linkedin_group",
+        "name": "AI Product Design",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "linkedin_group:public-20",
+        "platform": "linkedin_group",
+        "name": "Design Engineering",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "linkedin_group:public-21",
+        "platform": "linkedin_group",
+        "name": "Open Source Product Builders",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "linkedin_group:public-22",
+        "platform": "linkedin_group",
+        "name": "Claude Code Community",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "linkedin_group:public-23",
+        "platform": "linkedin_group",
+        "name": "MCP and Agent Builders",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "linkedin_group:public-24",
+        "platform": "linkedin_group",
+        "name": "Design Systems Leadership",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "linkedin_group:public-25",
+        "platform": "linkedin_group",
+        "name": "Vietnam Product Designers",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "linkedin_group:public-26",
+        "platform": "linkedin_group",
+        "name": "AI Agents in Product Teams",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "linkedin_group:public-27",
+        "platform": "linkedin_group",
+        "name": "UX Research Vietnam",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "linkedin_group:public-28",
+        "platform": "linkedin_group",
+        "name": "Build in Public Asia",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "linkedin_group:public-29",
+        "platform": "linkedin_group",
+        "name": "React and Design Systems",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      },
+      {
+        "id": "linkedin_group:public-30",
+        "platform": "linkedin_group",
+        "name": "Creative Technology Vietnam",
+        "score": 73,
+        "rule": "unclear",
+        "status": "UNKNOWN",
+        "postable": false
+      }
+    ]
+  },
+  "notes": [
+    "30 deterministic public candidate rows: 15 Facebook Groups + 15 LinkedIn Groups.",
+    "No live crawl, login, credentials, cookies, membership data, join request, or external side effect.",
+    "All rules, member counts, activity, membership, approval, and postability remain UNKNOWN; fixture rows cannot enter a publication queue.",
+    "Product context only: https://github.com/jangtrinh/design-os-studio"
+  ],
+  "receiptHash": "b82e14d4872ae37a825c951bcd6b149a559e069be23d78218f4a23a00bcf72e5"
+}
