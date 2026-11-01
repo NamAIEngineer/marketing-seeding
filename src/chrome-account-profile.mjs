@@ -35,7 +35,11 @@ const SAFE_REFERENCE = /^[A-Za-z0-9._:@/-]{1,240}$/;
 const LOGIN_OR_CHALLENGE = /(?:^|\/)login(?:\/|$)|checkpoint|challenge|captcha|consent|authorize|security[-_ ]check/i;
 const CHALLENGE_TEXT = /(?:captcha|recaptcha|two[- ]factor|2fa|verification code|security code|confirm it(?:'|’)s you|unusual activity|checkpoint|security check|verify your identity|xác minh|mã xác minh)/i;
 const LOGIN_FAILURE_TEXT = /(?:incorrect password|wrong password|invalid password|couldn['’]t log in|could not log in|unexpected error|try again|sai mật khẩu|không thể đăng nhập)/i;
+const AUTH_SURFACE_TEXT = /(?:sign\s*in|log\s*in|create\s+account|choose\s+an?\s+account|checkpoint|captcha|security\s+check|consent(?:\s+required)?)/i;
 const MAX_TEXT = 400;
+
+export const EVIDENCE_SOURCES = Object.freeze(["camoufox-public", "chrome-account:<id>", "github-api"]);
+const CHROME_SOURCE_PATTERN = /^chrome-account:[A-Za-z0-9._:@+-]{1,160}$/;
 
 function text(value, limit = MAX_TEXT) {
   return String(value ?? "").replace(/[\u0000\r\n\t]+/g, " ").replace(/\s+/g, " ").trim().slice(0, limit);
@@ -82,6 +86,22 @@ export function chromeAccountProfilePath(platform, accountId, { homeDir, profile
 
 export function chromeAccountSource(accountId) {
   return `chrome-account:${normalizedAccountId(accountId)}`;
+}
+
+export function normalizeEvidenceSource(value, { provider = null, accountId = null } = {}) {
+  const requested = text(value, 240);
+  const normalizedProvider = text(provider, 80).toLowerCase();
+  const fallback = normalizedProvider === "chrome" && accountId
+    ? chromeAccountSource(accountId)
+    : normalizedProvider === "camoufox"
+      ? "camoufox-public"
+      : normalizedProvider === "github-api"
+        ? "github-api"
+        : null;
+  const source = requested || fallback;
+  if (!source) return null;
+  if (source === "camoufox-public" || source === "github-api" || CHROME_SOURCE_PATTERN.test(source)) return source;
+  throw Object.assign(new Error("Evidence source must be camoufox-public, chrome-account:<id>, or github-api"), { code: "EVIDENCE_SOURCE_INVALID" });
 }
 
 export function chromeEvidenceHash(value) {
@@ -155,10 +175,11 @@ export function verifyChromeIdentity({ platform, url, title = "", bodyText = "",
       identityReference = `https://www.facebook.com/${stableId}`;
     }
   }
-  // Login/challenge text is only considered when the redirect itself is not a
-  // canonical profile. Profile posts can legitimately mention these words.
-  void title;
-  void bodyText;
+  // A canonical-looking URL can still render a login wall or challenge. Keep
+  // the first bounded text only; never promote that surface to READY.
+  if (AUTH_SURFACE_TEXT.test(text(title, 240)) || AUTH_SURFACE_TEXT.test(text(bodyText, 400))) {
+    return challengeResult(normalized, observedUrl, "CHROME_LOGIN_CHALLENGE", "Login, checkpoint, consent, or security challenge remains visible");
+  }
   const evidence = { platform: normalized, observedUrl: parsed.toString(), identityReference, stableId, candidateCount: 1 };
   return {
     status: "READY",
@@ -173,7 +194,7 @@ export function verifyChromeIdentity({ platform, url, title = "", bodyText = "",
   };
 }
 
-function defaultChromeExecutablePath() {
+export function defaultChromeExecutablePath() {
   if (process.platform === "darwin") return "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
   if (process.platform === "win32") return "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
   return "/usr/bin/google-chrome";
@@ -257,7 +278,12 @@ export class ChromeAccountProfileManager {
     if (!session) return { status: "UNKNOWN", code: "CHROME_LOGIN_SESSION_NOT_FOUND" };
     if (Date.now() > Date.parse(session.expiresAt)) { await this.close(sessionId); return { status: "BLOCKED", code: "CHROME_LOGIN_SESSION_EXPIRED", reason: "Chrome login window expired" }; }
     const current = pageUrl(session.page);
-    if (navigateToIdentityProbe && (!current || LOGIN_OR_CHALLENGE.test(current) || current === session.loginUrl)) {
+    // Only leave the initial login URL automatically. Account chooser, SSO,
+    // CAPTCHA, checkpoint, and consent URLs are operator-owned surfaces;
+    // navigating away would destroy the recovery flow and cause false
+    // CONTROLS_NOT_FOUND results.
+    const initialLoginSurface = !current || current === session.loginUrl || current.replace(/\/$/, "") === session.loginUrl.replace(/\/$/, "");
+    if (navigateToIdentityProbe && initialLoginSurface) {
       try { if (typeof session.page.goto === "function") await session.page.goto(CHROME_IDENTITY_PROBE_URLS[session.platform], { waitUntil: "domcontentloaded" }); }
       catch (error) { return { ...this.status(sessionId), status: "UNKNOWN", code: String(error?.code || "CHROME_IDENTITY_PROBE_FAILED").slice(0, 100) }; }
     }
