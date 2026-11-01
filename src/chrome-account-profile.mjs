@@ -1,7 +1,10 @@
 import os from "node:os";
 import path from "node:path";
 import { createHash } from "node:crypto";
-import { mkdir } from "node:fs/promises";
+import { mkdir, readlink } from "node:fs/promises";
+import { execFile, spawn } from "node:child_process";
+import { promisify } from "node:util";
+const execFileAsync = promisify(execFile);
 import { readAccountCredentials } from "./account-credentials.mjs";
 
 /**
@@ -218,6 +221,36 @@ function pageUrl(page) {
   try { return typeof page.url === "function" ? page.url() : String(page.url || ""); } catch { return ""; }
 }
 
+async function defaultChromeProcessInspector(profilePath) {
+  const lock = path.join(profilePath, "SingletonLock");
+  let target;
+  try { target = await readlink(lock); } catch { return { live: false, code: "CHROME_PROFILE_NOT_RUNNING" }; }
+  const match = String(target).match(/-(\d+)$/);
+  if (!match) return { live: false, code: "CHROME_PROFILE_PID_UNRESOLVED" };
+  const pid = Number(match[1]);
+  try {
+    const { stdout } = await execFileAsync("ps", ["-p", String(pid), "-o", "command="]); 
+    const command = String(stdout || "").trim();
+    const exact = command.includes(`--user-data-dir=${profilePath}`) && /Google Chrome(?:\.app)?\/Contents\/MacOS\/Google Chrome|google-chrome/i.test(command);
+    return { live: exact, pid, command, code: exact ? "CHROME_PROFILE_RUNNING" : "CHROME_PROFILE_PID_MISMATCH" };
+  } catch { return { live: false, pid, code: "CHROME_PROFILE_PROCESS_GONE" }; }
+}
+
+async function defaultChromeProbeLauncher({ executablePath, profilePath, url }) {
+  const child = spawn(executablePath, [`--user-data-dir=${profilePath}`, "--new-window", url], { detached: true, stdio: "ignore" });
+  child.unref();
+}
+
+async function defaultChromeHistoryReader(profilePath) {
+  const history = path.join(profilePath, "Default", "History");
+  try {
+    const { stdout } = await execFileAsync("sqlite3", ["-readonly", history, "-separator", "\\t", "SELECT url,title,last_visit_time FROM urls ORDER BY last_visit_time DESC LIMIT 40;"], { timeout: 5_000, maxBuffer: 256 * 1024 });
+    return String(stdout || "").trim().split("\\n").filter(Boolean).map((line) => { const [url, title, stamp] = line.split("\\t"); return { url, title, lastVisitTime: Number(stamp) || 0 }; });
+  } catch { return []; }
+}
+
+function chromeTimeMicros(value) { return Math.floor(Number(value) || 0); }
+
 /** Visible persistent profile manager. No credentials or storage-state APIs. */
 export class ChromeAccountProfileManager {
   #playwright;
@@ -227,12 +260,20 @@ export class ChromeAccountProfileManager {
   #ttlMs;
   #sessions = new Map();
   #retryAttempts = new Map();
-  constructor({ playwright = null, executablePath = process.env.SEEDING_CHROME_EXECUTABLE_PATH || defaultChromeExecutablePath(), homeDir = os.homedir(), profileRoot = null, ttlMs = 15 * 60_000 } = {}) {
+  #processInspector;
+  #historyReader;
+  #probeLauncher;
+  #sleepFn;
+  constructor({ playwright = null, executablePath = process.env.SEEDING_CHROME_EXECUTABLE_PATH || defaultChromeExecutablePath(), homeDir = os.homedir(), profileRoot = null, ttlMs = 15 * 60_000, processInspector = null, historyReader = null, probeLauncher = null, sleepFn = null } = {}) {
     this.#playwright = playwright;
     this.#executablePath = text(executablePath, 500) || defaultChromeExecutablePath();
     this.#homeDir = homeDir;
     this.#profileRoot = profileRoot;
     this.#ttlMs = Math.max(60_000, Number(ttlMs) || 15 * 60_000);
+    this.#processInspector = processInspector || defaultChromeProcessInspector;
+    this.#historyReader = historyReader || defaultChromeHistoryReader;
+    this.#probeLauncher = probeLauncher || defaultChromeProbeLauncher;
+    this.#sleepFn = sleepFn || ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
   }
   profilePath(platform, accountId) { return chromeAccountProfilePath(platform, accountId, { homeDir: this.#homeDir, profileRoot: this.#profileRoot }); }
   source(accountId) { return chromeAccountSource(accountId); }
@@ -298,7 +339,23 @@ export class ChromeAccountProfileManager {
       ? this.#sessions.get(String(sessionId))
       : [...this.#sessions.values()].find((item) => item.platform === normalized && item.accountId === account);
     if (!attached) {
-      return { status: "UNKNOWN", code: "CHROME_PROFILE_SESSION_NOT_ATTACHED", reason: "App-owned Chrome profile exists but no live manager session is attached; no login or credential action was attempted", platform: normalized, accountId: account, profilePath: this.profilePath(normalized, account), source: chromeAccountSource(account) };
+      const profilePath = this.profilePath(normalized, account);
+      const process = await this.#processInspector(profilePath);
+      if (!process?.live) return { status: "UNKNOWN", code: process?.code || "CHROME_PROFILE_NOT_RUNNING", reason: "App-owned Chrome profile has no verified live process; no login or credential action was attempted", platform: normalized, accountId: account, profilePath, source: chromeAccountSource(account) };
+      const probeStartedAt = Date.now();
+      try { await this.#probeLauncher({ executablePath: this.#executablePath, profilePath, url: CHROME_IDENTITY_PROBE_URLS[normalized] }); } catch (error) { return { status: "UNKNOWN", code: "CHROME_IDENTITY_PROBE_FAILED", reason: String(error?.message || "Could not navigate existing Chrome profile").slice(0, 240), platform: normalized, accountId: account, profilePath, source: chromeAccountSource(account) }; }
+      const minChromeTime = chromeTimeMicros((probeStartedAt + 1_000) * 1000) + 11_644_473_600_000_000;
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        const rows = await this.#historyReader(profilePath);
+        const row = rows.find((item) => chromeTimeMicros(item.lastVisitTime) >= minChromeTime && /linkedin\.com\/in\/|facebook\.com\/(?:profile\.php|[A-Za-z0-9])/i.test(String(item.url || "")));
+        if (row) {
+          const result = verifyChromeIdentity({ platform: normalized, url: row.url, title: row.title || "", bodyText: "", candidateCount: 1 });
+          if (result.status === "READY") return { ...result, platform: normalized, accountId: account, source: chromeAccountSource(account), profilePath, pid: process.pid, evidenceHash: chromeEvidenceHash({ ...result, profilePath, pid: process.pid, probeStartedAt, historyLastVisitTime: row.lastVisitTime }) };
+          return { ...result, platform: normalized, accountId: account, source: chromeAccountSource(account), profilePath, pid: process.pid };
+        }
+        await this.#sleepFn(500);
+      }
+      return { status: "UNKNOWN", code: "CHROME_IDENTITY_HISTORY_NOT_FRESH", reason: "Existing Chrome profile did not produce a fresh canonical identity redirect", platform: normalized, accountId: account, profilePath, pid: process.pid, source: chromeAccountSource(account) };
     }
     if (attached.platform !== normalized || attached.accountId !== account) {
       return { status: "UNKNOWN", code: "CHROME_PROFILE_BINDING_MISMATCH", reason: "Attached Chrome session does not match requested account", platform: normalized, accountId: account };

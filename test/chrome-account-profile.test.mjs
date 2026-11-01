@@ -88,6 +88,23 @@ test("Chrome manager can verify an attached existing session without credential 
   await rm(homeDir, { recursive: true, force: true });
 });
 
+test("Chrome manager verifies a live app-owned profile after manager restart", async () => {
+  const homeDir = await mkdtemp(path.join(os.tmpdir(), "chrome-profile-recover-"));
+  const nowChrome = (Date.now() + 2_000) * 1000 + 11644473600000000;
+  const manager = new ChromeAccountProfileManager({
+    homeDir, executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    processInspector: async () => ({ live: true, pid: 4242, command: "Google Chrome --user-data-dir=owned" }),
+    probeLauncher: async () => {},
+    historyReader: async () => [{ url: "https://www.linkedin.com/in/recovered-owner/", title: "Recovered Owner | LinkedIn", lastVisitTime: nowChrome }],
+    sleepFn: async () => {}
+  });
+  const result = await manager.verifyExistingProfile({ platform: "linkedin", accountId: "linkedin_nam" });
+  assert.equal(result.status, "READY");
+  assert.equal(result.identityReference, "https://www.linkedin.com/in/recovered-owner");
+  assert.equal(result.pid, 4242);
+  await rm(homeDir, { recursive: true, force: true });
+});
+
 test("Chrome identity proof rejects a profile shell that still shows an auth surface", () => {
   const result = verifyChromeIdentity({ platform: "facebook", url: "https://www.facebook.com/nam.dev", title: "Sign in to Facebook" });
   assert.equal(result.status, "BLOCKED");
