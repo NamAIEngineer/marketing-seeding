@@ -96,3 +96,17 @@ lanes: chrome-login=P0 WORKING dispatch=ctx_296c3a1aa393 worktree=ms-growth-chro
 CẦN NAM: Chưa mở cửa sổ đăng nhập. Sau khi smoke profile-only xác minh chữ đọc được, nút Tổng quan > Tài khoản > Đăng nhập thủ công sẽ mở cửa sổ Chrome `linkedin-linkedin_nam`; Nam tự nhập credential/SSO/MFA/CAPTCHA/checkpoint trong cửa sổ đó. Không dùng Chrome cá nhân, không copy cookie/session.
 blockers: CHROME-LOGIN-P0 (worker implementation + profile-only screenshot gate); LIVE-PUBLICATION (0 verified permalink); PILOT-COMMENTS (waits for READY account)
 next_30m: inspect Chrome worker output, integrate source/evidence seams serially, run independent checks, then build packaged app 4321; only after readable smoke verify open LinkedIn profile for Nam and add CHROME_LOGIN_READY line.
+
+updated: 2026-11-01T23:03:23+0700
+phase: P0
+runtime: packaged ai.marketing-seeding.packaged 4321 source=22178785c79decde793f494d198c93879db11cfc dirty=false prior health=200; Chrome integration pending
+accounts: linkedin/linkedin_nam: BLOCKED/WAITING_FOR_USER old Camoufox evidence; Chrome profile not opened | facebook_group/facebook_nam: UNKNOWN old Camoufox evidence; Chrome profile not opened
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0 buffer_tomorrow=10; quality=A; 10 unique SHA-256; ; manifest/disk/draft mapping independently checked at 23:03
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (public/fixture; authenticated Chrome state UNKNOWN)
+canonical_store: one JsonStore/SeedingService; source labels camoufox-public, chrome-account:<id>, github-api; evidenceHash required
+camoufox_manual_login: CLOSED; old LinkedIn browser terminated; stale lock metadata points to dead PID 9846 and will be reconciled by new runtime, no lock deletion performed
+lanes: chrome-login=P0 WORKING dispatch=ctx_296c3a1aa393; content=INTEGRATED c78e88d + Vietnamese gate; video=INTEGRATED 329b478 quality-A; community=READY_WITH_AUTH_UNKNOWN; ui=CHECKPOINTED; publish/comments/pilot=PAUSED until Chrome account READY
+CẦN NAM: Chưa mở cửa sổ đăng nhập. Sau profile-only Chrome smoke đọc được chữ, nút Tổng quan > Tài khoản > Đăng nhập thủ công mở cửa sổ Chrome ; Nam tự nhập credential/SSO/MFA/CAPTCHA/checkpoint. Không dùng Chrome cá nhân, không copy cookie/session.
+blockers: CHROME-LOGIN-P0 (worker implementation + profile-only screenshot); LIVE-PUBLICATION (0 verified permalink); PILOT-COMMENTS (waits for READY account)
+next_30m: nhận Chrome worker minimal seam/report, inspect independently, integrate serially, build clean app via , preserve state/Keychain, smoke /health+account API, then open LinkedIn Chrome window only after readable screenshot proof and add CHROME_LOGIN_READY.
