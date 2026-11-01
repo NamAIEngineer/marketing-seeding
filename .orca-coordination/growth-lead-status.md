@@ -607,3 +607,17 @@ lanes: runtime=SMOKE_PASS; pilot=ARMED_GATES_CLOSED; publish=PAUSED_APPROVAL_GAT
 CẦN NAM: none for account readiness; no credential/CAPTCHA/MFA action required
 blockers: VIDEO_CAPTURE_RECORDER | VIDEO_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | NORTH_STAR_REFRESH_UNKNOWN | AUTHENTICATED_COMMUNITY_UNKNOWN
 next_30m: preserve new runtime/state; wait explicit Claude approvals and repaired video capture; no publication
+
+updated: 2026-11-02T07:20:00+07:00
+phase: P2_READY_MEDIA_CONTENT_GATED
+runtime: packaged 4321 source=e908c90e17f4768131dd5f5257af249db885321c dirty=false health=200 pid=26300 stateRevision=454; North Star evidence commit a2ac8e4 pending rebuild; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam READY; facebook_group/facebook_nam READY
+pilot: armed=10 slots; scheduled=0 published_verified=0; no live submit
+videos: ready=10 qaFail=10 bufferTomorrow=0; v5 capture BLOCKED; no media binding
+content: 8 unique LinkedIn hooks verified; 16 unique bodies/slots; CONTENT_PENDING_CLAUDE
+north_star: repo=https://github.com/jangtrinh/design-os-studio current=82 forks=15 target=1000; deltaToday=UNKNOWN; attribution=UNKNOWN
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: runtime=REBUILD_PENDING_NORTH_STAR; pilot=ARMED_GATES_CLOSED; publish=PAUSED_APPROVAL_GATES; video=V5_BLOCKED; content=INDEPENDENT_PASS_WITH_CONCERNS; community=PUBLIC_30_READY_AUTH_UNKNOWN
+CẦN NAM: none for account readiness; no credential/CAPTCHA/MFA action required
+blockers: RUNTIME_REBUILD_NORTH_STAR | VIDEO_CAPTURE_RECORDER | VIDEO_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: rebuild latest North Star evidence; verify Overview 82 stars; preserve state/READY profiles; no publication
