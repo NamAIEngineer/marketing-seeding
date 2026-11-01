@@ -93,6 +93,6 @@ videos: ready=10 real-capture worker commit reported; independent QA/integration
 community: discovered=2 join_requested_today=1 approved=0 postable=0 (public/fixture evidence; authenticated account state UNKNOWN)
 camoufox_manual_login: CLOSED (old LinkedIn process terminated; stale profile lease remains UNKNOWN until runtime reconciliation)
 lanes: chrome-login=P0 WORKING dispatch=ctx_296c3a1aa393 worktree=ms-growth-chrome-20261101; comments-pilot=BLOCKED_ON_LOGIN; content=CHECKPOINTED; video=READY_FOR_INTEGRATION; community=READY_WITH_AUTH_UNKNOWN; ui=CHECKPOINTED; publish=PAUSED until READY
-CẦN NAM: Chưa mở cửa sổ đăng nhập. Sau khi smoke profile-only xác minh chữ đọc được, nút Tổng quan > Tài khoản > Đăng nhập thủ công sẽ mở cửa sổ Chrome ; Nam tự nhập credential/SSO/MFA/CAPTCHA/checkpoint trong cửa sổ đó. Không dùng Chrome cá nhân, không copy cookie/session.
+CẦN NAM: Chưa mở cửa sổ đăng nhập. Sau khi smoke profile-only xác minh chữ đọc được, nút Tổng quan > Tài khoản > Đăng nhập thủ công sẽ mở cửa sổ Chrome `linkedin-linkedin_nam`; Nam tự nhập credential/SSO/MFA/CAPTCHA/checkpoint trong cửa sổ đó. Không dùng Chrome cá nhân, không copy cookie/session.
 blockers: CHROME-LOGIN-P0 (worker implementation + profile-only screenshot gate); LIVE-PUBLICATION (0 verified permalink); PILOT-COMMENTS (waits for READY account)
 next_30m: inspect Chrome worker output, integrate source/evidence seams serially, run independent checks, then build packaged app 4321; only after readable smoke verify open LinkedIn profile for Nam and add CHROME_LOGIN_READY line.
