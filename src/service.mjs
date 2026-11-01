@@ -7231,6 +7231,11 @@ export class SeedingService {
       await this.store.mutate(actor, "account_agent_recovery_finished", (next) => {
         const row = next.executionAccounts.find((item) => item.id === account.id);
         if (!row) return;
+        // A recovery run can overlap a Chrome migration/retry. The snapshot
+        // above belongs to the Camoufox account that started this run. Never
+        // let its late completion overwrite a newer provider binding or a
+        // Chrome attempt already recorded for the same account.
+        if (row.provider !== account.provider || row.providerProfileId !== account.providerProfileId || Number(row.chromeLoginAttempts || 0) !== Number(account.chromeLoginAttempts || 0)) return;
         const discoveredIdentity = String(result?.identityReference || "").trim();
         Object.assign(row, { ...(discoveredIdentity ? { identityReference: discoveredIdentity, expectedIdentityUrl: discoveredIdentity } : {}), agentStatus: safeStatus, loginStatus: safeStatus, sessionHealth: safeStatus === "READY" ? "ready" : safeStatus === "BLOCKED" ? "blocked" : "unknown", health: safeStatus === "READY" ? "healthy" : safeStatus === "BLOCKED" ? "human_required" : "unknown", sessionRecoveryStatus: safeStatus === "READY" ? "RECOVERED" : safeStatus === "BLOCKED" ? "HUMAN_REQUIRED" : "UNKNOWN", lastLoginAt: safeStatus === "READY" ? finished : row.lastLoginAt || null, lastFailureCode: safeStatus === "READY" ? null : String(result?.code || "UNKNOWN").slice(0, 80), lastFailureReason: safeStatus === "READY" ? null : String(result?.reason || "UNKNOWN").replace(/\s+/g, " ").slice(0, 300), loginEvidenceAt: finished, updatedAt: finished });
       });
