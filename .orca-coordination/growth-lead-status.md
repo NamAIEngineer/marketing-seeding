@@ -148,3 +148,15 @@ lanes: chrome-auto-login=P0 IMPLEMENTED (Keychain→headed stable Chrome, one at
 CẦN NAM: Chỉ khi Chrome hiển thị CAPTCHA/2FA/checkpoint hoặc lỗi bảo mật: xử lý trong đúng cửa sổ account đó sáng mai; hệ thống không thử lại. Không dùng Chrome cá nhân, không copy cookie/session.
 blockers: PACKAGED-REBUILD (new source + bundled playwright-core); LIVE-PUBLICATION (0 verified permalink); CHALLENGE_INPUT (conditional per account)
 next_30m: commit source checkpoint, build from clean checkout, backup state + Keychain untouched, update LaunchAgent 4321, smoke health/source/account JSON, then retry LinkedIn once and Facebook once in order; record exact outcomes.
+
+updated: 2026-11-02T00:22:00+07:00
+phase: P0 AUTO-LOGIN
+runtime: source checkpoint committed `2034e3d`; packaged 4321 remains prior SHA until clean build; 4318 untouched
+accounts: linkedin/linkedin_nam and facebook_group/facebook_nam credentialStored=true previously verified; auto-login not run before rebuilt package
+today_posts: target=10 scheduled=0 published_verified=0 unknown=10
+videos: ready=10 qa_fail=0; quality-A bounded real capture, unique hashes verified
+community: discovered=2 join_requested_today=1 approved=0 postable=0 (authenticated state UNKNOWN)
+lanes: source=CHECKPOINTED; build=STARTING; chrome-auto-login=READY_TO_RUN one attempt/account; publish/comments/pilot=PAUSED until identity + one-post proof
+CẦN NAM: Conditional only: if an account window shows CAPTCHA/2FA/checkpoint, handle that window tomorrow; no automatic retry.
+blockers: PACKAGED-REBUILD (clean checkout + UI assets); LIVE-PUBLICATION (0 verified permalink)
+next_30m: create clean worktree at 2034e3d, build UI/public + desktop app, back up state, update LaunchAgent 4321, smoke health/source/account JSON.
