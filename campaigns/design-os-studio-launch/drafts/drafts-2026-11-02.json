@@ -547,5 +547,24 @@
         "report": null
       }
     }
-  ]
+  ],
+  "queuePolicy": {
+    "activeCount": 10,
+    "backlogCount": 6,
+    "videoOneToOne": true,
+    "videoQualityGate": "A required before publish"
+  },
+  "validationGate": {
+    "status": "PASS",
+    "report": "plans/growth-lead-20261102/evidence/content-vietnamese-validate-2026-11-02.json",
+    "checkedFiles": [
+      "campaigns/design-os-studio-launch/drafts/vietnamese-copy-2026-11-02.md"
+    ],
+    "register": "ux-microcopy",
+    "domains": [
+      "ux",
+      "biz",
+      "tech"
+    ]
+  }
 }
