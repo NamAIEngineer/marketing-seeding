@@ -2089,6 +2089,7 @@ export class SeedingService {
     // acquisition and returns only a bounded result (never credentials).
     this.accountAgentRunner = typeof options.accountAgentRunner === "function" ? options.accountAgentRunner : null;
     this.manualLoginManager = options.manualLoginManager || null;
+    this.chromeAccountProfileManager = options.chromeAccountProfileManager || null;
     const explicitProductRoots = options.productRepoRoots !== undefined || Boolean(String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").trim());
     this.productRepoRoots = (options.productRepoRoots || String(process.env.SEEDING_PRODUCT_REPO_ROOTS || "").split(path.delimiter))
       .map((value) => String(value || "").trim())
@@ -7143,6 +7144,33 @@ export class SeedingService {
       if (row) Object.assign(row, { agentStatus: "RUNNING", loginStatus: "UNKNOWN", sessionRecoveryStatus: "HUMAN_REQUIRED", loginAttemptAt: nowIso(), lastFailureCode: null, lastFailureReason: "Đang chờ đăng nhập trong cửa sổ Camoufox", updatedAt: nowIso() });
     });
     return { account: projectOnboardedAccount(account), login: session };
+  }
+
+  async startChromeAccountLogin(input = {}, actor = "operator") {
+    const platform = String(input.platform || "").trim().toLowerCase();
+    const accountId = String(input.accountId || "").trim();
+    if (!platform || !accountId) throw new Error("platform and accountId are required");
+    if (!this.chromeAccountProfileManager) return { status: "UNKNOWN", code: "CHROME_PROFILE_MANAGER_UNAVAILABLE" };
+    const profileId = String(input.profileId || `chrome-${platform}-${accountId}`).trim();
+    const account = await this.registerExecutionAccount({ platform, accountId, provider: "chrome", providerProfileId: profileId, profileId, status: "enabled", health: "unknown", authMode: "MANUAL_AUTH" }, actor);
+    const login = await this.chromeAccountProfileManager.start({ platform, accountId });
+    await this.store.mutate(actor, "chrome_account_login_started", (state) => {
+      const row = state.executionAccounts.find((item) => item.id === account.id);
+      if (row) Object.assign(row, { agentStatus: "RUNNING", loginStatus: "UNKNOWN", sessionRecoveryStatus: "HUMAN_REQUIRED", loginAttemptAt: nowIso(), chromeProfilePath: login.profilePath, updatedAt: nowIso() });
+    });
+    return { account: projectOnboardedAccount(account), login };
+  }
+
+  async pollChromeAccountLogin(sessionId, actor = "chrome-account-login") {
+    if (!this.chromeAccountProfileManager) return { status: "UNKNOWN", code: "CHROME_PROFILE_MANAGER_UNAVAILABLE" };
+    const result = await this.chromeAccountProfileManager.poll(sessionId);
+    if (result.status === "READY") {
+      await this.store.mutate(actor, "chrome_account_login_ready", (state) => {
+        const row = (state.executionAccounts || []).find((item) => item.platform === result.platform && item.accountId === result.accountId);
+        if (row) Object.assign(row, { provider: "chrome", identityReference: result.identityReference, expectedIdentityUrl: result.identityReference, agentStatus: "READY", loginStatus: "READY", sessionHealth: "ready", health: "healthy", loginEvidenceAt: nowIso(), identityEvidenceHash: result.evidenceHash, lastFailureCode: null, lastFailureReason: null, updatedAt: nowIso() });
+      });
+    }
+    return result;
   }
 
   async retryExecutionAccountLogin(input = {}, actor = "operator") {

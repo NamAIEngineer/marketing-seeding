@@ -43,6 +43,7 @@ import { readDesktopProvisioningStatus } from "./desktop-provisioning.mjs";
 import { ensureContentRuntime } from "./product-content-runtime.mjs";
 import { loadGrowthLeadProjection, readRegisteredGrowthAsset } from "./growth-lead-projection.mjs";
 import { ManualLoginSessionManager } from "./manual-login-session.mjs";
+import { ChromeAccountProfileManager } from "./chrome-account-profile.mjs";
 
 async function loadLocalEnv() {
   try {
@@ -156,6 +157,7 @@ const manualLoginProvision = createAutoCamoufoxAccountAgentRunner({
   headless: false
 }).provision;
 const manualLoginManager = new ManualLoginSessionManager({ provision: manualLoginProvision });
+const chromeAccountProfileManager = new ChromeAccountProfileManager();
 if (operatorToken.length < 32) {
   throw new Error("SEEDING_OPERATOR_TOKEN must contain at least 32 characters");
 }
@@ -220,6 +222,7 @@ const service = new SeedingService(store, {
     ? ({ account }) => runCamoufoxAccountAgent({ account, resolver: configuredExecutionSessionResolver })
     : autoCamoufoxRunner
   ,manualLoginManager
+  ,chromeAccountProfileManager
 });
 serviceRef = service;
 const platformAdapterRegistry = new PlatformAdapterRegistry();
@@ -1023,6 +1026,15 @@ const server = http.createServer(async (request, response) => {
       const input = await readJson(request);
       const result = await service.startManualAccountLogin(input, actor);
       return sendJson(response, 202, result);
+    }
+    if (request.method === "POST" && url.pathname === "/api/account-credentials/chrome-login") {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 202, await service.startChromeAccountLogin(await readJson(request), actor));
+    }
+    const chromeLoginMatch = url.pathname.match(/^\/api\/account-credentials\/chrome-login\/([^/]+)$/);
+    if (request.method === "GET" && chromeLoginMatch) {
+      if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
+      return sendJson(response, 200, await service.pollChromeAccountLogin(decodeURIComponent(chromeLoginMatch[1]), actor));
     }
     if (request.method === "POST" && url.pathname === "/api/account-credentials/retry-login") {
       if (role !== "operator") return sendJson(response, 401, { ok: false, error: "operator_token_required" });
