@@ -66,6 +66,20 @@ export async function loadGrowthLeadProjection({ dashboard = null } = {}) {
     readJson(communityReceiptPath, { dashboard: {}, discoveries: [], membershipChecks: [], joinProjection: null }),
   ]);
   const artifacts = (Array.isArray(manifest.artifacts) ? manifest.artifacts : []).map(mapArtifact).filter(Boolean);
+  // A manifest entry is eligible only when the recorded QA result is a pass
+  // that is not contradicted by the quality-A intake evidence. The intake
+  // receipt is authoritative for the current capture run; it records that the
+  // physical displays contained Claude/Orca rather than Design OS Studio.
+  const qualityAIntake = await readJson(path.join(campaignRoot, "video", "quality-a", "quality-a.json"), null);
+  const captureBlocked = qualityAIntake?.status === "BLOCKED_CAPTURE_TARGET_UNAVAILABLE";
+  const effectiveArtifacts = captureBlocked
+    ? artifacts.map((item) => ({
+      ...item,
+      qa: "BLOCKED_CAPTURE_TARGET_UNAVAILABLE",
+      quality: "UNVERIFIED",
+      source: "capture evidence contradicted: physical display did not show Design OS Studio",
+    }))
+    : artifacts;
   const draftRows = Array.isArray(drafts.drafts) ? drafts.drafts : [];
   const canonicalPosts = Array.isArray(dashboard?.posts) ? dashboard.posts : [];
   const posts = draftRows.slice(0, 10).map((draft, index) => {
@@ -78,7 +92,7 @@ export async function loadGrowthLeadProjection({ dashboard = null } = {}) {
     state: draft.state || "DRAFT",
     repoUrl: draft.repoUrl || drafts.repoUrl || "https://github.com/jangtrinh/design-os-studio",
     videoSlot: draft.videoSlot || `dos-video-slot-${String(index + 1).padStart(2, "0")}`,
-    video: artifacts[index] || null,
+    video: effectiveArtifacts[index] || null,
     publicationStatus: canonical?.status === "published" && canonical.publicationUrl ? "PUBLISHED_UNVERIFIED" : "UNKNOWN",
     permalink: canonical?.publicationUrl || null,
     latestMetric: canonical ? (dashboard?.latestMetrics?.[canonical.id] || null) : null,
@@ -86,7 +100,7 @@ export async function loadGrowthLeadProjection({ dashboard = null } = {}) {
     evidenceHash: canonical?.evidenceHash || null,
     };
   });
-  const qaFail = artifacts.filter((item) => !String(item.qa).startsWith("PASS")).length;
+  const qaFail = effectiveArtifacts.filter((item) => !String(item.qa).startsWith("PASS")).length;
   const communityDashboard = community.dashboard && typeof community.dashboard === "object" ? community.dashboard : {};
   const discoveries = Array.isArray(dashboard?.communityDiscoveries) && dashboard.communityDiscoveries.length
     ? dashboard.communityDiscoveries
@@ -112,11 +126,11 @@ export async function loadGrowthLeadProjection({ dashboard = null } = {}) {
       } : null
     },
     videos: {
-      ready: artifacts.length,
+      ready: effectiveArtifacts.length,
       qaFail,
-      bufferTomorrow: artifacts.length >= 10 && qaFail === 0 ? artifacts.length : 0,
+      bufferTomorrow: effectiveArtifacts.length >= 10 && qaFail === 0 ? effectiveArtifacts.length : 0,
       reference: manifest.reference || null,
-      artifacts,
+      artifacts: effectiveArtifacts,
     },
     northStar: northStarProjection(northStar),
     community: {

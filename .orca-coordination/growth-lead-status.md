@@ -316,3 +316,15 @@ lanes: runtime=REBUILD_FOR_ROUTE_GUARD; canonical-projection=LIVE_VERIFIED; ui=L
 CẦN NAM: Hai cửa sổ stable Google Chrome app-owned vẫn chờ Nam xử lý CAPTCHA/2FA/checkpoint. Không retry account thật. Mở đúng cửa sổ account khi Nam thức dậy; không dùng profile Chrome cá nhân.
 blockers: REBUILD_ROUTE_GUARD (controller) | NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
 next_30m: commit route guard, rebuild clean app, backup state, swap 4321, smoke health/source/UI, recheck canonical dashboard and await independent verifier.
+
+updated: 2026-11-02T03:06:00+07:00
+phase: NON_ACCOUNT_LANES_RECONCILIATION
+runtime: packaged 4321 source=a00214be09c7c60edf06a967a25654b1a263779e dirty=false health=200; 4318 PID 35020 untouched; source projection change pending rebuild
+accounts: linkedin/linkedin_nam BLOCKED CHROME_LOGIN_CHALLENGE (attempt=1; no retry) | facebook_group/facebook_nam BLOCKED CHROME_LOGIN_CONTROLS_NOT_FOUND (attempt=1; no retry)
+today_posts: target=10 pilot=armed slots=10 scheduled=0 published_verified=0 unknown=10; live schedule intentionally not materialized before READY/permalink/media proof
+videos: ready=10 qa_fail=10 buffer_tomorrow=0; current quality-A intake BLOCKED_CAPTURE_TARGET_UNAVAILABLE; direct frames show Claude/Orca desktop, not Design OS Studio; no relabel/delete
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: runtime=REBUILD_PENDING; canonical-projection=FAIL_CLOSED_VIDEO_INTAKE; ui=COMMITTED_69c4da0; pilot=ARMED; comments=GUARDS_COMMITTED_4_TESTS_PASS; community=PUBLIC_30_READY_AUTH_UNKNOWN; publish=PAUSED_NO_READY_ACCOUNT
+CẦN NAM: Hai cửa sổ stable Google Chrome app-owned vẫn chờ Nam xử lý CAPTCHA/2FA/checkpoint; không retry account thật. Không cần dán password/token vào terminal/chat.
+blockers: NO_READY_ACCOUNT | LIVE-PUBLICATION (0 verified permalink) | VIDEO_CAPTURE_TARGET_UNAVAILABLE | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: commit reconciliation and pilot evidence, clean build, preserve state/Keychain/Chrome profiles, swap LaunchAgent 4321, verify health/source/dashboard; keep 4318 untouched.

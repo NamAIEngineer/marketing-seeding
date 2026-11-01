@@ -39,6 +39,31 @@ Run mode: supervised Orca orchestration. Current non-account lanes continue whil
 - `T-community-public` artifact staged in worktree, pending controller commit.
 - `T-ui-overview`: worker pending.
 
+## Reconciliation checkpoint — 2026-11-02 03:05 ICT
+
+- `T-schedule-pilot`: `ARMED` in the canonical store; ten slots are defined
+  for 07:00–23:00 Asia/Ho_Chi_Minh, but live schedule rows stay at zero until
+  an account is `READY` and one post has independently verified permalink and
+  media evidence. Missed windows shift to the next unused slot without burst.
+- `T-comments-report`: local reply guards and observation-only report schema
+  are committed and verified (`node --test test/growth-pilot.test.mjs` — 4
+  passed). Live polling/reply remains blocked by the no-READY gate.
+- `T-community-public`: 30 public candidate rows are canonical (15 Facebook
+  Groups, 15 LinkedIn Groups), source `camoufox-public`; authenticated rules,
+  membership, join approval, warm-up, and postability remain `UNKNOWN`.
+- `T-ui-overview`: integrated UI presents the five result blocks and explicit
+  instructions for the two app-owned Chrome windows; the packaged runtime
+  still requires a rebuild from the current source checkpoint.
+- `T-video`: the current quality-A intake receipt is
+  `BLOCKED_CAPTURE_TARGET_UNAVAILABLE`. Direct frame inspection of the ten
+  `.mov` files shows Claude/Orca desktops rather than Design OS Studio. The
+  prior manifest's `PASS_REAL_SCREEN_CAPTURE_BOUNDED`/`quality=A` labels are
+  therefore not trusted by the projection; no files were deleted or relabeled
+  in place.
+- `T-integrate`: source projection now fails closed when that intake blocker is
+  present, exposing `qaFail=10`, `quality=UNVERIFIED`, and
+  `bufferTomorrow=0`; next clean package must carry this truthful state.
+
 ## Wave 2 — serialized integration and verification
 
 | Task | role | Scope | Dependencies | Acceptance |

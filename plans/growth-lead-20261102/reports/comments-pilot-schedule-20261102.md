@@ -18,3 +18,13 @@ Date: 2026-11-02
 `git diff --check` remains blocked by pre-existing conflict markers in `src/chrome-account-profile.mjs` (unrelated file, untouched).
 
 No live publication, reply, credential, or account side effect was performed. Current accounts remain blocked/unknown, so the armed schedule fails closed.
+
+## Follow-up verification at HEAD a00214be
+
+- Added tests for no-burst exhaustion and durable 23:30 observation-only report.
+- Added assertions for armed status, READY activation gate, 15-minute first-post contract, 48-hour warning reduction, and 30% next-day mix bound.
+- `node --test test/growth-pilot.test.mjs` — 4 passed.
+- `node --check src/growth-pilot.mjs` — passed.
+- Scoped `git diff --check` — passed.
+
+FACT: tests cover deterministic local pilot policy only. UNKNOWN: live account readiness, publication, reply delivery, platform metrics, permalink, and GitHub star observations. No live side effects occurred.

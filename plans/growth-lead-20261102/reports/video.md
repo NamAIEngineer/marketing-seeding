@@ -73,3 +73,22 @@ Full command output is retained in `campaigns/design-os-studio-launch/video/qa-e
 Credentials, MFA/CAPTCHA/OTP, uploads, publication, external messaging, deployment, merge, push, runtime/content/community/Overview code, and real screen capture setup.
 
 Status: DONE_WITH_CONCERNS
+
+## 2026-11-02 03:05 ICT reconciliation
+
+- **FACT:** `campaigns/design-os-studio-launch/video/quality-a/quality-a.json`
+  records `BLOCKED_CAPTURE_TARGET_UNAVAILABLE` with no promoted artifacts.
+- **FACT:** Direct decoded end frames from all ten
+  `video/real-captures/*.mov` files show the Claude/Orca desktop. The captures
+  are not evidence of a Design OS Studio window.
+- **FACT:** The historical manifest still contains ten labels
+  `PASS_REAL_SCREEN_CAPTURE_BOUNDED` / `quality=A`; those labels conflict with
+  the current intake receipt and are not treated as current QA proof.
+- **FACT:** The projection now fails closed when the blocker receipt exists:
+  `qaFail=10`, `bufferTomorrow=0`, each artifact `quality=UNVERIFIED` and
+  `qa=BLOCKED_CAPTURE_TARGET_UNAVAILABLE`. Files remain available for forensic
+  inspection; none were deleted or overwritten.
+- **UNKNOWN:** A new Design OS Studio capture run; no quality-A claim is made
+  until its target window is directly evidenced.
+
+Status: DONE_WITH_CONCERNS

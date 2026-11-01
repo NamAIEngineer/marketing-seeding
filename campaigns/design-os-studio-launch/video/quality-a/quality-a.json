@@ -1,0 +1,9 @@
+{
+  "status": "BLOCKED_CAPTURE_TARGET_UNAVAILABLE",
+  "quality": "A_REQUEST_NOT_MET",
+  "postIdsExpected": ["dos-1102-01", "dos-1102-02", "dos-1102-03", "dos-1102-04", "dos-1102-05", "dos-1102-06", "dos-1102-07", "dos-1102-08", "dos-1102-09", "dos-1102-10"],
+  "artifacts": [],
+  "blocker": "avfoundation ffmpeg captures physical displays, but available displays show Claude/Orca desktops, not the Design OS Studio window exposed by the computer-use surface. Captured proof frames confirm unrelated apps. No screen recording of the product was promoted or fabricated.",
+  "proofFiles": ["campaigns/design-os-studio-launch/video/quality-a/raw/foreground-check.jpg", "campaigns/design-os-studio-launch/video/quality-a/raw/foreground-check.mp4", "campaigns/design-os-studio-launch/video/quality-a/reference-proof-grid.png", "campaigns/design-os-studio-launch/video/quality-a/reference-feature-frame.png"],
+  "qualityBPreserved": true
+}
