@@ -1,6 +1,6 @@
 # Audio license evidence — 2026-11-02
 
-Status: **BLOCKED (commercial-use term mismatch)**
+Status: **BLOCKED (commercial-use term mismatch; no free commercial clearance found)**
 
 ## Retrieval
 
@@ -29,3 +29,12 @@ Edge of Motion by Aetheric
 ```
 
 No `CLAUDE_APPROVED` marker added. `template-spec.json` unchanged because the official terms do not establish permission for this commercial campaign.
+
+## Replacement search result
+
+- Checked official Free To Use FAQ on 2026-11-02 (Asia/Ho_Chi_Minh): `plans/growth-lead-20261102/evidence/freetouse-faq-20261102.html`.
+- FAQ states that commercial content requires an active Commercial Plan subscription or a single-track license. It defines commercial content to include content promoting, marketing, selling, or supporting a business, product, service, brand, or commercial activity.
+- The campaign is a software product launch, therefore the available `is_premium: false` status for Edge of Motion does not grant commercial clearance.
+- No free track with explicit commercial permission was found in the official Free To Use terms. No substitute audio is cleared.
+
+Verdict: **BLOCKED**. Do not compose or publish campaign videos with this track until a Commercial Plan, single-track license, or written permission is obtained.
