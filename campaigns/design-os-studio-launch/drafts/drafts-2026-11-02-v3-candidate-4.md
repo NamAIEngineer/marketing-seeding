@@ -2,10 +2,7 @@
 
 Status: CONTENT_PENDING_CLAUDE. Publication: NOT_AUTHORIZED. Video status: PENDING_CLAUDE_APPROVAL for all slots.
 
-Reviewable candidate. Failed v2 remains untouched.
-
 ## dos-1102-v3-candidate-04-01 — linkedin_personal
-
 Release fact: DESIGN:OS Studio 0.7.6 — local-first loop with .fig round trip and Dev Mode handoff
 Release: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6
 Video: MISSION_16_V3_PENDING_04_01 (PENDING_CLAUDE_APPROVAL)
@@ -14,7 +11,7 @@ State: CONTENT_PENDING_CLAUDE
 
 A useful handoff is my result: one file, one checked change, and a clear next step for engineering.
 
-We are building DESIGN:OS Studio 0.7.6 so that result can stay in one local workflow. I opened a .fig file, asked an agent for a bounded edit, reviewed the canvas, and used Dev Mode to inspect the implementation path.
+We are building DESIGN:OS Studio 0.7.6 so that result can stay in one workflow. I opened a .fig file, asked an agent for a bounded edit, reviewed the canvas, and used Dev Mode to inspect the implementation path.
 
 • Open a local .fig archive → continue from the real design file
 • Ask an existing CLI agent for one change → see the proposed result before accepting it
@@ -36,7 +33,6 @@ Source: https://freetouse.com/music
 Edge of Motion by Aetheric
 
 ## dos-1102-v3-candidate-04-02 — facebook_timeline
-
 Release fact: DESIGN:OS Studio 0.7.6 — mở và lưu tệp .fig trên máy, giữ quy trình cục bộ
 Release: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6
 Video: MISSION_16_V3_PENDING_04_02 (PENDING_CLAUDE_APPROVAL)
@@ -47,9 +43,9 @@ Mình và team đang build ra DESIGN:OS Studio để người dùng mở tệp t
 
 **DESIGN:OS Studio 0.7.6 — từ tệp nằm trên máy tới bản bàn giao rõ ràng.**
 
-Mình thử việc thật là nhận một tệp .fig, sửa một phần bố cục rồi kiểm tra lại trước khi gửi cho người khác.
+Mình thử việc thật là nhận một tệp thiết kế .fig, sửa một phần bố cục rồi kiểm tra lại trước khi gửi cho người khác.
 
-• Nhận tệp .fig → mở và lưu ngay trên máy
+• Nhận tệp thiết kế .fig → mở và lưu ngay trên máy
 • Chọn phần cần sửa → giao một yêu cầu cụ thể cho trợ lý
 • Xem lại bố cục → phát hiện chỗ lệch trước khi bàn giao
 • Giữ hoặc hoàn tác lượt sửa → không mất bản đang đúng
@@ -69,7 +65,6 @@ Source: https://freetouse.com/music
 Edge of Motion by Aetheric
 
 ## dos-1102-v3-candidate-04-03 — facebook_member_group
-
 Release fact: DESIGN:OS Studio 0.7.6 — trợ lý làm việc trong tệp với giữ/hoàn tác và kiểm tra ảnh
 Release: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6
 Video: MISSION_16_V3_PENDING_04_03 (PENDING_CLAUDE_APPROVAL)
@@ -100,4 +95,3 @@ Anh em trong nhóm ưu tiên kiểm soát phần nào: **sửa bố cục, giữ
 Music from Free To Use
 Source: https://freetouse.com/music
 Edge of Motion by Aetheric
-
