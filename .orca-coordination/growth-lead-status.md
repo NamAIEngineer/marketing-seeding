@@ -916,6 +916,17 @@ videos: Mission 22 dashboard worker active; no MP4/CLAUDE_APPROVED claim
 pilot: armed=10; scheduled=0; published_verified=0; no live publication evidence
 next_30m: wait for three worker receipts; independently inspect declared reports/artifacts; preserve publisher ownership; update status by 12:30 ICT
 
+updated: 2026-11-02T12:18:00+0700
+phase: MISSION_22_WORKER_RECEIPTS_CONTENT_PASS_SPEC_DONE_VIDEO_BLOCKED
+content: task_1f7a46f31e52 / ctx_155303e48fcf PASS bounded; 7 JSON/MD posts, unique products/bodies/media slots, zero forbidden license phrases/backticks, LinkedIn 183–194 words; remains CONTENT_PENDING_CLAUDE outside canonical manifest; verifier task_3867b39d655c / ctx_51acc08c7945 active
+spec_images: task_0a1bd50eca96 / ctx_47170a457fae DONE_WITH_CONCERNS; 7 complete NodeSpecs, .designos, apply/inspect receipts, 1920x1200 main + Dev Mode screenshots, SHA ledger PASS; visual/Claude review UNKNOWN, no canonical promotion
+videos: task_23f151710ef4 / ctx_a0ce19a3396b BLOCKED_CAPTURE_DURATION; ScreenCaptureKit writer stopped at 1.09–2.07s/status=2 for each sequential step; no truthful 30–40s MP4, no media promotion/approval
+publisher: term_84dd3dea owns Chrome/publish; Facebook img-01 remains BLOCKED login wall with no composer/submit/store mutation/permalink; Lead does not retry or touch publisher
+pilot: armed=10; scheduled=0; published_verified=0; fail-closed pending Claude media/content approval + publisher identity
+CẦN NAM: Facebook app-owned profile `facebook_nam` currently shows login wall; Nam must restore/verify login in that app-owned Chrome profile before publisher can retry once. Personal Chrome untouched.
+blockers: CONTENT_CLAUDE_APPROVAL | SPEC_VISUAL_REVIEW | VIDEO_CAPTURE_DURATION | FACEBOOK_LOGIN_WALL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: finish independent content verification; preserve spec/video evidence; no canonical promotion, schedule activation, publication, comment, join, or media approval
+
 ## Facebook publisher img-01 — 2026-11-02T04:53:04Z
 
 - Status: BLOCKED / CẦN NAM
