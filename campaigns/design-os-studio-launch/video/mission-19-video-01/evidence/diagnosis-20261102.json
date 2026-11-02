@@ -1,0 +1,75 @@
+{
+  "observed_at_utc": "2026-11-02T01:41:22Z",
+  "scope": "mission-19-video-01",
+  "app": {
+    "path": "/Users/nam/Applications/designos.app/Contents/MacOS/designos-studio",
+    "version": "designos-studio 0.7.6",
+    "sha256": "b4286e333637dd25c389c3e726ed89f33076801358cc0869773cef44d31490fe"
+  },
+  "processes": [
+    "44828     1 ??       S    /Users/nam/Applications/designos.app/Contents/MacOS/designos-studio /Users/nam/orca/workspaces/marketing-seeding/ms-growth-lead-20261101/campaigns/design-os-studio-launch/video/quality-a/v6-live/blank.designos",
+    "45731 44828 ttys031  Ss+  claude --session-id f37ed4da-58a8-4fe8-bc90-54f2bc4a578a --mcp-config /Users/nam/Library/Application Support/designos/ap/391fb5b6523d6ef6/mcp-config.json --settings /Users/nam/Library/Application Support/designos/ap/391fb5b6523d6ef6/hooks.json --setting-sources user --plugin-dir /Users/nam/Library/Application Support/designos/ap/391fb5b6523d6ef6/claude-plugin --append-system-prompt You are inside DESIGN:OS Studio bound exclusively to file 'Untitled' (session /Users/nam/Library/Application Support/designos/sessions/p44828-w1-tab-1). Use the pre-fetched bootstrap context (or call designos_get_app_state) for the current selected page, frames, tokens, and components, and deliver all designs onto that file and page via designos-mcp tools (designos_apply_spec, designos_create_node, designos_update_node) or by writing NodeSpec JSON to /Users/nam/Library/Application Support/designos/sessions/p44828-w1-tab-1/live-spec.json."
+  ],
+  "mcp_config": {
+    "path": "/Users/nam/Library/Application Support/designos/ap/391fb5b6523d6ef6/mcp-config.json",
+    "sha256": "7d01357660ff98281e49493f2ac02bf9fb41dcd8ae0cd9714997d6c491e4a1f4",
+    "command": "/Users/nam/Applications/designos.app/Contents/MacOS/designos-mcp",
+    "args": [
+      "--workspace",
+      "/"
+    ],
+    "env": {
+      "DESIGNOS_AGENT_RUNTIME": "claude",
+      "DESIGNOS_AGENT_RUN_ID": "p44828-w1-tab-1-1-1",
+      "DESIGNOS_CONTEXT_JSON": "/Users/nam/Library/Application Support/designos/sessions/p44828-w1-tab-1/context.json",
+      "DESIGNOS_FILE": "",
+      "DESIGNOS_IN_PROGRESS_STALE_MINUTES": "15",
+      "DESIGNOS_LIVE_CANVAS": "/Users/nam/Library/Application Support/designos/sessions/p44828-w1-tab-1/canvas.designos",
+      "DESIGNOS_LIVE_DOC_PATCH": "/Users/nam/Library/Application Support/designos/sessions/p44828-w1-tab-1/doc-patch.jsonl",
+      "DESIGNOS_LIVE_DOC_SYNC": "/Users/nam/Library/Application Support/designos/sessions/p44828-w1-tab-1/doc-sync.designos",
+      "DESIGNOS_LIVE_SPEC": "/Users/nam/Library/Application Support/designos/sessions/p44828-w1-tab-1/live-spec.json",
+      "DESIGNOS_MCP_CONFIG": "/Users/nam/Library/Application Support/designos/ap/391fb5b6523d6ef6/mcp-config.json",
+      "DESIGNOS_SESSION_DIR": "/Users/nam/Library/Application Support/designos/sessions/p44828-w1-tab-1",
+      "DESIGNOS_TARGET_PAGE_ID": "1"
+    }
+  },
+  "session": {
+    "path": "/Users/nam/Library/Application Support/designos/sessions/p44828-w1-tab-1",
+    "context": {
+      "agent_runtime": "claude",
+      "current_page_id": 1,
+      "current_page_name": "Page 1",
+      "doc_name": "Untitled",
+      "doc_revision": 2,
+      "file_path": null,
+      "run_id": "p44828-w1-tab-1-1-1",
+      "scoped": false,
+      "selected_node_ids": [],
+      "session_id": "p44828-w1-tab-1"
+    },
+    "sessions": {
+      "version": 1,
+      "last_cli": "claude",
+      "sessions": [
+        {
+          "tab_id": 1,
+          "title": "Claude Code #1",
+          "cli": "claude",
+          "session_id": "f37ed4da-58a8-4fe8-bc90-54f2bc4a578a",
+          "created_at": 1793581334,
+          "last_active_at": 1793581334,
+          "status": "active"
+        }
+      ]
+    },
+    "canvas_sha256": "ca94ad0f13f43938ea8e37903cdfd82fb2dee48e6b02a247e6f6e6e8f6f37460",
+    "canvas_node_count": 1
+  },
+  "diagnosis": [
+    "PID 44828 opens quality-a/v6-live/blank.designos, not this scoped worktree mission-19-video-01/blank.designos.",
+    "Claude PID 45731 cwd is the DesignOS session directory and is bound to doc_name Untitled with file_path null; session context scoped=false.",
+    "MCP config sets DESIGNOS_FILE empty and DESIGNOS_LIVE_CANVAS to an unsaved session canvas containing only Page 1; no generated nodes or doc patches exist.",
+    "A retry would require rebinding/restarting the foreign app/session and could alter unrelated worktree state; no safe local recovery performed."
+  ],
+  "verdict": "BLOCKED_DIAGNOSTIC_ONLY"
+}
