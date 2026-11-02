@@ -968,6 +968,19 @@ blockers: CONTENT_RULE_D_VERIFY_AND_CLAUDE_APPROVAL | SPEC_PROFILE_TOKENS_APPLY_
 next_30m: await the fresh content Rule-D builder receipt; then dispatch independent read-only verifier; preserve all foreign dirty media/artifacts and keep live side effects disabled
 dispatch_receipts: content-v4-rule-d=task_efea94786789/ctx_65738fafebed, worktree=ms-growth-lead-content-v4-rule-d-20261102; two earlier starts rejected repo_not_found before materialization; prior run=run_6a12be5c1b06; pin=plans/growth-lead-20261102/pin/content-v4-rule-d-20261102T1247.txt
 
+updated: 2026-11-02T13:31:00+0700
+phase: MISSION_22D_CONTENT_BUILDER_DONE_VERIFY_DISPATCHED
+content: Rule-D v4 builder done; source worktree commit `223f56b` (follow-up trim) contains 7 review-only posts. JSON/Markdown hashes `281fae53f4c830b8e9f18a93b7d23e2d3974baea0d23d7c4a46dfce7aea30a72` / `1f180e4eddf93ac7c352110f6198ade341a603191bc4da310b5c1ecff93a16ea`; LinkedIn bodies 200/200 words; validator exit=0 errors=0 warnings=0; grounded numeric hook 207601 at README.md:45; forbidden scan clean. Fresh independent verifier dispatched as task_5b790e9c5fce/ctx_2891aa77e0a9 in worktree ms-growth-lead-content-v4-rule-d-verify-20261102. No canonical promotion or Claude approval.
+publisher: term_84dd3dea exclusive; latest authorized Facebook retry returned CHROME_LOGIN_CONTROLS_NOT_FOUND; no publication/permalink/store mutation. CẦN NAM: restore/verify login manually in app-owned facebook_nam Chrome; no retry by Lead.
+runtime: packaged 4321 candidate source=8951c2c6f0b831562287e312ab3d90521de0adc4 health=200 sourceDirty=false stateRevision=456; 4318 untouched.
+spec_images: profile-tokens fix DONE_WITH_CONCERNS, saved=true/inspect node_count=36/PNG hashes PASS; semantic visual quality UNKNOWN; no promotion.
+videos: 22C silent 32s candidate quarantined; independent verify + Claude approval pending; no media binding.
+pilot: armed=10; scheduled=0; published_verified=0; fail-closed. community public=30; authenticated membership/rules/join/postability UNKNOWN.
+CẦN NAM: Facebook app-owned login wall/control blocker only; no credential/CAPTCHA/MFA action by Lead. Content/video still need Claude approval.
+blockers: CONTENT_VERIFIER_PENDING | CONTENT_CLAUDE_APPROVAL | VIDEO_VERIFY_AND_CLAUDE_APPROVAL | FACEBOOK_LOGIN_CONTROLS_NOT_FOUND | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: await independent Rule-D verifier; preserve builder/foreign worktrees; no publish/schedule/comment/join/media binding
+dispatch_receipts: content-v4-rule-d-builder=task_efea94786789/ctx_65738fafebed; content-v4-rule-d-verifier=task_5b790e9c5fce/ctx_2891aa77e0a9; runtime-publisher receipt from term_84dd3dea
+
 
 updated: 2026-11-02T13:02:00+0700
 phase: MISSION_22D_CHROME_RETRY_BLOCKED
