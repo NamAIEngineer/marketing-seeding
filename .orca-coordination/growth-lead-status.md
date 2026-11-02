@@ -676,3 +676,17 @@ lanes: runtime=REBUILD_CONTENT_0606_PENDING; pilot=ARMED_GATES_CLOSED; publish=P
 CẦN NAM: none for account readiness; no credential/CAPTCHA/MFA action required
 blockers: RUNTIME_REBUILD_CONTENT_0606 | VIDEO_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
 next_30m: build packaged app from clean checkout at HEAD f69a501 after report 838f6fb; preserve state/Keychain/Chrome profiles; verify health/source/dashboard; no publication
+
+updated: 2026-11-02T07:38:00+0700
+phase: PACKAGED_CONTENT_0606_SMOKE_PASS
+runtime: packaged LaunchAgent ai.marketing-seeding.packaged source=6b8fd8243d6345bd107b2e538173f9a17b92b2fe; health HTTP 200 via native Node HTTP; sourceDirty=false; stateRevision=454; PID 39021; state SHA b818fd8fd8ffaf3cb2d688b1ef282d5cd0693d1a1f10b1b30459eecd59c6831e; backup=/Users/nam/Library/Application Support/Marketing Seeding OS/update-backups/swap-20261102T003030Z-6b8fd8243d6345bd107b2e538173f9a17b92b2fe; rollback=/Users/nam/orca/workspaces/marketing-seeding/marketing-seeding-desktop-integrated/desktop/dist/.Marketing-Seeding-OS.rollback-6b8fd8243d6345bd107b2e538173f9a17b92b2fe-1793579430.app; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam READY; facebook_group/facebook_nam READY; credential endpoints JSON 200 credentialStored=true, no secrets
+pilot: armed=10 slots; scheduled=0 published_verified=0; no live submit
+videos: ready=10 qaFail=10 bufferTomorrow=0; v5 prototype only and not approved; no media binding
+content: HEAD f69a501 + verifier 838f6fb PASS_WITH_CONCERNS bounded; packaged source 6b8fd82 includes content, 16 unique bodies/slots; LinkedIn 8 hooks 179–190 words; Facebook timeline 4 + member_group 4 distinct; all CONTENT_PENDING_CLAUDE
+north_star: repo=https://github.com/jangtrinh/design-os-studio current=82 forks=15 target=1000; same-day delta and attribution UNKNOWN
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: runtime=SMOKE_PASS; pilot=ARMED_GATES_CLOSED; publish=PAUSED_APPROVAL_GATES; video=V5_PROTOTYPE_NOT_APPROVED; content=INDEPENDENT_PASS_WITH_CONCERNS; community=PUBLIC_30_READY_AUTH_UNKNOWN
+CẦN NAM: none for account readiness; no credential/CAPTCHA/MFA action required
+blockers: VIDEO_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: preserve packaged runtime/state; await explicit Claude content + video approval; no publication or account retry
