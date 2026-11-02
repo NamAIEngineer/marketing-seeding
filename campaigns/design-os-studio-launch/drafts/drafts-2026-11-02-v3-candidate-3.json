@@ -1,0 +1,56 @@
+{
+  "status": "CONTENT_PENDING_CLAUDE",
+  "publication": "NOT_AUTHORIZED",
+  "campaign": "Design OS Studio — daily distribution",
+  "repoUrl": "https://github.com/jangtrinh/design-os-studio",
+  "posts": [
+    {
+      "id": "dos-1102-v3-candidate-01",
+      "channel": "linkedin_personal",
+      "locale": "en",
+      "videoSlot": "MISSION_16_V3_PENDING_01",
+      "videoStatus": "PENDING_CLAUDE_APPROVAL",
+      "releaseFact": "DESIGN:OS Studio 0.7.6 — local-first design workflow and Dev Mode outputs",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6",
+      "sourceRefs": [
+        "README.md:Quickstart",
+        "README.md:First Safe Use & The Practical Loop",
+        "README.md:Facts Register"
+      ],
+      "state": "CONTENT_PENDING_CLAUDE",
+      "body": "A design handoff is much easier to review when the file, the change, and the implementation view stay together.\n\nWe are building DESIGN:OS Studio 0.7.6 around that practical result. I opened a local design file, asked an agent for one bounded change, inspected the canvas, and checked the implementation view before treating the work as ready to share.\n\nWhat that gave me:\n• Open a real .fig file locally → keep the working source on the machine\n• Ask an existing CLI agent for a change → review the result before accepting it\n• Keep or revert the turn → avoid losing the previous decision\n• Open Dev Mode → give engineering a concrete starting point\n• Capture a GPU frame and compare it → check the screen instead of trusting a description\n• Export a .fig archive → leave a handoff artifact the next person can open\n\nFrom “AI makes a screen” to “a design task ends with a reviewable file and handoff.”\n\nFree, open source: https://github.com/jangtrinh/design-os-studio\nRelease: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6\n\nWhat would you test first: file fidelity, agent control, or code handoff?\n\n#DesignOS #DesignEngineering #Figma #DevMode #BuildInPublic #OpenSource\nMusic from Free To Use\nSource: https://freetouse.com/music\nEdge of Motion by Aetheric"
+    },
+    {
+      "id": "dos-1102-v3-candidate-02",
+      "channel": "facebook_timeline",
+      "locale": "vi",
+      "videoSlot": "MISSION_16_V3_PENDING_02",
+      "videoStatus": "PENDING_CLAUDE_APPROVAL",
+      "releaseFact": "DESIGN:OS Studio 0.7.6 — local-first workflow, agentic canvas and code handoff",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6",
+      "sourceRefs": [
+        "README.md:Quickstart",
+        "README.md:The Practical Agentic Loop",
+        "README.md:Facts Register"
+      ],
+      "state": "CONTENT_PENDING_CLAUDE",
+      "body": "Mình và team đang build ra DESIGN:OS Studio để người dùng nhận file thiết kế, sửa trên máy và giao lại bản có thể làm tiếp.\n\n**DESIGN:OS Studio 0.7.6 — từ file mở được sang một lần bàn giao dùng được.**\n\nMình thử một việc thật: mở file .fig local, nhờ agent dựng phần đầu, tự rà canvas rồi mở phần code để chuẩn bị handoff.\n\n• Nhận file .fig trên máy → mở và lưu lại trong cùng workflow\n• Giao agent một thay đổi nhỏ → thấy kết quả trên canvas trước khi quyết định\n• Giữ hoặc hoàn tác lượt sửa → không phải làm lại từ đầu khi thử sai\n• Chọn layer trong Dev Mode → có điểm bắt đầu cho React, Tailwind, CSS hoặc SwiftUI\n• Chụp GPU frame → so lại màn hình thay vì chỉ đọc mô tả\n• Export file .fig → gửi cho người tiếp theo một artifact rõ ràng\n\nTừ “AI dựng xong một màn hình” sang “người dùng làm ra file, quyết định và handoff kiểm tra được”.\n\nFree, mã nguồn mở: https://github.com/jangtrinh/design-os-studio\nBản phát hành: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6\n\nAnh em muốn thử trước phần nào: **độ trung thực của file, quyền kiểm soát agent hay bước giao code**?\n\n#DesignOS #Figma #DesignEngineering #DevMode #BuildInPublic #OpenSource\nMusic from Free To Use\nSource: https://freetouse.com/music\nEdge of Motion by Aetheric"
+    },
+    {
+      "id": "dos-1102-v3-candidate-03",
+      "channel": "facebook_member_group",
+      "locale": "vi",
+      "videoSlot": "MISSION_16_V3_PENDING_03",
+      "videoStatus": "PENDING_CLAUDE_APPROVAL",
+      "releaseFact": "DESIGN:OS Studio 0.7.6 — agent workflow with local file and reviewable output",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6",
+      "sourceRefs": [
+        "README.md:First Safe Use & The Practical Loop",
+        "README.md:The Practical Agentic Loop",
+        "README.md:Quality Bar & Limitations"
+      ],
+      "state": "CONTENT_PENDING_CLAUDE",
+      "body": "Mình và team đang build ra DESIGN:OS Studio để người dùng làm xong một màn hình rồi kiểm tra được nó trước khi gửi cho team.\n\n**DESIGN:OS Studio 0.7.6 — làm trên file thật, xem lại từng bước.**\n\nMình nghĩ bài toán trong group không phải thêm một ô chat, mà là làm sao agent giúp được việc mà người thiết kế vẫn nhìn thấy và quyết định được.\n\n• Mở một file local → bắt đầu từ artifact thật thay vì ảnh minh họa\n• Giao một yêu cầu cụ thể → nhận phần bố cục đầu tiên để sửa tiếp\n• Xem thay đổi trên canvas → phát hiện chỗ chưa đúng trước khi handoff\n• Dùng Keep hoặc Revert → giữ quyền quyết định ở người làm\n• Mở Dev Mode → chuyển một layer thành điểm bắt đầu cho code\n• Chạy screenshot diff → có bằng chứng trực quan cho lần kiểm tra\n\nTừ “agent tạo UI rồi thôi” sang “agent làm việc trong workflow có state, review và kiểm tra”.\n\nFree, mã nguồn mở: https://github.com/jangtrinh/design-os-studio\nBản phát hành: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6\n\nTrong workflow của anh em, bước nào cần được giữ quyền kiểm soát nhất: **sửa layout, giữ/hoàn tác hay giao code**?\n\n#DesignOS #AIDesign #Figma #MCP #DesignSystems #BuildInPublic #OpenSource\nMusic from Free To Use\nSource: https://freetouse.com/music\nEdge of Motion by Aetheric"
+    }
+  ]
+}
