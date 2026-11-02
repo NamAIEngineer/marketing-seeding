@@ -109,6 +109,18 @@ Run mode: supervised Orca orchestration. Current non-account lanes continue whil
 
 Paused scope: Threads, Reddit, Product Hunt, Indie Hackers, X publication; no W3b platform outside Facebook/LinkedIn Groups. Credential entry and CAPTCHA/MFA/OTP remain the only `CẦN NAM` actions. T-comments-pilot may implement guards and scheduling before login but must not perform live writes until a READY account and kill switch are evidenced.
 
+## Wave 4 — Mission 22 parallel production (11:48 ICT)
+
+Publisher ownership is external and exclusive to `term_84dd3dea` (task `task_ccae37fd6ff6` / dispatch `ctx_296c3a1aa393`). Lead must not touch publisher code, Chrome profiles, or `service.mjs` publish paths. All three tasks below have disjoint artifact scopes and no live side effects.
+
+| Task | role | Scope | Dependencies | Acceptance |
+|---|---|---|---|---|
+| T-spec-images-22 | BUILD · spec/images | Seven complete NodeSpecs and `designos --apply-spec` screenshots/evidence for dashboard SaaS, pricing, mobile onboarding, settings/form, profile + design-system tokens, e-commerce, blog; include `.designos` source files and screenshot hashes. | none; read-only reference images/spec examples | A15, V6 |
+| T-content-22 | BUILD · content | Seven hand-written posts, one per product/media, following Nam gold standard and Mission 22/D: result-first, build-in-public, FREE + source-available (PolyForm Shield), official Figma-alternative positioning, no open-source wording, distinct case-study numeric hook and link placement experiment. | T-spec-images-22 product names may be consumed read-only; product facts must be README/CHANGELOG grounded | A15, A2, A3, V3 |
+| T-video-22 | BUILD · video | Dashboard video #1 using apply-spec against scoped file, ScreenCaptureKit/CLI-only capture, 30–40s complete process/reveal, intro/end card with full repo URL and Star CTA, reference-frame/bbox/crop checks, silent audio permitted. | none; no publisher or personal Chrome | A8, A15, V6 |
+
+Dispatch contract: controller Growth Lead; role BUILD; tier workhorse `gpt-6-luna`, effort high; independent verifier is a fresh read-only attempt after each final artifact; worktrees `ms-growth-lead-spec-images-20261102`, `ms-growth-lead-content-20261102`, and existing `ms-growth-video-20261101` respectively. Each worker must write its declared report, pin state before edits, preserve foreign dirty artifacts, send one `worker_done`, and end with `Status:`. Claude approval and publication remain human approval gates; no worker may publish, join, comment, access credentials, or use computer use.
+
 ## 2026-11-02 07:06 ICT — Mission 18 latest content + packaged refresh
 
 - T-content: worker commit `ea98daa` integrated as `a3a5117`; independent report commit `1393eea` PASS bounded. Facebook timeline/group hooks are distinct and each states “Mình và team đang build…” with concrete outcomes; all rows remain `CONTENT_PENDING_CLAUDE`.

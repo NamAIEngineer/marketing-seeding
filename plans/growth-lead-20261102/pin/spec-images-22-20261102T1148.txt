@@ -1,0 +1,4 @@
+attempt=spec-images-22-20261102T1148
+controller_head=c5134dee0d1d5415c995d563e12a4723c327b1c4
+created=2026-11-02T11:48:00+0700
+scope=seven NodeSpec/designos products and screenshots; new worktree

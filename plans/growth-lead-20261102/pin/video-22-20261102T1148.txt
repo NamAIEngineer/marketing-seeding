@@ -1,0 +1,4 @@
+attempt=video-22-20261102T1148
+video_worktree_head=dc00c343c963345ec753f72d092dcd631a139548
+created=2026-11-02T11:48:00+0700
+scope=scoped dashboard video and QA evidence; existing video worktree retained

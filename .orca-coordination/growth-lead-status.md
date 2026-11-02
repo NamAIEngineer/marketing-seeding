@@ -888,3 +888,29 @@ pilot: armed=10; scheduled=0; published_verified=0; fail-closed
 community: public candidates=30; authenticated rules/membership/join/postability UNKNOWN
 CẦN NAM: none for account readiness; no credential/CAPTCHA/MFA action
 next_30m: preserve foreign process and dirty media; await Claude approval or a valid scoped Studio bootstrap; no publish/schedule/join/reply
+
+updated: 2026-11-02T11:48:00+0700
+phase: MISSION_22_LANES_DISPATCHED_CONTENT_RULE_D
+runtime: packaged 4321 source=6b8fd8243d6345bd107b2e538173f9a17b92b2fe health=200 sourceDirty=false stateRevision=454 pid=39021; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam READY; facebook_group/facebook_nam READY; publisher worker term_84dd3dea owns Chrome/publish lane; Lead does not touch publisher, Chrome profiles, or publish service.mjs
+pilot: armed=10 slots 07:00-23:00 ICT; scheduled=0; published_verified=0; publisher receipt/permalink still UNKNOWN
+content: 7 new hand-written posts dispatched; rule D applied: FREE + source-available (PolyForm Shield), no open-source/mã nguồn mở/#OpenSource wording; official Figma alternative positioning; case-study numeric hook and link-in-post vs first-comment experiment required; awaiting worker report/Claude approval
+spec_images: 7 product NodeSpecs/apply-spec/screenshot lane dispatched for dashboard, pricing, mobile onboarding, settings/form, profile+tokens, e-commerce, blog; awaiting worker report/Claude approval
+videos: apply-spec + ScreenCaptureKit/CLI lane active; dashboard video target=15:00; no CLAUDE_APPROVED media and no canonical media binding claimed
+north_star: repo=https://github.com/jangtrinh/design-os-studio current=82 forks=15 target=1000; delta/attribution UNKNOWN
+community: public discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: runtime=SMOKE_PASS; pilot=ARMED_GATES_CLOSED; publish=OWNED_BY_PUBLISHER_WORKER; content=DISPATCHED_RULE_D; spec_images=DISPATCHED; video=ACTIVE_CAPTURE_GATE; community=PUBLIC_30_READY_AUTH_UNKNOWN
+CẦN NAM: none at this checkpoint; only publisher-side login/challenge/CAPTCHA/MFA or missing group membership is escalated
+blockers: CONTENT_PENDING_CLAUDE | SPEC_IMAGES_PENDING_CLAUDE | VIDEO1_CAPTURE_AND_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: collect worker receipts, independent-check outputs, and publisher receipt without touching publisher; update status by 12:18 ICT
+
+## Facebook publisher img-01 — 2026-11-02T04:53:04Z
+
+- Status: BLOCKED / CẦN NAM
+- Account/profile: `facebook_nam` / app-owned `chrome-profiles/facebook-facebook_nam`
+- Latest draft: `drafts-2026-11-02-v3-claude-images.md` (11:45 license revision read; source-available wording confirmed)
+- DOM result: `https://www.facebook.com/me` redirected to `https://www.facebook.com/`; title `Facebook`; body shows login wall (`Log in to Facebook`).
+- Login/checkpoint/CAPTCHA gate: login wall; stopped before composer, upload, submit, or store mutation; no permalink exists.
+- Screenshot: `/Users/nam/orca/workspaces/marketing-seeding/ms-growth-chrome-20261101/plans/growth-lead-20261102/evidence/facebook-publisher/fb-probe.png`
+- Screenshot SHA-256: `0554d665714e061a7ad10fd52fcd2f8393615950997ae8fd2002dc73d0fc9ea0`
+- PID safety: 69776 app-owned Facebook Chrome closed cleanly; personal Chrome PID 486 and LinkedIn PID 69774 untouched.
