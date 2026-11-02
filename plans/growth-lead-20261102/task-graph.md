@@ -115,3 +115,9 @@ Paused scope: Threads, Reddit, Product Hunt, Indie Hackers, X publication; no W3
 - T-runtime: candidate source `1393eea` built in a detached checkout and swapped into packaged 4321 with state backup/rollback. Health probe PASS; sourceDirty=false; state revision 454; 4318 untouched.
 - T-video: recorder repair report complete; v5 production still pending; canonical media remains fail-closed (`qaFail=10`, buffer=0). No video or content approval inferred.
 - T-publish: zero scheduled, zero verified permalink, zero live publication. Pilot remains armed, dual content/video gates closed.
+
+## 2026-11-02 07:26 ICT — Mission 18/06:06 content checkpoint
+
+- `T-content`: worker `65d8b1a` integrated as `f69a501`; independent verifier `838f6fb` PASS_WITH_CONCERNS bounded. All eight Facebook posts now explicitly say `Mình và team đang build ra ... để người dùng ...`; timeline (4) and member_group (4) remain distinct. 16 unique bodies/slots, LinkedIn 179–190 words, Free/open-source only, full repo URL, no backticks, all `CONTENT_PENDING_CLAUDE`.
+- `T-runtime`: packaged 4321 still observes prior LaunchAgent source `1393eea`; rebuild from HEAD `f69a501` required. Preserve state revision/Keychain/Chrome profiles and leave 4318 untouched.
+- `T-publish`: zero scheduled, zero verified permalink, zero live publication. Content/video approval gates stay closed.

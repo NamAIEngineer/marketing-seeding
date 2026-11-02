@@ -662,3 +662,17 @@ lanes: runtime=PARSER_FIX_REBUILD_PENDING; pilot=ARMED_GATES_CLOSED; publish=PAU
 CẦN NAM: none for account readiness; no credential/CAPTCHA/MFA action required
 blockers: RUNTIME_PARSER_REBUILD | VIDEO_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN | BUILD_DEPENDENCY_SYMLINK_LIMITATION
 next_30m: commit parser fix, build clean package, swap/restart 4321, verify Overview current=82 and source=HEAD; no publication
+
+updated: 2026-11-02T07:26:00+0700
+phase: CONTENT_0606_INDEPENDENT_PASS_RUNTIME_REBUILD_PENDING
+runtime: packaged 4321 currently observed listener PID 34010; current LaunchAgent bundle source=1393eea; HEAD content source=f69a501 with verifier report 838f6fb; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam READY; facebook_group/facebook_nam READY; no credential action
+pilot: armed=10 slots; scheduled=0 published_verified=0; no live submit
+videos: ready=10 qaFail=10 bufferTomorrow=0; v5 prototype only and not approved; no media binding
+content: HEAD f69a501 applies Nam 06:06 build-in-public voice; verifier 838f6fb PASS_WITH_CONCERNS bounded; 16 unique bodies/slots; LinkedIn 8 hooks 179–190 words; Facebook timeline 4 + member_group 4 distinct; all CONTENT_PENDING_CLAUDE
+north_star: repo=https://github.com/jangtrinh/design-os-studio current=82 forks=15 target=1000; same-day delta and attribution UNKNOWN
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: runtime=REBUILD_CONTENT_0606_PENDING; pilot=ARMED_GATES_CLOSED; publish=PAUSED_APPROVAL_GATES; video=V5_PROTOTYPE_NOT_APPROVED; content=INDEPENDENT_PASS_WITH_CONCERNS; community=PUBLIC_30_READY_AUTH_UNKNOWN
+CẦN NAM: none for account readiness; no credential/CAPTCHA/MFA action required
+blockers: RUNTIME_REBUILD_CONTENT_0606 | VIDEO_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: build packaged app from clean checkout at HEAD f69a501 after report 838f6fb; preserve state/Keychain/Chrome profiles; verify health/source/dashboard; no publication
