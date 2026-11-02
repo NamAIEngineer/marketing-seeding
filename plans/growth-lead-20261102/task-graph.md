@@ -121,3 +121,9 @@ Paused scope: Threads, Reddit, Product Hunt, Indie Hackers, X publication; no W3
 - `T-content`: worker `65d8b1a` integrated as `f69a501`; independent verifier `838f6fb` PASS_WITH_CONCERNS bounded. All eight Facebook posts now explicitly say `Mình và team đang build ra ... để người dùng ...`; timeline (4) and member_group (4) remain distinct. 16 unique bodies/slots, LinkedIn 179–190 words, Free/open-source only, full repo URL, no backticks, all `CONTENT_PENDING_CLAUDE`.
 - `T-runtime`: packaged 4321 still observes prior LaunchAgent source `1393eea`; rebuild from HEAD `f69a501` required. Preserve state revision/Keychain/Chrome profiles and leave 4318 untouched.
 - `T-publish`: zero scheduled, zero verified permalink, zero live publication. Content/video approval gates stay closed.
+
+## 2026-11-02 07:42 ICT — v5 prototype batch gate
+
+- `T-video`: ten technically valid v5 prototype MP4s exist under `video/quality-a/v5-prototype/artifacts-v5`, each 32.000s H.264/AAC with thumbnails and unique hashes.
+- Independent receipt `verify-video-v5-batch-20261102.md` is `FAIL / PENDING — PROTOTYPE BATCH ONLY`: nine outputs are deterministic derivatives of one capture sequence, audio license is UNKNOWN, and `CLAUDE_APPROVED` is absent.
+- Canonical manifest/draft media bindings remain unchanged. `T-integrate`, `T-publish`, and schedule stay blocked until independent capture/approval/license gates pass.
