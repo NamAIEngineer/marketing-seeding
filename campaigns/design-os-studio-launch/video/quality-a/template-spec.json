@@ -34,11 +34,20 @@
     "end": {"cardBoundsPxApprox": [53, 47, 1227, 682], "centeredVersionLine": true, "creditBaselineYPxApprox": 704, "creditFontSizePxApprox": 8, "creditText": "Untitled UI PRO v8.0 kit by Untitled UI. Music: Edge of Motion by Aetheric (freetouse.com)"}
   },
   "music": {
-    "source": "audio stream from supplied reference only; no substitute track acquired",
-    "reuseLicenseEvidence": "UNKNOWN: supplied reference visibly credits freetouse.com; no separate license terms retrieved in this run",
+    "source": "Moral Berkarat (2021) by AlexanderMenulis",
+    "trackUrl": "https://commons.wikimedia.org/wiki/File:Moral_Berkarat_(2021).ogg",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "license": "CC0 1.0 Universal / Public Domain Dedication",
+    "commercialUse": true,
+    "attributionRequired": false,
+    "retrievedAt": "2026-11-02T03:00:32Z",
+    "sha256": "dbf668a6704c3ef92430592f701f161a3f0e82ac48f199fed1e0fd89ebbc5cae",
+    "localEvidence": "plans/growth-lead-20261102/evidence/moral-berkarat-2021.ogg",
+    "licenseEvidence": "plans/growth-lead-20261102/evidence/moral-berkarat-source.json",
+    "reuseLicenseEvidence": "PASS: official Wikimedia metadata and CC0 deed permit commercial reuse; attribution is not required",
     "targetMeanDb": -15.1,
     "targetMaxDb": -0.5,
-    "synchronization": "use source track; cut feature scenes at observed beat/cut grid after listening confirmation"
+    "synchronization": "use selected track when muxed; silent MP4 is permitted if composition cannot safely include audio"
   },
   "proof": {"referenceGrid": "campaigns/design-os-studio-launch/video/quality-a/reference-proof-grid.png", "featureFrame": "campaigns/design-os-studio-launch/video/quality-a/reference-feature-frame.png"}
 }
