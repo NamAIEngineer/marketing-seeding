@@ -904,6 +904,8 @@ CẦN NAM: none at this checkpoint; only publisher-side login/challenge/CAPTCHA/
 blockers: CONTENT_PENDING_CLAUDE | SPEC_IMAGES_PENDING_CLAUDE | VIDEO1_CAPTURE_AND_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
 next_30m: collect worker receipts, independent-check outputs, and publisher receipt without touching publisher; update status by 12:18 ICT
 
+dispatch_receipts: spec_images=task_0a1bd50eca96/ctx_47170a457fae; content=task_1f7a46f31e52/ctx_155303e48fcf; video=task_23f151710ef4/ctx_a0ce19a3396b; orchestration checkpoint commit=0ad95bf
+
 ## Facebook publisher img-01 — 2026-11-02T04:53:04Z
 
 - Status: BLOCKED / CẦN NAM
