@@ -1,0 +1,133 @@
+{
+  "status": "CONTENT_PENDING_CLAUDE",
+  "publication": "NOT_AUTHORIZED",
+  "musicCreditPolicy": "Add credit only when selected track license requires it.",
+  "posts": [
+    {
+      "id": "dos-1102-v3-remaining-01",
+      "channel": "linkedin_personal",
+      "locale": "en",
+      "product": "Landing page",
+      "videoSlot": "MISSION_16_V3_PENDING_REMAINING_01",
+      "videoStatus": "PENDING_CLAUDE_APPROVAL",
+      "releaseFact": "DESIGN:OS Studio 0.7.6 local-first canvas, agent workflow, Auto Layout and Dev Mode",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6",
+      "sourceRefs": [
+        "README.md:The Practical Agentic Loop",
+        "README.md:First Safe Use & The Practical Loop",
+        "README.md:Facts Register"
+      ],
+      "state": "CONTENT_PENDING_CLAUDE",
+      "musicCreditRequired": false,
+      "body": "A landing page I could review with the team, not another loose collection of screenshots.\n\nWe are building DESIGN:OS Studio so a real page can move from rough structure to a handoff inside one desktop workflow.\n\n• Start with a blank canvas → get a first landing-page hierarchy to discuss\n• Ask an agent to shape sections → review the actual frames instead of a chat transcript\n• Select a layer → inspect the implementation path in Dev Mode\n• Adjust spacing and components → keep the visual decision beside the file\n• Export the design → give dev a concrete artifact to continue\n\nThe point is simple: move from a feature demo to a product screen a team can review. Free and open source: https://github.com/jangtrinh/design-os-studio\nRelease: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6\n\nWhat would you test first on a real project: layout control, component consistency, or code handoff?\n\n#DesignOS #DesignEngineering #Figma #BuildInPublic #OpenSource"
+    },
+    {
+      "id": "dos-1102-v3-remaining-02",
+      "channel": "linkedin_personal",
+      "locale": "en",
+      "product": "Mobile onboarding",
+      "videoSlot": "MISSION_16_V3_PENDING_REMAINING_02",
+      "videoStatus": "PENDING_CLAUDE_APPROVAL",
+      "releaseFact": "DESIGN:OS Studio 0.7.6 local-first canvas, agent workflow, Auto Layout and Dev Mode",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6",
+      "sourceRefs": [
+        "README.md:The Practical Agentic Loop",
+        "README.md:First Safe Use & The Practical Loop",
+        "README.md:Facts Register"
+      ],
+      "state": "CONTENT_PENDING_CLAUDE",
+      "musicCreditRequired": false,
+      "body": "A mobile onboarding flow I could walk through before handing it to product and engineering.\n\nMy team and I are building DESIGN:OS Studio for the practical gap between an idea and a screen someone can test.\n\n• Sketch the first mobile states → see the flow as connected screens\n• Ask an agent for a layout pass → compare the result on the canvas\n• Tune Auto Layout → keep cards and text aligned as content changes\n• Inspect the selected layer in Dev Mode → give dev a useful code starting point\n• Save the .fig locally → keep the source with the project\n\nThe point is simple: move from a feature demo to a product screen a team can review. Free and open source: https://github.com/jangtrinh/design-os-studio\nRelease: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6\n\nWhat would you test first on a real project: layout control, component consistency, or code handoff?\n\n#DesignOS #DesignEngineering #Figma #BuildInPublic #OpenSource"
+    },
+    {
+      "id": "dos-1102-v3-remaining-03",
+      "channel": "linkedin_personal",
+      "locale": "en",
+      "product": "Signup form",
+      "videoSlot": "MISSION_16_V3_PENDING_REMAINING_03",
+      "videoStatus": "PENDING_CLAUDE_APPROVAL",
+      "releaseFact": "DESIGN:OS Studio 0.7.6 local-first canvas, agent workflow, Auto Layout and Dev Mode",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6",
+      "sourceRefs": [
+        "README.md:The Practical Agentic Loop",
+        "README.md:First Safe Use & The Practical Loop",
+        "README.md:Facts Register"
+      ],
+      "state": "CONTENT_PENDING_CLAUDE",
+      "musicCreditRequired": false,
+      "body": "A signup form with a clear path from first field to confirmation, ready for a real review.\n\nWe are building DESIGN:OS Studio in public so design work ends in something a team can actually inspect and use.\n\n• Lay out the form states → make the user path visible\n• Ask an agent for a first component pass → get a concrete starting point\n• Check spacing and contrast → catch issues before handoff\n• Select the form layer → inspect React, Tailwind, CSS or SwiftUI output in Dev Mode\n• Keep the file local → revise the source instead of passing screenshots around\n\nThe point is simple: move from a feature demo to a product screen a team can review. Free and open source: https://github.com/jangtrinh/design-os-studio\nRelease: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6\n\nWhat would you test first on a real project: layout control, component consistency, or code handoff?\n\n#DesignOS #DesignEngineering #Figma #BuildInPublic #OpenSource"
+    },
+    {
+      "id": "dos-1102-v3-remaining-04",
+      "channel": "linkedin_personal",
+      "locale": "en",
+      "product": "Pricing page",
+      "videoSlot": "MISSION_16_V3_PENDING_REMAINING_04",
+      "videoStatus": "PENDING_CLAUDE_APPROVAL",
+      "releaseFact": "DESIGN:OS Studio 0.7.6 local-first canvas, agent workflow, Auto Layout and Dev Mode",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6",
+      "sourceRefs": [
+        "README.md:The Practical Agentic Loop",
+        "README.md:First Safe Use & The Practical Loop",
+        "README.md:Facts Register"
+      ],
+      "state": "CONTENT_PENDING_CLAUDE",
+      "musicCreditRequired": false,
+      "body": "A pricing page I could critique with real hierarchy before asking anyone to write production code.\n\nMy team and I are building DESIGN:OS Studio so an agent can help make the first pass while the designer keeps the final call.\n\n• Build the pricing sections → see the information order on canvas\n• Ask for a component draft → review the actual result, not a promise\n• Change variables and spacing → keep the page coherent across cards\n• Run the visual check → compare the captured frame with the intended screen\n• Open Dev Mode → leave dev a selected layer and an implementation direction\n\nThe point is simple: move from a feature demo to a product screen a team can review. Free and open source: https://github.com/jangtrinh/design-os-studio\nRelease: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6\n\nWhat would you test first on a real project: layout control, component consistency, or code handoff?\n\n#DesignOS #DesignEngineering #Figma #BuildInPublic #OpenSource"
+    },
+    {
+      "id": "dos-1102-v3-remaining-05",
+      "channel": "facebook_timeline",
+      "locale": "vi",
+      "product": "Profile card",
+      "videoSlot": "MISSION_16_V3_PENDING_REMAINING_05",
+      "videoStatus": "PENDING_CLAUDE_APPROVAL",
+      "releaseFact": "DESIGN:OS Studio 0.7.6 local-first canvas, agent workflow, Auto Layout and Dev Mode",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6",
+      "sourceRefs": [
+        "README.md:The Practical Agentic Loop",
+        "README.md:First Safe Use & The Practical Loop",
+        "README.md:Facts Register"
+      ],
+      "state": "CONTENT_PENDING_CLAUDE",
+      "musicCreditRequired": false,
+      "body": "Mình và team đang build ra DESIGN:OS Studio để người dùng làm ra một profile card có thể đem đi review ngay.\n\nMình thử một việc rất cụ thể: từ canvas trống tới profile card có avatar, thông tin và trạng thái rõ ràng.\n\n• Dựng khung card → có bố cục đầu tiên để góp ý\n• Giao agent làm phần component → có bản nháp thật trên canvas\n• Chỉnh khoảng cách và màu → card dễ đọc hơn khi đưa vào màn hình\n• Chọn layer trong Dev Mode → dev có điểm bắt đầu để viết code\n• Lưu file .fig trên máy → còn nguyên nguồn để sửa tiếp\n\nNôm na là từ “thử tính năng” sang “làm ra màn hình để dùng tiếp”.\n\nFree, mã nguồn mở: https://github.com/jangtrinh/design-os-studio\nBản phát hành: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6\n\nAnh em muốn thử trước phần nào: **bố cục, component hay bàn giao code**?\n\n#DesignOS #Figma #UIUX #BuildInPublic #MaNguonMo"
+    },
+    {
+      "id": "dos-1102-v3-remaining-06",
+      "channel": "facebook_member_group",
+      "locale": "vi",
+      "product": "Design system",
+      "videoSlot": "MISSION_16_V3_PENDING_REMAINING_06",
+      "videoStatus": "PENDING_CLAUDE_APPROVAL",
+      "releaseFact": "DESIGN:OS Studio 0.7.6 local-first canvas, agent workflow, Auto Layout and Dev Mode",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6",
+      "sourceRefs": [
+        "README.md:The Practical Agentic Loop",
+        "README.md:First Safe Use & The Practical Loop",
+        "README.md:Facts Register"
+      ],
+      "state": "CONTENT_PENDING_CLAUDE",
+      "musicCreditRequired": false,
+      "body": "Có bác nào đang dựng design system mà mỗi lần đổi token lại phải sửa từng component không?\n\nMình và team đang build ra DESIGN:OS Studio để người dùng làm ra một bộ component có thể kiểm tra và dùng tiếp.\n\n• Tạo component mẫu → có khung chung cho các màn hình\n• Đổi variable màu và chữ → nhiều trạng thái cập nhật cùng hướng\n• Giao agent xử lý một phần → có kết quả để mình duyệt, không phó mặc\n• Kiểm tra layer và khoảng cách → phát hiện chỗ lệch trước khi bàn giao\n• Mở Dev Mode → dev xem được hướng triển khai từ component đang chọn\n\nNôm na là từ “thử tính năng” sang “làm ra màn hình để dùng tiếp”.\n\nFree, mã nguồn mở: https://github.com/jangtrinh/design-os-studio\nBản phát hành: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6\n\nAnh em muốn thử trước phần nào: **bố cục, component hay bàn giao code**?\n\n#DesignOS #Figma #UIUX #BuildInPublic #MaNguonMo"
+    },
+    {
+      "id": "dos-1102-v3-remaining-07",
+      "channel": "facebook_timeline",
+      "locale": "vi",
+      "product": "Analytics workspace",
+      "videoSlot": "MISSION_16_V3_PENDING_REMAINING_07",
+      "videoStatus": "PENDING_CLAUDE_APPROVAL",
+      "releaseFact": "DESIGN:OS Studio 0.7.6 local-first canvas, agent workflow, Auto Layout and Dev Mode",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6",
+      "sourceRefs": [
+        "README.md:The Practical Agentic Loop",
+        "README.md:First Safe Use & The Practical Loop",
+        "README.md:Facts Register"
+      ],
+      "state": "CONTENT_PENDING_CLAUDE",
+      "musicCreditRequired": false,
+      "body": "Mình và team đang build ra DESIGN:OS Studio để người dùng làm ra một màn hình analytics rõ thứ tự thông tin, không chỉ một ảnh đẹp.\n\nMình thử đặt các khối số liệu, biểu đồ và trạng thái vào một workspace rồi rà lại như một màn hình thật.\n\n• Chia khu vực dữ liệu → người xem biết nên đọc gì trước\n• Dựng card và biểu đồ → có màn hình để team phản biện\n• Nhờ agent làm lượt bố cục → tiết kiệm phần lặp lại nhưng vẫn tự duyệt\n• Chỉnh Auto Layout → nội dung thay đổi vẫn giữ trật tự\n• Xuất code từ layer chọn → dev có điểm bắt đầu cụ thể\n\nNôm na là từ “thử tính năng” sang “làm ra màn hình để dùng tiếp”.\n\nFree, mã nguồn mở: https://github.com/jangtrinh/design-os-studio\nBản phát hành: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6\n\nAnh em muốn thử trước phần nào: **bố cục, component hay bàn giao code**?\n\n#DesignOS #Figma #UIUX #BuildInPublic #MaNguonMo"
+    }
+  ]
+}
