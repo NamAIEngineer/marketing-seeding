@@ -129,6 +129,20 @@ Dispatch contract: controller Growth Lead; role BUILD; tier workhorse `gpt-6-lun
 | T-verify-spec-images-22 | VERIFY · spec/images | Read-only direct inspection of seven product specs, `.designos`, apply/inspect receipts, 1920x1200 screenshots, Dev Mode screenshots, SHA ledger, and foreign-change boundaries | T-spec-images-22 | A15, V6, V4, V5 |
 | T-verify-video-22 | VERIFY · video | Read-only direct inspection of the worker's capture logs, MP4 absence, recorder status=2, evidence paths, and fail-closed classification | T-video-22 | A8, A15, V6, V4 |
 
+## Wave 6 — Mission 22/D content refresh (12:47 ICT)
+
+Mission 22/D supersedes the earlier seven-post copy artifact for review. The
+earlier files remain immutable evidence; this wave writes a new artifact only.
+
+| Task | role | Scope | Dependencies | Acceptance |
+|---|---|---|---|---|
+| T-content-v4-rule-d | BUILD · content | Seven hand-written posts for dashboard, pricing page, mobile onboarding, settings/form, profile + tokens, e-commerce, and blog. Apply the official FREE Figma-alternative positioning, exact source-available PolyForm Shield wording, result-first build-in-public copy, grounded numeric case-study hook variant, and link-in-post vs first-comment experiment metadata. | Mission 22/D reference; read-only README/CHANGELOG facts | A15, A2, A3, V3, no forbidden license wording |
+| T-verify-content-v4-rule-d | VERIFY · content | Fresh read-only inspection of the new JSON/MD artifact, including numeric evidence, locale, word counts, forbidden scan, uniqueness, pilot variables, pending state, and canonical-worktree boundaries. | T-content-v4-rule-d | A15, V1, V3, V4, V5 |
+
+The builder worktree must remain disjoint from canonical drafts and publisher
+ownership. No Claude approval, video approval, media binding, schedule, or live
+publication is inferred from this wave.
+
 ## 2026-11-02 07:06 ICT — Mission 18 latest content + packaged refresh
 
 - T-content: worker commit `ea98daa` integrated as `a3a5117`; independent report commit `1393eea` PASS bounded. Facebook timeline/group hooks are distinct and each states “Mình và team đang build…” with concrete outcomes; all rows remain `CONTENT_PENDING_CLAUDE`.

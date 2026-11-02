@@ -320,3 +320,94 @@ Nam gửi 4 bài đăng tay và nói: video và content phải chuẩn như vậ
 - Minh bạch: nếu bài nói như người ngoài thì vẫn phải thật; không dựng persona giả, không tự comment/like chéo.
 - Video: chính là phong cách video mẫu release-recap mà bài A dùng; bản 30-40s mục 16 giữ đúng ngôn ngữ hình ảnh đó (khung selection xanh mở/đóng, nhãn cam nhỏ, headline 1-2 từ to, UI thật crop/zoom).
 - Gate giữ nguyên: CLAUDE_APPROVED cho cả content và video mới được đăng.
+
+## 19. CLAUDE REVIEW 07:50 2/11 — video v4 FAIL, content v2 FAIL (chi tiết + cách sửa)
+VIDEO v4-long-prototype (30.23s) — FAIL:
+- Canvas gần như y hệt mọi khung: dashboard + mobile đã hoàn chỉnh từ giây đầu. Headline ghi "Ask the agent / Build the grid / Switch the theme" nhưng trên màn hình không có gì thay đổi → nói một đằng, hình một nẻo. Không thấy panel agent, không thấy prompt, không thấy layout mọc ra.
+- Toàn bộ canvas bị thu nhỏ, UI bé xíu; không crop/zoom vào vùng đang thay đổi như video mẫu.
+- Headline nhỏ so với mẫu; không có màn reveal thành phẩm to rõ.
+CÁCH SỬA (bắt buộc):
+1. Mỗi video = 1 phiên quay thật, liên tục, 60–180s raw: bắt đầu từ file .designos TRỐNG → mở Agents panel → gõ prompt (thấy chữ) → agent (Claude Code trong Studio, hoặc designos CLI/MCP) dựng sản phẩm NGAY TRÊN CANVAS trong lúc ScreenCaptureKit quay cửa sổ Studio.
+2. Dựng lại 30–40s: tìm vùng thay đổi giữa các frame (frame diff) để crop/zoom đúng chỗ đang mọc ra; tua nhanh đoạn chờ; 5–7 cảnh; reveal thành phẩm full khung, to rõ; end card repo + Star.
+3. 10 video = 10 phiên quay riêng, 10 sản phẩm khác nhau (dashboard, landing page, mobile onboarding, form, pricing, profile card...) → giải quyết luôn blocker independent capture.
+4. Nhạc: Free To Use cho phép dùng miễn phí trong nội dung mạng xã hội nếu ghi credit đúng mẫu trong phần mô tả. Tải track Edge of Motion (Aetheric) từ trang chính thức freetouse.com trên Mac, KHÔNG cắt từ video mẫu; ghi URL + ngày tải vào template-spec.json làm license evidence. Mọi bài có video phải có 3 dòng credit cuối bài:
+   Music from Free To Use
+   Source: https://freetouse.com/music
+   Edge of Motion by Aetheric
+5. Làm xong video #1 (dashboard) → contact sheet 2fps + so sánh mẫu → chờ CLAUDE_APPROVED rồi mới làm 9 cái còn lại.
+CONTENT drafts-2026-11-02-v2 — FAIL:
+- Sinh bằng template: 13 bài dùng chung 6 bullet y hệt và chung 1 câu reframe; bài tiếng Việt chèn nguyên câu tiếng Anh ("The README records...", "The facts register..."); dấu "??" lặp; có câu placeholder "what would you test first?"; câu hỏi không khớp fact; fact cũ v0.2.0 nhưng link release luôn v0.6.0; bullet là thao tác chung chung, không phải kết quả cho việc thật; 8 bài LinkedIn personal trong khi cap là 2/ngày.
+CÁCH SỬA (bắt buộc):
+1. KHÔNG dùng script/template ghép câu. Viết TỪNG BÀI riêng bằng LLM, lấy bài mẫu Nam duyệt hướng ở cuối reference/manual-posts-nam-gold-standard.md làm thước đo chất lượng.
+2. Mỗi bài = 1 việc thật của designer/dev (nhận file khách, dựng dashboard, bàn giao code, đổi theme...) → kết quả nhận được. Bullet riêng cho từng bài, không lặp.
+3. Facebook: 100% tiếng Việt. LinkedIn: 100% tiếng Anh. Ưu tiên tin mới nhất (0.7.x), link release khớp đúng fact.
+4. Có 3 dòng credit nhạc khi bài có video. Có câu build-in-public "mình và team đang build...". Free, mã nguồn mở; không nhắc thu phí.
+5. Tôn trọng cap; nếu cap không đủ 10 bài/ngày thì báo con số thật, không vượt.
+6. Nộp TRƯỚC 3 bài (1 LinkedIn, 1 Facebook trang cá nhân, 1 group) cho Claude duyệt; đạt rồi mới viết tiếp.
+
+## 20. CLAUDE REVIEW 09:55 2/11 — content đã duyệt 3 bài, quyết định nhạc, gỡ kẹt video
+CONTENT:
+- candidate-4 chưa đạt (vẫn chung 1 chuỗi 6 bước, không có sản phẩm cụ thể, tiếng Việt dịch cứng "tệp/trợ lý/mã", hook nhạt).
+- Claude đã viết lại 3 bài và ĐÃ DUYỆT NỘI DUNG: campaigns/design-os-studio-launch/drafts/drafts-2026-11-02-v3-claude.md (CLAUDE_APPROVED nội dung; vẫn chờ video dashboard #1 được duyệt mới đăng).
+- 7 bài còn lại: viết theo đúng chất lượng 3 bài này. Mỗi bài gắn 1 video/sản phẩm khác (landing page, mobile onboarding, form, pricing, profile card, design system...), bullet khác nhau thật sự, giữ thuật ngữ quen: file, agent, layer, component, Auto Layout, Dev Mode, code, dev. Nộp 7 bài trong 1 file, Claude duyệt lần check sau.
+NHẠC (quyết định của Claude, Nam đã ủy quyền):
+- Bỏ track Edge of Motion / Free To Use (bản free chỉ cho nội dung phi thương mại → không chắc với bài quảng bá sản phẩm). Không cắt nhạc từ video mẫu.
+- Dùng 1 track nhạc nền điện tử/motion có license cho phép dùng thương mại không cần trả phí (ưu tiên Pixabay Music, Content License). Tải từ trang chính thức trên Mac; lưu URL track + URL license + ngày tải + SHA vào template-spec.json. Nếu license yêu cầu credit thì thêm credit vào cuối bài; nếu không thì không thêm.
+- Nếu không tải/xác minh được trong 30 phút: xuất video không nhạc (âm thanh im lặng), KHÔNG chặn cả pipeline vì nhạc.
+VIDEO — gỡ kẹt "foreign worktree binding / Claude Untitled / empty DESIGNOS_FILE":
+1. Lưu file trống thành tên rõ ràng (vd v6-live/dashboard-01.designos) TRƯỚC, mở đúng file đó trong Studio, xác nhận tiêu đề cửa sổ/đường dẫn file đúng, rồi mới mở Agents panel.
+2. Chờ agent tối thiểu 5 phút (Claude Code thường mất 30–120s mới bắt đầu sửa canvas), không kết luận fail sau 8 giây.
+3. Đường thay thế nếu Agents panel vẫn bind sai: dùng designos-mcp / designos CLI (đã cài trong ~/Applications/designos.app) gửi lệnh tạo node vào đúng tài liệu đang mở, từng bước (frame → sidebar → header → card KPI → chart → table) có khoảng nghỉ để canvas cập nhật, trong lúc ScreenCaptureKit quay cửa sổ. Cảnh prompt trong video vẫn phải là thao tác thật đã diễn ra.
+4. Ghi lại cách làm chạy được thành script tái dùng cho 9 video còn lại (mỗi video 1 phiên quay riêng, 1 sản phẩm riêng).
+5. Nộp video dashboard #1 + contact sheet 2fps + so sánh mẫu → chờ CLAUDE_APPROVED.
+
+## 21. ĐĂNG NGAY HÔM NAY BẰNG ẢNH THẬT (Claude 10:38 2/11, Nam hỏi sao chưa có bài nào) — ƯU TIÊN P0
+Không chờ video nữa cho 3 bài đã duyệt. Video vẫn làm tiếp song song cho các bài sau.
+1. Chụp 3 ảnh thật cửa sổ DESIGN:OS Studio bằng ScreenCaptureKit (chỉ cửa sổ Studio, PNG 1600px+): (a) canvas có dashboard SaaS đã dựng, zoom vừa khung nhìn rõ; (b) Agents panel đang mở cạnh canvas có prompt thấy chữ; (c) Dev Mode hiện code của 1 layer dashboard. Lưu campaigns/design-os-studio-launch/images/2026-11-02/ + SHA. Báo path cho Claude ngay khi có (Claude duyệt ảnh trong 30 phút).
+2. Sửa đúng 1 dòng trong 3 bài drafts-2026-11-02-v3-claude.md: thay "Video bên dưới là toàn bộ quá trình." bằng "Ảnh bên dưới là giao diện thật trong Studio."; LinkedIn thay "The video below shows the whole process." bằng "Screenshots below are from the actual app." Không đổi gì khác.
+3. Khi ảnh có CLAUDE_APPROVED: đăng theo thứ tự, mỗi bài cách nhau ≥30 phút:
+   - v3-claude-02 lên trang cá nhân Facebook (bài live đầu tiên) → mở permalink thật, kiểm tra nội dung + ảnh hiển thị đúng → ghi vào store + Overview.
+   - v3-claude-01 lên LinkedIn cá nhân → kiểm tra permalink.
+   - v3-claude-03 vào 1 group UI/UX/AI mà account ĐÃ là thành viên, cho phép đăng bài, và CHƯA đăng bài DESIGN:OS gần đây (KHÔNG dùng group "Cùng học Figma UI/UX & Product design" vì Nam vừa đăng ở đó 23/10 và 27/10). Đọc nội quy group trước; group cần duyệt bài thì ghi trạng thái PENDING_GROUP_APPROVAL.
+4. Bất kỳ lỗi đăng/challenge nào: dừng account đó, chụp màn hình, ghi CẦN NAM; không retry liên tục.
+5. Sau 3 bài: lịch còn lại hôm nay dùng 7 bài mới (khi Claude duyệt) + ảnh/video đã duyệt, theo cap, đến 23:00.
+
+## 21b. CHUẨN ẢNH (Nam 10:42 2/11) — ghi đè mục 21 bước 1
+Ảnh phải là SẢN PHẨM HOÀN CHỈNH như ảnh trong bài của sếp Jang (https://www.facebook.com/share/p/1TFBUaWQeA/): giao diện thật trong DESIGN:OS Studio với thiết kế đã xong, đẹp, có dữ liệu thật, nhìn vào là thấy làm ra được cái gì. Bài Jang dùng ảnh ghép: bên trái là nhiều màn hình UI hoàn chỉnh đặt cạnh nhau trên canvas, bên phải là canvas Studio đang mở panel chỉnh style.
+- KHÔNG dùng wireframe, frame trống, layout dở dang, canvas thu nhỏ chữ không đọc được.
+- Ảnh chính: dashboard SaaS hoàn chỉnh (sidebar, header, KPI cards có số, chart, table có dữ liệu, màu và typography đồng nhất) trong canvas Studio, crop vừa đủ để đọc được chữ.
+- Có thể làm ảnh ghép 2–4 ô như bài Jang: dashboard hoàn chỉnh + 1–2 màn hình liên quan (mobile, detail) + 1 ô Studio đang mở panel (Agents/Dev Mode/Edit style).
+- Thiết kế phải thật sự được làm trong Studio (agent hoặc thao tác), lưu file .designos + .fig làm bằng chứng.
+- Nộp ảnh cho Claude duyệt trước khi đăng.
+
+## 22. LỆNH CỦA NAM 10:54 — HÔM NAY ĐỦ 10 BÀI + VIDEO HOÀN CHỈNH CHO 7 NGÀY TỚI (P0 tuyệt đối)
+Nam rất bực vì cả sáng 0 bài. Mọi lane khác dừng lại nhường cho mục này.
+A. LỊCH HÔM NAY (10 slot, 11:30 → 23:00, theo cap an toàn, không vượt):
+   - LinkedIn cá nhân 2: img-02 (12:00) + 1 bài mới (chiều).
+   - Facebook trang cá nhân 2: img-01 (11:30) + 1 bài mới (tối).
+   - Facebook group 4: img-03 (12:30) + 3 bài mới, mỗi group 1 bài khác, cách nhau ≥2 giờ, chỉ group đã là thành viên + nội quy cho phép.
+   - LinkedIn group 2: chỉ group đã là thành viên; nếu chưa có group LinkedIn nào ⇒ báo ngay để Claude đổi slot, KHÔNG vượt cap trang cá nhân.
+B. 7 BÀI MỚI HÔM NAY = 7 SẢN PHẨM KHÁC NHAU dựng bằng designos --apply-spec (cách Claude đã làm lúc 10:50, xem images/2026-11-02/apply1.log): agent viết NodeSpec JSON hoàn chỉnh, đẹp, dữ liệu thật cho: dashboard SaaS, pricing page, mobile onboarding (3 màn), settings/form, profile card + design system tokens, e-commerce product page, blog/article layout. Theo mẫu examples/specs/*.spec.json trong /Users/nam/Documents/design-os-issue-1063. Chụp bằng designos FILE --screenshot OUT.png --size 1920x1200 --select id:2 --zoom fit --no-toast (+ 1 ảnh --dev react). Nội dung viết theo đúng khuôn drafts-2026-11-02-v3-claude-images.md, mỗi bài nói kết quả của sản phẩm đó. Nộp ảnh + 7 bài cho Claude trước 13:30.
+C. VIDEO — PIPELINE MỚI CHẮC CHẮN CHẠY (bỏ cách chờ Agents panel):
+   1. Mở file .designos trống trong Studio GUI, bắt đầu ScreenCaptureKit quay cửa sổ.
+   2. Chạy --apply-spec lần lượt từng phần của spec (khung → header → sidebar → cards → chart → table) vào ĐÚNG file đang mở, mỗi bước cách 3–5s; Studio live hot-reload ~500ms nên canvas mọc ra từng phần ngay trên màn hình.
+   3. Cảnh mở đầu: terminal/prompt thật đang chạy lệnh (quay cửa sổ terminal riêng, ghép vào), rồi canvas mọc ra, rồi Dev Mode, rồi reveal full thành phẩm, end card repo + Star.
+   4. Dựng 30–40s theo ngôn ngữ video mẫu (khung selection xanh, nhãn cam, headline to, crop/zoom vùng đang mọc). Không nhạc nếu chưa có license thương mại xác minh.
+   5. Video #1 (dashboard) nộp Claude trước 15:00. Đạt ⇒ chạy batch: 70 video cho 7 ngày (3/11 → 8/11 + phần còn lại hôm nay), mỗi video 1 sản phẩm/spec khác, sản xuất trước ít nhất 1 ngày. Claude duyệt theo lô 10.
+D. Báo tiến độ vào growth-lead-status.md mỗi 30 phút; bài nào lên ghi permalink ngay.
+
+## 22E. NAM 10:56 — OVERVIEW PHẢI CẬP NHẬT LIÊN TỤC
+- Mỗi bài đăng xong ⇒ ghi ngay vào store 4321 (permalink, kênh, account, giờ, ảnh/video, nội dung) ⇒ hiện trên Overview trong vòng 1 phút.
+- Crawl số liệu bài đã đăng (like, comment, share, view) từ chính permalink bằng Chrome profile của account, mỗi 30–60 phút, ghi vào store ⇒ Overview.
+- Crawl star GitHub (gh api) mỗi giờ ⇒ khối 1000★.
+- Crawl group/cộng đồng mới (public) + trạng thái join ⇒ khối Cộng đồng.
+- Overview hiển thị: số bài hôm nay x/10, danh sách bài + link + số tương tác, star, video/ảnh đã duyệt, việc CẦN NAM. Không được để Overview trống hay số cũ.
+
+## 23. KẾ HOẠCH PILOT 7 NGÀY CHÍNH THỨC (Claude 11:02 2/11, Nam giao toàn quyền lập plan)
+Đọc .orca-coordination/PILOT-PLAN-7-NGAY.md (nội dung đầy đủ bên dưới). Từ giờ mọi việc chạy theo kế hoạch này; các mục 1–22 vẫn là chi tiết thực thi.
+
+## 24. CẤM COMPUTER USE (Nam 11:26 2/11) — luật vĩnh viễn
+- ORCA (Lead + mọi worker) KHÔNG được dùng computer use / điều khiển chuột-bàn phím màn hình của Nam cho bất kỳ việc gì.
+- Đăng bài, comment, join group, đọc số liệu: chỉ qua DOM bằng Playwright trên Chrome profile app-owned (launchPersistentContext, Chrome thật), từ code của app marketing-seeding (publisher/service), có receipt + permalink.
+- Quay video: chỉ ScreenCaptureKit quay cửa sổ Studio + CLI designos; không click màn hình.
+- Không bao giờ đụng Chrome cá nhân của Nam.

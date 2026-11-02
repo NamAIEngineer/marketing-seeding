@@ -1,0 +1,9 @@
+task=content-v4-rule-d-refresh
+created=2026-11-02T12:47:00+0700
+base_sha=f2ed32a88be49100b7e5e625c197c7f7e09e94ed
+scope=review-only-new-child-worktree
+canonical_drafts=preserve
+publisher=term_84dd3dea-exclusive
+computer_use=forbidden
+publication=forbidden
+credential=forbidden

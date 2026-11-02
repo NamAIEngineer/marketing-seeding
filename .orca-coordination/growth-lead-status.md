@@ -929,6 +929,17 @@ next_30m: finish independent content verification; preserve spec/video evidence;
 
 verification_dispatches: content=task_3867b39d655c/ctx_51acc08c7945; spec_images=task_b8bcff01a0b1/ctx_da79fc150d75; video_direct=task_cb9dd612f8e2/ctx_9a4016576721; video dependency task_1445f09eacaa marked failed only to unblock independent audit, no retry of capture
 
+updated: 2026-11-02T12:30:00+0700
+phase: MISSION_22_INDEPENDENT_VERIFY_SPEC_FAIL
+spec_images: independent verifier task_b8bcff01a0b1 / ctx_da79fc150d75 = FAIL; `products/evidence/profile-tokens.apply.log` records Invalid NodeSpec JSON, unknown field `variables`; six other apply receipts pass bounded file checks; 14 PNG dimensions/hash pass but semantic visual quality/Claude approval UNKNOWN
+content: independent verifier still active; worker PASS remains outside canonical manifest and CONTENT_PENDING_CLAUDE
+videos: direct independent verifier active; builder blocker remains BLOCKED_CAPTURE_DURATION with no MP4 promotion
+publisher: term_84dd3dea exclusive; Facebook login wall evidence unchanged; no permalink/store mutation
+pilot: armed=10; scheduled=0; published_verified=0; fail-closed
+CẦN NAM: Facebook app-owned `facebook_nam` login wall remains; Nam must restore/verify login manually. No retry by Lead.
+blockers: SPEC_PROFILE_TOKENS_APPLY_ERROR | CONTENT_VERIFIER_PENDING | VIDEO_CAPTURE_DURATION | CONTENT_CLAUDE_APPROVAL | FACEBOOK_LOGIN_WALL | LIVE-PUBLICATION (0 permalink)
+next_30m: dispatch bounded profile-tokens fix in separate worktree; await content/video verifier receipts; no canonical promotion or publication
+
 ## Facebook publisher img-01 — 2026-11-02T04:53:04Z
 
 - Status: BLOCKED / CẦN NAM
@@ -939,3 +950,30 @@ verification_dispatches: content=task_3867b39d655c/ctx_51acc08c7945; spec_images
 - Screenshot: `/Users/nam/orca/workspaces/marketing-seeding/ms-growth-chrome-20261101/plans/growth-lead-20261102/evidence/facebook-publisher/fb-probe.png`
 - Screenshot SHA-256: `0554d665714e061a7ad10fd52fcd2f8393615950997ae8fd2002dc73d0fc9ea0`
 - PID safety: 69776 app-owned Facebook Chrome closed cleanly; personal Chrome PID 486 and LinkedIn PID 69774 untouched.
+
+updated: 2026-11-02T12:47:00+0700
+phase: MISSION_22D_CONTENT_RULE_REFRESH_DISPATCHED
+runtime: packaged 4321 last verified source=6b8fd8243d6345bd107b2e538173f9a17b92b2fe health=200 sourceDirty=false stateRevision=454 pid=39021; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam READY; facebook_group/facebook_nam READY in prior receipt; publisher worker term_84dd3dea remains exclusive; Lead does not touch Chrome/publisher/service.mjs
+pilot: armed=10 slots 07:00-23:00 ICT; scheduled=0; published_verified=0; no live submit
+content: previous Mission 20 rewrite remains review-only but violates new Mission 22/D license wording; new T-content-v4-rule-d dispatched to a fresh child worktree. Must write 7 products, official Figma-alternative sentence, `free, source-available (PolyForm Shield)`, no open-source/mã nguồn mở/#OpenSource, grounded numeric case-study variant, and link-in-post/first-comment fields. No canonical promotion or Claude approval.
+spec_images: Mission 22 independent verifier FAIL remains: profile-tokens NodeSpec uses unsupported `variables`; fix worker settled with artifact outside canonical, independent verification still required.
+videos: old Mission 22 capture FAIL; 22C silent 32s candidate remains quarantined pending independent verification and Claude approval; no media binding.
+publisher: Facebook img-01 evidence remains login wall at `/me` → `/`; no composer/submit/store mutation/permalink; publisher owns retry. CẦN NAM: restore/verify login in app-owned `facebook_nam` profile; Lead does not retry.
+north_star: repo=https://github.com/jangtrinh/design-os-studio current=82 forks=15 target=1000; delta/attribution UNKNOWN
+community: public discovered=30 canonical=camoufox-public; authenticated membership/rules/join/postability UNKNOWN; no side effects
+lanes: runtime=SMOKE_PASS_LAST_RECEIPT; pilot=ARMED_GATES_CLOSED; publish=OWNED_BY_PUBLISHER_WORKER; content=RULE_D_REFRESH_DISPATCHED; spec_images=PROFILE_FIX_PENDING_VERIFY; video=QUARANTINED_PENDING_VERIFY_AND_CLAUDE; community=PUBLIC_30_READY_AUTH_UNKNOWN
+CẦN NAM: Facebook app-owned profile login wall remains; no credential/CAPTCHA/MFA action by Lead. Claude approval is still required for content/video; no publication claim.
+blockers: CONTENT_RULE_D_VERIFY_AND_CLAUDE_APPROVAL | SPEC_PROFILE_TOKENS_APPLY_ERROR | VIDEO_CAPTURE_AND_CLAUDE_APPROVAL | FACEBOOK_LOGIN_WALL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
+next_30m: await the fresh content Rule-D builder receipt; then dispatch independent read-only verifier; preserve all foreign dirty media/artifacts and keep live side effects disabled
+dispatch_receipts: content-v4-rule-d=task_efea94786789/ctx_65738fafebed, worktree=ms-growth-lead-content-v4-rule-d-20261102; two earlier starts rejected repo_not_found before materialization; prior run=run_6a12be5c1b06; pin=plans/growth-lead-20261102/pin/content-v4-rule-d-20261102T1247.txt
+
+
+updated: 2026-11-02T13:02:00+0700
+phase: MISSION_22D_CHROME_RETRY_BLOCKED
+runtime: packaged 4321 swapped to candidate source=8951c2c6f0b831562287e312ab3d90521de0adc4; health=200; stateRevision=456; sourceDirty=false
+publisher: one authorized app-managed Keychain retry for facebook_group/facebook_nam completed through POST /api/account-credentials/retry-login; app returned CHROME_LOGIN_CONTROLS_NOT_FOUND (Login submit control was not found); account now BLOCKED/HUMAN_REQUIRED; Chrome window remains open on app-owned profile
+chrome: executable=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome; profile=/Users/nam/Library/Application Support/Marketing Seeding OS/chrome-profiles/facebook-facebook_nam; candidate has chromiumSandbox=true and ignoreDefaultArgs=[--use-mock-keychain]; no --no-sandbox observed; personal Chrome PID 486 untouched
+publication: img-01 not attempted; no composer/upload/submit/permalink/store publication mutation
+CẦN NAM: Facebook login form submit control unavailable in the one authorized retry; inspect the visible app-owned facebook_nam Chrome window and complete/restore login manually if needed. No automatic retry permitted.
+blockers: FACEBOOK_LOGIN_CONTROLS_NOT_FOUND | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN

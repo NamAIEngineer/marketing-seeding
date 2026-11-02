@@ -80,3 +80,9 @@ Anh em thử rồi cho mình xin feedback: khi làm file cho khách, mọi ngư�
 ## SỬA BỞI NAM (06:05 2/11) — BẮT BUỘC
 4. Giọng build-in-public: "mình và team đang build ra ..." (nói rõ team đang làm ra cái gì, giúp người dùng làm ra cái gì). Thay câu minh bạch cũ bằng kiểu này, vd: "Mình và team đang build DESIGN:OS Studio — một app để nhận file Figma, sửa, giao lại cho khách mà không sợ hỏng."
 5. Kênh Facebook: đăng cả trang cá nhân (facebook_timeline) VÀ các cộng đồng/group Facebook liên quan (facebook_member_group), mỗi nơi 1 bài khác nhau, theo cap.
+
+## D. Bài mới của Jang 2/11 11:3x (https://www.facebook.com/share/p/1HDht86Ucy/) — luật mới BẮT BUỘC
+- License: DESIGN:OS Studio là FREE, **source-available (PolyForm Shield)** — TUYỆT ĐỐI KHÔNG ghi "mã nguồn mở" / "open source" / #OpenSource. Ghi: "free, source-available".
+- Câu định vị chính thức của tác giả, dùng được: "DESIGN:OS Studio là một Figma alternative chất lượng cao, FREE, built for AI." Hashtag: #FigmaAlternative #FreeDesignTool.
+- Khuôn case-study có số liệu thật: tiêu đề ngắn có con số ("một ngày, 34 comment") → bối cảnh thời gian → số liệu thật → "3 điều mình giữ" đánh số → mời xem video/bài chi tiết ở comment → câu định vị + link → hashtag. Dùng làm 1 biến hook "case study số liệu" trong pilot.
+- Link chi tiết (LinkedIn article, Unikorn) đặt ở comment đầu tiên do chính account mình comment ngay sau khi đăng — thử như 1 biến pilot (link trong bài vs link ở comment).
