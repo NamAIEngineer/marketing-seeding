@@ -1,0 +1,57 @@
+{
+  "id": "9185c204-8828-4697-be45-63e57ee5bec6",
+  "ok": true,
+  "result": {
+    "screenshotStatus": {
+      "metadata": {
+        "windowId": 44649,
+        "engine": "screenCaptureKit"
+      },
+      "state": "captured"
+    },
+    "snapshot": {
+      "id": "D2A1938C-517A-4923-92F4-DA7FD981443D",
+      "window": {
+        "height": 965,
+        "screenIndex": 0,
+        "platform": {
+          "layer": 0
+        },
+        "title": "design:os studio",
+        "x": 160,
+        "id": 44649,
+        "width": 1600,
+        "isMinimized": false,
+        "y": 25,
+        "isOffscreen": false
+      },
+      "coordinateSpace": "window",
+      "focusedElementId": 10,
+      "truncation": {
+        "maxDepthReached": false,
+        "maxNodes": 1200,
+        "truncated": false,
+        "maxDepth": 64
+      },
+      "treeText": "App=os.design.studio (pid 44828)\nWindow: \"design:os studio\", App: design:os studio.\n\n0 standard window design:os studio\n\t1 button Main menu\n\t2 button File\n\t3 button Agents\n\t4 button Assets\n\t5 button Tools\n\t6 button Variables\n\t7 button Plugins\n\t8 button Updates & Shortcuts\n\t9 button Close tab\n\t10 text entry area (settable) Placeholder: Reply to Claude Code…\n\t11 button Attach context\n\t12 button Send\n\t13 button Permissions: Ask first\n\t14 button Agent: Claude Code\n\t15 text field (settable), Value: 5A5A5A\n\t16 text field (settable), Value: 100\n\t17 container Agents panel\n\t18 tab group Agent tabs\n\t19 tab (settable) Claude Code #1, Value: 0\n\t20 button New chat\n\t21 button More\n\t22 text entry area (settable) Agent terminal\n\t23 container Message composer\n\t24 close button\n\t25 full screen button, Secondary Actions: zoom the window\n\t26 minimize button\n\nThe focused UI element is 10 text entry area (settable) Placeholder: Reply to Claude Code….",
+      "app": {
+        "bundleId": "os.design.studio",
+        "pid": 44828,
+        "name": "design:os studio"
+      },
+      "elementCount": 27
+    },
+    "screenshot": {
+      "height": 965,
+      "scale": 1,
+      "width": 1600,
+      "format": "png",
+      "path": "/var/folders/v6/q1pcmbrs7nbf3g6pn0g42wsh0000gn/T/orca-computer-use/9185c204-8828-4697-be45-63e57ee5bec6-screenshot.png",
+      "dataOmitted": true,
+      "expiresAt": "2026-11-03T01:22:20.380Z"
+    }
+  },
+  "_meta": {
+    "runtimeId": "ca9076b8-2a16-4401-a75d-5f6badf378bc"
+  }
+}
