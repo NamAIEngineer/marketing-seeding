@@ -906,6 +906,16 @@ next_30m: collect worker receipts, independent-check outputs, and publisher rece
 
 dispatch_receipts: spec_images=task_0a1bd50eca96/ctx_47170a457fae; content=task_1f7a46f31e52/ctx_155303e48fcf; video=task_23f151710ef4/ctx_a0ce19a3396b; orchestration checkpoint commit=0ad95bf
 
+updated: 2026-11-02T12:00:00+0700
+phase: MISSION_22_PUBLISHER_LOGIN_WALL_RECORDED
+publisher: term_84dd3dea owns lane; Facebook img-01 probe reached login wall at `/me` redirect `/`, stopped before composer/upload/submit/store mutation; no permalink; evidence path and SHA recorded by publisher worker below
+CẦN NAM: `facebook_nam` app-owned Chrome profile requires Nam to restore/verify login manually; no credential submission or retry by Lead; account side effect remains stopped
+content: Mission 22/D worker active; no canonical promotion or Claude approval
+spec_images: Mission 22 worker active; no Claude approval
+videos: Mission 22 dashboard worker active; no MP4/CLAUDE_APPROVED claim
+pilot: armed=10; scheduled=0; published_verified=0; no live publication evidence
+next_30m: wait for three worker receipts; independently inspect declared reports/artifacts; preserve publisher ownership; update status by 12:30 ICT
+
 ## Facebook publisher img-01 — 2026-11-02T04:53:04Z
 
 - Status: BLOCKED / CẦN NAM
