@@ -127,3 +127,8 @@ Paused scope: Threads, Reddit, Product Hunt, Indie Hackers, X publication; no W3
 - `T-video`: ten technically valid v5 prototype MP4s exist under `video/quality-a/v5-prototype/artifacts-v5`, each 32.000s H.264/AAC with thumbnails and unique hashes.
 - Independent receipt `verify-video-v5-batch-20261102.md` is `FAIL / PENDING — PROTOTYPE BATCH ONLY`: nine outputs are deterministic derivatives of one capture sequence, audio license is UNKNOWN, and `CLAUDE_APPROVED` is absent.
 - Canonical manifest/draft media bindings remain unchanged. `T-integrate`, `T-publish`, and schedule stay blocked until independent capture/approval/license gates pass.
+
+## 2026-11-02 07:45 ICT — independent-capture blocker
+
+- `T-video`: fresh read-only receipt `verify-video-v5-independent-capture-blocker-20261102.md` confirms six real capture sessions only; nine derivative outputs do not establish independent final captures. Audio license remains UNKNOWN and `CLAUDE_APPROVED` is absent.
+- Canonical media/draft bindings remain untouched. `T-integrate`, `T-publish`, and schedule remain blocked pending nine additional real sessions or an explicit approved fan-out policy, audio evidence, and Claude approval.
