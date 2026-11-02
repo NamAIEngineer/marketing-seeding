@@ -29,7 +29,7 @@ Evidence:
 - `campaigns/design-os-studio-launch/video/mission-19-video-01/evidence/post-submit-state.json`
 - `campaigns/design-os-studio-launch/video/mission-19-video-01/evidence/SHA256SUMS`
 
-The official app at `/Users/nam/Applications/designos.app` opened a blank `.designos` file. The Agents panel and typed prompt are visible. After submission, the composer returned empty and accessibility state exposed no generated nodes or agent response. The required 60–180 second continuous transformation capture and 30–40 second composition are therefore unavailable. Existing v4/v5/quality-B artifacts remain fail-closed; videos 2–10 were not produced.
+The official app at `/Users/nam/Applications/designos.app` opened a blank `.designos` file. The Agents panel and typed prompt are visible. After submission, the composer returned empty and accessibility state exposed no generated nodes or agent response. Follow-up diagnosis found the running DesignOS PID bound to a foreign lead-worktree `quality-a/v6-live/blank.designos`, while the Claude session was an unsaved Untitled document (`scoped=false`, `file_path=null`) and MCP `DESIGNOS_FILE` was empty. Rebinding or restarting that foreign session was skipped to protect unrelated state. The required 60–180 second continuous transformation capture and 30–40 second composition are therefore unavailable. Existing v4/v5/quality-B artifacts remain fail-closed; videos 2–10 were not produced.
 
 ## Audio
 
