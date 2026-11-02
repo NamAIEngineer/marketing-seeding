@@ -138,3 +138,10 @@ Paused scope: Threads, Reddit, Product Hunt, Indie Hackers, X publication; no W3
 - `T-content-v3-candidate`: worker `44aaa6f` integrated as `62c1eea`; exactly three review candidates added. Independent verifier pending. Failed v2 remains preserved and rejected.
 - Candidate gate requires verifier PASS, then explicit Claude content approval before expanding to remaining posts.
 - `T-video-01` and `T-audio-license` remain independent; no content candidate implies video approval or license proof.
+
+## 2026-11-02 08:11 ICT — MISSION 19 candidate-4 correction
+
+- `T-content-v3-candidate`: candidate-3 verifier FAIL (207-word LinkedIn and substantial English in Facebook) is preserved. Candidate-4 commits `d08de11`, `f6e90d7`, and `ed76641` contain exactly three separate hand-written posts. Independent verifier `verify-content-v3-candidate-4.md` now PASSes content gates at HEAD `ed76641` (LinkedIn 190 words; bounded Vietnamese Facebook); content remains `CONTENT_PENDING_CLAUDE`.
+- `T-audio-license`: `cbfcc7f` preserves official Free To Use download and license snapshot. Commercial campaign use is BLOCKED by the official Commercial Content prohibition; no audio/media approval inferred.
+- `T-video-01`: 07:58 v6 live-session retry opened blank `.designos` in official Studio window 44649 and accepted an Agents prompt, but produced no canvas diff or MP4 (`BLOCKED_INTERACTION_CAPTURE`). No valid raw session or `CLAUDE_APPROVED` evidence exists.
+- `T-integrate`/`T-publish`: remain fail-closed. No canonical draft expansion, video binding, schedule activation, publication, permalink, comment, or group side effect is allowed before independent PASS plus explicit Claude content/video approval and valid commercial audio rights.
