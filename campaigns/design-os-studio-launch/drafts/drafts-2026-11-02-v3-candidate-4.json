@@ -1,0 +1,53 @@
+{
+  "status": "CONTENT_PENDING_CLAUDE",
+  "publication": "NOT_AUTHORIZED",
+  "posts": [
+    {
+      "id": "dos-1102-v3-candidate-04-01",
+      "channel": "linkedin_personal",
+      "locale": "en",
+      "releaseFact": "DESIGN:OS Studio 0.7.6 — local-first loop with .fig round trip and Dev Mode handoff",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6",
+      "videoSlot": "MISSION_16_V3_PENDING_04_01",
+      "videoStatus": "PENDING_CLAUDE_APPROVAL",
+      "sourceRefs": [
+        "README.md:First Safe Use & The Practical Loop",
+        "README.md:The Practical Agentic Loop",
+        "README.md:Facts Register"
+      ],
+      "state": "CONTENT_PENDING_CLAUDE",
+      "body": "A useful handoff is my result: one file, one checked change, and a clear next step for engineering.\n\nWe are building DESIGN:OS Studio 0.7.6 so that result can stay in one local workflow. I opened a .fig file, asked an agent for a bounded edit, reviewed the canvas, and used Dev Mode to inspect the implementation path.\n\n• Open a local .fig archive → continue from the real design file\n• Ask an existing CLI agent for one change → see the proposed result before accepting it\n• Keep or revert the turn → preserve the decision when an experiment misses\n• Select a layer in Dev Mode → give engineering a concrete code starting point\n• Capture a GPU frame → compare the visible result with the intended screen\n• Export the archive → hand over a file the next person can open\n\nFrom “AI makes a screen” to “a design task ends with a reviewable artifact and handoff.”\n\nWe are building this in public. Free, open source: https://github.com/jangtrinh/design-os-studio\nRelease: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6\n\nWhich result would you test first: file fidelity, agent control, or code handoff?\n\n#DesignOS #DesignEngineering #Figma #DevMode #BuildInPublic #OpenSource\nMusic from Free To Use\nSource: https://freetouse.com/music\nEdge of Motion by Aetheric"
+    },
+    {
+      "id": "dos-1102-v3-candidate-04-02",
+      "channel": "facebook_timeline",
+      "locale": "vi",
+      "releaseFact": "DESIGN:OS Studio 0.7.6 — mở và lưu tệp .fig trên máy, giữ quy trình cục bộ",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6",
+      "videoSlot": "MISSION_16_V3_PENDING_04_02",
+      "videoStatus": "PENDING_CLAUDE_APPROVAL",
+      "sourceRefs": [
+        "README.md:Quickstart",
+        "README.md:First Safe Use & The Practical Loop"
+      ],
+      "state": "CONTENT_PENDING_CLAUDE",
+      "body": "Mình và team đang build ra DESIGN:OS Studio để người dùng mở tệp thiết kế, sửa xong và giao lại bản có thể dùng tiếp.\n\n**DESIGN:OS Studio 0.7.6 — từ tệp nằm trên máy tới bản bàn giao rõ ràng.**\n\nMình thử việc thật là nhận một tệp .fig, sửa một phần bố cục rồi kiểm tra lại trước khi gửi cho người khác.\n\n• Nhận tệp .fig → mở và lưu ngay trên máy\n• Chọn phần cần sửa → giao một yêu cầu cụ thể cho trợ lý\n• Xem lại bố cục → phát hiện chỗ lệch trước khi bàn giao\n• Giữ hoặc hoàn tác lượt sửa → không mất bản đang đúng\n• Mở phần xem mã → đưa cho người lập trình một điểm bắt đầu\n• Xuất lại tệp → gửi đúng bản đã kiểm tra\n\nTừ “mở được tệp” sang “sửa, kiểm tra và bàn giao mà vẫn biết mình đang gửi gì”.\n\nFree, mã nguồn mở: https://github.com/jangtrinh/design-os-studio\nBản phát hành: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6\n\nNếu làm việc với tệp của khách, mọi người muốn thử trước việc nào: **sửa bố cục, giữ phiên bản hay bàn giao mã**?\n\n#DesignOS #Figma #ThietKeSanPham #MaNguonMo #BuildInPublic #DevMode\nMusic from Free To Use\nSource: https://freetouse.com/music\nEdge of Motion by Aetheric"
+    },
+    {
+      "id": "dos-1102-v3-candidate-04-03",
+      "channel": "facebook_member_group",
+      "locale": "vi",
+      "releaseFact": "DESIGN:OS Studio 0.7.6 — trợ lý làm việc trong tệp với giữ/hoàn tác và kiểm tra ảnh",
+      "releaseUrl": "https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6",
+      "videoSlot": "MISSION_16_V3_PENDING_04_03",
+      "videoStatus": "PENDING_CLAUDE_APPROVAL",
+      "sourceRefs": [
+        "README.md:The Practical Agentic Loop",
+        "README.md:First Safe Use & The Practical Loop",
+        "README.md:Quality Bar & Limitations"
+      ],
+      "state": "CONTENT_PENDING_CLAUDE",
+      "body": "Mình và team đang build ra DESIGN:OS Studio để người dùng nhờ trợ lý làm thử trên tệp thật rồi tự quyết định phần nào được giữ lại.\n\n**DESIGN:OS Studio 0.7.6 — trợ lý sửa thử, người thiết kế kiểm tra và quyết định.**\n\nTrong nhóm mình muốn hỏi đúng chuyện làm việc: làm sao thử nhanh mà không biến một lượt sửa thành rủi ro cho bản đang đúng?\n\n• Mở tệp thiết kế thật → bắt đầu từ nội dung cần làm, không phải ảnh minh họa\n• Giao một việc nhỏ → nhận phần bố cục đầu tiên để xem xét\n• Kiểm tra từng thay đổi → biết chỗ nào cần sửa trước khi gửi\n• Chọn giữ hoặc hoàn tác → bảo toàn quyết định của người thiết kế\n• Chụp lại màn hình → có căn cứ để so với kết quả mong muốn\n• Xuất tệp đã kiểm tra → người tiếp theo nhận đúng bản cần làm\n\nTừ “trợ lý tự dựng rồi kết thúc” sang “trợ lý làm trong quy trình có kiểm tra và quyền quyết định”.\n\nFree, mã nguồn mở: https://github.com/jangtrinh/design-os-studio\nBản phát hành: https://github.com/jangtrinh/design-os-studio/releases/tag/v0.7.6\n\nAnh em trong nhóm ưu tiên kiểm soát phần nào: **sửa bố cục, giữ hoặc hoàn tác, hay kiểm tra trước khi bàn giao**?\n\n#DesignOS #Figma #ThietKeGiaoDien #TroLyAI #BuildInPublic #MaNguonMo\nMusic from Free To Use\nSource: https://freetouse.com/music\nEdge of Motion by Aetheric"
+    }
+  ]
+}
