@@ -621,3 +621,44 @@ lanes: runtime=REBUILD_PENDING_NORTH_STAR; pilot=ARMED_GATES_CLOSED; publish=PAU
 CẦN NAM: none for account readiness; no credential/CAPTCHA/MFA action required
 blockers: RUNTIME_REBUILD_NORTH_STAR | VIDEO_CAPTURE_RECORDER | VIDEO_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
 next_30m: rebuild latest North Star evidence; verify Overview 82 stars; preserve state/READY profiles; no publication
+
+updated: 2026-11-02T06:59:56+0700
+phase: PACKAGED_NORTH_STAR_RESTART_PENDING
+runtime: packaged 4321 bundle contains a2ac8e4 candidate; LaunchAgent restart and live health/source verification pending; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam READY; facebook_group/facebook_nam READY; no credential action
+pilot: armed=10 slots; scheduled=0 published_verified=0; no live submit while content/video approval gates closed
+videos: ready=10 qaFail=10 bufferTomorrow=0; recorder repair evidence present; v5 production pending
+content: Mission 18 latest 06:06 rewrite worker commit ea98daa pending integration; CONTENT_PENDING_CLAUDE
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: runtime=RESTART_PENDING; publish=PAUSED_APPROVAL_GATES; video=V5_PRODUCTION_PENDING; content=WORKER_REWRITE; community=PUBLIC_30_READY_AUTH_UNKNOWN
+CẦN NAM: none for account readiness; no credential/CAPTCHA/MFA action required
+blockers: VIDEO_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN | BUILD_DEPENDENCY_SYMLINK_LIMITATION
+next_30m: restart packaged LaunchAgent, verify health/source/dashboard/credential JSON without secrets; integrate content worker after independent checks; no publication
+
+updated: 2026-11-02T07:04:57+0700
+phase: CONTENT_VERIFIED_BUILD_STARTED
+runtime: packaged 4321 currently source=a2ac8e4; building clean checkout at /private/tmp/ms-growth-clean-build-content-20261102T000457Z; 4318 PID 35020 untouched
+content: worker ea98daa integrated as a3a5117; independent verifier 1393eea PASS bounded; CONTENT_PENDING_CLAUDE
+videos: recorder repaired; v5 production pending; qaFail=10; no media promotion
+next_30m: run sh desktop/build-macos.sh, preserve state/Keychain/Chrome profiles, swap 4321 only after artifact checks
+
+updated: 2026-11-02T07:06:26+0700
+phase: CONTENT_NORTH_STAR_BUNDLE_SWAPPED
+runtime: candidate source=1393eea installed at packaged 4321 seam; backup=/Users/nam/Library/Application Support/Marketing Seeding OS/update-backups/swap-20261102T000623Z-1393eea state_sha=b818fd8fd8ffaf3cb2d688b1ef282d5cd0693d1a1f10b1b30459eecd59c6831e; LaunchAgent restart pending; rollback=/Users/nam/orca/workspaces/marketing-seeding/marketing-seeding-desktop-integrated/desktop/dist/.Marketing-Seeding-OS.rollback-1393eea-1793577985.app; 4318 PID 35020 untouched
+content: a3a5117 integrated; independent verifier 1393eea PASS bounded; CONTENT_PENDING_CLAUDE
+videos: ready=10 qaFail=10 bufferTomorrow=0; recorder repair report present; v5 production and approval pending
+next_30m: restart LaunchAgent, verify health/source/state/dashboard/credential routes, then commit status/decision checkpoint
+
+updated: 2026-11-02T07:12:00+0700
+phase: RUNTIME_SMOKE_NORTH_STAR_PARSER_FIX_PENDING
+runtime: packaged 4321 candidate source=1393eea currently running pid=32145; parser fix pending rebuild; stateRevision=454; 4318 PID 35020 untouched
+accounts: linkedin/linkedin_nam READY; facebook_group/facebook_nam READY; credential JSON route verified with operator bearer, no secret fields
+pilot: armed=10 slots; scheduled=0 published_verified=0; no live submit
+videos: ready=10 qaFail=10 bufferTomorrow=0; recorder repaired; v5 production pending; no media binding
+content: a3a5117 plus independent verifier 1393eea PASS; 16 unique bodies/slots; 8 LinkedIn hooks; 8 Facebook hooks; CONTENT_PENDING_CLAUDE
+north_star: parser bug found: broad regex showed 81; source receipt says 82 at 2026-11-02T06:49:23+07:00; fix staged, dashboard currently stale until rebuild
+community: discovered=30 canonical=camoufox-public; authenticated_reads=0; join_requested_today=0; approved=0; postable=0
+lanes: runtime=PARSER_FIX_REBUILD_PENDING; pilot=ARMED_GATES_CLOSED; publish=PAUSED_APPROVAL_GATES; video=V5_PRODUCTION_PENDING; content=INDEPENDENT_PASS_PENDING_CLAUDE; community=PUBLIC_30_READY_AUTH_UNKNOWN
+CẦN NAM: none for account readiness; no credential/CAPTCHA/MFA action required
+blockers: RUNTIME_PARSER_REBUILD | VIDEO_CLAUDE_APPROVAL | CONTENT_CLAUDE_APPROVAL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN | BUILD_DEPENDENCY_SYMLINK_LIMITATION
+next_30m: commit parser fix, build clean package, swap/restart 4321, verify Overview current=82 and source=HEAD; no publication

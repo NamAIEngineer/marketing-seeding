@@ -27,8 +27,14 @@ function safeAssetName(value) {
 }
 
 function northStarProjection(markdown) {
-  const stars = Number(markdown.match(/(?:FACT|Current|stars)[^\n]{0,80}?([0-9]+)\s+stars/i)?.[1]);
-  const observedAt = markdown.match(/2026-11-01[^\n]*(?:ICT|\+07:00)/i)?.[0] || null;
+  // Prefer the newest GitHub API receipt. A later line records the prior
+  // observation, so a broad "N stars" regex can silently regress the panel.
+  const apiLine = markdown.match(/stargazers_count\s*=\s*(\d+)/i)?.[1];
+  const fallbackStars = markdown.match(/(?:Current|FACT)[^\n]{0,80}?([0-9]+)\s+stars/i)?.[1];
+  const stars = Number(apiLine || fallbackStars);
+  const observedAt = markdown.match(/(2026-\d\d-\d\dT\d\d:\d\d:\d\d\+07:00)/)?.[1]
+    || markdown.match(/\bat\s+(2026-\d\d-\d\dT[^\s]+)/i)?.[1]
+    || null;
   return {
     repoUrl: "https://github.com/jangtrinh/design-os-studio",
     target: 1000,

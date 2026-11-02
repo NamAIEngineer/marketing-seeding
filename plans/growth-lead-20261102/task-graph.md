@@ -108,3 +108,10 @@ Run mode: supervised Orca orchestration. Current non-account lanes continue whil
 | T-schedule-pilot | BUILD · publish/learning | Enable 10/day 07:00–23:00 only after pilot post proof; allocate across account pool under per-account caps, spacing, warning 50% reduction, and kill switch | T-linkedin-pilot; verified permalink | A13, A14, V9 |
 
 Paused scope: Threads, Reddit, Product Hunt, Indie Hackers, X publication; no W3b platform outside Facebook/LinkedIn Groups. Credential entry and CAPTCHA/MFA/OTP remain the only `CẦN NAM` actions. T-comments-pilot may implement guards and scheduling before login but must not perform live writes until a READY account and kill switch are evidenced.
+
+## 2026-11-02 07:06 ICT — Mission 18 latest content + packaged refresh
+
+- T-content: worker commit `ea98daa` integrated as `a3a5117`; independent report commit `1393eea` PASS bounded. Facebook timeline/group hooks are distinct and each states “Mình và team đang build…” with concrete outcomes; all rows remain `CONTENT_PENDING_CLAUDE`.
+- T-runtime: candidate source `1393eea` built in a detached checkout and swapped into packaged 4321 with state backup/rollback. Health probe PASS; sourceDirty=false; state revision 454; 4318 untouched.
+- T-video: recorder repair report complete; v5 production still pending; canonical media remains fail-closed (`qaFail=10`, buffer=0). No video or content approval inferred.
+- T-publish: zero scheduled, zero verified permalink, zero live publication. Pilot remains armed, dual content/video gates closed.
