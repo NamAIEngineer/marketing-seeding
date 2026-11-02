@@ -148,4 +148,10 @@ Paused scope: Threads, Reddit, Product Hunt, Indie Hackers, X publication; no W3
 - `T-audio-license`: replacement search commit `7b29b57` adds official FAQ evidence. No free track with explicit commercial permission was found; active Commercial Plan or single-track license is required. Keep audio and all video/media gates blocked.
 - `T-video-01`: recovery diagnosis `dc00c34`/`12cadb4` identifies foreign-worktree Studio binding (`quality-a/v6-live/blank.designos`), unsaved Claude Untitled session, and empty `DESIGNOS_FILE`. Recovery must use a newly bound scoped session only; do not restart or mutate the foreign session. Current state remains `BLOCKED_DIAGNOSTIC_ONLY`.
 - Final controller receipt: lead HEAD `ca011e7` is pushed and matches `origin/NamAIEngineer/marketing-seeding`. No canonical media/draft/manifest changes or live side effects were performed after the gates closed.
+
+## 2026-11-02 09:55 ICT — MISSION 20 redispatch
+
+- `T-content`: Claude-approved 3-post source is `campaigns/design-os-studio-launch/drafts/drafts-2026-11-02-v3-claude.md`. Seven additional posts dispatched to a separate worker; product/video uniqueness and hand-written quality are required before integration.
+- `T-audio-license`: Edge of Motion/Free To Use is superseded. Pixabay/commercial-license evidence search is bounded to 30 minutes; silent video is permitted after timeout and should not block content/video.
+- `T-video-01`: fresh worker must save a named blank `.designos`, open that exact path, verify scope, wait >=5 minutes, and fall back to scoped designos-mcp/CLI node creation with ScreenCaptureKit capture. No foreign process restart, canonical binding, videos 2–10, or publication.
 - `T-integrate`/`T-publish`: remain fail-closed. No canonical draft expansion, video binding, schedule activation, publication, permalink, comment, or group side effect is allowed before independent PASS plus explicit Claude content/video approval and valid commercial audio rights.
