@@ -121,6 +121,14 @@ Publisher ownership is external and exclusive to `term_84dd3dea` (task `task_cca
 
 Dispatch contract: controller Growth Lead; role BUILD; tier workhorse `gpt-6-luna`, effort high; independent verifier is a fresh read-only attempt after each final artifact; worktrees `ms-growth-lead-spec-images-20261102`, `ms-growth-lead-content-20261102`, and existing `ms-growth-video-20261101` respectively. Each worker must write its declared report, pin state before edits, preserve foreign dirty artifacts, send one `worker_done`, and end with `Status:`. Claude approval and publication remain human approval gates; no worker may publish, join, comment, access credentials, or use computer use.
 
+## Wave 5 — Mission 22 independent verification
+
+| Task | role | Scope | Dependency | Acceptance |
+|---|---|---|---|---|
+| T-verify-content-22 | VERIFY · content | Read-only direct inspection of the seven JSON/MD posts in the content worker worktree; forbidden license/language/word-count/uniqueness/source/pending gates; no edits | T-content-22 | A15, A2, A3, V3, V4, V5 |
+| T-verify-spec-images-22 | VERIFY · spec/images | Read-only direct inspection of seven product specs, `.designos`, apply/inspect receipts, 1920x1200 screenshots, Dev Mode screenshots, SHA ledger, and foreign-change boundaries | T-spec-images-22 | A15, V6, V4, V5 |
+| T-verify-video-22 | VERIFY · video | Read-only direct inspection of the worker's capture logs, MP4 absence, recorder status=2, evidence paths, and fail-closed classification | T-video-22 | A8, A15, V6, V4 |
+
 ## 2026-11-02 07:06 ICT — Mission 18 latest content + packaged refresh
 
 - T-content: worker commit `ea98daa` integrated as `a3a5117`; independent report commit `1393eea` PASS bounded. Facebook timeline/group hooks are distinct and each states “Mình và team đang build…” with concrete outcomes; all rows remain `CONTENT_PENDING_CLAUDE`.

@@ -927,6 +927,8 @@ CẦN NAM: Facebook app-owned profile `facebook_nam` currently shows login wall;
 blockers: CONTENT_CLAUDE_APPROVAL | SPEC_VISUAL_REVIEW | VIDEO_CAPTURE_DURATION | FACEBOOK_LOGIN_WALL | LIVE-PUBLICATION (0 verified permalink) | AUTHENTICATED_COMMUNITY_UNKNOWN
 next_30m: finish independent content verification; preserve spec/video evidence; no canonical promotion, schedule activation, publication, comment, join, or media approval
 
+verification_dispatches: content=task_3867b39d655c/ctx_51acc08c7945; spec_images=task_b8bcff01a0b1/ctx_da79fc150d75; video_direct=task_cb9dd612f8e2/ctx_9a4016576721; video dependency task_1445f09eacaa marked failed only to unblock independent audit, no retry of capture
+
 ## Facebook publisher img-01 — 2026-11-02T04:53:04Z
 
 - Status: BLOCKED / CẦN NAM
